@@ -65,7 +65,7 @@ export function ChangePasswordForm() {
   if (!auth.isAuthenticated) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">
-        <p className="text-[15px] text-[#555] dark:text-lavo-muted mb-6">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted mb-6">
           {t('error_generic')}
         </p>
         <Link
@@ -81,13 +81,13 @@ export function ChangePasswordForm() {
   if (success) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">
-        <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20 flex items-center justify-center mx-auto mb-6">
           <SuccessIcon />
         </div>
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('success_message')}
         </p>
         <Link
@@ -160,7 +160,7 @@ export function ChangePasswordForm() {
       type="button"
       onClick={toggle}
       aria-label={label}
-      className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+      className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
     >
       <EyeIcon open={visible} />
     </button>

@@ -12,11 +12,13 @@ const config: Config = {
     '^libphonenumber-js$': '<rootDir>/tests/helpers/mocks/libphonenumber-js.ts',
     '^firebase-admin$': '<rootDir>/tests/helpers/mocks/firebase-admin.ts',
     '^isomorphic-dompurify$': '<rootDir>/tests/helpers/mocks/isomorphic-dompurify.ts',
+    '^@upstash/redis$': '<rootDir>/tests/helpers/mocks/upstash-redis.ts',
+    '^@upstash/redis/nodejs$': '<rootDir>/tests/helpers/mocks/upstash-redis.ts',
   },
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/.next/',
-    // Playwright E2E specs use @playwright/test — they cannot run under Jest.
+    // Playwright E2E specs use @playwright/test - they cannot run under Jest.
     // Playwright has its own config (playwright.config.ts) and runner (npm run test:e2e).
     '<rootDir>/tests/e2e/',
   ],

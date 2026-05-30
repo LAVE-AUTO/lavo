@@ -3,7 +3,7 @@ import { safeJsonLd } from '@/lib/json-ld';
 import { getStationDetailPublic } from '@/server/station/station-service';
 import { StationDetail } from '@/components/stations/StationDetail';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
     // fallback to defaults
   }
   return {
-    title: `LAVO — ${name}`,
+    title: `Hurryline - ${name}`,
     description,
     alternates: {
       canonical: `${APP_URL}/${locale}/stations/${id}`,
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       type: 'website' as const,
       url: `${APP_URL}/${locale}/stations/${id}`,
-      title: `LAVO — ${name}`,
+      title: `Hurryline - ${name}`,
       description,
     },
   };
@@ -93,7 +93,7 @@ export default async function StationDetailPage({ params }: Props) {
   const jsonLd = await buildLocalBusinessJsonLd(id, locale);
 
   return (
-    <main className="min-h-screen bg-[#EDEDED] dark:bg-dark-bg transition-colors">
+    <main className="min-h-screen bg-[#FFF9EC] dark:bg-background transition-colors">
       {jsonLd && (
         <script
           type="application/ld+json"

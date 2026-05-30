@@ -1,7 +1,7 @@
 'use client';
 
 /* ------------------------------------------------------------------ */
-/* SlotPicker — grille de sélection de créneau horaire                 */
+/* SlotPicker - grille de sélection de créneau horaire                 */
 /* ------------------------------------------------------------------ */
 
 export interface AvailableSlot {
@@ -52,7 +52,7 @@ export default function SlotPicker({ slots, selectedSlotId, onSelect, locale }: 
     <div className="space-y-5">
       {groups.map(({ dateLabel, slots: daySlots }) => (
         <div key={dateLabel}>
-          <p className="text-[12px] font-bold text-[#999] dark:text-[#888] uppercase tracking-widest mb-2">
+          <p className="text-[12px] font-bold text-[#999] dark:text-foreground/55 uppercase tracking-widest mb-2">
             {dateLabel}
           </p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -67,13 +67,12 @@ export default function SlotPicker({ slots, selectedSlotId, onSelect, locale }: 
                   disabled={isDisabled}
                   onClick={() => onSelect(slot.id)}
                   className={[
-                    'py-2.5 rounded-[10px] text-[14px] font-bold border transition-all',
-                    'font-[family-name:var(--font-roboto-mono)]',
+                    'py-2.5 rounded-[10px] text-[16px] font-bebas tracking-wider border transition-all',
                     isDisabled
-                      ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed'
+                      ? 'border-border text-foreground/40 cursor-not-allowed'
                       : isSelected
-                        ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
-                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                        ? 'border-gold bg-gold text-background shadow-sm cursor-pointer'
+                        : 'border-border text-foreground hover:border-gold/60 cursor-pointer',
                   ].join(' ')}
                 >
                   {slot.time}

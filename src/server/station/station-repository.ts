@@ -1,19 +1,40 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
 export type NewStation = typeof stations.$inferInsert;
 
-/** Sum of (capacity - booked_count) for future slots. */
-const availableSlotsExpr = sql`(SELECT COALESCE(SUM(${timeSlots.capacity} - ${timeSlots.booked_count}), 0)::bigint FROM time_slots WHERE time_slots.station_id = ${stations.id} AND time_slots.start_time > NOW())`;
+/**
+ * Precomputed available_slots from station_stats LEFT JOIN.
+ * COALESCE handles stations that have no row in the view yet (e.g. first run before refresh).
+ */
+const availableSlotsExpr = sql<number>`COALESCE(${stationStats.available_slots}, 0)`;
 
 /**
- * Count of reservations with completed_at IS NOT NULL per station (for most_visited and sort).
+ * Precomputed completed_count from station_stats LEFT JOIN.
  * This is the "Services terminés" metric per plan Section 4.
  */
-const completedCountExpr = sql`(SELECT COUNT(*)::bigint FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.completed_at IS NOT NULL)`;
+const completedCountExpr = sql<number>`COALESCE(${stationStats.completed_count}, 0)`;
+
+/** Lowest active service entry price for the station, as text (nullable when no entries). */
+const priceFromExpr = sql<string | null>`(SELECT MIN(sve.price)::text FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true)`;
+
+/** URL of the first station photo ordered by position (nullable when no photos). */
+const imageUrlExpr = sql<string | null>`(SELECT station_photos.url FROM station_photos WHERE station_photos.station_id = ${stations.id} ORDER BY station_photos.position ASC LIMIT 1)`;
+
+/** Count of live queue entries (pending_payment, pending, confirmed, late) for the station. */
+const liveQueueCountExpr = sql<number>`(SELECT COUNT(*)::int FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.entry_type = 'queue' AND reservations.status IN ('pending_payment', 'pending', 'confirmed', 'late'))`;
+
+/** Station opening time from station_configs (nullable when config absent). */
+const openingTimeExpr = sql<string | null>`(SELECT station_configs.opening_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;
+
+/** Station closing time from station_configs (nullable when config absent). */
+const closingTimeExpr = sql<string | null>`(SELECT station_configs.closing_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;
+
+/** Minimum service duration (min) across all active service entries for the station. Null when no services configured. */
+const minDurationExpr = sql<number | null>`(SELECT MIN(sve.duration_min) FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true)`;
 
 export type ListActiveStationsFilters = {
   search?: string;
@@ -29,19 +50,82 @@ export type ListActiveStationsFilters = {
   wash_type_ids?: string[];
   /** Filter to stations where service_scope equals this value (exterior | interior | both). */
   service_scope?: string;
+  /** User latitude in degrees; required (with near_lng) to support `distance_asc`/`distance_desc` sort. */
+  near_lat?: number;
+  /** User longitude in degrees; required (with near_lat) to support `distance_asc`/`distance_desc` sort. */
+  near_lng?: number;
+  /** Minimum distance from user in km (requires near_lat/near_lng). */
+  distance_min_km?: number;
+  /** Maximum distance from user in km (requires near_lat/near_lng). */
+  distance_max_km?: number;
+  /** When true, restricts to stations with is_open=true for today's day_of_week in station_hours. */
+  open_today?: boolean;
 };
+
+/**
+ * Squared great-circle distance approximation (no sqrt) suitable for ordering.
+ * Returns infinity when the station has no lat/lng so it sorts to the end.
+ * `near_lat` and `near_lng` are passed as plain numbers and parameterised via Drizzle.
+ *
+ * Implementation: equirectangular projection. Accurate enough at the city
+ * scale we care about and avoids requiring the PostGIS extension.
+ */
+function distanceOrderExpr(nearLat: number, nearLng: number) {
+  return sql<number>`(
+    CASE
+      WHEN ${stations.latitude} IS NULL OR ${stations.longitude} IS NULL THEN 1e18
+      ELSE
+        POWER(((${stations.latitude})::float - ${nearLat}::float) * 111.0, 2)
+        + POWER(((${stations.longitude})::float - ${nearLng}::float) * 111.0 * COS(RADIANS(${nearLat}::float)), 2)
+    END
+  )`;
+}
+
+/** Haversine distance in km between station and user. Returns NULL when station has no coordinates. */
+function distanceKmExpr(nearLat: number, nearLng: number) {
+  return sql<number | null>`(
+    CASE
+      WHEN ${stations.latitude} IS NULL OR ${stations.longitude} IS NULL THEN NULL
+      ELSE 2 * 6371.0 * ASIN(SQRT(
+        POWER(SIN(RADIANS(((${stations.latitude})::float - ${nearLat}::float) / 2)), 2)
+        + COS(RADIANS(${nearLat}::float)) * COS(RADIANS((${stations.latitude})::float))
+          * POWER(SIN(RADIANS(((${stations.longitude})::float - ${nearLng}::float) / 2)), 2)
+      ))
+    END
+  )`;
+}
 
 export type ListActiveStationsResult = {
   rows: StationWithAvailableSlots[];
   total: number;
 };
 
-/** Row returned by listActiveStations: station columns plus available_slots and completed_count (bigint from DB). */
-export type StationWithAvailableSlots = Station & { available_slots: string; completed_count: string };
+/** Row returned by listActiveStations: station columns plus computed metrics and enriched fields. */
+export type StationWithAvailableSlots = Station & {
+  available_slots: string;
+  completed_count: string;
+  price_from: string | null;
+  image_url: string | null;
+  live_queue_count: number;
+  opening_time: string | null;
+  closing_time: string | null;
+  min_duration: number | null;
+  distance_km: number | null;
+};
 
-function rowToStationWithSlots(
-  row: Station & { available_slots: unknown; completed_count: unknown }
-): StationWithAvailableSlots {
+type StationEnrichedRow = Station & {
+  available_slots: unknown;
+  completed_count: unknown;
+  price_from: string | null;
+  image_url: string | null;
+  live_queue_count: number;
+  opening_time: string | null;
+  closing_time: string | null;
+  min_duration: number | null;
+  distance_km: number | null;
+};
+
+function rowToStationWithSlots(row: StationEnrichedRow): StationWithAvailableSlots {
   return {
     ...row,
     available_slots: String(row.available_slots),
@@ -58,6 +142,11 @@ export async function findStationById(id: string): Promise<Station | undefined> 
   return db.query.stations.findFirst({ where: eq(stations.id, id) });
 }
 
+/** Finds a station by its promo referral code. */
+export async function findStationByPromoRefCode(refCode: string): Promise<Station | undefined> {
+  return db.query.stations.findFirst({ where: eq(stations.promo_ref_code, refCode) });
+}
+
 /**
  * Builds WHERE conditions for listActiveStations and listActiveStationsCount.
  * Shared so count and list use identical filters.
@@ -69,7 +158,12 @@ function listActiveStationsWhere(
   city: string | undefined,
   formatId: string | undefined,
   washTypeIds: string[] | undefined,
-  serviceScope: string | undefined
+  serviceScope: string | undefined,
+  openToday?: boolean,
+  nearLat?: number,
+  nearLng?: number,
+  distanceMinKm?: number,
+  distanceMaxKm?: number,
 ) {
   const conditions = [eq(stations.status, 'active')];
   if (city) conditions.push(eq(stations.city, city));
@@ -86,7 +180,7 @@ function listActiveStationsWhere(
   }
   if (formatId) {
     conditions.push(
-      sql`EXISTS (SELECT 1 FROM vehicle_formats WHERE vehicle_formats.station_id = ${stations.id} AND vehicle_formats.id = ${formatId})`
+      sql`EXISTS (SELECT 1 FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.vehicle_format_id = ${formatId})`
     );
   }
   if (washTypeIds?.length) {
@@ -96,6 +190,17 @@ function listActiveStationsWhere(
   }
   if (serviceScope) {
     conditions.push(eq(stations.service_scope, serviceScope));
+  }
+  if (openToday) {
+    const todayDow = new Date().getDay();
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
+    );
+  }
+  if (nearLat != null && nearLng != null) {
+    const distExpr = distanceKmExpr(nearLat, nearLng);
+    if (distanceMinKm != null) conditions.push(sql`${distExpr} >= ${distanceMinKm}`);
+    if (distanceMaxKm != null) conditions.push(sql`${distExpr} <= ${distanceMaxKm}`);
   }
   return conditions.length === 1 ? conditions[0] : and(...conditions);
 }
@@ -115,8 +220,17 @@ function searchPriorityOrder(term: string) {
 
 /**
  * Builds ORDER BY list from sort criteria (priority order).
+ *
+ * `nearLat` / `nearLng` are required to honour the `distance_asc` /
+ * `distance_desc` criteria; when missing those tokens are silently skipped so
+ * the rest of the sort still applies.
  */
-function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: string | undefined) {
+function buildOrderBy(
+  sort: StationSortCriterion[] | undefined,
+  searchTerm: string | undefined,
+  nearLat?: number,
+  nearLng?: number,
+) {
   const orderByList: ReturnType<typeof asc>[] = [];
   if (searchTerm && sort?.length === 0) {
     orderByList.push(asc(searchPriorityOrder(`%${searchTerm}%`)));
@@ -133,6 +247,12 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
       else if (c === 'total_ratings_desc') orderByList.push(desc(stations.total_ratings));
       else if (c === 'completed_count_asc') orderByList.push(asc(completedCountExpr));
       else if (c === 'completed_count_desc') orderByList.push(desc(completedCountExpr));
+      else if (c === 'distance_asc' && nearLat != null && nearLng != null) {
+        orderByList.push(asc(distanceOrderExpr(nearLat, nearLng)));
+      }
+      else if (c === 'distance_desc' && nearLat != null && nearLng != null) {
+        orderByList.push(desc(distanceOrderExpr(nearLat, nearLng)));
+      }
     }
   }
   return orderByList;
@@ -146,22 +266,34 @@ function buildOrderBy(sort: StationSortCriterion[] | undefined, searchTerm: stri
 export async function listActiveStations(
   filters: ListActiveStationsFilters = {}
 ): Promise<ListActiveStationsResult> {
-  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, page = 1, per_page = 20, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const limit = Math.min(Math.max(1, per_page ?? 20), 100);
   const offset = (Math.max(1, page ?? 1) - 1) * limit;
 
-  const orderByList = buildOrderBy(sort, searchTerm);
+  const orderByList = buildOrderBy(sort, searchTerm, near_lat, near_lng);
+
+  const distKm = (near_lat != null && near_lng != null)
+    ? distanceKmExpr(near_lat, near_lng).as('distance_km')
+    : sql<null>`NULL::float`.as('distance_km');
 
   const baseSelect = db
     .select({
       ...getTableColumns(stations),
       available_slots: availableSlotsExpr.as('available_slots'),
       completed_count: completedCountExpr.as('completed_count'),
+      price_from: priceFromExpr.as('price_from'),
+      image_url: imageUrlExpr.as('image_url'),
+      live_queue_count: liveQueueCountExpr.as('live_queue_count'),
+      opening_time: openingTimeExpr.as('opening_time'),
+      closing_time: closingTimeExpr.as('closing_time'),
+      min_duration: minDurationExpr.as('min_duration'),
+      distance_km: distKm,
     })
     .from(stations)
+    .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
     .where(whereClause);
 
   const [countRows, rows] = await Promise.all([
@@ -184,9 +316,9 @@ export async function listActiveStationsGroup(
   filters: ListActiveStationsFilters,
   limitPerGroup: number
 ): Promise<StationWithAvailableSlots[]> {
-  const { search, city, sort, format_id, wash_type_ids, service_scope } = filters;
+  const { search, city, sort, format_id, wash_type_ids, service_scope, near_lat, near_lng, distance_min_km, distance_max_km, open_today } = filters;
   const searchTerm = search?.trim();
-  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope);
+  const whereClause = listActiveStationsWhere(search, city, format_id, wash_type_ids, service_scope, open_today, near_lat, near_lng, distance_min_km, distance_max_km);
 
   const groupOrder: StationSortCriterion[] =
     group === 'available_now'
@@ -195,7 +327,11 @@ export async function listActiveStationsGroup(
         ? ['rating_desc', ...(sort ?? [])]
         : ['completed_count_desc', ...(sort ?? [])];
 
-  const orderByList = buildOrderBy(groupOrder.length ? groupOrder : undefined, searchTerm);
+  const orderByList = buildOrderBy(groupOrder.length ? groupOrder : undefined, searchTerm, near_lat, near_lng);
+
+  const distKm = (near_lat != null && near_lng != null)
+    ? distanceKmExpr(near_lat, near_lng).as('distance_km')
+    : sql<null>`NULL::float`.as('distance_km');
 
   const baseSelect = () =>
     db
@@ -203,9 +339,17 @@ export async function listActiveStationsGroup(
         ...getTableColumns(stations),
         available_slots: availableSlotsExpr.as('available_slots'),
         completed_count: completedCountExpr.as('completed_count'),
+        price_from: priceFromExpr.as('price_from'),
+        image_url: imageUrlExpr.as('image_url'),
+        live_queue_count: liveQueueCountExpr.as('live_queue_count'),
+        opening_time: openingTimeExpr.as('opening_time'),
+        closing_time: closingTimeExpr.as('closing_time'),
+        min_duration: minDurationExpr.as('min_duration'),
+        distance_km: distKm,
       })
       .from(stations)
-      .where(group === 'available_now' ? and(whereClause, sql`(${availableSlotsExpr}) > 0`) : whereClause);
+      .leftJoin(stationStats, eq(stationStats.station_id, stations.id))
+      .where(group === 'available_now' ? and(whereClause, sql`COALESCE(${stationStats.available_slots}, 0) > 0`) : whereClause);
 
   const query = baseSelect();
   const ordered = orderByList.length > 0 ? query.orderBy(...orderByList) : query;
@@ -214,7 +358,7 @@ export async function listActiveStationsGroup(
 }
 
 /**
- * Finds an active station by id with stationConfig, vehicleFormats, and timeSlots.
+ * Finds an active station by id with config, vehicle formats, time slots, photos, and wash types.
  * Returns undefined if not found or station is not active.
  */
 export async function findActiveStationWithDetail(id: string) {
@@ -222,8 +366,13 @@ export async function findActiveStationWithDetail(id: string) {
     where: and(eq(stations.id, id), eq(stations.status, 'active')),
     with: {
       stationConfig: true,
-      vehicleFormats: true,
       timeSlots: true,
+      photos: {
+        orderBy: (photo, { asc }) => [asc(photo.position)],
+      },
+      stationWashTypes: {
+        with: { washType: true },
+      },
     },
   });
 }
@@ -269,14 +418,54 @@ export async function listStationsByStatus(
 }
 
 /**
- * List all stations for admin KYC history, optionally filtered by status.
- * Ordered by updated_at DESC so most recent activity appears first.
+ * List stations for admin management with pagination and optional status filter.
+ * Returns both the page rows and the total matching count.
+ * Hard cap: perPage is clamped to 100.
  */
-export async function listAllStationsForAdmin(status?: string): Promise<Station[]> {
-  return db.query.stations.findMany({
-    where: status ? eq(stations.status, status) : undefined,
-    orderBy: (t, { desc }) => [desc(t.updated_at)],
-  });
+export async function listAllStationsForAdmin(
+  status?: string,
+  page = 1,
+  perPage = 50,
+): Promise<{ rows: Station[]; total: number }> {
+  const limit  = Math.min(100, Math.max(1, Math.floor(perPage)));
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
+  const filter = status ? eq(stations.status, status) : undefined;
+
+  const [rows, countResult] = await Promise.all([
+    db.select().from(stations).where(filter).orderBy(desc(stations.updated_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(stations).where(filter),
+  ]);
+
+  return { rows, total: countResult[0]?.count ?? 0 };
+}
+
+/**
+ * Lists active + suspended stations (managed) with pagination.
+ * Returns page rows, total managed count, and per-status counts for chip display.
+ * Three parallel queries: rows, total, counts grouped by status.
+ */
+export async function listManagedStationsForAdmin(
+  page = 1,
+  perPage = 50,
+): Promise<{ rows: Station[]; total: number; total_active: number; total_suspended: number }> {
+  const limit  = Math.min(100, Math.max(1, Math.floor(perPage)));
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
+  const filter = inArray(stations.status, ['active', 'suspended']);
+
+  const [rows, countResult, statusCounts] = await Promise.all([
+    db.select().from(stations).where(filter).orderBy(desc(stations.updated_at)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(stations).where(filter),
+    db.select({ status: stations.status, count: sql<number>`count(*)::int` })
+      .from(stations).where(filter).groupBy(stations.status),
+  ]);
+
+  const byStatus = Object.fromEntries(statusCounts.map((r) => [r.status, r.count]));
+  return {
+    rows,
+    total: countResult[0]?.count ?? 0,
+    total_active:    byStatus['active']    ?? 0,
+    total_suspended: byStatus['suspended'] ?? 0,
+  };
 }
 
 export async function updateStationStatus(
@@ -302,5 +491,48 @@ export async function updateStationInfo(
     .set({ ...data, updated_at: new Date() })
     .where(eq(stations.id, id))
     .returning();
+  if (!updated) throw new Error(`Station ${id} not found during info update`);
   return updated;
+}
+
+export async function getNotificationPrefs(stationId: string): Promise<Record<string, unknown> | null> {
+  const row = await db.query.stations.findFirst({
+    where: eq(stations.id, stationId),
+    columns: { notification_prefs: true },
+  });
+  return (row?.notification_prefs as Record<string, unknown> | null) ?? null;
+}
+
+/**
+ * Hard cap on the merged document size: prevents unbounded JSONB growth from many
+ * PATCH calls each contributing distinct keys. Mirrors the per-request cap (50)
+ * used by the route validator.
+ */
+const NOTIFICATION_PREFS_MAX_TOTAL_KEYS = 50;
+
+export async function patchNotificationPrefs(
+  stationId: string,
+  prefs: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const current = await getNotificationPrefs(stationId);
+  const merged: Record<string, unknown> = { ...(current ?? {}), ...prefs };
+
+  // If the merged document exceeds the cap, drop the oldest keys (those not present
+  // in the new patch). This keeps the JSONB bounded across many PATCH calls.
+  const keys = Object.keys(merged);
+  if (keys.length > NOTIFICATION_PREFS_MAX_TOTAL_KEYS) {
+    const newKeys = new Set(Object.keys(prefs));
+    const overflow = keys.length - NOTIFICATION_PREFS_MAX_TOTAL_KEYS;
+    let dropped = 0;
+    for (const k of keys) {
+      if (dropped >= overflow) break;
+      if (!newKeys.has(k)) {
+        delete merged[k];
+        dropped++;
+      }
+    }
+  }
+
+  await db.update(stations).set({ notification_prefs: merged, updated_at: new Date() }).where(eq(stations.id, stationId));
+  return merged;
 }

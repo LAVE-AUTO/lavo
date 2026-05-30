@@ -5,12 +5,12 @@
  * Never hard-code real credentials here.
  *
  * Required environment variables:
- *   E2E_CLIENT_EMAIL        — email of the test client account
- *   E2E_CLIENT_PASSWORD     — password of the test client account
- *   E2E_STATION_EMAIL       — email of the test station account
- *   E2E_STATION_PASSWORD    — password of the test station account
- *   E2E_ADMIN_EMAIL         — email of the test admin account
- *   E2E_ADMIN_PASSWORD      — password of the test admin account
+ *   E2E_CLIENT_EMAIL        - email of the test client account
+ *   E2E_CLIENT_PASSWORD     - password of the test client account
+ *   E2E_STATION_EMAIL       - email of the test station account
+ *   E2E_STATION_PASSWORD    - password of the test station account
+ *   E2E_ADMIN_EMAIL         - email of the test admin account
+ *   E2E_ADMIN_PASSWORD      - password of the test admin account
  */
 
 export const TEST_CLIENT_EMAIL    = process.env.E2E_CLIENT_EMAIL    ?? '';

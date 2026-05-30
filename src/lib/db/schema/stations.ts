@@ -3,10 +3,15 @@
  * Station identity, approval lifecycle, and per-station pricing by vehicle format.
  */
 import {
+  bigint,
   boolean,
+  date,
   decimal,
   index,
   integer,
+  jsonb,
+  numeric,
+  pgMaterializedView,
   pgTable,
   text,
   time,
@@ -16,6 +21,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
+
+// %%%%% Wash types %%%%%
 
 /**
  * Reference table for wash types (e.g. hand_wash, automatic, self_service).
@@ -46,10 +53,14 @@ export const stationWashTypes = pgTable(
   (table) => [
     uniqueIndex("station_wash_types_station_id_wash_type_id_unique").on(
       table.station_id,
-      table.wash_type_id
+      table.wash_type_id,
     ),
-  ]
+  ],
 );
+
+// %%%%% END - Wash types %%%%%
+
+// %%%%% Stations %%%%%
 
 /**
  * Station identity, approval lifecycle, and operational flags.
@@ -67,12 +78,20 @@ export const stations = pgTable(
     registration_number: varchar("registration_number", { length: 100 }),
     address: text("address").notNull(),
     city: varchar("city", { length: 100 }).notNull(),
+    postal_code: varchar("postal_code", { length: 20 }),
     latitude: decimal("latitude", { precision: 10, scale: 7 }),
     longitude: decimal("longitude", { precision: 10, scale: 7 }),
     description: text("description"),
     /** Type de prestation: exterior only, interior only, or both. Nullable for existing stations. */
     service_scope: varchar("service_scope", { length: 20 }),
     wash_post_count: integer("wash_post_count"),
+    /** Promo QR configuration stored by the admin promo section. */
+    promo_commission_rate: decimal("promo_commission_rate", { precision: 5, scale: 4 }),
+    promo_ref_code: varchar("promo_ref_code", { length: 128 }),
+    promo_ref_generated_at: timestamp("promo_ref_generated_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
     status: varchar("status", { length: 30 }).notNull(),
     is_open: boolean("is_open").notNull().default(false),
     stripe_account_id: varchar("stripe_account_id", { length: 100 }),
@@ -97,6 +116,7 @@ export const stations = pgTable(
     })
       .notNull()
       .defaultNow(),
+    notification_prefs: jsonb("notification_prefs"),
   },
   (table) => [
     index("stations_status_idx").on(table.status),
@@ -104,8 +124,15 @@ export const stations = pgTable(
     index("stations_is_open_idx").on(table.is_open),
     index("stations_user_id_idx").on(table.user_id),
     index("stations_service_scope_idx").on(table.service_scope),
-  ]
+    index("stations_approved_at_idx").on(table.approved_at),
+    index("stations_updated_at_idx").on(table.updated_at),
+    index("stations_promo_ref_code_idx").on(table.promo_ref_code),
+  ],
 );
+
+// %%%%% END - Stations %%%%%
+
+// %%%%% Station config & posts %%%%%
 
 /**
  * One-to-one operational config per station. id = station id.
@@ -168,56 +195,92 @@ export const stationPosts = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("station_posts_station_id_position_unique").on(table.station_id, table.position),
-  ]
+    uniqueIndex("station_posts_station_id_position_unique").on(
+      table.station_id,
+      table.position,
+    ),
+  ],
 );
 
+// %%%%% END - Station config & posts %%%%%
+
+// %%%%% Vehicle formats %%%%%
+
 /**
- * Per-station vehicle format and price (e.g. Petit, Moyen, SUV).
+ * Global vehicle formats shared by all stations (e.g. Berline, SUV, Utilitaire).
+ * Not station-scoped — managed by admin.
  */
-export const vehicleFormats = pgTable("vehicle_formats", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  station_id: uuid("station_id")
-    .notNull()
-    .references(() => stations.id, { onDelete: "cascade" }),
-  label: varchar("label", { length: 100 }).notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  is_active: boolean("is_active").notNull(),
-  created_at: timestamp("created_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-  updated_at: timestamp("updated_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-});
+export const vehicleFormats = pgTable(
+  "vehicle_formats",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    label: varchar("label", { length: 100 }).notNull(),
+    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    is_active: boolean("is_active").notNull(),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  () => [],
+);
+
+// %%%%% END - Vehicle formats %%%%%
+
+// %%%%% Station documents %%%%%
 
 /**
  * Documents submitted during station onboarding (step 3).
  * One row per document; terms_accepted records the legal confirmation checkbox.
  * storage: 'cloudinary' (default) or 'local'; local files are synced to Cloudinary by cron.
  */
-export const stationDocuments = pgTable("station_documents", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  station_id: uuid("station_id")
-    .notNull()
-    .references(() => stations.id, { onDelete: "cascade" }),
-  document_type: varchar("document_type", { length: 50 }).notNull(),
-  file_url: text("file_url").notNull(),
-  storage: varchar("storage", { length: 20 }).notNull().default("cloudinary"),
-  terms_accepted: boolean("terms_accepted").notNull().default(false),
-  created_at: timestamp("created_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-});
+export const stationDocuments = pgTable(
+  "station_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    document_type: varchar("document_type", { length: 50 }).notNull(),
+    file_url: text("file_url").notNull(),
+    storage: varchar("storage", { length: 20 }).notNull().default("cloudinary"),
+    terms_accepted: boolean("terms_accepted").notNull().default(false),
+    /** Date when the document expires. Set during station approval. Null = no expiry tracked. */
+    expiry_date: date("expiry_date", { mode: "date" }),
+    /** Timestamp when the first expiry reminder was sent (anti-duplicate flag). */
+    reminder_first_sent_at: timestamp("reminder_first_sent_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    /** Timestamp when the second expiry reminder was sent (anti-duplicate flag). */
+    reminder_second_sent_at: timestamp("reminder_second_sent_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("station_documents_expiry_date_idx").on(table.expiry_date),
+    index("station_documents_station_id_idx").on(table.station_id),
+  ],
+);
+
+// %%%%% END - Station documents %%%%%
+
+// %%%%% Pending uploads %%%%%
 
 /**
  * Rows to process by sync-pending-uploads job: local files to upload to Cloudinary.
@@ -237,5 +300,49 @@ export const pendingUploads = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("pending_uploads_created_at_idx").on(table.created_at)]
+  (table) => [index("pending_uploads_created_at_idx").on(table.created_at)],
 );
+
+// %%%%% END - Pending uploads %%%%%
+
+// %%%%% Station photos %%%%%
+
+/**
+ * Dedicated table for station photo URLs.
+ * Replaces the previous approach of storing photos in station_documents
+ * with document_type = 'photo'. position is 0-based; ordered ascending.
+ */
+export const stationPhotos = pgTable(
+  "station_photos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    position: integer("position").notNull().default(0),
+    created_at: timestamp("created_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("station_photos_station_id_idx").on(table.station_id)],
+);
+
+// %%%%% END - Station photos %%%%%
+
+// %%%%% Materialized views %%%%%
+
+/**
+ * Precomputed station statistics: available_slots, completed_count, average_rating, total_ratings.
+ * Populated by migration 0035. Refreshed concurrently after reservation completions and rating changes.
+ * Use .existing() because Drizzle does not manage this view; the SQL migration owns it.
+ */
+export const stationStats = pgMaterializedView("station_stats", {
+  station_id: uuid("station_id").notNull(),
+  available_slots: bigint("available_slots", { mode: "number" }).notNull(),
+  completed_count: bigint("completed_count", { mode: "number" }).notNull(),
+  average_rating: numeric("average_rating").notNull(),
+  total_ratings: bigint("total_ratings", { mode: "number" }).notNull(),
+}).existing();
+
+// %%%%% END - Materialized views %%%%%

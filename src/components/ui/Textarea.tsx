@@ -22,7 +22,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="text-[13px] font-medium text-[#555] dark:text-lavo-muted"
+            className="text-[13px] font-medium text-foreground/70 dark:text-Hurryline-muted"
           >
             {label}
           </label>
@@ -31,12 +31,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={[
-            'w-full rounded-[10px] border bg-white dark:bg-dark-card text-[#1A1A1A] dark:text-white',
-            'px-3 py-2.5 text-[15px] placeholder:text-lavo-muted resize-y min-h-[100px]',
+            'w-full rounded-[10px] border bg-white dark:bg-surface text-[#001201] dark:text-white',
+            'px-3 py-2.5 text-[15px] placeholder:text-Hurryline-muted resize-y min-h-[100px]',
             'outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-colors',
             error
-              ? 'border-lavo-error focus:ring-lavo-error/30'
-              : 'border-[#CCCCCC] dark:border-tab-inactive',
+              ? 'border-Hurryline-error focus:ring-Hurryline-error/30'
+              : 'border-[#CCCCCC] dark:border-border',
             className,
           ]
             .filter(Boolean)
@@ -44,7 +44,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p className="text-[12px] text-lavo-error font-medium">{error}</p>
+          <p className="text-[12px] text-Hurryline-error font-medium">{error}</p>
         )}
       </div>
     );

@@ -23,12 +23,15 @@ import {
   capturePaymentIntent,
   refundPaymentIntent,
   distributePenalty,
+  classifyStripeError,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import {
   listActiveQueueEntries,
   updateEntry,
   cancelQueueEntryForNoShowIfEligible,
+  setStripeTransferIdIfMissing,
   type Entry,
 } from './entry-repository';
 
@@ -42,13 +45,20 @@ export type MarkNoShowsResult = {
 // runWithConcurrencyLimit enforces an internal ceiling of 10; keep this value <= 10.
 const NO_SHOW_CONCURRENCY = 8;
 
+/** Max entries scanned per cron invocation — protects memory and Stripe API quotas. */
+const NO_SHOW_BATCH_LIMIT = 500;
+
 /**
- * Detects all active queue entries whose station has closed for the entry's effective date,
+ * Detects active queue entries whose station has closed for the entry's effective date,
  * applies cancellation fees, and cancels them.
+ *
+ * Bounded scan: processes at most NO_SHOW_BATCH_LIMIT entries per invocation. Run the cron
+ * more frequently if your platform regularly accumulates more no-shows per closing wave —
+ * the operation is idempotent (cancelQueueEntryForNoShowIfEligible is conditional).
  */
 export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   const [entries, policy] = await Promise.all([
-    listActiveQueueEntries(),
+    listActiveQueueEntries(NO_SHOW_BATCH_LIMIT),
     getCancellationPolicy(),
   ]);
 
@@ -91,7 +101,7 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
     // Guarded cancel: only proceed if the row is still in an active status. If a previous
     // cron run (or a concurrent overlap) has already cancelled this entry, the conditional
     // update returns undefined and we skip the Stripe side entirely. Prevents double-capture,
-    // double-refund, and double-penalty-reversal — all of which are real financial risks.
+    // double-refund, and double-penalty-reversal - all of which are real financial risks.
     const cancelled = await cancelQueueEntryForNoShowIfEligible(
       entry.id,
       penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null
@@ -106,18 +116,47 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
     // idempotent on a PaymentIntent (subsequent captures return the same charge), so no key is
     // required there.
     if (entry.stripe_payment_id) {
-      let captured = false;
+      let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
       try {
-        await capturePaymentIntent(entry.stripe_payment_id);
-        captured = true;
+        captureResult = await capturePaymentIntent(entry.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[NO_SHOW_CAPTURE_FAILED]', {
           entryId: entry.id,
           stripe_payment_id: entry.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
-      if (captured && refundedAmount > 0) {
+
+      const charged = captureResult?.charged ?? false;
+      const chargeId = captureResult?.chargeId ?? null;
+      const transferId = captureResult?.transferId ?? null;
+
+      if (charged && chargeId) {
+        try {
+          await updateEntry(entry.id, { stripe_charge_id: chargeId });
+        } catch (e) {
+          console.error('[NO_SHOW_STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+            entryId: entry.id,
+            chargeId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+      if (charged && transferId) {
+        // Persist stripe_transfer_id so a later admin refund correctly reverses the
+        // station's transfer instead of taking the loss from the platform balance.
+        await setStripeTransferIdIfMissing(entry.id, transferId).catch((e) => {
+          console.error('[NO_SHOW_TRANSFER_ID_PERSIST_FAILED]', {
+            entryId: entry.id,
+            transferId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        });
+      }
+      if (charged && refundedAmount > 0) {
         try {
           const refundId = await refundPaymentIntent(
             entry.stripe_payment_id,
@@ -132,16 +171,21 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
           });
         }
       }
-      if (captured && penaltyAmount > 0) {
+      if (charged && penaltyAmount > 0) {
         try {
           await distributePenalty(
             entry.stripe_payment_id,
             Math.round(penaltyAmount * 100),
-            policy.stationPenaltyShare
+            policy.stationPenaltyShare,
+            `no-show-penalty:${entry.id}`,
+            chargeId ?? undefined,
+            transferId ?? undefined,
           );
         } catch (e) {
           console.error('[NO_SHOW_PENALTY_DIST_FAILED]', {
             entryId: entry.id,
+            stripe_payment_id: entry.stripe_payment_id,
+            penalty_amount_cents: Math.round(penaltyAmount * 100),
             error: e instanceof Error ? e.message : String(e),
           });
         }
@@ -158,6 +202,13 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
         stationId: entry.station_id,
         type: 'queue_no_show',
         payload: { penaltyAmount, refundedAmount },
+      });
+      await notifyClientFeed({
+        userId: entry.user_id,
+        entryId: entry.id,
+        stationId: entry.station_id,
+        kind: 'queue_no_show',
+        body: 'Votre réservation a été annulée car la station a fermé pour la journée.',
       });
     } catch (e) {
       console.error('[NO_SHOW_NOTIFY_FAILED]', {

@@ -1,7 +1,9 @@
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
+import { BCRYPT_ROUNDS } from '@/helpers/server-constants';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
+import { getCachedOrFetch } from '@/lib/redis-cache';
 import {
   adminLogs,
   pendingUploads,
@@ -20,6 +22,7 @@ import {
 } from '@/lib/email';
 import { APP_URL } from '@/helpers/constants';
 import { buildStationQrPublicUrl } from '@/server/qr/qr-token-service';
+import { notifyAdminEvent } from '@/server/notifications/admin-notification-service';
 import {
   createStripeConnectAccount,
   createStripeOnboardingLink,
@@ -39,18 +42,28 @@ import {
   listActiveStationsGroup,
   listStationsByStatus,
   listAllStationsForAdmin,
+  listManagedStationsForAdmin,
+  updateStationInfo,
   type ListActiveStationsFilters,
   type Station,
   type StationWithAvailableSlots,
 } from './station-repository';
-import { findDocumentsByStationId } from './document-repository';
+import {
+  findDocumentsByStationId,
+  findPhotosByStationId,
+  replaceStationPhotos,
+  type StationPhoto,
+} from './document-repository';
+import { findAllFormats } from './format-repository';
+import { findPublicServicesForStation } from './service-repository';
+import { getStationHours } from './station-hours-service';
 
 export type StationOnboardingDto = {
-  // Step 1 — account credentials
+  // Step 1 - account credentials
   email: string;
   phone: string;
   password: string;
-  // Step 2 — station details
+  // Step 2 - station details
   station_name: string;
   legal_name?: string;
   registration_number?: string;
@@ -64,7 +77,7 @@ export type StationOnboardingDto = {
   description?: string;
   /** Type de prestation: optional; persisted as nullable on stations. */
   service_scope?: 'exterior' | 'interior' | 'both';
-  // Step 3 — documents + legal (storage from onboarding upload; default cloudinary)
+  // Step 3 - documents + legal (storage from onboarding upload; default cloudinary)
   documents: { document_type: string; file_url: string; storage?: 'cloudinary' | 'local' }[];
   terms_accepted: true;
 };
@@ -76,6 +89,7 @@ export type StationOnboardingResult = {
 
 export type StationWithDocuments = Station & {
   documents: Awaited<ReturnType<typeof findDocumentsByStationId>>;
+  photos: Awaited<ReturnType<typeof findPhotosByStationId>>;
 };
 
 /**
@@ -89,7 +103,7 @@ export async function completeStationOnboarding(
   const existing = await findByEmail(dto.email);
   if (existing) throw new ConflictError('Email already in use');
 
-  const password_hash = await bcrypt.hash(dto.password, 12);
+  const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
   const verificationToken = randomUUID();
 
   const uniqueWashTypeIds = [...new Set(dto.wash_type_ids)];
@@ -180,6 +194,10 @@ export async function completeStationOnboarding(
   sendVerificationEmail(user.email, dto.station_name ?? '', verificationToken, locale).catch(() => void 0);
 
   sendStationApplicationAdminNotification(station.name, station.id).catch(() => void 0);
+  notifyAdminEvent({
+    type: 'station_application_submitted',
+    stationId: station.id,
+  }).catch(() => void 0);
 
   return { user, station };
 }
@@ -214,30 +232,93 @@ export async function getPendingStations(page = 1, perPage = 20): Promise<Pendin
   };
 }
 
-export async function getStationsForAdmin(status?: string): Promise<Station[]> {
-  return listAllStationsForAdmin(status);
+export type StationsAdminResult = {
+  stations: Station[];
+  meta: { total: number; page: number; per_page: number; total_pages: number };
+};
+
+export async function getStationsForAdmin(
+  status?: string,
+  page = 1,
+  perPage = 50,
+): Promise<StationsAdminResult> {
+  const safePer = Math.min(100, Math.max(1, perPage));
+  const { rows, total } = await listAllStationsForAdmin(status, page, safePer);
+
+  const formatted = rows.map((r) => ({
+    ...r,
+    promo_commission_rate: r.promo_commission_rate == null ? null : String(r.promo_commission_rate),
+    latitude:     r.latitude     == null ? null : String(r.latitude),
+    longitude:    r.longitude    == null ? null : String(r.longitude),
+    average_score: r.average_score == null ? null : String(r.average_score),
+  } as Station));
+
+  return {
+    stations: formatted,
+    meta: { total, page, per_page: safePer, total_pages: Math.max(1, Math.ceil(total / safePer)) },
+  };
+}
+
+export type ManagedStationsResult = {
+  stations: Station[];
+  meta: {
+    total: number; page: number; per_page: number; total_pages: number;
+    total_active: number; total_suspended: number;
+  };
+};
+
+/** Returns active + suspended stations with pagination and per-status counts. */
+export async function getManagedStationsForAdmin(
+  page = 1,
+  perPage = 50,
+): Promise<ManagedStationsResult> {
+  const safePer = Math.min(100, Math.max(1, perPage));
+  const { rows, total, total_active, total_suspended } =
+    await listManagedStationsForAdmin(page, safePer);
+
+  const formatted = rows.map((r) => ({
+    ...r,
+    promo_commission_rate: r.promo_commission_rate == null ? null : String(r.promo_commission_rate),
+    latitude:      r.latitude      == null ? null : String(r.latitude),
+    longitude:     r.longitude     == null ? null : String(r.longitude),
+    average_score: r.average_score == null ? null : String(r.average_score),
+  } as Station));
+
+  return {
+    stations: formatted,
+    meta: {
+      total, page, per_page: safePer,
+      total_pages: Math.max(1, Math.ceil(total / safePer)),
+      total_active,
+      total_suspended,
+    },
+  };
 }
 
 export async function getStationById(id: string): Promise<StationWithDocuments> {
   const station = await findStationById(id);
   if (!station) throw new NotFoundError('Station not found');
 
-  const documents = await findDocumentsByStationId(id);
-  return { ...station, documents };
+  const [documents, photos] = await Promise.all([
+    findDocumentsByStationId(id),
+    findPhotosByStationId(id),
+  ]);
+  return { ...station, documents, photos };
 }
 
 export async function approveStation(
   adminId: string,
   stationId: string,
-  locale: 'fr' | 'en' = 'fr'
+  locale: 'fr' | 'en' = 'fr',
+  documentExpiryDates?: Array<{ document_id: string; expiry_date: Date }>
 ): Promise<void> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  // H-2: Fail hard — a station without an owner cannot be activated or receive payments.
+  // H-2: Fail hard - a station without an owner cannot be activated or receive payments.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    throw new NotFoundError('Station owner not found — cannot approve an orphaned station');
+    throw new NotFoundError('Station owner not found - cannot approve an orphaned station');
   }
 
   // M-1: Create Stripe account BEFORE activating so the station stays pending if Stripe fails.
@@ -245,7 +326,7 @@ export async function approveStation(
   const stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
-  // The WHERE on status ensures only one concurrent approve wins — the other gets 0 rows → 409.
+  // The WHERE on status ensures only one concurrent approve wins - the other gets 0 rows → 409.
   await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(stations)
@@ -271,6 +352,25 @@ export async function approveStation(
       target_id: stationId,
       details: { stripe_account_id: accountId, stripe_connected: true },
     });
+
+    // Persist document expiry dates if provided - rows are independent, run in parallel.
+    if (documentExpiryDates?.length) {
+      const ownedIds = await tx
+        .select({ id: stationDocuments.id })
+        .from(stationDocuments)
+        .where(eq(stationDocuments.station_id, stationId));
+      const ownedSet = new Set(ownedIds.map((r) => r.id));
+      await Promise.all(
+        documentExpiryDates
+          .filter(({ document_id }) => ownedSet.has(document_id))
+          .map(({ document_id, expiry_date }) =>
+            tx
+              .update(stationDocuments)
+              .set({ expiry_date })
+              .where(eq(stationDocuments.id, document_id))
+          )
+      );
+    }
   });
 
   let qrPublicUrl: string | undefined;
@@ -280,12 +380,16 @@ export async function approveStation(
     console.error('[STATION_APPROVAL_QR_URL_GENERATION_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) });
   }
 
-  // M-4: stationUser already fetched (H-2) — no need for fire-and-forget user lookup.
+  // M-4: stationUser already fetched (H-2) - no need for fire-and-forget user lookup.
   sendStationApprovalEmail(stationUser.email, station.name, locale, { qrPublicUrl })
     .catch((e) => console.error('[APPROVE_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 
   sendStationApplicationAdminNotification(station.name, station.id, { context: 'approval', qrPublicUrl })
     .catch(() => void 0);
+  notifyAdminEvent({
+    type: 'station_application_approved',
+    stationId: station.id,
+  }).catch(() => void 0);
 }
 
 export async function rejectStation(
@@ -296,10 +400,10 @@ export async function rejectStation(
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
-  // H-2: Fail hard — an orphaned station should not be silently rejected without notifying anyone.
+  // H-2: Fail hard - an orphaned station should not be silently rejected without notifying anyone.
   const stationUser = station.user_id ? await findById(station.user_id) : null;
   if (!stationUser) {
-    throw new NotFoundError('Station owner not found — cannot reject an orphaned station');
+    throw new NotFoundError('Station owner not found - cannot reject an orphaned station');
   }
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
@@ -328,7 +432,7 @@ export async function rejectStation(
     });
   });
 
-  // M-4: Fire-and-forget email — log failures instead of silently swallowing them.
+  // M-4: Fire-and-forget email - log failures instead of silently swallowing them.
   sendStationRejectionEmail(stationUser.email, station.name, reason)
     .catch((e) => console.error('[REJECT_EMAIL_FAILED]', { stationId, error: e instanceof Error ? e.message : String(e) }));
 }
@@ -337,20 +441,30 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
-  const documents = await findDocumentsByStationId(station.id);
-  return { ...station, documents };
+  const [documents, photos] = await Promise.all([
+    findDocumentsByStationId(station.id),
+    findPhotosByStationId(station.id),
+  ]);
+  return { ...station, documents, photos };
 }
 
 // ─── Public API (Card 1) ────────────────────────────────────────────────────
 
 /**
- * List item for GET /api/v1/stations. Station row plus available (derived from slots),
- * available_slots, and optional completed_count for display.
+ * List item for GET /api/v1/stations. Station row plus derived availability fields,
+ * enriched with price_from, image_url, verified, queue_count, and opening_hours.
  */
-export type StationListPublicItem = Omit<StationWithAvailableSlots, 'available_slots' | 'completed_count'> & {
+export type StationListPublicItem = Omit<
+  StationWithAvailableSlots,
+  'available_slots' | 'completed_count' | 'live_queue_count' | 'opening_time' | 'closing_time'
+> & {
   available_slots: number;
   available: boolean;
+  verified: boolean;
+  queue_count: number;
+  opening_hours: { open: string; close: string } | null;
   completed_count?: number;
+  min_duration: number | null;
 };
 
 export type ListStationsPublicMeta = {
@@ -373,62 +487,188 @@ export type ListStationsPublicResult = {
 };
 
 /**
- * Maps repository row to public list item (available_slots and completed_count as numbers).
+ * Maps repository row to public list item.
+ * Converts numeric strings, computes verified and opening_hours, renames live_queue_count to queue_count.
  */
 function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem {
   const available_slots = Math.max(0, Number(row.available_slots ?? 0));
   const available = available_slots > 0;
   const completed_count = row.completed_count != null ? Number(row.completed_count) : undefined;
-  const { available_slots: _s, completed_count: _c, ...rest } = row;
-  return { ...rest, available_slots, available, ...(completed_count !== undefined && { completed_count }) };
+  const verified = row.approved_at !== null && row.status === 'active';
+  const opening_hours =
+    row.opening_time && row.closing_time
+      ? { open: row.opening_time, close: row.closing_time }
+      : null;
+  const {
+    available_slots: _s,
+    completed_count: _c,
+    live_queue_count: _q,
+    opening_time: _ot,
+    closing_time: _ct,
+    ...rest
+  } = row;
+  return {
+    ...rest,
+    available_slots,
+    available,
+    verified,
+    queue_count: row.live_queue_count,
+    opening_hours,
+    min_duration: row.min_duration,
+    ...(completed_count !== undefined && { completed_count }),
+  };
 }
+
+// %%%%% Station owner - profile update %%%%%
+
+export async function updateMyStation(
+  userId: string,
+  data: {
+    name?: string;
+    description?: string | null;
+    address?: string;
+    city?: string;
+    postal_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    service_scope?: 'exterior' | 'interior' | 'both' | null;
+    wash_types?: string[];
+  }
+): Promise<Station> {
+  const station = await findStationByUserId(userId);
+  if (!station) throw new NotFoundError('No station associated with this account');
+
+  const payload: Parameters<typeof updateStationInfo>[1] = {
+    ...(data.name !== undefined && { name: data.name }),
+    ...(data.description !== undefined && { description: data.description }),
+    ...(data.address !== undefined && { address: data.address }),
+    ...(data.city !== undefined && { city: data.city }),
+    ...(data.postal_code !== undefined && { postal_code: data.postal_code }),
+    ...(data.latitude !== undefined && { latitude: data.latitude != null ? String(data.latitude) : null }),
+    ...(data.longitude !== undefined && { longitude: data.longitude != null ? String(data.longitude) : null }),
+    ...(data.service_scope !== undefined && { service_scope: data.service_scope }),
+  };
+
+  let uniqueWashTypeIds: string[] | undefined;
+  if (data.wash_types !== undefined) {
+    uniqueWashTypeIds = [...new Set(data.wash_types)];
+    if (uniqueWashTypeIds.length > 0) {
+      const validRows = await db
+        .select({ id: washTypes.id })
+        .from(washTypes)
+        .where(and(inArray(washTypes.id, uniqueWashTypeIds), eq(washTypes.is_active, true)));
+      if (validRows.length !== uniqueWashTypeIds.length) {
+        throw new ValidationError('Invalid or inactive wash type id(s)');
+      }
+    }
+  }
+
+  const updated = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(stations)
+      .set({ ...payload, updated_at: new Date() })
+      .where(eq(stations.id, station.id))
+      .returning();
+    if (!row) throw new NotFoundError('No station associated with this account');
+
+    if (uniqueWashTypeIds !== undefined) {
+      await tx.delete(stationWashTypes).where(eq(stationWashTypes.station_id, station.id));
+      if (uniqueWashTypeIds.length > 0) {
+        await tx.insert(stationWashTypes).values(
+          uniqueWashTypeIds.map((wash_type_id) => ({ station_id: station.id, wash_type_id }))
+        );
+      }
+    }
+
+    return row;
+  });
+
+  return updated;
+}
+
+export async function updateMyStationPhotos(
+  userId: string,
+  photos: { url: string; position: number }[]
+): Promise<StationPhoto[]> {
+  const station = await findStationByUserId(userId);
+  if (!station) throw new NotFoundError('Station not found for this user');
+  return replaceStationPhotos(station.id, photos);
+}
+
+// %%%%% END - Station owner - profile update %%%%%
+
+/** Cache TTL in seconds for public station listing (Redis layer). */
+const STATIONS_LIST_TTL = 30;
+
+/** In-process TTL for the station listing - avoids a Redis GET on every request. */
+const STATIONS_LIST_INPROCESS_TTL_MS = 10_000;
+const _stationsListCache = new Map<string, { value: ListStationsPublicResult; expiresAt: number }>();
 
 /**
  * Returns paginated list of active stations and optional group arrays (available_now, most_appreciated, most_visited).
  * Response shape: { data: { all, ...groups }, meta: { total, page, per_page, total_pages } }.
  * Backward compatible: when no groups param, only data.all and meta are set.
+ * Three-layer cache: in-process (10s) → Redis (30s) → DB.
  */
 export async function listStationsPublic(
   filters: ListActiveStationsFilters
 ): Promise<ListStationsPublicResult> {
-  const page = Math.max(1, filters.page ?? 1);
-  const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
-  const { rows, total } = await listActiveStations({ ...filters, page, per_page });
-  const total_pages = Math.max(1, Math.ceil(total / per_page));
+  const cacheKey = `stations:list:${JSON.stringify(filters, Object.keys(filters).sort())}`;
 
-  const data: ListStationsPublicData = {
-    all: rows.map(toListPublicItem),
-  };
+  const inProcess = _stationsListCache.get(cacheKey);
+  if (inProcess && Date.now() < inProcess.expiresAt) return inProcess.value;
 
-  const groups = filters.groups;
-  const limitPerGroup = filters.limit_per_group ?? 50;
-  if (groups?.length) {
-    const groupPromises = groups.map((group) =>
-      listActiveStationsGroup(group, filters, limitPerGroup).then((r) => r.map(toListPublicItem))
-    );
-    const results = await Promise.all(groupPromises);
-    groups.forEach((g, i) => {
-      if (g === 'available_now') data.available_now = results[i];
-      else if (g === 'most_appreciated') data.most_appreciated = results[i];
-      else if (g === 'most_visited') data.most_visited = results[i];
-    });
-  }
+  const result = await getCachedOrFetch(cacheKey, STATIONS_LIST_TTL, async () => {
+    const page = Math.max(1, filters.page ?? 1);
+    const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
+    const hasActiveFilter = !!(filters.search?.trim() || filters.city || filters.format_id || filters.wash_type_ids?.length || filters.service_scope);
+    const open_today = !hasActiveFilter;
+    const { rows, total } = await listActiveStations({ ...filters, page, per_page, open_today });
+    const total_pages = Math.max(1, Math.ceil(total / per_page));
 
-  return {
-    data,
-    meta: { total, page, per_page, total_pages },
-  };
+    const data: ListStationsPublicData = {
+      all: rows.map(toListPublicItem),
+    };
+
+    const groups = filters.groups;
+    const limitPerGroup = filters.limit_per_group ?? 50;
+    if (groups?.length) {
+      const groupPromises = groups.map((group) =>
+        listActiveStationsGroup(group, { ...filters, open_today }, limitPerGroup).then((r) => r.map(toListPublicItem))
+      );
+      const results = await Promise.all(groupPromises);
+      groups.forEach((g, i) => {
+        if (g === 'available_now') data.available_now = results[i];
+        else if (g === 'most_appreciated') data.most_appreciated = results[i];
+        else if (g === 'most_visited') data.most_visited = results[i];
+      });
+    }
+
+    return {
+      data,
+      meta: { total, page, per_page, total_pages },
+    };
+  });
+
+  _stationsListCache.set(cacheKey, { value: result, expiresAt: Date.now() + STATIONS_LIST_INPROCESS_TTL_MS });
+  return result;
 }
 
 /**
- * Returns a single active station with config, vehicle formats, and time slots.
- * Includes available and available_slots computed from timeSlots (start_time > NOW()).
- * Includes completed_count (Services terminés) from reservations with completed_at IS NOT NULL.
+ * Returns a single active station with config, vehicle formats, time slots, photos, and wash types.
+ * Includes available, available_slots, completed_count, verified, photos[], and wash_types[].
  * Throws NotFoundError if station does not exist or is not active.
  */
 export async function getStationDetailPublic(id: string) {
-  const station = await findActiveStationWithDetail(id);
+  const [station, vehicleFormats, completed_count, stationServices, hourRows] = await Promise.all([
+    findActiveStationWithDetail(id),
+    findAllFormats(),
+    getCompletedCountForStation(id),
+    findPublicServicesForStation(id),
+    getStationHours(id),
+  ]);
   if (!station) throw new NotFoundError('Station not found');
+
   const now = new Date();
   const available_slots = (station.timeSlots ?? [])
     .filter((s: { start_time: Date }) => s.start_time > now)
@@ -437,10 +677,53 @@ export async function getStationDetailPublic(id: string) {
         sum + Math.max(0, (s.capacity ?? 0) - (s.booked_count ?? 0)),
       0
     );
-  // Unavailability derived only from slot availability; no API toggle for is_open (Figma gap).
   const available = available_slots > 0;
-  const completed_count = await getCompletedCountForStation(id);
-  return { ...station, available_slots, available, completed_count };
+  const verified = station.approved_at !== null && station.status === 'active';
+
+  const photos = (station.photos ?? []).map((p) => p.url);
+  const wash_types = (station.stationWashTypes ?? [])
+    .filter((swt) => swt.washType !== null)
+    .map((swt) => ({
+      id: swt.washType!.id,
+      code: swt.washType!.code,
+      label: swt.washType!.label,
+    }));
+
+  const station_config = station.stationConfig
+    ? {
+        opening_time: station.stationConfig.opening_time,
+        closing_time: station.stationConfig.closing_time,
+        wash_duration_minutes: station.stationConfig.wash_duration_minutes,
+        wash_post_count: station.stationConfig.wash_post_count,
+        reservation_surcharge: station.stationConfig.reservation_surcharge
+          ? parseFloat(String(station.stationConfig.reservation_surcharge))
+          : null,
+      }
+    : null;
+
+  const station_hours = hourRows.map((row) => ({
+    day_of_week: row.day_of_week,
+    is_open: row.is_open,
+    morning_start: row.morning_start,
+    morning_end: row.morning_end,
+    afternoon_start: row.afternoon_start,
+    afternoon_end: row.afternoon_end,
+  }));
+
+  const { photos: _p, stationWashTypes: _w, ...rest } = station;
+  return {
+    ...rest,
+    available_slots,
+    available,
+    completed_count,
+    verified,
+    photos,
+    wash_types,
+    vehicleFormats,
+    station_services: stationServices,
+    station_config,
+    station_hours,
+  };
 }
 
 /**
@@ -460,4 +743,3 @@ export async function getStationJoinPublic(id: string): Promise<{ mapsUrl: strin
   const mapsUrl = `https://www.google.com/maps?q=${q}`;
   return { mapsUrl };
 }
-

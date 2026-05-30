@@ -145,16 +145,16 @@ function ToggleCard({ selected, onClick, icon, label, sub, ariaPressed }: Toggle
         'flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-[1.5px] text-center transition-all duration-150 w-full',
         selected
           ? 'bg-gold/10 border-gold shadow-[0_2px_10px_rgba(175,132,8,0.12)]'
-          : 'bg-white dark:bg-dark-card border-[#CCCCCC] dark:border-tab-inactive hover:border-gold/50 dark:hover:border-gold/40',
+          : 'bg-white dark:bg-surface border-[#CCCCCC] dark:border-border hover:border-gold/50 dark:hover:border-gold/40',
       ].join(' ')}
     >
-      <span className={selected ? 'text-gold' : 'text-[#888] dark:text-lavo-muted'}>
+      <span className={selected ? 'text-gold' : 'text-foreground/55 dark:text-Hurryline-muted'}>
         {icon}
       </span>
       <span className={`text-[13px] font-semibold leading-tight ${selected ? 'text-dark-bg dark:text-white' : 'text-[#444] dark:text-white'}`}>
         {label}
       </span>
-      <span className={`text-[11px] leading-snug ${selected ? 'text-gold/70' : 'text-[#999] dark:text-lavo-muted'}`}>
+      <span className={`text-[11px] leading-snug ${selected ? 'text-gold/70' : 'text-[#999] dark:text-Hurryline-muted'}`}>
         {sub}
       </span>
     </button>
@@ -217,11 +217,6 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
     self_service: { icon: <SelfServiceIcon />, sub: t('wash_type_self_service_sub') },
   };
 
-  const SERVICE_SCOPES: { value: Step2Data['serviceScope']; label: string; sub: string; icon: ReactNode }[] = [
-    { value: 'exterior', label: t('service_scope_exterior'), sub: t('service_scope_exterior_sub'), icon: <ExteriorIcon /> },
-    { value: 'interior', label: t('service_scope_interior'), sub: t('service_scope_interior_sub'), icon: <InteriorIcon /> },
-    { value: 'both',     label: t('service_scope_both'),     sub: t('service_scope_both_sub'),     icon: <BothIcon /> },
-  ];
 
   const charCount = data.description.length;
 
@@ -310,7 +305,7 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
 
       {/* Wash types */}
       <div className="mb-5">
-        <p className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white mb-2.5">
+        <p className="text-[14px] font-semibold text-[#001201] dark:text-white mb-2.5">
           {t('wash_types')}
           <span className="text-gold ml-0.5">*</span>
         </p>
@@ -337,34 +332,11 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
           })}
         </div>
         {errors.washTypeIds && (
-          <p role="alert" className="mt-2 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+          <p role="alert" className="mt-2 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
             <span aria-hidden="true">!</span>
             {errors.washTypeIds}
           </p>
         )}
-      </div>
-
-      {/* Service scope */}
-      <div className="mb-1">
-        <p className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white mb-2.5">
-          {t('service_scope')}
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {SERVICE_SCOPES.map((s) => {
-            const selected = data.serviceScope === s.value;
-            return (
-              <ToggleCard
-                key={s.value}
-                selected={selected}
-                onClick={() => onChange({ ...data, serviceScope: selected ? '' : s.value })}
-                ariaPressed={selected}
-                icon={s.icon}
-                label={s.label}
-                sub={s.sub}
-              />
-            );
-          })}
-        </div>
       </div>
 
       {/* ── Description ── */}
@@ -373,7 +345,7 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
       <div className="mb-4">
         <label
           htmlFor="description"
-          className="block text-[14px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5"
+          className="block text-[14px] font-semibold text-[#001201] dark:text-white mb-1.5"
         >
           {t('description')}
         </label>
@@ -385,9 +357,9 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
             value={data.description}
             onChange={(e) => onChange({ ...data, description: e.target.value })}
             maxLength={1000}
-            className="w-full px-4 py-3 pb-7 bg-white dark:bg-dark-card border-[1.5px] border-[#CCCCCC] dark:border-tab-inactive rounded-lg text-[15px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)] transition-colors duration-150 resize-none"
+            className="w-full px-4 py-3 pb-7 bg-white dark:bg-surface border-[1.5px] border-[#CCCCCC] dark:border-border rounded-lg text-[15px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1] outline-none focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)] transition-colors duration-150 resize-none"
           />
-          <span className={`absolute bottom-2.5 right-3 text-[11px] tabular-nums ${charCount >= 900 ? 'text-lavo-error' : 'text-[#AAA] dark:text-lavo-muted'}`}>
+          <span className={`absolute bottom-2.5 right-3 text-[11px] tabular-nums ${charCount >= 900 ? 'text-Hurryline-error' : 'text-[#AAA] dark:text-Hurryline-muted'}`}>
             {charCount}/1000
           </span>
         </div>

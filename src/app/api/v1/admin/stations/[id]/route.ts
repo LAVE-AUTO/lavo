@@ -1,18 +1,54 @@
 import { requireRole } from '@/lib/require-role';
 import { getStationById } from '@/server/station/station-service';
-import { updateStation } from '@/server/admin/admin-management-service';
+import { updateStation, deleteStation } from '@/server/admin/admin-management-service';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, NotFoundError } from '@/lib/errors';
 import { adminStationIdParamSchema, mapZodErrors } from '@/validators/station';
-import { updateStationAdminSchema } from '@/validators/admin-user';
+import { updateStationAdminSchema, deleteEntitySchema } from '@/validators/admin-user';
 import { ApiCode } from '@/types/api-codes';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 
+
+// %%%%% Shared helpers %%%%%
+
+/**
+ * Resolves the dynamic [id] segment and validates it as a UUID.
+ * Returns the parsed id string on success, or a ready-to-return NextResponse on failure.
+ */
+async function parseStationId(
+  params: Promise<{ id: string }>
+): Promise<string | NextResponse> {
+  const { id } = await params;
+  const parsed = adminStationIdParamSchema.safeParse({ id });
+  if (!parsed.success) {
+    return applyNoStoreHeaders(
+      error400('Invalid station id', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error))
+    );
+  }
+  return parsed.data.id;
+}
+
+/**
+ * Wraps the standard service-error → HTTP response mapping used by all handlers
+ * in this route file.
+ */
+function handleServiceError(e: unknown): NextResponse {
+  if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+  if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+  return applyNoStoreHeaders(error500(e));
+}
+
+
+// %%%%% END - Shared helpers %%%%%
+
+
+// %%%%% Route handlers %%%%%
+
 /**
  * GET /api/v1/admin/stations/:id
- * Get full station details including submitted documents.
- * Requires admin role.
+ * Returns full station details including submitted documents.
+ * Stripe account id is stripped - not needed by the admin UI.
  *
  * Responses:
  *   200 { data: StationWithDocuments }
@@ -25,41 +61,37 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireRole(_request, 'admin');
+  const auth = await requireRole(undefined, 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
-  const { id } = await params;
-
-  const paramParsed = adminStationIdParamSchema.safeParse({ id });
-  if (!paramParsed.success) {
-    return applyNoStoreHeaders(
-      error400('Invalid station id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error))
-    );
-  }
+  const stationId = await parseStationId(params);
+  if (stationId instanceof Response) return stationId;
 
   try {
-    const station = await getStationById(paramParsed.data.id);
+    const raw = await getStationById(stationId);
+    // Strip Stripe account id - reduces blast radius if this endpoint is ever misconfigured.
+    // Rejection reason and approval metadata are intentionally retained for admin review.
+    const { stripe_account_id: _stripe, ...station } = raw;
     return applyNoStoreHeaders(successResponse(station));
   } catch (e) {
-    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
-    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    return handleServiceError(e);
   }
 }
+
 
 /**
  * PUT /api/v1/admin/stations/:id
  * Updates whitelisted fields on a station.
- * Logs the action in admin_logs with full before/after snapshot.
+ * Logs the action in admin_logs with a full before/after snapshot.
  *
  * Role: admin only.
  *
  * Responses:
  *   200 { data: AdminStation }
- *   400 VALIDATION_FAILED  — invalid UUID param or body
+ *   400 VALIDATION_FAILED  - invalid UUID param or body
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND          — station not found
+ *   404 NOT_FOUND          - station not found
  *   500 INTERNAL_ERROR
  */
 export async function PUT(
@@ -69,14 +101,8 @@ export async function PUT(
   const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
-  const { id } = await params;
-
-  const paramParsed = adminStationIdParamSchema.safeParse({ id });
-  if (!paramParsed.success) {
-    return applyNoStoreHeaders(
-      error400('Invalid station id', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error))
-    );
-  }
+  const stationId = await parseStationId(params);
+  if (stationId instanceof Response) return stationId;
 
   let body: unknown;
   try {
@@ -93,11 +119,61 @@ export async function PUT(
   }
 
   try {
-    const station = await updateStation(auth.sub, paramParsed.data.id, parsed.data);
+    // updateStation returns with stripe_account_id and rejection_reason already stripped.
+    const station = await updateStation(auth.sub, stationId, parsed.data);
     return applyNoStoreHeaders(successResponse(station, 'Station updated successfully'));
   } catch (e) {
-    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
-    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
-    return applyNoStoreHeaders(error500(e));
+    return handleServiceError(e);
   }
 }
+
+
+/**
+ * DELETE /api/v1/admin/stations/:id
+ * Soft-disables or permanently deletes a station.
+ *
+ * Query params:
+ *   permanent  true  → hard delete (irreversible)
+ *              false → soft delete (status → disabled)  [default]
+ *
+ * Role: admin only.
+ *
+ * Responses:
+ *   200 { data: { deleted: true } }                               hard delete
+ *   200 { data: AdminStation (stripe_account_id stripped) }       soft delete
+ *   400 VALIDATION_FAILED
+ *   401 UNAUTHORIZED
+ *   403 FORBIDDEN
+ *   404 NOT_FOUND
+ *   500 INTERNAL_ERROR
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireRole(request, 'admin');
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
+
+  const stationId = await parseStationId(params);
+  if (stationId instanceof Response) return stationId;
+
+  const { searchParams } = new URL(request.url);
+  const queryParsed = deleteEntitySchema.safeParse({
+    permanent: searchParams.get('permanent') ?? 'false',
+  });
+  if (!queryParsed.success) {
+    return applyNoStoreHeaders(
+      error400('Invalid query params', ApiCode.VALIDATION_FAILED, mapZodErrors(queryParsed.error))
+    );
+  }
+
+  try {
+    const result = await deleteStation(auth.sub, stationId, queryParsed.data.permanent);
+    return applyNoStoreHeaders(successResponse(result));
+  } catch (e) {
+    return handleServiceError(e);
+  }
+}
+
+
+// %%%%% END - Route handlers %%%%%

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from './StationBrandPanel';
 import { StationApplyForm } from './StationApplyForm';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
+import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 import { type WashTypeOption } from './StepCommerce';
@@ -24,7 +24,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left brand panel — desktop only */}
+      {/* Left brand panel - desktop only */}
       <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
         <StationBrandPanel step={currentStep} />
       </aside>
@@ -40,7 +40,7 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
 
           {/* Mobile top bar */}
           <div className="flex items-center justify-between mb-5 lg:hidden">
-            <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+            <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <LangToggle />
@@ -51,26 +51,25 @@ export function StationApplyShell({ washTypes }: StationApplyShellProps) {
             <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
               {t('heading')}
             </h1>
-            <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+            <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted">
               {t('subheading')}
             </p>
           </div>
 
           <AuthModeSwitcher mode="merchant" />
 
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 py-8 px-6 sm:px-8 animate-fade-in-up">
+          <div className="bg-white dark:bg-surface rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 py-8 px-6 sm:px-8 animate-fade-in-up">
+            <div className="-mt-2 mb-6">
+              <TabSwitcher
+                activeTab="register"
+                loginLabel={t('tab_login')}
+                registerLabel={t('tab_register')}
+                loginHref="/station/login"
+                registerHref="/station/apply"
+              />
+            </div>
             <StationApplyForm washTypes={washTypes} onStepChange={setCurrentStep} />
           </div>
-
-          <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
-            {t('already_member')}{' '}
-            <Link
-              href="/station/login"
-              className="text-gold font-semibold hover:underline"
-            >
-              {t('login_link')}
-            </Link>
-          </p>
         </div>
       </main>
     </div>

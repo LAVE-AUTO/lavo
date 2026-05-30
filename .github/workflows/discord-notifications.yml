@@ -17,7 +17,7 @@ jobs:
         if: github.event_name == 'push'
         uses: sarisia/actions-status-discord@v1
         with:
-          webhook: ${{ secrets.LAVO_WEBHOOK_URL }}
+          webhook: ${{ secrets.Hurryline_WEBHOOK_URL }}
           title: "NEXT.JS - Nouveau Push"
           description: |
             **Depot :** ${{ github.repository }}
@@ -35,7 +35,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: sarisia/actions-status-discord@v1
         with:
-          webhook: ${{ secrets.LAVO_WEBHOOK_URL }}
+          webhook: ${{ secrets.Hurryline_WEBHOOK_URL }}
           title: "NEXT.JS - Pull Request ${{ github.event.action }}"
           description: |
             **PR :** #${{ github.event.number }} - ${{ github.event.pull_request.title }}

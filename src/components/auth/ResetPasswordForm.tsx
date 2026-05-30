@@ -64,8 +64,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   if (!token) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-lavo-error/10 border border-lavo-error/20 flex items-center justify-center mx-auto mb-5">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8472A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <div className="w-16 h-16 rounded-full bg-Hurryline-error/10 border border-Hurryline-error/20 flex items-center justify-center mx-auto mb-5">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -89,13 +89,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   if (success) {
     return (
       <div className="px-8 pb-8 text-center animate-fade-in">
-        <div className="w-20 h-20 rounded-full bg-lavo-success/10 border border-lavo-success/20 flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20 flex items-center justify-center mx-auto mb-6">
           <SuccessIcon />
         </div>
         <h2 className="text-[22px] font-bold text-dark-bg dark:text-white mb-3">
           {t('success_title')}
         </h2>
-        <p className="text-[15px] text-[#555] dark:text-lavo-muted leading-relaxed mb-8">
+        <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted leading-relaxed mb-8">
           {t('success_message')}
         </p>
         <Link
@@ -165,7 +165,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       type="button"
       onClick={toggle}
       aria-label={label}
-      className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+      className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
     >
       <EyeIcon open={visible} />
     </button>

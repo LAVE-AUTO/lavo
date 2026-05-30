@@ -33,7 +33,7 @@ export function FormField({
     <div className="mb-4">
       <label
         htmlFor={inputId}
-        className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide"
+        className="block text-[15px] font-semibold text-[#001201] dark:text-white mb-1.5 tracking-wide"
       >
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
@@ -45,12 +45,12 @@ export function FormField({
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : undefined}
           className={[
-            'w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
-            'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+            'w-full px-4 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
+            'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
             'outline-none transition-all duration-150',
             error
-              ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
-              : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+              ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+              : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
             rightIcon ? 'pr-11' : '',
             className ?? '',
           ]
@@ -59,14 +59,14 @@ export function FormField({
           {...inputProps}
         />
         {rightIcon && (
-          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888]">
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-foreground/55">
             {rightIcon}
           </span>
         )}
       </div>
 
       {error && (
-        <p id={errorId} role="alert" className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+        <p id={errorId} role="alert" className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {error}
         </p>

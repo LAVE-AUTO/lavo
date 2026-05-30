@@ -22,7 +22,7 @@ export function successResponse<T>(
  * @param message - User-facing error message
  * @param status - HTTP status code
  * @param options - Optional code (ApiCode) and field-level errors
- * @param devError - Internal error details (only in development, not part of contract)
+ * @param devError - Optional internal error for server-side logging only (never serialized in the response).
  */
 export function errorResponse(
   message: string,
@@ -30,14 +30,22 @@ export function errorResponse(
   options: { code?: ApiCode; errors?: ApiErrorBody['errors'] } = {},
   devError: unknown = null
 ): NextResponse {
-  const body: ApiErrorBody & Record<string, unknown> = {
+  const body: ApiErrorBody = {
     message,
     ...(options.code && { code: options.code }),
     ...(options.errors && options.errors.length > 0 && { errors: options.errors }),
   };
-  if (process.env.NODE_ENV === 'development' && devError) {
-    body._dev =
-      devError instanceof Error ? devError.message : String(devError);
+  if (devError) {
+    // Server-side log only. Never include internal error details in the response payload —
+    // status code + message + ApiCode are the public contract per dev_prompt.md.
+    console.error('[errorResponse]', {
+      status,
+      code: options.code,
+      message,
+      error: devError instanceof Error
+        ? { name: devError.name, message: devError.message, stack: devError.stack }
+        : devError,
+    });
   }
   return NextResponse.json(body, { status });
 }
@@ -48,6 +56,7 @@ function defaultCodeForStatus(status: number): ApiCode | undefined {
   if (status === HTTP_STATUS.FORBIDDEN) return ApiCode.FORBIDDEN;
   if (status === HTTP_STATUS.NOT_FOUND) return ApiCode.NOT_FOUND;
   if (status === HTTP_STATUS.CONFLICT) return ApiCode.CONFLICT;
+  if (status === HTTP_STATUS.TOO_MANY_REQUESTS) return ApiCode.TOO_MANY_REQUESTS;
   if (status === HTTP_STATUS.NOT_IMPLEMENTED) return ApiCode.NOT_IMPLEMENTED;
   if (status >= 500) return ApiCode.INTERNAL_ERROR;
   return undefined;
@@ -121,7 +130,8 @@ export const error413 = (message = 'File too large') =>
 
 /**
  * Standard 500 Internal Server Error response.
- * Always uses `INTERNAL_ERROR` code and can include a dev-only `_dev` field when a dev error is passed.
+ * Logs the underlying error server-side (via errorResponse) so production issues are diagnosable;
+ * the response body itself never carries internal error details.
  */
 export const error500 = (devError?: unknown) =>
   errorResponse(
@@ -146,4 +156,30 @@ export const error429 = () =>
  */
 export function notImplementedResponse(message: string): NextResponse {
   return errorResponse(message, 501, { code: ApiCode.NOT_IMPLEMENTED });
+}
+
+export function handleError(error: unknown): NextResponse {
+  if (error instanceof AppError) return fromAppError(error);
+
+  if (isZodError(error)) {
+    return error400(
+      'Validation failed',
+      ApiCode.VALIDATION_FAILED,
+      error.errors.map((e) => ({ field: e.path.join('.'), message: e.message }))
+    );
+  }
+
+  // error500 logs via errorResponse so unhandled errors are visible in prod log streams.
+  return error500(error);
+}
+
+function isZodError(
+  error: unknown
+): error is { errors: Array<{ path: (string | number)[]; message: string }> } {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'name' in error &&
+    (error as { name: unknown }).name === 'ZodError'
+  );
 }

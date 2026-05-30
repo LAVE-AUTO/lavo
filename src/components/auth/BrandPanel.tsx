@@ -62,130 +62,6 @@ const FEATURE_KEYS = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Car illustration                                                     */
-/* ------------------------------------------------------------------ */
-
-function CarIllustration({ isDark }: { isDark: boolean }) {
-  const bodyFill = isDark ? '#1A2518' : '#1E2D1E';
-  const bodyStroke = '#C49A1E';
-  const glassFill = isDark ? '#2A3A28' : '#3A4E36';
-  const glassReflect = isDark ? '#3C5038' : '#4D6448';
-  const wheelOuter = isDark ? '#151D13' : '#1A2518';
-  const chromeFill = '#C49A1E';
-
-  return (
-    <svg viewBox="0 0 320 170" fill="none" className="w-full max-w-[300px] animate-float" aria-hidden="true">
-      <defs>
-        <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={isDark ? '#2A3A28' : '#2C3828'} />
-          <stop offset="100%" stopColor={bodyFill} />
-        </linearGradient>
-        <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={glassReflect} />
-          <stop offset="60%" stopColor={glassFill} />
-        </linearGradient>
-        <linearGradient id="chromeGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#A07818" />
-          <stop offset="50%" stopColor="#D4AA2E" />
-          <stop offset="100%" stopColor="#A07818" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-
-      {/* Ground shadow */}
-      <ellipse cx="160" cy="152" rx="130" ry="10" fill={isDark ? '#0A120A' : '#151D13'} opacity="0.35" />
-
-      {/* Main body — sleek sedan profile */}
-      <path
-        d="M32 112 C32 112 40 78 50 70 L72 58 Q80 54 90 54 L230 54 Q240 54 248 58 L270 70 C280 78 288 112 288 112 L288 118 Q288 122 284 122 L36 122 Q32 122 32 118 Z"
-        fill="url(#bodyGrad)" stroke={bodyStroke} strokeWidth="1.8"
-      />
-
-      {/* Roof/cabin glass — curved greenhouse */}
-      <path
-        d="M88 54 L108 24 Q114 16 126 16 L194 16 Q206 16 212 24 L232 54"
-        fill="url(#glassGrad)" stroke={bodyStroke} strokeWidth="1.5"
-      />
-
-      {/* Glass reflection highlight */}
-      <path
-        d="M108 50 L120 24 Q124 19 132 19 L170 19 Q178 19 182 24 L194 50"
-        fill="white" opacity="0.06"
-      />
-
-      {/* Window divider (B-pillar) */}
-      <line x1="160" y1="54" x2="160" y2="18" stroke={bodyStroke} strokeWidth="1.2" opacity="0.4" />
-
-      {/* Chrome accent line along body */}
-      <path
-        d="M48 90 Q50 86 58 84 L262 84 Q270 86 272 90"
-        fill="none" stroke="url(#chromeGrad)" strokeWidth="1.5" opacity="0.7"
-      />
-
-      {/* Front headlight */}
-      <ellipse cx="46" cy="100" rx="8" ry="6" fill={chromeFill} opacity="0.5" filter="url(#glow)" />
-      <ellipse cx="46" cy="100" rx="4" ry="3" fill={chromeFill} opacity="0.9" />
-
-      {/* Rear taillight */}
-      <ellipse cx="278" cy="100" rx="6" ry="5" fill="#C44040" opacity="0.5" filter="url(#glow)" />
-      <ellipse cx="278" cy="100" rx="3" ry="2.5" fill="#E05050" opacity="0.8" />
-
-      {/* Front wheel */}
-      <circle cx="90" cy="122" r="24" fill={wheelOuter} stroke={bodyStroke} strokeWidth="2" />
-      <circle cx="90" cy="122" r="16" fill={isDark ? '#1E2A1A' : '#222E20'} stroke={bodyStroke} strokeWidth="1" opacity="0.6" />
-      <circle cx="90" cy="122" r="8" fill={chromeFill} opacity="0.2" />
-      <circle cx="90" cy="122" r="3.5" fill={chromeFill} opacity="0.9" />
-      {/* Wheel spokes */}
-      {[0, 60, 120, 180, 240, 300].map((angle) => (
-        <line
-          key={angle}
-          x1={90 + 5 * Math.cos((angle * Math.PI) / 180)}
-          y1={122 + 5 * Math.sin((angle * Math.PI) / 180)}
-          x2={90 + 15 * Math.cos((angle * Math.PI) / 180)}
-          y2={122 + 15 * Math.sin((angle * Math.PI) / 180)}
-          stroke={chromeFill} strokeWidth="1.2" opacity="0.35"
-        />
-      ))}
-
-      {/* Rear wheel */}
-      <circle cx="230" cy="122" r="24" fill={wheelOuter} stroke={bodyStroke} strokeWidth="2" />
-      <circle cx="230" cy="122" r="16" fill={isDark ? '#1E2A1A' : '#222E20'} stroke={bodyStroke} strokeWidth="1" opacity="0.6" />
-      <circle cx="230" cy="122" r="8" fill={chromeFill} opacity="0.2" />
-      <circle cx="230" cy="122" r="3.5" fill={chromeFill} opacity="0.9" />
-      {/* Wheel spokes */}
-      {[0, 60, 120, 180, 240, 300].map((angle) => (
-        <line
-          key={angle}
-          x1={230 + 5 * Math.cos((angle * Math.PI) / 180)}
-          y1={122 + 5 * Math.sin((angle * Math.PI) / 180)}
-          x2={230 + 15 * Math.cos((angle * Math.PI) / 180)}
-          y2={122 + 15 * Math.sin((angle * Math.PI) / 180)}
-          stroke={chromeFill} strokeWidth="1.2" opacity="0.35"
-        />
-      ))}
-
-      {/* Door handle */}
-      <rect x="140" y="78" width="18" height="3" rx="1.5" fill={chromeFill} opacity="0.5" />
-
-      {/* Side mirror — front */}
-      <path d="M74 56 L68 50 L68 58 Z" fill={bodyFill} stroke={bodyStroke} strokeWidth="1" />
-
-      {/* Sparkle accents */}
-      <g filter="url(#glow)">
-        <circle cx="55" cy="35" r="2" fill={chromeFill} opacity="0.5" className="animate-gold-shimmer" />
-        <circle cx="160" cy="6" r="2.5" fill={chromeFill} opacity="0.4" className="animate-gold-shimmer animation-delay-300" />
-        <circle cx="265" cy="30" r="2" fill={chromeFill} opacity="0.45" className="animate-gold-shimmer animation-delay-500" />
-        <circle cx="110" cy="5" r="1.5" fill={chromeFill} opacity="0.3" className="animate-gold-shimmer animation-delay-200" />
-        <circle cx="220" cy="8" r="1.5" fill={chromeFill} opacity="0.35" className="animate-gold-shimmer animation-delay-400" />
-      </g>
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* BrandPanel                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -193,7 +69,7 @@ function CarIllustration({ isDark }: { isDark: boolean }) {
  * Left-side branding panel for auth pages on desktop.
  *
  * Logo strategy:
- *   Dark + any locale → frame2.png badge + "Slowtime" text
+ *   Dark + any locale → frame2.png badge + "Hurryline" text
  *   Light + FR        → logo2_2.png       (full FR wordmark)
  *   Light + EN        → logo_anglais_1.png (full EN wordmark)
  *
@@ -231,7 +107,7 @@ export function BrandPanel() {
   };
 
   const textPrimary   = isDark ? 'text-white'             : 'text-dark-bg';
-  const textSecondary = isDark ? 'text-lavo-muted'         : 'text-[#5A6B54]';
+  const textSecondary = isDark ? 'text-Hurryline-muted'         : 'text-[#B0BFB1]';
   const trackColor    = isDark ? 'bg-white/10'             : 'bg-black/10';
   const inactiveDot   = isDark ? 'bg-white/20 hover:bg-white/40' : 'bg-black/20 hover:bg-black/40';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';
@@ -257,13 +133,13 @@ export function BrandPanel() {
       />
 
       {/* Gold shimmer top bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gold animate-gold-shimmer" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gold" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
+      <div className="relative z-10 flex flex-col h-full p-10 xl:p-14">
 
         {/* ── Logo ── */}
-        <div className="animate-fade-in">
+        <div className="animate-fade-in flex justify-center">
           {isDark ? (
             <div className="flex items-center gap-2.5">
               <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm shrink-0">
@@ -277,24 +153,22 @@ export function BrandPanel() {
                 />
               </div>
               <span className="text-xl font-bold text-white tracking-wide">
-                Slowtime
+                Hurryline
               </span>
             </div>
           ) : (
             <Image
               src={lightLogoSrc}
-              alt="Slowtime"
-              width={180}
-              height={48}
-              className="object-contain h-10 w-auto"
+              alt="Hurryline"
+              width={260}
+              height={70}
+              className="object-contain h-16 w-auto"
             />
           )}
         </div>
 
-        {/* ── Car illustration + headline ── */}
-        <div className="flex flex-col items-center text-center gap-6">
-          <CarIllustration isDark={isDark} />
-
+        {/* ── Brand headline ── */}
+        <div className="mt-auto flex flex-col items-center text-center gap-6">
           <div>
             <h2 className={`text-4xl xl:text-[2.75rem] font-bold leading-tight animate-fade-in-up animation-delay-100 ${textPrimary}`}>
               {t('headline')}{' '}
@@ -307,7 +181,7 @@ export function BrandPanel() {
         </div>
 
         {/* ── Feature carousel ── */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 mt-12 items-center w-full">
 
           {/* Editorial counter + divider */}
           <div className="flex items-center gap-3">
@@ -315,17 +189,18 @@ export function BrandPanel() {
             <span className={`text-[11px] font-bold tracking-[0.2em] uppercase ${isDark ? 'text-gold/80' : 'text-gold'}`}>
               {String(activeIdx + 1).padStart(2, '0')} / {String(FEATURE_KEYS.length).padStart(2, '0')}
             </span>
+            <div className="h-px w-8 bg-gold/60" />
           </div>
 
           {/* Active feature card */}
           <div
             key={activeIdx}
-            className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 ${featureCardBg}`}
+            className={`flex items-center gap-5 animate-fade-in-up rounded-2xl p-5 w-full ${featureCardBg}`}
           >
             <div className="w-16 h-16 rounded-2xl bg-gold/20 border-2 border-gold/40 flex items-center justify-center text-gold shrink-0">
               {FEATURE_ICONS[activeIdx]}
             </div>
-            <div>
+            <div className="text-left">
               <p className={`text-[21px] font-bold leading-tight ${textPrimary}`}>
                 {t(FEATURE_KEYS[activeIdx].label)}
               </p>
@@ -336,7 +211,7 @@ export function BrandPanel() {
           </div>
 
           {/* Progress bar + dot navigation */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full">
             <div className={`flex-1 h-[3px] rounded-full ${trackColor}`}>
               <div
                 key={progressKey}

@@ -1,58 +1,106 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 /* Class-based dark mode (ThemeProvider adds/removes .dark on <html>). */
 
 @custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------
+   Hurryline brand palette - light mode defaults
+   ------------------------------------------------------------------
+   - background          = page surface
+   - foreground          = primary text on background
+   - text-secondary      = inverse-on-accent text (e.g. label on a gold pill)
+   - surface             = card / panel background (subtle differentiation)
+   - border              = neutral border tint
+   - grey / grey-2       = neutral fills for chips, dividers, muted blocks
+   The same tokens are flipped under `.dark` below; semantic Tailwind
+   utilities (`bg-background`, `text-foreground`, etc.) work in both modes.
+*/
 :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    --background: #FFEECA;
+    --foreground: #001201;
+    --text-secondary: #FFF9EC;
+    --surface: #FFF9EC;
+    --border: rgba(0, 18, 1, 0.08);
+    --grey-2: #B0BFB1;
+}
+
+.dark {
+    --background: #001201;
+    --foreground: #FFEECA;
+    --text-secondary: #001201;
+    --surface: #001A05;
+    --border: rgba(255, 238, 202, 0.10);
+    --grey-2: #C6C1B4;
 }
 
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-    /* LAVO font size scale */
+    --color-text-secondary: var(--text-secondary);
+    --color-surface: var(--surface);
+    --color-border: var(--border);
+    --color-grey-2: var(--grey-2);
+    /* Hurryline font size scale */
     --font-size-2xs: 14px;
     --font-size-xs: 15px;
     --font-size-sm: 16px;
     --font-size-base: 17px;
     --font-size-md: 19px;
     --font-size-lg: 22px;
-    /* LAVO brand colors */
-    --color-gold: #af8408;
-    --color-gold-hover: #D4A820;
-    --color-dark-bg: #1A2116;
-    --color-dark-card: #1E2A1A;
-    --color-dark-surface: #243020;
-    --color-tab-inactive: #2C3828;
-    --color-lavo-error: #E8472A;
-    --color-lavo-success: #00C851;
-    --color-lavo-muted: #A0A0A0;
-    /* LAVO fonts */
+    /* Hurryline brand colors (theme-invariant) */
+    --color-gold: #DDAF3B;
+    --color-gold-hover: #DDAF3B;
+    --color-grey: #C6C1B4;
+    /* Brand 'marron négatif' accent. Reserved for future accent surfaces;
+       it is NOT the danger / alert colour (see --color-Hurryline-error). */
+    --color-negative-brown: #391C01;
+    --color-blue: #1E40AF;
+    --color-orange: #FF9800;
+    /* Legacy aliases kept for the components still using the old token names.
+       Migrating call-sites to `bg-background` / `dark:bg-background` is a
+       follow-up sweep; while that lands, keeping these pointers avoids a
+       big-bang regression on the existing screens. */
+    --color-dark-bg: #001201;
+    --color-dark-card: #001A05;
+    --color-dark-surface: #001A05;
+    --color-tab-inactive: #1A2916;
+    /* Hurryline-error = danger / alert / destructive feedback (#FF383C).
+       The brand 'negative brown' (#391C01) is exposed separately via the
+       `negative-brown` token above for accent surfaces; it is NOT the
+       error colour. */
+    --color-Hurryline-error: #FF383C;
+    --color-Hurryline-success: #00C853;
+    --color-Hurryline-muted: #B0BFB1;
+    /* Hurryline fonts */
+    --font-sans: 'Rajdhani', sans-serif;
     --font-rajdhani: 'Rajdhani', sans-serif;
+    --font-bebas: 'Bebas Neue', sans-serif;
     --font-roboto-mono: 'Roboto Mono', monospace;
     --font-playfair: 'Playfair Display', serif;
     --font-dm-mono: 'DM Mono', monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-     :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-    }
+    --font-mono: 'Roboto Mono', monospace;
 }
 
 
-/* Rajdhani is the global brand font for all text. */
+/* Rajdhani is the global brand font for all body text. Horaires (any
+   timestamp the user reads as a clock) opt into Bebas Neue via the
+   `.font-bebas` utility below or the `font-bebas` Tailwind token. */
 
+html,
 body {
     background: var(--background);
     color: var(--foreground);
     font-family: 'Rajdhani', sans-serif;
     font-size: var(--font-size-base);
+}
+
+.font-bebas {
+    font-family: 'Bebas Neue', sans-serif;
+    /* Bebas Neue is condensed; bumping the tracking slightly keeps numbers
+       legible when used for opening hours and time slots. */
+    letter-spacing: 0.02em;
 }
 
 button,
@@ -136,6 +184,24 @@ button,
     animation: gold-shimmer 2.5s ease-in-out infinite;
 }
 
+@keyframes emblem-pulse {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.55;
+    }
+    50% {
+        transform: scale(1.08);
+        opacity: 0.18;
+    }
+}
+
+.animate-emblem-pulse {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: emblem-pulse 4.5s ease-in-out infinite;
+}
+
 @keyframes float-orb {
     0%,
     100% {
@@ -168,7 +234,7 @@ button,
 }
 
 .hero-title-gradient {
-    background: linear-gradient(120deg, #C49A1E 10%, #F2C94C 50%, #C49A1E 90%);
+    background: linear-gradient(120deg, #DDAF3B 10%, #DDAF3B 50%, #DDAF3B 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -351,6 +417,39 @@ button,
 }
 
 
+/* Show scrollbar only on hover */
+
+.scrollbar-hover {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+    width: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.scrollbar-hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+    transition: background 0.2s;
+}
+
+.scrollbar-hover:hover {
+    scrollbar-width: thin;
+    scrollbar-color: #DDAF3B33 transparent;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+    background: #DDAF3B55;
+}
+
+
 /* ------------------------------------------------------------------ */
 
 
@@ -360,13 +459,13 @@ button,
 /* ------------------------------------------------------------------ */
 
 .auth-form-bg {
-    background-image: radial-gradient(ellipse at 50% 0%, rgba(196, 154, 30, 0.09) 0%, transparent 55%), linear-gradient(rgba(244, 241, 234, 0.93), rgba(238, 234, 224, 0.93)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(221, 175, 59, 0.09) 0%, transparent 55%), linear-gradient(rgba(244, 241, 234, 0.93), rgba(238, 234, 224, 0.93)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
 
 .dark .auth-form-bg {
-    background-image: radial-gradient(ellipse at 50% 0%, rgba(196, 154, 30, 0.09) 0%, transparent 55%), linear-gradient(rgba(26, 33, 22, 0.94), rgba(26, 33, 22, 0.94)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(221, 175, 59, 0.09) 0%, transparent 55%), linear-gradient(rgba(26, 33, 22, 0.94), rgba(26, 33, 22, 0.94)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
@@ -381,13 +480,13 @@ button,
 /* ------------------------------------------------------------------ */
 
 .stations-hero-bg {
-    background-image: radial-gradient(ellipse at 60% 40%, rgba(196, 154, 30, 0.12) 0%, transparent 60%), linear-gradient(160deg, rgba(75, 65, 55, 0.96) 0%, rgba(100, 85, 70, 0.94) 50%, rgba(75, 65, 55, 0.96) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
+    background-image: radial-gradient(ellipse at 60% 40%, rgba(221, 175, 59, 0.12) 0%, transparent 60%), linear-gradient(160deg, rgba(75, 65, 55, 0.96) 0%, rgba(100, 85, 70, 0.94) 50%, rgba(75, 65, 55, 0.96) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
 
 .dark .stations-hero-bg {
-    background-image: radial-gradient(ellipse at 60% 40%, rgba(196, 154, 30, 0.18) 0%, transparent 60%), linear-gradient(160deg, rgba(26, 33, 22, 0.97) 0%, rgba(36, 48, 32, 0.95) 50%, rgba(26, 33, 22, 0.97) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
+    background-image: radial-gradient(ellipse at 60% 40%, rgba(221, 175, 59, 0.18) 0%, transparent 60%), linear-gradient(160deg, rgba(26, 33, 22, 0.97) 0%, rgba(36, 48, 32, 0.95) 50%, rgba(26, 33, 22, 0.97) 100%), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');
     background-size: auto, auto, cover;
     background-position: center, center, center;
 }
@@ -396,7 +495,7 @@ button,
 /* ------------------------------------------------------------------ */
 
 
-/* Landing page — marquee and display font utilities                    */
+/* Landing page - marquee and display font utilities                    */
 
 
 /* ------------------------------------------------------------------ */
@@ -425,43 +524,35 @@ button,
 }
 
 
-/* Landing hero background (light / dark) */
+/* Landing hero background (light / dark) - track the same Hurryline brand
+   palette as the rest of the platform so hero / sections / cards stay
+   consistent across themes. */
 
 .landing-hero-bg {
-    background: #f7f3ec;
-    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(192, 154, 24, 0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(200, 220, 200, 0.4) 0%, transparent 50%);
+    background: var(--background);
+    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(221, 175, 59, 0.10) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(176, 191, 177, 0.30) 0%, transparent 50%);
 }
 
 .dark .landing-hero-bg {
-    background: #0d1f0f;
-    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(200, 152, 10, 0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(22, 34, 24, 0.6) 0%, transparent 50%);
+    background: var(--background);
+    background-image: radial-gradient(ellipse 65% 70% at 95% 45%, rgba(221, 175, 59, 0.10) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 0% 80%, rgba(57, 28, 1, 0.55) 0%, transparent 50%);
 }
 
 
 /* Landing section alternating background */
 
 .landing-alt-bg {
-    background: #efefea;
-    border-top: 1px solid rgba(192, 154, 24, 0.1);
-    border-bottom: 1px solid rgba(192, 154, 24, 0.1);
-}
-
-.dark .landing-alt-bg {
-    background: #111f0f;
-    border-top: 1px solid rgba(200, 152, 10, 0.1);
-    border-bottom: 1px solid rgba(200, 152, 10, 0.1);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
 
 /* Landing card style */
 
 .landing-card {
-    background: #e8e2d4;
-    border: 1px solid rgba(192, 154, 24, 0.15);
-}
-
-.dark .landing-card {
-    background: #f5edd6;
+    background: var(--surface);
+    border: 1px solid var(--border);
 }
 
 
@@ -476,4 +567,76 @@ button,
 .reveal.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+
+/* Scrollbar appears only on hover/focus for dense modal panes. */
+
+.hover-scrollbar {
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.hover-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.hover-scrollbar:hover,
+.hover-scrollbar:focus-within {
+    scrollbar-width: thin;
+    /* Firefox */
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar,
+.hover-scrollbar:focus-within::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar-track,
+.hover-scrollbar:focus-within::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hover-scrollbar:hover::-webkit-scrollbar-thumb,
+.hover-scrollbar:focus-within::-webkit-scrollbar-thumb {
+    background: rgba(148, 148, 132, 0.55);
+    border-radius: 999px;
+}
+
+
+/* Responsive font scaling for admin and station dashboards.
+   Targets .app-shell (set on AdminShell and StationShell roots) so the
+   public site, client area, and auth pages keep their designed sizes.
+   At >=1024px bump small text by 1px; at >=1280px bump by 2px. */
+
+@media (min-width: 1024px) {
+    .app-shell .text-\[10px\] {
+        font-size: 11px;
+    }
+    .app-shell .text-\[11px\] {
+        font-size: 12px;
+    }
+    .app-shell .text-\[12px\] {
+        font-size: 13px;
+    }
+    .app-shell .text-\[13px\] {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .app-shell .text-\[10px\] {
+        font-size: 12px;
+    }
+    .app-shell .text-\[11px\] {
+        font-size: 13px;
+    }
+    .app-shell .text-\[12px\] {
+        font-size: 14px;
+    }
+    .app-shell .text-\[13px\] {
+        font-size: 15px;
+    }
 }

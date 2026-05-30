@@ -11,7 +11,7 @@
  *   400 VALIDATION_FAILED
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND — rating not found
+ *   404 NOT_FOUND - rating not found
  *   500 INTERNAL_ERROR
  */
 import { requireRole } from '@/lib/require-role';

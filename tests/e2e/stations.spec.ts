@@ -1,5 +1,5 @@
 /**
- * E2E — Public station list and detail pages.
+ * E2E - Public station list and detail pages.
  *
  * Covers:
  *   - /fr/stations loads and renders at least one station card.
@@ -21,7 +21,7 @@ test.describe('public station list page', () => {
 
     /*
      * Station cards are rendered as <article> elements by StationCard.
-     * We wait for at least one to appear — this implicitly tests that the
+     * We wait for at least one to appear - this implicitly tests that the
      * API call resolves and the Suspense boundary clears.
      */
     const cards = page.locator('article');
@@ -55,7 +55,7 @@ test.describe('public station list page', () => {
     await expect(page).toHaveURL(/\/stations\/|\/login/, { timeout: 10_000 });
 
     // The toHaveURL assertion above already guarantees the URL matches /stations/ or /login.
-    // No additional assertion is needed — the dead code block has been removed.
+    // No additional assertion is needed - the dead code block has been removed.
     void href;
   });
 });
@@ -79,7 +79,8 @@ test.describe('public station detail page', () => {
      */
     const ctaLink  = firstCard.locator('a').last();
     const rawHref  = (await ctaLink.getAttribute('href')) ?? '';
-    const idMatch  = rawHref.match(/\/stations\/([^?#/]+)/);
+    const decodedHref = decodeURIComponent(rawHref);
+    const idMatch  = decodedHref.match(/\/stations\/([^?#/]+)/);
     if (!idMatch) throw new Error(`Could not extract station id from href: "${rawHref}"`);
     return `/fr/stations/${idMatch[1]}`;
   }
@@ -100,7 +101,7 @@ test.describe('public station detail page', () => {
 
     /*
      * Address: StationDetail renders city/address information in the detail
-     * section.  We look for any element that could contain address text —
+     * section.  We look for any element that could contain address text -
      * the exact selector is flexible because the layout may change.
      *
      * A broad but correct check: the page must have visible text content
@@ -118,7 +119,7 @@ test.describe('public station detail page', () => {
      * checking common patterns used in the codebase (the link to /login
      * with callbackUrl, or a button that opens the BookingFlow).
      */
-    const bookingCta = page.locator('button, a').filter({ hasText: /réserver|book|réservation/i }).first();
+    const bookingCta = page.locator('button, a').filter({ hasText: /réserver|book|réservation|choisir un format/i }).first();
     await expect(bookingCta).toBeVisible({ timeout: 10_000 });
   });
 });

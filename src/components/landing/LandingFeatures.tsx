@@ -53,14 +53,14 @@ export function LandingFeatures() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-[#F4F3EE] dark:bg-dark-card/60 transition-colors">
+    <section className="py-16 sm:py-28 bg-[#F4F3EE] dark:bg-surface/60 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <ScrollReveal className="text-center mb-10 sm:mb-16">
-          <h2 className="text-[28px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
+          <h2 className="text-[28px] sm:text-[40px] font-black text-foreground leading-tight">
             {t('features_title')}
           </h2>
-          <p className="mt-3 text-[17px] text-[#666] dark:text-[#C0C0B0] max-w-lg mx-auto">
+          <p className="mt-3 text-[17px] text-foreground/65 dark:text-[#C0C0B0] max-w-lg mx-auto">
             {t('features_subtitle')}
           </p>
         </ScrollReveal>
@@ -69,16 +69,16 @@ export function LandingFeatures() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {FEATURES.map((feat, i) => (
             <ScrollReveal key={feat.key} delay={i * 0.08}>
-              <div className="group rounded-2xl bg-white dark:bg-dark-card border border-[#E8E8D8] dark:border-tab-inactive p-5 sm:p-7 hover:border-gold/30 dark:hover:border-gold/20 transition-all hover:shadow-lg hover:-translate-y-0.5 h-full">
+              <div className="group rounded-2xl bg-white dark:bg-surface border border-[#E8E8D8] dark:border-border p-5 sm:p-7 hover:border-gold/30 dark:hover:border-gold/20 transition-all hover:shadow-lg hover:-translate-y-0.5 h-full">
                 <div className="flex items-start gap-5">
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feat.gradient} flex items-center justify-center text-gold flex-shrink-0 group-hover:scale-105 transition-transform`}>
                     {feat.icon}
                   </div>
                   <div>
-                    <h3 className="text-[17px] font-bold text-[#0A0A14] dark:text-white mb-2">
+                    <h3 className="text-[17px] font-bold text-foreground mb-2">
                       {t(`${feat.key}_title`)}
                     </h3>
-                    <p className="text-[15px] text-[#666] dark:text-[#C0C0B0] leading-relaxed">
+                    <p className="text-[15px] text-foreground/65 dark:text-[#C0C0B0] leading-relaxed">
                       {t(`${feat.key}_desc`)}
                     </p>
                   </div>

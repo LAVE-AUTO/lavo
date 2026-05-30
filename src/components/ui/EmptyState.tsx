@@ -29,13 +29,13 @@ export function EmptyState({ icon, title, description, action, className = '' }:
         .join(' ')}
     >
       {icon && (
-        <div className="text-lavo-muted mb-1" aria-hidden="true">
+        <div className="text-Hurryline-muted mb-1" aria-hidden="true">
           {icon}
         </div>
       )}
       <p className="text-[16px] font-semibold text-[#333] dark:text-white">{title}</p>
       {description && (
-        <p className="text-[14px] text-lavo-muted max-w-xs">{description}</p>
+        <p className="text-[14px] text-Hurryline-muted max-w-xs">{description}</p>
       )}
       {action && <div className="mt-2">{action}</div>}
     </div>

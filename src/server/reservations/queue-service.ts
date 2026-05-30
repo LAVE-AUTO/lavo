@@ -5,18 +5,25 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
-import { findFormatByIdAndStation } from '@/server/station/format-repository';
+import { and, eq } from 'drizzle-orm';
+import { reservations as reservationsTable } from '@/lib/db/schema';
+import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
-import { createPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
+import { findById } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getQueuePositionWhenMovingFromReservation } from './queue-position-helper';
+import { generateTicketCode } from './ticket-code';
 import {
   createQueueEntry,
   findEntryById,
   listQueueByStation,
   countQueueByStation,
   getNextQueuePosition,
-  hasActiveEntryAtStation,
+  hasActiveQueueEntryAtStation,
+  findPendingPaymentQueueEntryAtStation,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -36,56 +43,107 @@ const STATUS_LATE = 'late';
  *
  * Stripe-first pattern: PI is created before the DB entry so there is no crash window where an
  * entry exists with stripe_payment_id = null. If the DB transaction fails (duplicate, race), the PI
- * is never returned to the client and auto-expires on Stripe after 24h — no charge, no orphan.
+ * is never returned to the client and auto-expires on Stripe after 24h - no charge, no orphan.
  */
 export async function joinQueue(
   userId: string,
   stationId: string,
-  vehicleFormatId: string,
+  serviceId: string,
+  vehicleFormatId: string | null | undefined,
   stationStripeAccountId: string
 ): Promise<JoinQueueResult> {
-  const format = await findFormatByIdAndStation(vehicleFormatId, stationId);
-  if (!format) throw new NotFoundError('Vehicle format not found');
-  if (!format.is_active) throw new ConflictError('Format is not active');
+  const service = await findServiceByIdAndStation(serviceId, stationId);
+  if (!service) throw new NotFoundError('Service not found');
 
-  const formatPrice = parseFloat(String(format.price));
-  const split = await computeReservationSplit({ amountTotal: formatPrice, isQrBooking: false });
+  const vehicleEntry = await findServiceVehicleEntryForBooking(serviceId, vehicleFormatId ?? null);
+  if (!vehicleEntry) throw new NotFoundError('Service pricing entry not found for this format');
+  if (!vehicleEntry.is_active) throw new ConflictError('Service entry is not active');
 
-  const amountCents = Math.round(formatPrice * 100);
+  const entryPrice = parseFloat(String(vehicleEntry.price));
+  const split = await computeReservationSplit({ amountTotal: entryPrice, isQrBooking: false });
+
+  const amountCents = Math.round(entryPrice * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
-  // Create Stripe PaymentIntent before the DB entry (Stripe-first pattern).
-  // reservation_id is omitted here; it will be set via a non-fatal metadata update after DB commit.
+  // Cancel any stale pending_payment queue entry before creating a new PI.
+  // Allows users to retry after abandoning the Stripe form.
+  //
+  // The cancel + shift must run atomically (bug #8): two concurrent join attempts from the
+  // same user could otherwise both observe the same stalePending and each apply the shift,
+  // double-decrementing queue positions and corrupting the queue for the whole station.
+  // We use a conditional UPDATE so only the first transaction wins; subsequent ones see no
+  // matching row and skip the shift.
+  const stalePending = await findPendingPaymentQueueEntryAtStation(userId, stationId);
+  if (stalePending) {
+    let wonRace = false;
+    let stripePaymentIdToCancel: string | null = null;
+    await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(reservationsTable)
+        .set({ status: 'cancelled', queue_position: null, updated_at: new Date() })
+        .where(
+          and(
+            eq(reservationsTable.id, stalePending.id),
+            eq(reservationsTable.status, 'pending_payment')
+          )
+        )
+        .returning({
+          id: reservationsTable.id,
+          stripe_payment_id: reservationsTable.stripe_payment_id,
+        });
+      if (!updated) return; // another concurrent call already handled this stale entry.
+      wonRace = true;
+      stripePaymentIdToCancel = updated.stripe_payment_id;
+      if (stalePending.queue_position != null) {
+        await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1, tx);
+      }
+    });
+    if (wonRace && stripePaymentIdToCancel) {
+      try {
+        await cancelPaymentIntent(stripePaymentIdToCancel);
+      } catch {
+        // Non-fatal: PI may already be expired
+      }
+    }
+  }
+
+  // Idempotency key: scoped to (user, station, service, vehicle, minute). A network-retry from
+  // the client within the same minute returns the same PI rather than producing a second
+  // authorization hold on the card.
+  const piIdempotencyKey = `pi-create:queue:${userId}:${stationId}:${serviceId}:${vehicleFormatId ?? 'na'}:${Math.floor(Date.now() / 60_000)}`;
   const { paymentIntentId, clientSecret } = await createPaymentIntent({
     amountCents,
     userId,
     stationId,
     stationStripeAccountId,
     commissionCents,
+    idempotencyKey: piIdempotencyKey,
     metadata: {
-      vehicle_format_id: vehicleFormatId,
+      service_id: serviceId,
+      vehicle_format_id: vehicleFormatId ?? '',
       entry_type: 'queue',
     },
   });
 
-  // Atomic: check duplicate and allocate position. Entry is created with stripe_payment_id already set.
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveEntryAtStation(userId, stationId, tx);
-    if (hasActive) throw new ConflictError('You already have an active entry at this station');
+    const hasActive = await hasActiveQueueEntryAtStation(userId, stationId, tx);
+    if (hasActive) throw new ConflictError('You already have an active queue entry at this station');
 
     const nextPos = await getNextQueuePosition(stationId, tx);
 
     return createQueueEntry({
       user_id: userId,
       station_id: stationId,
-      vehicle_format_id: vehicleFormatId,
+      vehicle_format_id: vehicleFormatId ?? null,
+      service_id: serviceId,
       queue_position: nextPos,
       status: STATUS_PENDING_PAYMENT,
-      amount_paid: String(formatPrice.toFixed(2)),
+      amount_paid: String(entryPrice.toFixed(2)),
       commission_rate: split.commissionRate,
       commission_amount: String(split.commissionAmount.toFixed(2)),
       station_payout: String(split.stationPayout.toFixed(2)),
       stripe_payment_id: paymentIntentId,
+      ticket_code: generateTicketCode(),
     }, tx);
   });
 
@@ -94,7 +152,7 @@ export async function joinQueue(
   try {
     await updatePaymentIntentMetadata(paymentIntentId, { reservation_id: entry.id });
   } catch (e) {
-    console.error('[JOIN_QUEUE] PI metadata update failed — non-fatal', {
+    console.error('[JOIN_QUEUE] PI metadata update failed - non-fatal', {
       entryId: entry.id,
       paymentIntentId,
       error: e instanceof Error ? e.message : String(e),
@@ -107,6 +165,24 @@ export async function joinQueue(
     stationId,
     type: 'queue_joined',
   });
+  await notifyClientFeed({
+    userId,
+    entryId: entry.id,
+    stationId,
+    kind: 'queue_joined',
+    body: "Vous êtes dans la file d'attente. Vous serez notifié quand ce sera votre tour.",
+  });
+
+  /* Push to the station owner's in-app feed (best-effort, never blocks). */
+  const client = await findById(userId);
+  const clientName = client?.first_name ?? 'Un client';
+  await notifyStationFeed({
+    stationId,
+    entryId: entry.id,
+    kind: 'queue_new',
+    body: `${clientName} a rejoint la file d'attente (${entryPrice.toFixed(2)} $)`,
+  });
+
   return { entry, clientSecret };
 }
 
@@ -121,7 +197,7 @@ export async function listQueue(stationId: string): Promise<Entry[]> {
  * Moves a reservation to the queue (downgrade). Used by cron for late unconfirmed reservations.
  * Uses queue-position helper for new position; shifts existing queue entries; decrements slot booked_count.
  *
- * Payment policy for late clients: no refund — the Stripe PaymentIntent is captured immediately so
+ * Payment policy for late clients: no refund - the Stripe PaymentIntent is captured immediately so
  * funds are distributed between the station and the platform as if the service had been rendered.
  * The client is moved to the walk-in queue and handled later by the station.
  */
@@ -133,7 +209,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
 
   const stationId = entry.station_id;
 
-  // Atomic: compute new position, shift queue, convert entry, decrement slot — all or nothing.
+  // Atomic: compute new position, shift queue, convert entry, decrement slot - all or nothing.
   const updated = await db.transaction(async (tx) => {
     const existingCount = await countQueueByStation(stationId, tx);
     const newPosition = getQueuePositionWhenMovingFromReservation(stationId, {
@@ -160,6 +236,13 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
     userId: entry.user_id,
     stationId,
     type: 'moved_to_queue',
+  });
+  await notifyClientFeed({
+    userId: entry.user_id,
+    entryId,
+    stationId,
+    kind: 'moved_to_queue',
+    body: "Votre créneau est passé. Vous avez été placé en tête de file d'attente.",
   });
   return updated;
 }
@@ -195,6 +278,13 @@ export async function pickQueueEntry(stationId: string, queueEntryId: string): P
       userId: entry.user_id,
       stationId,
       type: 'queue_pick',
+    });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: queueEntryId,
+      stationId,
+      kind: 'queue_pick',
+      body: 'La station est prête pour vous. Rendez-vous à la baie de lavage.',
     });
   } catch (e) {
     console.error('Failed to send pick notification for entry', queueEntryId, e);

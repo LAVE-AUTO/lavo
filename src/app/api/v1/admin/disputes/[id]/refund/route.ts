@@ -57,7 +57,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  *       403:
- *         description: Forbidden — admin role required
+ *         description: Forbidden - admin role required
  *         content:
  *           application/json:
  *             schema:
@@ -99,7 +99,7 @@ import {
 } from '@/lib/responses';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
-import { AppError, DisputeAlreadyClosedError, RefundNotEligibleError } from '@/lib/errors';
+import { AppError, DisputeAlreadyClosedError } from '@/lib/errors';
 import { disputeIdParamSchema, refundDisputeSchema, mapZodErrors } from '@/validators/dispute';
 import { refundDispute } from '@/server/disputes/dispute-service';
 import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
@@ -116,16 +116,15 @@ const refundLimiter = createEndpointRateLimiter({ maxRequests: 10, windowMs: 60_
  * Role: admin only.
  *
  * Body:
- *   amount? (number) — partial refund amount in EUR; omit for full refund
+ *   amount? (number) - partial refund amount in EUR; omit for full refund
  *
  * Responses:
  *   200 { data: Dispute }
- *   400 VALIDATION_FAILED   — invalid param or body
- *   400 REFUND_NOT_ELIGIBLE — stripe_transfer_id exists on the reservation
+ *   400 VALIDATION_FAILED   - invalid param or body
  *   401 UNAUTHORIZED
  *   403 FORBIDDEN
- *   404 NOT_FOUND           — dispute or reservation not found
- *   409 DISPUTE_ALREADY_CLOSED — dispute is not open
+ *   404 NOT_FOUND           - dispute or reservation not found
+ *   409 DISPUTE_ALREADY_CLOSED - dispute is not open
  *   500 INTERNAL_ERROR
  */
 export async function POST(
@@ -163,16 +162,16 @@ export async function POST(
     const dispute = await refundDispute(auth.sub, idResult.data, parsed.data);
     return applyNoStoreHeaders(successResponse(dispute, 'Dispute refunded successfully'));
   } catch (e) {
-    if (e instanceof RefundNotEligibleError) {
-      return applyNoStoreHeaders(error400(e.message, ApiCode.REFUND_NOT_ELIGIBLE));
-    }
     if (e instanceof DisputeAlreadyClosedError) {
       return applyNoStoreHeaders(error409(e.message, ApiCode.DISPUTE_ALREADY_CLOSED));
     }
     if (e instanceof AppError && e.statusCode === 404) {
       return applyNoStoreHeaders(error404(e.message));
     }
-    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    if (e instanceof AppError) {
+      console.error(`[POST /api/v1/admin/disputes/:id/refund] AppError ${e.statusCode}:`, e.message);
+      return applyNoStoreHeaders(fromAppError(e));
+    }
     // SECURITY: never pass raw error to error500
     console.error('[POST /api/v1/admin/disputes/:id/refund] Unhandled error:', e);
     return applyNoStoreHeaders(error500());

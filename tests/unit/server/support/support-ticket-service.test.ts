@@ -28,6 +28,9 @@ jest.mock('@/server/support/support-ticket-repository', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('@/lib/db', () => ({
   db: {
@@ -169,7 +172,7 @@ describe('createSupportTicket', () => {
   });
 
   it('enforces the limit when max_open_tickets_per_user is 0 (zero tickets allowed)', async () => {
-    // A value of "0" means the limit is zero — the repo throws inside the transaction.
+    // A value of "0" means the limit is zero - the repo throws inside the transaction.
     mockGetSettings.mockResolvedValue({ max_open_tickets_per_user: '0' });
     mockCreateTicket.mockRejectedValue(new AppError('Ticket limit reached', 422));
 
@@ -290,7 +293,7 @@ describe('addSupportMessage', () => {
   });
 
   it('admin can add a message to any ticket regardless of ownership', async () => {
-    // Ticket belongs to userId, not adminId — admin must still be allowed.
+    // Ticket belongs to userId, not adminId - admin must still be allowed.
     const result = await addSupportMessage(adminId, ticketId, 'We are looking into it.', true);
 
     expect(mockAddMessage).toHaveBeenCalledWith(
@@ -594,7 +597,7 @@ describe('getSupportSettings', () => {
 
     const result = await getSupportSettings();
 
-    expect(result.support_email).toBe('support@lavo.ca');
+    expect(result.support_email).toBe('support@Hurryline.ca');
     process.env.SUPPORT_EMAIL = originalEnv;
   });
 });
@@ -611,7 +614,7 @@ describe('updateSupportSettings', () => {
 
   it('delegates to repo.updateSettings with the full settings map (atomic)', async () => {
     const settings = {
-      support_email: 'help@lavo.ca',
+      support_email: 'help@Hurryline.ca',
       max_open_tickets_per_user: '3',
     };
 
@@ -629,10 +632,10 @@ describe('updateSupportSettings', () => {
   });
 
   it('passes a single-key map to repo.updateSettings', async () => {
-    await updateSupportSettings({ support_email: 'ops@lavo.ca' });
+    await updateSupportSettings({ support_email: 'ops@Hurryline.ca' });
 
     expect(mockUpdateSettings).toHaveBeenCalledTimes(1);
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ support_email: 'ops@Hurryline.ca' });
   });
 });
 

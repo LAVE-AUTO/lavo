@@ -1,16 +1,31 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
-import { MOCK_RESERVATIONS, type MockReservation } from '@/data/reservations-mock';
 import { ReceiptModal } from './ReceiptModal';
+import { HistoryCard, type HistoryReservation } from './HistoryCard';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 
 type PeriodKey = 'all' | 'week' | 'month' | '3months' | 'year';
-type StatusKey  = 'all' | 'completed' | 'cancelled';
+type StatusKey = 'all' | 'completed' | 'cancelled';
 
-const HISTORY_STATUSES: MockReservation['status'][] = ['completed', 'cancelled'];
+type HistoryApiEntry = {
+  id: string;
+  title: string;
+  status: string;
+  entry_type: 'reservation' | 'queue';
+  created_at: string;
+  station: { name: string | null; address: string | null; city: string | null };
+  vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
+  amount_paid: string;
+  tip_amount?: string | null;
+};
+
+type HistoryApiResponse = { data: { items: HistoryApiEntry[] } };
 
 function getPeriodStart(period: PeriodKey): Date | null {
   if (period === 'all') return null;
@@ -22,52 +37,73 @@ function getPeriodStart(period: PeriodKey): Date | null {
   return d;
 }
 
-/**
- * Client history view.
- * Calls GET /history/client; falls back to mock data if the endpoint is not yet implemented.
- */
+function formatAmount(amount: number, locale: string): string {
+  return `${amount.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$`;
+}
+
 export function ClientHistoryView() {
-  const t      = useTranslations('history');
+  const t = useTranslations('history');
   const locale = useLocale();
 
-  const [entries,  setEntries]  = useState<MockReservation[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [period,   setPeriod]   = useState<PeriodKey>('all');
-  const [status,   setStatus]   = useState<StatusKey>('all');
-  const [selected, setSelected] = useState<MockReservation | null>(null);
+  const [entries, setEntries] = useState<HistoryReservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [status, setStatus] = useState<StatusKey>('all');
+  const [selected, setSelected] = useState<HistoryReservation | null>(null);
 
-  useEffect(() => {
-    let aborted = false;
-    (async () => {
-      const [ok, data] = await getFromApi<{ data: { entries: MockReservation[] } }>('/history/client');
-      if (aborted) return;
+  const loadEntries = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    /* Backend caps `limit` at 100 (validators/history.ts). */
+    const [ok, data] = await getFromApi<HistoryApiResponse>('/history/client?limit=100');
 
-      const raw = ok && data && typeof data === 'object' && 'data' in data
-        ? (data as { data: { entries?: MockReservation[] } }).data?.entries
-        : null;
+    const raw = ok && data && typeof data === 'object' && 'data' in data
+      ? (data as HistoryApiResponse).data?.items
+      : null;
 
+    if (Array.isArray(raw)) {
       setEntries(
-        Array.isArray(raw)
-          ? raw.filter((e) => HISTORY_STATUSES.includes(e.status))
-          : MOCK_RESERVATIONS.filter((r) => HISTORY_STATUSES.includes(r.status)),
+        raw
+          .filter((entry) => entry.status === 'completed' || entry.status === 'cancelled')
+          .map((entry) => ({
+            id: entry.id,
+            stationName: entry.station.name ?? entry.title,
+            stationAddress: [entry.station.address, entry.station.city].filter(Boolean).join(', '),
+            vehicleFormatLabel: entry.vehicle_format_label,
+            serviceName: entry.service_name,
+            serviceCategory: entry.service_category,
+            entryType: entry.entry_type,
+            amountPaid: Number.parseFloat(entry.amount_paid) || 0,
+            tipAmount: entry.tip_amount != null ? Number.parseFloat(entry.tip_amount) || 0 : null,
+            status: entry.status as HistoryReservation['status'],
+            createdAt: entry.created_at,
+          })),
       );
-      setLoading(false);
-    })();
-    return () => { aborted = true; };
+    } else {
+      setEntries([]);
+      setLoadError(true);
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => { void loadEntries(); }, [loadEntries]);
 
   const filtered = useMemo(() => {
     const start = getPeriodStart(period);
     return entries
       .filter((e) => status === 'all' || e.status === status)
-      .filter((e) => !start || new Date(e.date) >= start)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .filter((e) => !start || new Date(e.createdAt) >= start)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [entries, period, status]);
 
+  /* KPIs span the filtered view so they match the visible list. */
   const totalSpent = useMemo(
-    () => filtered
-      .filter((e) => e.status === 'completed')
-      .reduce((sum, e) => sum + e.totalPrice, 0),
+    () => filtered.filter((e) => e.status === 'completed').reduce((sum, e) => sum + e.amountPaid, 0),
+    [filtered],
+  );
+  const completedCount = useMemo(
+    () => filtered.filter((e) => e.status === 'completed').length,
     [filtered],
   );
 
@@ -88,94 +124,92 @@ export function ClientHistoryView() {
   if (loading) return <PageSpinner py="py-20" />;
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-6">
 
-      {/* Stats */}
-      {entries.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 border border-[#D0D0C0] dark:border-tab-inactive text-center">
-            <div className="text-[24px] font-black text-[#0A0A14] dark:text-white leading-none">{filtered.length}</div>
-            <div className="text-[11px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">
-              {t('total_entries')}
-            </div>
-          </div>
-          <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl p-4 border border-[#D0D0C0] dark:border-tab-inactive text-center">
-            <div className="text-[24px] font-black text-gold leading-none">{totalSpent}$</div>
-            <div className="text-[11px] text-[#666] dark:text-[#B0B0A0] mt-1.5 uppercase tracking-wider font-bold">
-              {t('total_spent')}
-            </div>
-          </div>
+      {loadError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-2xl border border-Hurryline-error/20 bg-Hurryline-error/8 px-4 py-5 text-center dark:border-Hurryline-error/30 dark:bg-Hurryline-error/10"
+        >
+          <p className="text-[14px] font-semibold text-[#B2351F] dark:text-[#F0A090]">{t('error_load')}</p>
+          <button
+            type="button"
+            onClick={loadEntries}
+            className="mt-3 rounded-full border border-gold/40 px-4 py-2 text-[13px] font-semibold text-gold transition-colors hover:bg-gold/10 cursor-pointer"
+          >
+            {t('btn_retry')}
+          </button>
         </div>
       )}
 
-      {/* Period filter */}
-      <div className="mb-4">
-        <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
-          {t('filter_period')}
-        </p>
-        <div className="flex gap-1.5 flex-wrap">
-          {PERIODS.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setPeriod(key)}
-              className={[
-                'px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors',
-                period === key
-                  ? 'bg-gold text-dark-bg'
-                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#555] dark:text-[#C0C0B0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
-              ].join(' ')}
-            >
-              {label}
-            </button>
-          ))}
+      {/* KPIs */}
+      {entries.length > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          <KpiCard
+            label={t('total_entries')}
+            value={String(filtered.length)}
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+                <line x1="9" y1="17" x2="15" y2="17" />
+              </svg>
+            }
+          />
+          <KpiCard
+            label={t('total_spent')}
+            value={formatAmount(totalSpent, locale)}
+            sub={completedCount > 0 ? t('kpi_completed_x', { count: completedCount }) : undefined}
+            highlight
+            icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+              </svg>
+            }
+          />
         </div>
-      </div>
+      )}
 
-      {/* Status filter */}
-      <div className="mb-6">
-        <p className="text-[11px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
-          {t('filter_status')}
-        </p>
-        <div className="flex gap-1.5">
-          {STATUSES.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setStatus(key)}
-              className={[
-                'px-3 py-1.5 rounded-full text-[13px] font-bold transition-colors',
-                status === key
-                  ? key === 'completed' ? 'bg-lavo-success text-white'
-                  : key === 'cancelled' ? 'bg-lavo-error text-white'
-                  : 'bg-gold text-dark-bg'
-                  : 'bg-[#E0E0D0] dark:bg-dark-card text-[#555] dark:text-[#C0C0B0] hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive',
-              ].join(' ')}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Filters - period + status grouped in one card for cohesion */}
+      {entries.length > 0 && (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          <FilterStrip
+            label={t('filter_period')}
+            items={PERIODS}
+            value={period}
+            onChange={setPeriod}
+          />
+          <div className="border-t border-border/60 dark:border-border">
+            <FilterStrip
+              label={t('filter_status')}
+              items={STATUSES}
+              value={status}
+              onChange={setStatus}
+              variantByKey={(k) => k === 'completed' ? 'success' : k === 'cancelled' ? 'error' : 'gold'}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* List */}
       {filtered.length === 0 ? (
         <HistoryEmpty t={t} />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filtered.map((entry) => (
             <HistoryCard
               key={entry.id}
               entry={entry}
               locale={locale}
-              t={t}
               onSelect={() => setSelected(entry)}
             />
           ))}
         </div>
       )}
 
-      {/* Receipt modal */}
       {selected && (
         <ReceiptModal entry={selected} locale={locale} onClose={() => setSelected(null)} />
       )}
@@ -184,73 +218,78 @@ export function ClientHistoryView() {
 }
 
 /* ------------------------------------------------------------------ */
-/* History card                                                         */
+/* KPI card                                                             */
 /* ------------------------------------------------------------------ */
 
-interface HistoryCardProps {
-  entry: MockReservation;
-  locale: string;
-  t: ReturnType<typeof useTranslations>;
-  onSelect: () => void;
+function KpiCard({
+  label, value, sub, icon, highlight = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="bg-surface rounded-2xl p-4 border border-border">
+      <div className="flex items-center gap-2">
+        <span className="w-8 h-8 rounded-xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
+          {icon}
+        </span>
+        <span className="text-[10.5px] font-black text-foreground/65 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">{label}</span>
+      </div>
+      <p className={`mt-3 text-[24px] sm:text-[26px] font-black leading-none ${highlight ? 'text-gold' : 'text-foreground'}`}>
+        {value}
+      </p>
+      {sub && (
+        <p className="mt-1.5 text-[11px] font-semibold text-foreground/55 dark:text-[#8A8A82]">{sub}</p>
+      )}
+    </div>
+  );
 }
 
-function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
-  const dateLabel = new Date(e.date).toLocaleDateString(
-    locale === 'en' ? 'en-CA' : 'fr-CA',
-    { day: 'numeric', month: 'short', year: 'numeric' },
-  );
+/* ------------------------------------------------------------------ */
+/* Filter strip                                                         */
+/* ------------------------------------------------------------------ */
 
-  const isCompleted = e.status === 'completed';
+interface FilterStripProps<T extends string> {
+  label: string;
+  items: { key: T; label: string }[];
+  value: T;
+  onChange: (next: T) => void;
+  variantByKey?: (key: T) => 'gold' | 'success' | 'error';
+}
 
+function FilterStrip<T extends string>({ label, items, value, onChange, variantByKey }: FilterStripProps<T>) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="w-full text-left bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 hover:border-gold/30 transition-colors"
-    >
-      <div className="flex gap-3 items-center">
-        {/* Thumbnail */}
-        <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-[#D0D0C0] dark:bg-tab-inactive">
-          {e.stationImageUrl && (
-            <img src={e.stationImageUrl} alt={e.stationName} className="w-full h-full object-cover" />
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <span className="text-[15px] font-bold text-[#0A0A14] dark:text-white leading-tight line-clamp-1">
-              {e.stationName}
-            </span>
-            <span className={[
-              'shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold',
-              isCompleted
-                ? 'bg-lavo-success/15 text-lavo-success'
-                : 'bg-lavo-error/15 text-lavo-error',
-            ].join(' ')}>
-              {t(`status_${e.status}`)}
-            </span>
-          </div>
-
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5 truncate">
-            {e.forfaitName} · {e.categoryLabel}
-          </p>
-
-          <div className="flex items-center gap-3 mt-1.5 text-[13px]">
-            <span className="text-[#777] dark:text-[#C0C0B0]">{dateLabel}</span>
-            <span className="text-[#777] dark:text-[#C0C0B0]">{e.timeSlot}</span>
-            <span className="ml-auto font-black text-gold">{e.totalPrice}$</span>
-          </div>
-        </div>
-
-        {/* Chevron — only for completed (receipt available) */}
-        {isCompleted && (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        )}
+    <div className="px-4 py-3.5">
+      <p className="text-[10.5px] font-black text-foreground/65 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">{label}</p>
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
+        {items.map(({ key, label: l }) => {
+          const isActive = value === key;
+          const variant = variantByKey ? variantByKey(key) : 'gold';
+          const activeClass =
+            variant === 'success' ? 'bg-Hurryline-success text-white'
+            : variant === 'error' ? 'bg-Hurryline-error text-white'
+            : 'bg-gold text-dark-bg';
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onChange(key)}
+              className={[
+                'shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors cursor-pointer',
+                isActive
+                  ? activeClass
+                  : 'bg-white/70 dark:bg-tab-inactive text-foreground/70 hover:bg-surface/60 dark:hover:bg-tab-inactive',
+              ].join(' ')}
+            >
+              {l}
+            </button>
+          );
+        })}
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -260,19 +299,25 @@ function HistoryCard({ entry: e, locale, t, onSelect }: HistoryCardProps) {
 
 function HistoryEmpty({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-[#E0E0D0] dark:bg-dark-card flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9A9A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center bg-surface rounded-2xl border border-border">
+      <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
           <polyline points="14 2 14 8 20 8" />
           <line x1="16" y1="13" x2="8" y2="13" />
           <line x1="16" y1="17" x2="8" y2="17" />
         </svg>
       </div>
-      <div>
-        <p className="text-[16px] font-bold text-[#0A0A14] dark:text-white">{t('empty_title')}</p>
-        <p className="text-[14px] text-[#666] dark:text-[#B0B0A0] mt-1 max-w-xs">{t('empty_desc')}</p>
+      <div className="px-6">
+        <p className="text-[16px] font-black text-foreground">{t('empty_title')}</p>
+        <p className="text-[13.5px] text-foreground/65 mt-1 max-w-xs mx-auto leading-snug">{t('empty_desc')}</p>
       </div>
+      <Link
+        href="/stations"
+        className="rounded-full bg-gold px-5 py-2.5 text-[13px] font-black text-dark-bg transition-colors hover:bg-gold-hover btn-shine"
+      >
+        {t('empty_cta')}
+      </Link>
     </div>
   );
 }

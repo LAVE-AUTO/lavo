@@ -99,7 +99,7 @@ async function tryCloudinaryUpload(
           public_id: publicId.replace(/\.[^.]+$/, '') || publicId,
           filename: originalName || `file${ext}`,
         };
-        // v2 API: upload_stream(options, callback) — options must come first.
+        // v2 API: upload_stream(options, callback) - options must come first.
         const uploadStream = cloudinary.uploader.upload_stream(
           opts,
           (err: Error | undefined, res: { secure_url?: string } | undefined) => {

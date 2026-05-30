@@ -104,11 +104,11 @@ function CountrySelect({
   }, [countries, search]);
 
   const triggerClasses = [
-    'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
+    'flex items-center gap-1.5 px-3 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
     'outline-none transition-all duration-150 whitespace-nowrap',
     hasError
-      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
-      : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C]'
+      : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 
   return (
@@ -124,11 +124,11 @@ function CountrySelect({
         <span className="w-5 h-4 inline-flex items-center">
           {FlagIcon && <FlagIcon title="" />}
         </span>
-        <span className="text-[15px] font-medium text-[#1A1A1A] dark:text-white">
+        <span className="text-[15px] font-medium text-[#001201] dark:text-white">
           {dialCode}
         </span>
         <svg
-          className={`w-2.5 h-2.5 text-[#888] transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-2.5 h-2.5 text-foreground/55 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -142,11 +142,11 @@ function CountrySelect({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 mt-1 w-72 bg-white dark:bg-dark-card border border-[#CCCCCC] dark:border-tab-inactive rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute top-full left-0 z-50 mt-1 w-72 bg-white dark:bg-surface border border-[#CCCCCC] dark:border-border rounded-lg shadow-lg overflow-hidden">
           {/* Search bar */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#EEEEEE] dark:border-tab-inactive">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#EEEEEE] dark:border-border">
             <svg
-              className="w-3.5 h-3.5 text-[#888] shrink-0"
+              className="w-3.5 h-3.5 text-foreground/55 shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -163,7 +163,7 @@ function CountrySelect({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent text-[14px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] outline-none"
+              className="w-full bg-transparent text-[14px] text-[#001201] dark:text-white placeholder-[#AAAAAA] outline-none"
               placeholder="Search country..."
               autoComplete="off"
             />
@@ -182,17 +182,17 @@ function CountrySelect({
                     className={[
                       'w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors',
                       selected
-                        ? 'bg-[#F5F0E0] dark:bg-dark-surface font-semibold'
+                        ? 'bg-[#FFF9EC] dark:bg-surface font-semibold'
                         : 'hover:bg-[#F8F8F6] dark:hover:bg-dark-surface',
                     ].join(' ')}
                   >
                     <span className="w-5 h-4 inline-flex items-center shrink-0">
                       {ItemFlag && <ItemFlag title="" />}
                     </span>
-                    <span className="flex-1 text-[14px] text-[#1A1A1A] dark:text-white truncate">
+                    <span className="flex-1 text-[14px] text-[#001201] dark:text-white truncate">
                       {c.name}
                     </span>
-                    <span className="text-[13px] text-[#888] dark:text-[#999] tabular-nums">
+                    <span className="text-[13px] text-foreground/55 dark:text-[#999] tabular-nums">
                       {c.dial}
                     </span>
                   </button>
@@ -200,7 +200,7 @@ function CountrySelect({
               );
             })}
             {filtered.length === 0 && (
-              <li className="px-3 py-3 text-[13px] text-[#888] text-center">
+              <li className="px-3 py-3 text-[13px] text-foreground/55 text-center">
                 No results
               </li>
             )}
@@ -212,7 +212,7 @@ function CountrySelect({
 }
 
 /* ------------------------------------------------------------------ */
-/*  PhoneInput — country select + local number input, side by side     */
+/*  PhoneInput - country select + local number input, side by side     */
 /* ------------------------------------------------------------------ */
 
 export interface PhoneInputValue {
@@ -252,17 +252,17 @@ export function PhoneInput({
   );
 
   const inputClasses = [
-    'w-full px-4 py-3 bg-white dark:bg-dark-card border-[1.5px] rounded-lg',
-    'text-[16px] text-[#1A1A1A] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#4A5A46]',
+    'w-full px-4 py-3 bg-white dark:bg-surface border-[1.5px] rounded-lg',
+    'text-[16px] text-[#001201] dark:text-white placeholder-[#AAAAAA] dark:placeholder-[#B0BFB1]',
     'outline-none transition-all duration-150',
     error
-      ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
-      : 'border-[#CCCCCC] dark:border-tab-inactive focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(196,154,30,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(196,154,30,0.15)]',
+      ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C] focus:shadow-[0_0_0_3px_rgba(232,71,42,0.2)]'
+      : 'border-[#CCCCCC] dark:border-border focus:border-gold dark:focus:border-gold focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.18)] dark:focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.15)]',
   ].join(' ');
 
   return (
     <div className="mb-4">
-      <label className="block text-[15px] font-semibold text-[#1A1A1A] dark:text-white mb-1.5 tracking-wide">
+      <label className="block text-[15px] font-semibold text-[#001201] dark:text-white mb-1.5 tracking-wide">
         {label}
         {required && <span className="text-gold ml-0.5">*</span>}
       </label>
@@ -284,7 +284,7 @@ export function PhoneInput({
       </div>
 
       {error && (
-        <p className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+        <p className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
           <span aria-hidden="true">!</span>
           {error}
         </p>

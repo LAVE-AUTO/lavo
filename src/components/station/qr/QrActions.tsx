@@ -2,6 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import {
+  renderBrandedQrPosterToDataUrl,
+  QR_COLOR_DARK,
+  QR_COLOR_LIGHT,
+  QR_LOGO_SRC,
+} from './qr-with-logo';
 import QRCode from 'qrcode';
 
 interface Props {
@@ -9,7 +15,7 @@ interface Props {
   stationName: string;
 }
 
-// Sanitize a station name for use in a filename — removes path-traversal chars and limits length
+// Sanitize a station name for use in a filename - removes path-traversal chars and limits length
 function sanitizeFilename(name: string): string {
   return name
     .toLowerCase()
@@ -28,30 +34,62 @@ export function QrActions({ url, stationName }: Props) {
     setCanShare(typeof navigator !== 'undefined' && 'share' in navigator);
   }, []);
 
-  /* Download as PNG */
+  /* Download as PNG — branded poster (wordmark + station name + caption) */
   const downloadPng = useCallback(async () => {
-    const dataUrl = await QRCode.toDataURL(url, {
-      width: 1024,
-      margin: 2,
-      color: { dark: '#1A1A0A', light: '#FFFFFF' },
-      errorCorrectionLevel: 'H',
+    const dataUrl = await renderBrandedQrPosterToDataUrl(url, {
+      stationName,
+      caption: t('poster_caption'),
     });
     const a = document.createElement('a');
     a.href = dataUrl;
     a.download = `qr-${sanitizeFilename(stationName)}.png`;
     a.click();
-  }, [url, stationName]);
+  }, [url, stationName, t]);
 
-  /* Download as SVG */
+  /* Download as SVG (logo embedded as a base64 <image>) */
   const downloadSvg = useCallback(async () => {
-    const svgStr = await QRCode.toString(url, {
+    const baseSvg = await QRCode.toString(url, {
       type: 'svg',
       width: 1024,
       margin: 2,
-      color: { dark: '#1A1A0A', light: '#FFFFFF' },
+      color: { dark: QR_COLOR_DARK, light: QR_COLOR_LIGHT },
       errorCorrectionLevel: 'H',
     });
-    const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+    const logoDataUrl = await fetch(QR_LOGO_SRC)
+      .then((r) => r.blob())
+      .then(
+        (blob) =>
+          new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          }),
+      )
+      .catch(() => null);
+    let finalSvg = baseSvg;
+    if (logoDataUrl) {
+      const viewBoxMatch = baseSvg.match(/viewBox="0 0 (\d+) (\d+)"/);
+      const vbSize = viewBoxMatch ? parseFloat(viewBoxMatch[1]) : 1024;
+      const logoW = vbSize * 0.26;
+      const pad = vbSize * 0.025;
+      const radius = vbSize * 0.04;
+      const tmp = new Image();
+      const aspect = await new Promise<number>((resolve) => {
+        tmp.onload = () => resolve(tmp.naturalWidth / tmp.naturalHeight);
+        tmp.onerror = () => resolve(2.48);
+        tmp.src = logoDataUrl;
+      });
+      const logoH = logoW / aspect;
+      const bgW = logoW + pad * 2;
+      const bgH = logoH + pad * 2;
+      const bgX = (vbSize - bgW) / 2;
+      const bgY = (vbSize - bgH) / 2;
+      const overlay =
+        `<rect x="${bgX}" y="${bgY}" width="${bgW}" height="${bgH}" rx="${radius}" ry="${radius}" fill="${QR_COLOR_LIGHT}"/>` +
+        `<image href="${logoDataUrl}" x="${bgX + pad}" y="${bgY + pad}" width="${logoW}" height="${logoH}" preserveAspectRatio="xMidYMid meet"/>`;
+      finalSvg = baseSvg.replace(/<\/svg>\s*$/, `${overlay}</svg>`);
+    }
+    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
@@ -98,7 +136,7 @@ export function QrActions({ url, stationName }: Props) {
       <button
         type="button"
         onClick={downloadPng}
-        className={`${btnBase} bg-[#C49A1E] text-[#0C1209] hover:opacity-90`}
+        className={`${btnBase} bg-[#DDAF3B] text-[#001201] hover:opacity-90`}
       >
         <DownloadIcon />
         {t('download_png')}
@@ -109,7 +147,7 @@ export function QrActions({ url, stationName }: Props) {
         <button
           type="button"
           onClick={downloadSvg}
-          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]`}
+          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]`}
         >
           <SvgIcon />
           {t('download_svg')}
@@ -117,7 +155,7 @@ export function QrActions({ url, stationName }: Props) {
         <button
           type="button"
           onClick={copyLink}
-          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#243020] dark:text-[#9A9A8A] dark:hover:bg-[#1A2A14]`}
+          className={`${btnBase} flex-1 border border-[#D8D4C8] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:border-[#001A05] dark:text-[#B0BFB1] dark:hover:bg-[#1A2A14]`}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
           {copied ? t('link_copied') : copyError ? t('copy_error') : t('copy_link')}
@@ -129,7 +167,7 @@ export function QrActions({ url, stationName }: Props) {
         <button
           type="button"
           onClick={share}
-          className={`${btnBase} border border-[#C49A1E]/30 text-[#C49A1E] hover:bg-[#C49A1E]/10`}
+          className={`${btnBase} border border-[#DDAF3B]/30 text-[#DDAF3B] hover:bg-[#DDAF3B]/10`}
         >
           <ShareIcon />
           {t('share')}
@@ -139,7 +177,7 @@ export function QrActions({ url, stationName }: Props) {
   );
 }
 
-/* Inline SVG icons — outline style, 16x16 */
+/* Inline SVG icons - outline style, 16x16 */
 
 const DownloadIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

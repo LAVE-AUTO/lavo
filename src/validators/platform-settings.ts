@@ -1,7 +1,7 @@
 /**
  * Validator for the platform settings API (GET/PATCH /api/v1/admin/settings).
  *
- * All 15 whitelisted keys are declared in ALLOWED_PLATFORM_SETTING_KEYS.
+ * All whitelisted keys are declared in ALLOWED_PLATFORM_SETTING_KEYS.
  * Per-key semantic rules are enforced in the superRefine callback so each
  * failure is reported under the correct key path.
  */
@@ -19,6 +19,7 @@ export { mapZodErrors };
  * Includes business rules (cancellation, booking), content limits (ratings, support),
  * and notification email addresses.
  */
+
 /**
  * Stripe card authorizations expire after 7 days.
  * This is the technical upper bound for max_advance_booking_days; bookings beyond
@@ -43,22 +44,38 @@ export const ALLOWED_PLATFORM_SETTING_KEYS = [
   'max_rating_comment_length',
   'max_support_message_length',
   'dispute_window_days',
+  'kyc_reminder_first_threshold_days',
+  'kyc_reminder_second_threshold_days',
+  'admin_log_retention_days',
 ] as const;
 
 export type PlatformSettingKey = (typeof ALLOWED_PLATFORM_SETTING_KEYS)[number];
+
+
+// %%%%% END - Constants %%%%%
 
 
 // %%%%% Helper functions %%%%%
 // Parsing and validation utilities
 
 /**
- * Parses a string as a non-negative integer. Returns NaN on failure.
- * Ensures no negative values and exact string representation match (no extra whitespace).
+ * Base integer parser: trims whitespace, parses as base-10 integer, and rejects
+ * values whose string representation does not round-trip exactly (catches leading
+ * zeros, spaces, and non-integer input). Returns NaN on any failure.
  */
-function parseNonNegativeInteger(raw: string): number {
+function parseStrictInteger(raw: string): number {
   const trimmed = raw.trim();
   const val = parseInt(trimmed, 10);
-  if (isNaN(val) || val < 0 || String(val) !== trimmed) return NaN;
+  if (isNaN(val) || String(val) !== trimmed) return NaN;
+  return val;
+}
+
+/**
+ * Parses a string as a non-negative integer. Returns NaN on failure.
+ */
+function parseNonNegativeInteger(raw: string): number {
+  const val = parseStrictInteger(raw);
+  if (isNaN(val) || val < 0) return NaN;
   return val;
 }
 
@@ -66,9 +83,8 @@ function parseNonNegativeInteger(raw: string): number {
  * Parses a string as a positive integer with an optional maximum. Returns NaN on failure.
  */
 function parsePositiveInteger(raw: string, max?: number): number {
-  const trimmed = raw.trim();
-  const val = parseInt(trimmed, 10);
-  if (isNaN(val) || val < 1 || String(val) !== trimmed) return NaN;
+  const val = parseStrictInteger(raw);
+  if (isNaN(val) || val < 1) return NaN;
   if (max !== undefined && val > max) return NaN;
   return val;
 }
@@ -77,9 +93,8 @@ function parsePositiveInteger(raw: string, max?: number): number {
  * Parses a string as an integer within [min, max]. Returns NaN on failure.
  */
 function parseBoundedInteger(raw: string, min: number, max: number): number {
-  const trimmed = raw.trim();
-  const val = parseInt(trimmed, 10);
-  if (isNaN(val) || val < min || val > max || String(val) !== trimmed) return NaN;
+  const val = parseStrictInteger(raw);
+  if (isNaN(val) || val < min || val > max) return NaN;
   return val;
 }
 
@@ -104,6 +119,9 @@ function addIssue(ctx: z.RefinementCtx, path: string, message: string): void {
 }
 
 
+// %%%%% END - Helper functions %%%%%
+
+
 // %%%%% Schema definition %%%%%
 // Bulk platform settings update schema with comprehensive per-key validation
 
@@ -111,7 +129,7 @@ function addIssue(ctx: z.RefinementCtx, path: string, message: string): void {
  * Bulk platform-settings update schema.
  *
  * Accepts a record of known keys → string values.
- *   - Minimum 1 key required; maximum 15 per request (one per allowed key)
+ *   - Minimum 1 key required; maximum one per allowed key
  *   - Unknown keys are rejected
  *   - Per-key semantic rules enforce correct types and value ranges via superRefine
  *
@@ -131,10 +149,11 @@ export const updatePlatformSettingsSchema = z
     'At least one setting key is required'
   )
   .refine(
-    (obj) => Object.keys(obj).length <= 15,
-    'Cannot update more than 15 settings at once'
+    (obj) => Object.keys(obj).length <= ALLOWED_PLATFORM_SETTING_KEYS.length,
+    `Cannot update more than ${ALLOWED_PLATFORM_SETTING_KEYS.length} settings at once`
   )
   .superRefine((obj, ctx) => {
+
     // --- Group A: Cancellation policy ---
 
     if ('cancellation_free_window_minutes' in obj) {
@@ -268,6 +287,34 @@ export const updatePlatformSettingsSchema = z
         addIssue(ctx, 'max_support_message_length', 'max_support_message_length must be an integer between 100 and 10000');
       }
     }
+
+
+    // --- Group G: KYC document expiry reminders ---
+
+    if ('kyc_reminder_first_threshold_days' in obj) {
+      const val = parsePositiveInteger(obj.kyc_reminder_first_threshold_days!);
+      if (isNaN(val)) {
+        addIssue(ctx, 'kyc_reminder_first_threshold_days', 'kyc_reminder_first_threshold_days must be a positive integer (minimum 1, default 30)');
+      }
+    }
+
+    if ('kyc_reminder_second_threshold_days' in obj) {
+      const val = parsePositiveInteger(obj.kyc_reminder_second_threshold_days!);
+      if (isNaN(val)) {
+        addIssue(ctx, 'kyc_reminder_second_threshold_days', 'kyc_reminder_second_threshold_days must be a positive integer (minimum 1, default 7)');
+      }
+    }
+
+    if ('admin_log_retention_days' in obj) {
+      const val = parseBoundedInteger(obj.admin_log_retention_days!, 7, 3650);
+      if (isNaN(val)) {
+        addIssue(ctx, 'admin_log_retention_days', 'admin_log_retention_days must be an integer between 7 and 3650 days');
+      }
+    }
+
   });
 
 export type UpdatePlatformSettingsInput = z.infer<typeof updatePlatformSettingsSchema>;
+
+
+// %%%%% END - Schema definition %%%%%

@@ -32,15 +32,15 @@ export function PhoneMockup() {
           {/* App header */}
           <div className="px-4 pt-3 pb-4">
             <p className="text-[11px] font-bold text-gold tracking-wider uppercase">
-              Slowtime
+              Hurryline
             </p>
-            <p className="text-[16px] font-black text-[#0A0A14] dark:text-white mt-1 leading-tight">
+            <p className="text-[16px] font-black text-foreground mt-1 leading-tight">
               {t('step_1_title')}
             </p>
           </div>
 
           {/* Search bar mockup */}
-          <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2.5 bg-[#F4F3EE] dark:bg-[#243020] rounded-xl">
+          <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2.5 bg-[#F4F3EE] dark:bg-[#001A05] rounded-xl">
             <svg
               width="14"
               height="14"
@@ -59,7 +59,7 @@ export function PhoneMockup() {
           </div>
 
           {/* Station card 1 */}
-          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#1E2A1A] p-3 shadow-sm">
+          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#001A05] p-3 shadow-sm">
             <div className="flex gap-3">
               <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -67,7 +67,7 @@ export function PhoneMockup() {
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#af8408"
+                  stroke="#DDAF3B"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -78,16 +78,16 @@ export function PhoneMockup() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">
+                <p className="text-[13px] font-bold text-foreground truncate">
                   Clean Express
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#999] mt-0.5">
+                <p className="text-[11px] text-foreground/55 dark:text-[#999] mt-0.5">
                   Paris 11e &middot; 0.8 km
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
                   <span className="text-[11px] text-gold">&#9733; 4.9</span>
                   <span className="text-[10px] text-[#AAA]">(312)</span>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-lavo-success/15 text-lavo-success font-bold">
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-Hurryline-success/15 text-Hurryline-success font-bold">
                     3 dispo
                   </span>
                 </div>
@@ -96,7 +96,7 @@ export function PhoneMockup() {
           </div>
 
           {/* Station card 2 */}
-          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#1E2A1A] p-3 shadow-sm">
+          <div className="mx-4 mb-3 rounded-xl border border-[#E8E8D8] dark:border-[#2C3828] bg-white dark:bg-[#001A05] p-3 shadow-sm">
             <div className="flex gap-3">
               <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -104,7 +104,7 @@ export function PhoneMockup() {
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#af8408"
+                  stroke="#DDAF3B"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -115,16 +115,16 @@ export function PhoneMockup() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[#0A0A14] dark:text-white truncate">
+                <p className="text-[13px] font-bold text-foreground truncate">
                   Aqua Wash Pro
                 </p>
-                <p className="text-[11px] text-[#888] dark:text-[#999] mt-0.5">
+                <p className="text-[11px] text-foreground/55 dark:text-[#999] mt-0.5">
                   Paris 15e &middot; 1.2 km
                 </p>
                 <div className="flex items-center gap-1 mt-1.5">
                   <span className="text-[11px] text-gold">&#9733; 4.7</span>
                   <span className="text-[10px] text-[#AAA]">(187)</span>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-lavo-success/15 text-lavo-success font-bold">
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-Hurryline-success/15 text-Hurryline-success font-bold">
                     5 dispo
                   </span>
                 </div>
@@ -135,7 +135,7 @@ export function PhoneMockup() {
           {/* Floating confirmation toast */}
           <div className="mx-4 mt-2 rounded-xl bg-[#0A0A14] dark:bg-gold/10 p-3 animate-float-card">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-lavo-success/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-Hurryline-success/20 flex items-center justify-center flex-shrink-0">
                 <svg
                   width="14"
                   height="14"

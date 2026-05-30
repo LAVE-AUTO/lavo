@@ -1,70 +1,48 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { RevealOnScroll } from './RevealOnScroll';
 
-interface FaqItemProps {
-  question: string;
-  answer: string;
+interface Props {
+  tag: string;
+  title: string;
+  titleAccent: string;
+  /** Sanitized HTML body (admin-editable). */
+  html: string;
 }
 
-function FaqItem({ question, answer }: FaqItemProps) {
-  const [open, setOpen] = useState(false);
-
+export function FaqSection({ tag, title, titleAccent, html }: Props) {
   return (
-    <button
-      type="button"
-      onClick={() => setOpen((prev) => !prev)}
-      className="w-full rounded-[10px] border border-[rgba(200,152,10,0.1)] bg-[rgba(245,237,214,0.03)] px-5 py-5 text-left transition-all duration-300 hover:border-[rgba(200,152,10,0.35)] hover:bg-[rgba(200,152,10,0.04)] cursor-pointer"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-[15px] font-semibold text-[#1a1a1a] dark:text-[#fef9e7]">{question}</span>
-        <span className="flex-shrink-0 text-[20px] font-light text-[#c8980a] transition-transform duration-300"
-          style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}>
-          +
-        </span>
-      </div>
-      {open && (
-        <div className="mt-3 text-[13px] leading-[1.7] text-[#4a6a4d] dark:text-[#7a9a7d]">
-          {answer}
-        </div>
-      )}
-    </button>
-  );
-}
-
-export function FaqSection() {
-  const t = useTranslations('home.faq');
-
-  const items = [
-    { q: t('q1'), a: t('a1') },
-    { q: t('q2'), a: t('a2') },
-    { q: t('q3'), a: t('a3') },
-    { q: t('q4'), a: t('a4') },
-    { q: t('q5'), a: t('a5') },
-    { q: t('q6'), a: t('a6') },
-  ];
-
-  return (
-    <section className="landing-alt-bg px-6 py-28 lg:px-16" id="faq">
+    <section className="landing-alt-bg px-6 py-16 lg:px-16 lg:py-20" id="faq">
       <div className="mx-auto max-w-[1280px]">
         <RevealOnScroll className="text-center mb-2">
-          <div className="font-dm-mono mb-4 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#c8980a]">
-            {t('tag')}
-            <span className="h-px w-9 bg-[#c8980a] opacity-50" />
+          <div className="font-dm-mono mb-3 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[3px] text-[#DDAF3B]">
+            {tag}
+            <span className="h-px w-9 bg-[#DDAF3B] opacity-50" />
           </div>
-          <h2 className="font-playfair text-[clamp(34px,3.8vw,52px)] font-bold leading-[1.1] text-[#1a1a1a] dark:text-[#fef9e7]">
-            {t('title')}{' '}
-            <em className="italic text-[#c8980a]">{t('title_accent')}</em>
+          <h2 className="font-playfair text-[clamp(34px,3.8vw,52px)] font-bold leading-[1.1] text-[#001201] dark:text-[#FFEECA]">
+            {title}{' '}
+            <em className="italic text-[#DDAF3B]">{titleAccent}</em>
           </h2>
         </RevealOnScroll>
 
-        <div className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {items.map((item) => (
-            <FaqItem key={item.q} question={item.q} answer={item.a} />
-          ))}
-        </div>
+        <RevealOnScroll>
+          <div
+            className={[
+              'mx-auto mt-10 max-w-3xl text-[14px] sm:text-[15px] text-[var(--foreground)] dark:text-[#a8c2a8] leading-[1.85]',
+              '[&_h2]:font-playfair [&_h2]:text-[22px] [&_h2]:font-bold [&_h2]:text-[#001201] dark:[&_h2]:text-[#FFEECA] [&_h2]:mt-10 [&_h2]:mb-3',
+              '[&_h3]:relative [&_h3]:pl-6 [&_h3]:mt-8 [&_h3]:mb-2.5 [&_h3]:text-[16px] sm:[&_h3]:text-[17px] [&_h3]:font-bold [&_h3]:text-[#001201] dark:[&_h3]:text-[#FFEECA]',
+              '[&_h3]:before:content-[""] [&_h3]:before:absolute [&_h3]:before:left-0 [&_h3]:before:top-1/2 [&_h3]:before:-translate-y-1/2 [&_h3]:before:h-4 [&_h3]:before:w-1 [&_h3]:before:rounded-full [&_h3]:before:bg-[#DDAF3B]',
+              '[&_p]:mb-4',
+              '[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1.5',
+              '[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1.5',
+              '[&_strong]:text-[#001201] dark:[&_strong]:text-[#FFEECA] [&_strong]:font-bold',
+              '[&_a]:text-[#DDAF3B] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2',
+            ].join(' ')}
+            // Sanitized server-side via DOMPurify before persistence.
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        </RevealOnScroll>
       </div>
     </section>
   );

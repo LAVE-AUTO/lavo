@@ -2,7 +2,9 @@
  * Application-wide constants.
  */
 
-export const APP_NAME = 'LAVO';
+export const APP_NAME =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APP_NAME) ||
+  'Hurryline';
 export const APP_URL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APP_URL) ||
   'http://localhost:3000';
@@ -21,6 +23,11 @@ export const MAX_USERNAME_LENGTH = 30;
 export const DEFAULT_MAX_TEXT_FIELD_LENGTH = 50;
 /** Default max length for truncateText when not specified. */
 export const DEFAULT_TRUNCATE_LENGTH = 150;
+
+export const SUPPORT_SUBJECT_MIN_LENGTH = 5;
+export const SUPPORT_SUBJECT_MAX_LENGTH = 255;
+export const SUPPORT_MESSAGE_MIN_LENGTH = 10;
+export const SUPPORT_MESSAGE_MAX_LENGTH = 5000;
 
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
@@ -63,7 +70,7 @@ export const HTTP_STATUS = {
 
 /**
  * Maximum number of days in advance a reservation can be booked.
- * Stripe card authorizations expire after 7 days — bookings beyond this window
+ * Stripe card authorizations expire after 7 days - bookings beyond this window
  * would result in an expired authorization before service completion.
  */
 export const MAX_ADVANCE_BOOKING_DAYS = 7;

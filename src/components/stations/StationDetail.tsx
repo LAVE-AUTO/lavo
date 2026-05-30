@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { StationReviews } from './StationReviews';
+import { StationOpeningHours } from './StationOpeningHours';
 import { BookingFlow } from './booking/BookingFlow';
+import { StationServicesSection } from './StationServicesSection';
 import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
+import { useUserLocation, haversineKm } from './useUserLocation';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/context/toast-context';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuth } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
-import type { StationDetailData, ServiceCategory, ServiceForfait } from '@/types/station';
+import type { StationDetailData, StationServicePublic } from '@/types/station';
 
 interface StationDetailProps {
   id: string;
@@ -27,10 +30,18 @@ function normalizeQrContext(searchParams: ReturnType<typeof useSearchParams>): {
   const rawVersion = searchParams.get('v');
   const qrToken = typeof rawToken === 'string' && /^[a-f0-9]{64}$/i.test(rawToken) ? rawToken : null;
   const qrVersion = rawVersion === '1' ? '1' : null;
-  if (!qrToken || !qrVersion) {
-    return { qrToken: null, qrVersion: null };
-  }
+  if (!qrToken || !qrVersion) return { qrToken: null, qrVersion: null };
   return { qrToken, qrVersion };
+}
+
+function pickDefaultService(services: StationServicePublic[]): StationServicePublic | null {
+  if (services.length === 0) return null;
+  return services.find((s) => s.isPopular) ?? services[0];
+}
+
+function minPrice(svc: StationServicePublic): number | null {
+  const prices = svc.vehicleEntries.map((e) => e.price);
+  return prices.length > 0 ? Math.min(...prices) : null;
 }
 
 export function StationDetail({ id }: StationDetailProps) {
@@ -39,36 +50,76 @@ export function StationDetail({ id }: StationDetailProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { qrToken, qrVersion } = normalizeQrContext(searchParams);
-  const { success: toastSuccess, error: toastError } = useToast();
   const { isAuthenticated } = useAuth();
   const locale = useLocale();
   const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, [mountedRef]);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [station, setStation] = useState<StationDetailData | null | undefined>(undefined);
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  /* Format entry choice persisted per service id - lets users switch services without losing earlier picks. */
+  const [formatEntryByService, setFormatEntryByService] = useState<Record<string, string>>({});
+  const userLocation = useUserLocation();
 
   useEffect(() => {
     let cancelled = false;
     fetchStationById(id).then((result) => {
-      if (!cancelled) setStation(result);
+      if (cancelled) return;
+      setStation(result);
+      const defaultSvc = result ? pickDefaultService(result.stationServices) : null;
+      if (defaultSvc) setSelectedServiceId(defaultSvc.id);
     }).catch(() => {
       if (!cancelled) setStation(null);
     });
     return () => { cancelled = true; };
   }, [id]);
 
-  const [selectedCategoryIdx, setSelectedCategoryIdx] = useState(0);
-  const [selectedForfaitIdx, setSelectedForfaitIdx] = useState(0);
+  /* Photo carousel auto-rotation - 5 seconds when multiple photos exist. */
+  useEffect(() => {
+    const photoCount = station?.photos?.length ?? 0;
+    if (photoCount < 2) return;
+    const ticker = setInterval(() => {
+      setPhotoIndex((i) => (i + 1) % photoCount);
+    }, 5000);
+    return () => clearInterval(ticker);
+  }, [station?.photos?.length]);
+
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [joiningQueue, setJoiningQueue] = useState(false);
+  const [bookingRefreshing, setBookingRefreshing] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const [navConfirmOpen, setNavConfirmOpen] = useState(false);
+
+  const selectedService = useMemo(
+    () => station?.stationServices.find((s) => s.id === selectedServiceId) ?? null,
+    [station, selectedServiceId],
+  );
+
+  const selectedFormatEntryId = selectedServiceId
+    ? formatEntryByService[selectedServiceId] ?? null
+    : null;
+
+  const handleSelectService = (id: string) => {
+    setSelectedServiceId(id);
+  };
+
+  const handleSelectFormatEntry = (entryId: string | null) => {
+    if (!selectedServiceId) return;
+    setFormatEntryByService((prev) => {
+      const next = { ...prev };
+      if (entryId == null) delete next[selectedServiceId];
+      else next[selectedServiceId] = entryId;
+      return next;
+    });
+  };
 
   if (station === undefined) return <PageSpinner />;
 
   if (!station) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
-        <p className="text-[16px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">{t('error_load')}</p>
+        <p className="text-[16px] font-semibold text-foreground">{t('error_load')}</p>
         <Link href="/stations" className="text-[15px] font-semibold text-gold hover:text-gold-hover transition-colors">
           {t('back_to_list')}
         </Link>
@@ -76,34 +127,50 @@ export function StationDetail({ id }: StationDetailProps) {
     );
   }
 
-  const hasSlots = station.availableSlots > 0;
-  const isOpen   = station.isOpen !== false;
-  const categories = station.serviceCategories || [];
-  const currentCategory: ServiceCategory | undefined = categories[selectedCategoryIdx];
-  const forfaits = currentCategory ? currentCategory.forfaits : [];
-  const currentForfait: ServiceForfait | undefined = forfaits[selectedForfaitIdx];
+  const isOpen = station.isOpen !== false;
+  const hasServices = station.stationServices.length > 0;
+  const hasNoAvailability = (station.availableSlots ?? 0) <= 0;
 
-  const handleCategoryChange = (idx: number) => {
-    setSelectedCategoryIdx(idx);
-    setSelectedForfaitIdx(0);
-  };
+  const selectedFormatEntry = selectedService && selectedFormatEntryId
+    ? selectedService.vehicleEntries.find((e) => e.id === selectedFormatEntryId) ?? null
+    : null;
 
-  const handleJoinQueue = async () => {
+  const currentPrice = selectedService
+    ? (selectedService.category === 'hand_wash'
+        ? (selectedFormatEntry?.price ?? minPrice(selectedService))
+        : minPrice(selectedService))
+    : station.priceFrom;
+
+  const needsFormatChoice = selectedService?.category === 'hand_wash'
+    && selectedService.vehicleEntries.some((e) => e.vehicleFormatId != null)
+    && !selectedFormatEntry;
+
+  const distanceLabel = (() => {
+    const km = station.distanceKm != null
+      ? station.distanceKm
+      : (userLocation && station.latitude != null && station.longitude != null)
+        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude)
+        : null;
+    if (km == null) return null;
+    return km < 1 ? t('distance_m', { distance: Math.round(km * 1000) }) : t('distance_km', { distance: km.toFixed(1) });
+  })();
+
+  const handleOpenBooking = async () => {
     if (!isAuthenticated) {
-      const callbackUrl = encodeURIComponent(`/stations/${id}`);
+      const callbackUrl = encodeURIComponent(`/${locale ?? 'fr'}/stations/${id}`);
       router.push(`/${locale ?? 'fr'}/login?callbackUrl=${callbackUrl}`);
       return;
     }
-    if (!currentForfait) return;
-    setJoiningQueue(true);
-    const [ok] = await postWithApi(`/stations/${id}/queue/join`, { vehicle_format_id: currentForfait.id });
-    if (!mountedRef.current) return;
-    setJoiningQueue(false);
-    if (ok) {
-      toastSuccess(t('detail_queue_joined'));
-    } else {
-      toastError(t('detail_queue_join_error'));
+    setBookingRefreshing(true);
+    try {
+      const fresh = await fetchStationById(id);
+      if (fresh && mountedRef.current) setStation(fresh);
+    } catch {
+      // Keep existing data on network error
+    } finally {
+      if (mountedRef.current) setBookingRefreshing(false);
     }
+    if (mountedRef.current) setBookingOpen(true);
   };
 
   const fallbackMapsUrl =
@@ -111,340 +178,379 @@ export function StationDetail({ id }: StationDetailProps) {
       ? `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${station.name}, ${station.address}, ${station.city}`)}`;
 
-  // POST /stations/:id/join signals "client en route" to the station (notification/metric).
-  // This is separate from POST /stations/:id/queue/join which adds the client to the queue.
-  const handleEnRoute = async () => {
+  const handleConfirmEnRoute = async () => {
     setNavigating(true);
     const [ok, data] = await postWithApi<{ data: { mapsUrl: string } }>(`/stations/${id}/join`, {});
     if (!mountedRef.current) return;
     setNavigating(false);
+    setNavConfirmOpen(false);
     const result = ok ? (data as { data: { mapsUrl: string } }).data : null;
     const url = result?.mapsUrl ?? fallbackMapsUrl;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  /* ── Reusable booking widget (rendered in sidebar on lg, inline on mobile) ── */
-  const BookingWidget = (
-    <div className="space-y-5">
-      {/* Price + status row */}
-      <div className="flex items-center justify-between">
+  /* Live queue stats block. */
+  const QueueBlock = (
+    <div className="rounded-2xl border border-border bg-surface/60 overflow-hidden">
+      <div className="flex items-center gap-2 px-5 pt-4">
+        <span className="w-2 h-2 rounded-full bg-Hurryline-success animate-pulse" />
+        <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] flex-1">
+          {t('detail_queue')}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2 px-5 pt-3 pb-3 text-center">
         <div>
-          <div className="text-[24px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-            {currentForfait ? currentForfait.price : station.priceFrom}
-            <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
-          </div>
-          <div className="text-[13px] text-[#555] dark:text-[#C0C0B0] mt-0.5">
-            {currentForfait ? currentForfait.name : t('detail_price_from')}
-          </div>
+          <p className="text-[22px] font-black text-foreground leading-none">{station.queueCount}</p>
+          <p className="text-[10.5px] text-foreground/65 mt-1.5 uppercase tracking-wider font-bold">{t('queue_waiting')}</p>
         </div>
-        <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="px-3 py-1 text-[13px]">
-          <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-lavo-success animate-pulse' : 'bg-lavo-error'}`} />
+        <div>
+          <p className="text-[22px] font-black text-foreground leading-none">
+            {distanceLabel ?? '--'}
+          </p>
+          <p className="text-[10.5px] text-foreground/65 mt-1.5 uppercase tracking-wider font-bold">{t('queue_distance')}</p>
+        </div>
+      </div>
+      {station.queueCount > 0 && distanceLabel && (
+        <p className="px-5 pb-4 text-[12.5px] text-foreground/70 leading-snug">
+          {t('detail_leave_now')} <strong className="text-gold font-black">{t('detail_perfect_timing')}</strong>
+        </p>
+      )}
+    </div>
+  );
+
+  /* Compact summary panel used as the sticky right-column on desktop. */
+  const SummaryPanel = (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[11px] text-foreground/55 uppercase tracking-wider font-bold">{t('detail_price_from')}</p>
+          <p className="text-[32px] font-black text-foreground leading-none mt-1">
+            {currentPrice != null ? (
+              <>
+                <span className="text-[16px] font-bold mr-1 text-foreground/70">{t('price_unit')}</span>
+                {currentPrice.toLocaleString()}
+              </>
+            ) : '--'}
+          </p>
+        </div>
+        <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="px-3 py-1 text-[12px]">
+          <span className={`w-2 h-2 rounded-full mr-1.5 ${isOpen ? 'bg-Hurryline-success animate-pulse' : 'bg-Hurryline-error'}`} />
           {isOpen ? t('status_open') : t('status_closed')}
         </Badge>
       </div>
 
-      {/* Slot picker — shown when available slots OR station is open (for queue join) */}
-      {(hasSlots || isOpen) && categories.length > 0 && (
-        <div>
-          <label className="block text-[11px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-2">
-            {t('service_type')}
-          </label>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {categories.map((cat, idx) => (
-              <button
-                key={cat.type}
-                type="button"
-                onClick={() => handleCategoryChange(idx)}
-                className={`shrink-0 px-3 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
-                  idx === selectedCategoryIdx
-                    ? 'bg-gold text-dark-bg shadow-md'
-                    : 'bg-[#F0F0E2] dark:bg-tab-inactive text-[#333] dark:text-[#C0C0B0] border border-[#D0D0C0] dark:border-tab-inactive hover:border-gold/40'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+      {selectedService && (
+        <div className="rounded-xl bg-gold/10 border border-gold/30 px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gold">{t('detail_selected_service')}</p>
+          <p className="text-[14.5px] font-bold text-foreground truncate mt-0.5">{selectedService.name}</p>
         </div>
       )}
 
-      {/* Forfait cards — shown when available slots OR station is open (for queue join) */}
-      {(hasSlots || isOpen) && currentCategory && (
-        <div className="space-y-3">
-          {currentCategory.description && (
-            <p className="text-[13px] text-[#555] dark:text-[#B0B0A0] leading-relaxed">
-              {currentCategory.description}
-            </p>
-          )}
-          <div className="space-y-2.5 max-h-[280px] overflow-y-auto scrollbar-hide pr-0.5">
-            {forfaits.map((forfait, idx) => (
-              <button
-                key={forfait.id}
-                type="button"
-                onClick={() => setSelectedForfaitIdx(idx)}
-                className={`w-full text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-                  idx === selectedForfaitIdx
-                    ? 'border-gold bg-gold/10 dark:bg-gold/5'
-                    : 'border-[#D0D0C0] dark:border-tab-inactive bg-white/40 dark:bg-dark-bg/40 hover:border-gold/30'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {idx === selectedForfaitIdx && (
-                        <span className="w-4 h-4 rounded-full bg-gold flex items-center justify-center shrink-0">
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                        </span>
-                      )}
-                      <span className="text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{forfait.name}</span>
-                    </div>
-                    <p className="text-[12px] text-[#555] dark:text-[#B0B0A0] line-clamp-2">{forfait.description}</p>
-                    <span className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-[#888] dark:text-[#999]">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                      {forfait.duration} min
-                    </span>
-                  </div>
-                  <span className="text-[17px] font-black text-gold shrink-0">{forfait.price}$</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {QueueBlock}
 
-      {/* Unavailable notice — shown when station is closed and has no available slots */}
-      {!hasSlots && !isOpen && (
-        <div className="rounded-xl border border-[#D0D0C0] dark:border-tab-inactive bg-[#F0F0E2] dark:bg-dark-bg/50 px-4 py-4 text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
-          {t('detail_unavailable_notice')}
-        </div>
-      )}
-
-      {/* Queue stats */}
-      {hasSlots && (
-        <div className="bg-[#F0F0E2] dark:bg-dark-bg/50 rounded-xl p-3.5 border border-[#D8D8C8] dark:border-tab-inactive">
-          <div className="flex items-center gap-1.5 text-[11px] font-black text-[#555] dark:text-[#A0A090] tracking-wider uppercase mb-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-lavo-success animate-pulse shrink-0" />
-            {t('detail_queue')}
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.queueCount}</div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_waiting')}</div>
-            </div>
-            <div>
-              <div className={`text-[20px] font-black leading-none ${station.estimatedWaitMinutes > 20 ? 'text-lavo-error' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
-                {station.estimatedWaitMinutes > 0 ? station.estimatedWaitMinutes : '—'}
-              </div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('min_attente')}</div>
-            </div>
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">{station.availableSlots}</div>
-              <div className="text-[11px] text-[#555] dark:text-[#C0C0B0] mt-1">{t('queue_available')}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CTA */}
-      {hasSlots ? (
+      {(isOpen || hasServices) && !hasNoAvailability ? (
         <button
           type="button"
-          onClick={() => setBookingOpen(true)}
-          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
+          onClick={handleOpenBooking}
+          disabled={bookingRefreshing}
+          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer btn-shine disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {t('continue')}
-        </button>
-      ) : isOpen && currentForfait ? (
-        <button
-          type="button"
-          onClick={handleJoinQueue}
-          disabled={joiningQueue}
-          aria-busy={joiningQueue}
-          className="w-full py-3.5 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {joiningQueue ? '...' : t('detail_join_queue')}
+          {bookingRefreshing ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {t('detail_book_service')}
+            </span>
+          ) : t('detail_book_service')}
         </button>
       ) : (
-        <div className="w-full py-3.5 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
-          {t('no_slots')}
-        </div>
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          title={t('detail_unavailable_banner_title')}
+          className="w-full py-3.5 bg-surface dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-foreground/65 dark:text-[#C0C0B0] text-center cursor-not-allowed"
+        >
+          {t('detail_book_service')}
+        </button>
+      )}
+
+      {!isOpen && !hasServices && (
+        <p className="text-[12.5px] text-foreground/70 leading-relaxed text-center">
+          {t('detail_unavailable_notice')}
+        </p>
       )}
     </div>
   );
 
   return (
     <>
-      <div className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg transition-colors animate-fade-in">
+      <div className="min-h-screen bg-background transition-colors animate-fade-in">
 
-        {/* ── Hero — full width ── */}
-        <div className="relative h-[240px] sm:h-[320px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#EDEDED] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
-          {station.imageUrl ? (
-            <img src={station.imageUrl} alt={station.name} className="w-full h-full object-cover" />
+        {/* ── Hero ── */}
+        <div className="relative h-[260px] sm:h-[340px] lg:h-[440px] bg-linear-to-br from-[#D5D5C5] to-[#FFF9EC] dark:from-tab-inactive dark:to-dark-bg overflow-hidden">
+          {(station.photos?.length ?? 0) > 0 ? (
+            station.photos!.map((url, i) => (
+              <img
+                key={`${i}-${url}`}
+                src={url}
+                alt={station.name}
+                onError={() => setHeroImgFailed(true)}
+                className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${i === photoIndex ? 'opacity-100' : 'opacity-0'}`}
+              />
+            ))
+          ) : station.imageUrl && !heroImgFailed ? (
+            <img src={station.imageUrl} alt={station.name} onError={() => setHeroImgFailed(true)} className="w-full h-full object-cover object-center" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#999] dark:text-[#3A4A36] text-[14px] font-semibold">
               Photo
             </div>
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
 
-          {/* Back button */}
+          {(station.photos?.length ?? 0) > 1 && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm">
+              {station.photos!.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPhotoIndex(i)}
+                  aria-label={t('detail_photo_dot', { index: i + 1 })}
+                  className={`h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-white w-5' : 'bg-white/60 hover:bg-white/80 w-1.5'}`}
+                />
+              ))}
+            </div>
+          )}
+
           <Link
             href="/stations"
-            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center hover:bg-black/75 transition-colors"
             aria-label={t('back_to_list')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </Link>
 
-          {/* Favorite button */}
           <button
             type="button"
             onClick={() => toggle(id)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center hover:bg-black/75 transition-colors cursor-pointer"
             aria-label={isFavorite(id) ? t('detail_remove_favorite') : t('detail_add_favorite')}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite(id) ? '#C49A1E' : 'none'} stroke={isFavorite(id) ? '#C49A1E' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite(id) ? '#DDAF3B' : 'none'} stroke={isFavorite(id) ? '#DDAF3B' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
           </button>
 
-          {/* Bottom info overlay */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-5 pt-12">
-            <div className="max-w-[1440px] mx-auto">
-              <h1 className="text-[26px] sm:text-[32px] lg:text-[38px] font-black text-white leading-tight drop-shadow mb-2">
-                {station.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="flex items-center gap-1.5 text-white/90 text-[14px]">
-                  <span className="text-gold text-[16px]">&#9733;</span>
-                  <span className="font-bold">{station.rating.toFixed(1)}</span>
-                  <span className="opacity-80">{t('reviews_count', { count: station.reviewCount })}</span>
-                </span>
-                {station.verified && (
-                  <Badge variant="verified" className="backdrop-blur-sm border border-gold/40 px-2.5 py-0.5 text-[12px]">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="20 6 9 17 4 12" /></svg>
-                    {t('detail_verified')}
-                  </Badge>
-                )}
-                {station.openingHours && (
-                  <span className="text-white/80 text-[13px]">&#183; {station.openingHours}</span>
-                )}
-              </div>
+          {/* Station identity overlay - bottom-left of hero */}
+          <div className="absolute left-4 right-4 sm:left-6 sm:right-6 bottom-4 sm:bottom-6 text-white">
+            <h1 className="text-[22px] sm:text-[28px] lg:text-[34px] font-black leading-tight drop-shadow-md">
+              {station.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] sm:text-[13px]">
+              <span className="inline-flex items-center gap-1 font-bold">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#FFD36B" stroke="#FFD36B" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span>{station.rating.toFixed(1)}</span>
+                <span className="opacity-80 font-semibold">({station.reviewCount})</span>
+              </span>
+              {distanceLabel && (
+                <>
+                  <span className="w-px h-3.5 bg-white/40" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1 font-semibold">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {distanceLabel}
+                  </span>
+                </>
+              )}
+              {station.openingHours && (
+                <>
+                  <span className="w-px h-3.5 bg-white/40" aria-hidden="true" />
+                  <span className="font-bebas tracking-wider text-[14px]">{station.openingHours}</span>
+                </>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${isOpen ? 'bg-Hurryline-success/20 text-white border border-Hurryline-success/40' : 'bg-Hurryline-error/20 text-white border border-Hurryline-error/40'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-Hurryline-success animate-pulse' : 'bg-Hurryline-error'}`} />
+                {isOpen ? t('status_open') : t('status_closed')}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider bg-gold/25 text-white border border-gold/50">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {t('detail_verified_label')}
+              </span>
             </div>
           </div>
         </div>
 
         {/* ── Main content ── */}
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-16 py-8 pb-36 sm:pb-28 lg:pb-14">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-16 py-7 pb-36 sm:pb-28 lg:pb-14">
           <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-12 lg:items-start">
 
             {/* ── Left column ── */}
             <div className="space-y-7">
 
-              {/* Booking widget — mobile/tablet only, below title */}
-              <div className="lg:hidden">
-                <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-5 border border-[#D0D0C0] dark:border-tab-inactive">
-                  {BookingWidget}
-                </div>
+              {/* Mobile summary panel */}
+              <div className="lg:hidden bg-surface rounded-2xl p-5 border border-border">
+                {SummaryPanel}
               </div>
+
+              {hasNoAvailability && (
+                <div
+                  role="status"
+                  className="flex gap-3 rounded-2xl border border-Hurryline-error/30 bg-Hurryline-error/10 px-4 py-3.5"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF383C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 mt-0.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-black text-[#B2351F] dark:text-[#F0A090]">{t('detail_unavailable_banner_title')}</p>
+                    <p className="text-[12.5px] text-[#7A2A18] dark:text-[#EFC2B5] mt-0.5 leading-snug">{t('detail_unavailable_banner_message')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Services */}
+              <StationServicesSection
+                services={station.stationServices}
+                selectedServiceId={selectedServiceId}
+                selectedFormatEntryId={selectedFormatEntryId}
+                onSelectService={handleSelectService}
+                onSelectFormatEntry={handleSelectFormatEntry}
+                onBook={handleOpenBooking}
+                bookingLoading={bookingRefreshing}
+                disabledBook={(!isOpen && !hasServices) || hasNoAvailability || needsFormatChoice}
+              />
 
               {/* Description */}
               {station.description && (
                 <div>
-                  <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-2">{t('detail_description')}</h2>
-                  <p className="text-[15px] text-[#555] dark:text-[#C0C0B0] leading-[1.75]">{station.description}</p>
+                  <h2 className="text-[17px] font-black text-foreground mb-2">{t('detail_description')}</h2>
+                  <p className="text-[14.5px] text-foreground/70 leading-[1.75]">{station.description}</p>
                 </div>
+              )}
+
+              {/* Opening hours by day */}
+              {station.stationHours.length > 0 && (
+                <StationOpeningHours hours={station.stationHours} />
               )}
 
               {/* Location */}
               <button
                 type="button"
-                onClick={handleEnRoute}
+                onClick={() => setNavConfirmOpen(true)}
                 disabled={navigating}
-                className="flex w-full items-center gap-4 bg-[#E8E8D8] dark:bg-dark-card rounded-xl px-5 py-4 transition-colors hover:border-gold/40 border border-[#D0D0C0] dark:border-tab-inactive group/loc text-left cursor-pointer disabled:opacity-60"
+                className="flex w-full items-center gap-4 bg-surface rounded-2xl px-5 py-4 transition-colors hover:border-gold/40 border border-border group/loc text-left cursor-pointer disabled:opacity-60"
               >
                 <div className="w-11 h-11 rounded-full bg-gold/15 flex items-center justify-center shrink-0">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[15px] font-semibold text-[#000C1F] dark:text-[#FFF8EC] truncate">{station.address}</div>
-                  <div className="text-[13px] text-[#555] dark:text-[#C0C0B0]">{station.city}</div>
+                  <p className="text-[15px] font-semibold text-foreground truncate">{station.address}</p>
+                  <p className="text-[13px] text-foreground/70">{station.city}</p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
 
               {/* Reviews */}
               <div>
-                <h2 className="text-[17px] font-black text-[#000C1F] dark:text-[#FFF8EC] mb-4">
-                  {t('detail_reviews')} <span className="text-[#888] font-semibold text-[15px]">({station.reviewCount})</span>
+                <h2 className="text-[17px] font-black text-foreground mb-4">
+                  {t('detail_reviews')} <span className="text-foreground/55 font-semibold text-[15px]">({station.reviewCount})</span>
                 </h2>
                 <StationReviews reviews={station.reviews} />
               </div>
             </div>
 
-            {/* ── Right column — sticky booking sidebar (desktop only) ── */}
+            {/* ── Desktop sticky summary ── */}
             <aside className="hidden lg:block lg:sticky lg:top-[84px] self-start">
-              <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-2xl p-6 border border-[#D0D0C0] dark:border-tab-inactive shadow-sm">
-                {BookingWidget}
+              <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
+                {SummaryPanel}
               </div>
             </aside>
           </div>
         </div>
 
         {/* ── Mobile sticky footer CTA ── */}
-        <div className="lg:hidden fixed bottom-16 sm:bottom-0 left-0 right-0 bg-[#F5F5E6]/97 dark:bg-dark-bg/97 backdrop-blur-md border-t border-[#D0D0C0] dark:border-tab-inactive py-3 z-40 transition-colors">
+        <div className="lg:hidden fixed bottom-16 sm:bottom-0 left-0 right-0 bg-background/97 dark:bg-background/97 backdrop-blur-md border-t border-border py-3 z-40 transition-colors">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
-            <div>
-              <div className="text-[20px] font-black text-[#000C1F] dark:text-[#FFF8EC] leading-none">
-                {currentForfait ? currentForfait.price : station.priceFrom}
-                <span className="text-[14px] font-semibold ml-1 text-[#555] dark:text-[#C0C0B0]">{t('price_unit')}</span>
-              </div>
-              <div className="text-[12px] text-[#555] dark:text-[#C0C0B0]">
-                {currentForfait ? currentForfait.name : t('detail_price_from')}
-              </div>
+            <div className="min-w-0">
+              <p className="text-[20px] font-black text-foreground leading-none">
+                {currentPrice != null ? (
+                  <><span className="text-[14px] font-semibold text-foreground/70 mr-1">{t('price_unit')}</span>{currentPrice.toLocaleString()}</>
+                ) : '--'}
+              </p>
+              <p className="text-[11px] text-foreground/70 mt-1 truncate">
+                {selectedService ? selectedService.name : t('detail_price_from')}
+              </p>
             </div>
-            {hasSlots ? (
+            {(isOpen || hasServices) && !hasNoAvailability ? (
               <button
                 type="button"
-                onClick={() => setBookingOpen(true)}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine"
+                onClick={handleOpenBooking}
+                disabled={bookingRefreshing}
+                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {t('continue')}
-              </button>
-            ) : isOpen && currentForfait ? (
-              <button
-                type="button"
-                onClick={handleJoinQueue}
-                disabled={joiningQueue}
-                className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg text-center transition-colors cursor-pointer btn-shine disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {joiningQueue ? '...' : t('detail_join_queue')}
+                {bookingRefreshing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {t('detail_book_service')}
+                  </span>
+                ) : t('detail_book_service')}
               </button>
             ) : (
-              <div className="flex-1 py-3 bg-[#E0E0D0] dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-[#444] dark:text-[#C0C0B0] text-center">
-                {t('no_slots')}
-              </div>
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                title={hasNoAvailability ? t('detail_unavailable_banner_title') : undefined}
+                className="flex-1 py-3 bg-surface dark:bg-tab-inactive rounded-xl text-[15px] font-bold text-foreground/65 dark:text-[#C0C0B0] text-center cursor-not-allowed"
+              >
+                {t('detail_book_service')}
+              </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Booking flow modal */}
-      {bookingOpen && currentForfait && (
+      {/* Booking flow modal - pre-selected service from the detail screen */}
+      {bookingOpen && (
         <BookingFlow
           station={station}
-          category={currentCategory!}
-          forfait={currentForfait}
           qrToken={qrToken}
           qrVersion={qrVersion}
+          initialServiceId={selectedServiceId}
+          initialFormatEntryId={selectedFormatEntryId}
           onClose={() => setBookingOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={navConfirmOpen}
+        title={t('detail_navigate_title')}
+        message={t('detail_navigate_message')}
+        confirmLabel={t('detail_navigate_confirm')}
+        cancelLabel={t('detail_navigate_cancel')}
+        loading={navigating}
+        onConfirm={handleConfirmEnRoute}
+        onCancel={() => setNavConfirmOpen(false)}
+      />
     </>
   );
 }

@@ -28,34 +28,34 @@ export async function MerchantFooter() {
   ];
 
   return (
-    <footer className="bg-[#0d1f0f] border-t border-[rgba(200,152,10,0.1)]">
+    <footer className="bg-dark-bg border-t border-[rgba(221,175,59,0.1)]">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-16 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-11">
 
           {/* Brand column */}
           <div>
-            <div className="font-playfair text-[30px] font-black text-[#c8980a] tracking-[4px] mb-3">
-              Slowtime
+            <div className="font-playfair text-[30px] font-black text-[#DDAF3B] tracking-[4px] mb-3">
+              Hurryline
             </div>
-            <p className="text-[13px] text-[#7a9a7d] leading-[1.7] max-w-[260px]">
+            <p className="text-[13px] text-[#B0BFB1] leading-[1.7] max-w-[260px]">
               {t('tagline')}
             </p>
           </div>
 
           {/* Marchands column */}
           <div>
-            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#c8980a] mb-[18px]">
+            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#DDAF3B] mb-[18px]">
               {t('marchands_col')}
             </div>
             <ul className="flex flex-col gap-[9px]">
               {marchandLinks.map(({ href, label, external }) => (
                 <li key={label}>
                   {external ? (
-                    <a href={href} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                    <a href={href} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                       {label}
                     </a>
                   ) : (
-                    <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                    <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                       {label}
                     </Link>
                   )}
@@ -66,13 +66,13 @@ export async function MerchantFooter() {
 
           {/* Resources column */}
           <div>
-            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#c8980a] mb-[18px]">
+            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#DDAF3B] mb-[18px]">
               {t('resources_col')}
             </div>
             <ul className="flex flex-col gap-[9px]">
               {resourceLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                  <a href={href} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                     {label}
                   </a>
                 </li>
@@ -82,13 +82,13 @@ export async function MerchantFooter() {
 
           {/* Legal column */}
           <div>
-            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#c8980a] mb-[18px]">
+            <div className="font-dm-mono text-[10px] tracking-[2px] uppercase text-[#DDAF3B] mb-[18px]">
               {t('legal_col')}
             </div>
             <ul className="flex flex-col gap-[9px]">
               {legalLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#7a9a7d] hover:text-[#fef9e7] transition-colors duration-300">
+                  <a href={href} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                     {label}
                   </a>
                 </li>
@@ -98,17 +98,17 @@ export async function MerchantFooter() {
         </div>
 
         <div className="border-t border-[rgba(255,255,255,0.05)] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[12px] text-[#7a9a7d]">
+          <p className="text-[12px] text-[#B0BFB1]">
             {t('copyright', { year })}
           </p>
           <div className="flex items-center gap-5">
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_privacy')}
             </a>
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_tos')}
             </a>
-            <a href="#" className="text-[11px] text-[#7a9a7d] hover:text-[#c8980a] transition-colors duration-300">
+            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_cancel')}
             </a>
           </div>

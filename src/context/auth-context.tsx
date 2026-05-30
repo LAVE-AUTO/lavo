@@ -23,6 +23,10 @@ export interface AuthUser {
   role: UserRole;
   station_id?: string | null;
   force_password_change?: boolean;
+  /** ISO timestamp set when the user clicks the verification email link. Null until then. */
+  email_verified_at?: string | null;
+  /** ISO timestamp of account creation - used as "member since" on the profile page. */
+  created_at?: string;
 }
 
 interface AuthContextValue {
@@ -43,6 +47,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 /** Returns "; Secure" when the page is served over HTTPS. */
 function secureFlag(): string {
   return typeof window !== 'undefined' && window.isSecureContext ? '; Secure' : '';
+}
+
+function setRoleCookie(role: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `Hurryline_auth_role=${role}; path=/; SameSite=Lax${secureFlag()}`;
+}
+
+function clearRoleCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = `Hurryline_auth_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
 }
 
 function normalizeRole(role: string): UserRole {
@@ -75,6 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRefreshingRef = useRef(false);
   const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
+  // Prevents double clearAuth calls (concurrent 401s, StrictMode double-effects)
+  const isLoggedOutRef = useRef(false);
+
+  // Always holds the latest clearAuth so the axios interceptor never captures a stale closure
+  const latestClearAuthRef = useRef<() => void>(() => {});
+
+  // Prevents the StrictMode double-invocation from running the mount effect twice
+  const hasMountedRef = useRef(false);
+
   // Keep axios Accept-Language in sync with the app locale
   useEffect(() => {
     setAxiosLocale(locale);
@@ -98,10 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
           if (typeof document !== 'undefined') {
             if (normalized.role === 'admin') {
-              document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+              document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
             } else {
-              document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+              document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
             }
+            setRoleCookie(normalized.role);
           }
           return data.access_token;
         }
@@ -113,6 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAuth = useCallback(() => {
+    if (isLoggedOutRef.current) return;
+    isLoggedOutRef.current = true;
     tokenRef.current = null;
     setToken(null);
     setUser(null);
@@ -120,14 +146,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      clearRoleCookie();
     }
     if (typeof window !== 'undefined') {
-      window.location.href = loginPath;
+      window.location.replace(loginPath);
     }
   }, [loginPath]);
 
-  const handleUnauthorized = useCallback(async () => {
+  // Keep the ref in sync so the axios interceptor always redirects to the correct locale
+  useEffect(() => {
+    latestClearAuthRef.current = clearAuth;
+  }, [clearAuth]);
+
+  // Deduplicated refresh - multiple concurrent callers share the same in-flight promise.
+  const tryRefreshToken = useCallback(async (): Promise<string | null> => {
     if (!isRefreshingRef.current) {
       isRefreshingRef.current = true;
       refreshPromiseRef.current = refreshAccessToken().finally(() => {
@@ -135,60 +168,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshPromiseRef.current = null;
       });
     }
+    return refreshPromiseRef.current;
+  }, [refreshAccessToken]);
 
-    const newToken = await refreshPromiseRef.current;
-    if (newToken) {
+  // Used by refetchUser (raw fetch, not axios) - clears session when refresh fails.
+  const handleUnauthorized = useCallback(async () => {
+    const newToken = await tryRefreshToken();
+    if (!newToken) clearAuth();
+  }, [tryRefreshToken, clearAuth]);
+
+  // On mount: restore session from the httpOnly refresh token cookie.
+  // hasMountedRef prevents the StrictMode double-invocation from calling refresh
+  // twice — the second call would use the already-rotated cookie and clear the session.
+  useEffect(() => {
+    if (hasMountedRef.current) return;
+    hasMountedRef.current = true;
+
+    tryRefreshToken().then(async (newToken) => {
+      if (!newToken) {
+        // Refresh failed — clear hint cookies immediately so the middleware stops
+        // redirecting /login → /admin and creating an infinite loop.
+        if (typeof document !== 'undefined') {
+          const expired = '; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+          document.cookie = `Hurryline_admin_session=${expired}`;
+          document.cookie = `Hurryline_auth_role=${expired}`;
+        }
+        // Also clear the httpOnly refresh cookie server-side.
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        }).catch(() => {});
+      }
       refreshAxiosService({
         baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
         tokenGetter: () => tokenRef.current,
-        onUnauthorized: () => { clearAuth(); },
+        tokenRefresher: tryRefreshToken,
+        onUnauthorized: () => latestClearAuthRef.current(),
       });
-    } else {
-      clearAuth();
-    }
-  }, [refreshAccessToken, clearAuth]);
-
-  // On mount: restore session from the httpOnly refresh token cookie.
-  // The user object is fetched from the server — nothing is read from localStorage.
-  useEffect(() => {
-    refreshAccessToken().then((newToken) => {
-      if (newToken) {
-        refreshAxiosService({
-          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-          tokenGetter: () => tokenRef.current,
-          onUnauthorized: handleUnauthorized,
-        });
-      } else {
-        initAxiosService({
-          baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        });
-      }
+      setIsLoading(false);
+    }).catch(() => {
+      // Safety net: ensure the loading spinner never gets stuck
       setIsLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {
+    isLoggedOutRef.current = false; // Allow clearAuth to fire again after re-login
     const normalized = normalizeUser(newUser as unknown as Record<string, unknown>);
     tokenRef.current = newToken;
     setToken(newToken);
     setUser(normalized);
-    // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
+    // Hint cookies for middleware-level guards (non-httpOnly, non-sensitive)
     if (typeof document !== 'undefined') {
       if (normalized.role === 'admin') {
-        document.cookie = `lavo_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+        document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
       } else {
-        document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+        document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
       }
+      setRoleCookie(normalized.role);
     }
     refreshAxiosService({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
       tokenGetter: () => tokenRef.current,
-      onUnauthorized: () => {
-        clearAuth();
-      },
+      tokenRefresher: tryRefreshToken,
+      onUnauthorized: () => latestClearAuthRef.current(),
     });
-  }, [clearAuth]);
+  }, [tryRefreshToken]);
 
   const logout = useCallback(async () => {
     try {
@@ -203,10 +249,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
     });
     if (typeof document !== 'undefined') {
-      document.cookie = `lavo_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
+      clearRoleCookie();
     }
+    // replace() instead of href so the logged-in pages are not in browser history
     if (typeof window !== 'undefined') {
-      window.location.href = homePath;
+      window.location.replace(`${homePath}`);
     }
   }, [homePath]);
 

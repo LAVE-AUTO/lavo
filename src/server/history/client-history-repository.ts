@@ -3,7 +3,7 @@
  */
 import { and, asc, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stations, vehicleFormats, timeSlots } from '@/lib/db/schema';
+import { reservations, stations, vehicleFormats, timeSlots, stationPhotos, stationServices } from '@/lib/db/schema';
 import type { ClientHistoryAllowedStatus } from '@/validators/history';
 
 export type ClientHistoryRepositoryFilters = {
@@ -33,7 +33,10 @@ export type ClientHistoryRepositoryItem = {
   station_name: string | null;
   station_address: string | null;
   station_city: string | null;
+  station_image_url: string | null;
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   slot_start_time: Date | null;
 };
 
@@ -138,12 +141,16 @@ export async function listClientHistory(
         station_name: stations.name,
         station_address: stations.address,
         station_city: stations.city,
+        station_image_url: sql<string | null>`(SELECT ${stationPhotos.url} FROM station_photos WHERE station_photos.station_id = ${reservations.station_id} ORDER BY station_photos.position ASC LIMIT 1)`,
         vehicle_format_label: vehicleFormats.label,
+        service_name: stationServices.name,
+        service_category: stationServices.category,
         slot_start_time: timeSlots.start_time,
       })
       .from(reservations)
       .leftJoin(stations, eq(reservations.station_id, stations.id))
       .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .where(where)
       .orderBy(orderByPrimary)
@@ -177,12 +184,16 @@ export async function findClientHistoryReceiptByEntryId(
       station_name: stations.name,
       station_address: stations.address,
       station_city: stations.city,
+      station_image_url: sql<string | null>`(SELECT ${stationPhotos.url} FROM station_photos WHERE station_photos.station_id = ${reservations.station_id} ORDER BY station_photos.position ASC LIMIT 1)`,
       vehicle_format_label: vehicleFormats.label,
+      service_name: stationServices.name,
+      service_category: stationServices.category,
       slot_start_time: timeSlots.start_time,
     })
     .from(reservations)
     .leftJoin(stations, eq(reservations.station_id, stations.id))
     .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+    .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
     .limit(1);

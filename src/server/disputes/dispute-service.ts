@@ -6,7 +6,6 @@ import {
   ForbiddenError,
   DisputeAlreadyExistsError,
   DisputeAlreadyClosedError,
-  RefundNotEligibleError,
   ValidationError,
   ConflictError,
 } from '@/lib/errors';
@@ -22,11 +21,11 @@ import type { CreateDisputeInput, RefundDisputeInput, CloseDisputeInput, ListDis
  * The dispute filing window is configurable via the `dispute_window_days` platform setting
  * (DB → PLATFORM_DISPUTE_WINDOW_DAYS env var → 30-day default).
  *
- * @throws NotFoundError — reservation not found
- * @throws ForbiddenError — reservation does not belong to the client
- * @throws ValidationError — reservation not completed or not paid
- * @throws ConflictError — dispute window has expired
- * @throws DisputeAlreadyExistsError — a dispute already exists for this reservation
+ * @throws NotFoundError - reservation not found
+ * @throws ForbiddenError - reservation does not belong to the client
+ * @throws ValidationError - reservation not completed or not paid
+ * @throws ConflictError - dispute window has expired
+ * @throws DisputeAlreadyExistsError - a dispute already exists for this reservation
  */
 export async function createDispute(
   clientId: string,
@@ -60,7 +59,7 @@ export async function createDispute(
   );
   // Guard against a corrupt DB value: fall back to 30 days if parseInt returns NaN or non-positive.
   const windowDays = Number.isFinite(rawWindowDays) && rawWindowDays > 0 ? rawWindowDays : 30;
-  const completedAt = reservation.completed_at ?? reservation.updated_at;
+  const completedAt = reservation.completed_at ?? reservation.created_at;
   const windowMs = windowDays * 24 * 60 * 60 * 1000;
   if (Date.now() - completedAt.getTime() > windowMs) {
     throw new ConflictError('Dispute window has expired');
@@ -86,6 +85,18 @@ export async function createDispute(
     requested_amount:
       input.requested_amount !== undefined ? input.requested_amount.toFixed(2) : undefined,
   });
+}
+
+// ─── Admin: get by id ─────────────────────────────────────────────────────────
+
+/**
+ * Returns a single dispute with enriched client and station contact details.
+ * @throws NotFoundError - dispute not found
+ */
+export async function getDisputeByIdAdmin(disputeId: string): Promise<repo.DisputeWithDetails> {
+  const dispute = await repo.findDisputeByIdWithDetails(disputeId);
+  if (!dispute) throw new NotFoundError('Dispute not found');
+  return dispute;
 }
 
 // ─── Admin: list ──────────────────────────────────────────────────────────────
@@ -135,11 +146,10 @@ export async function listDisputesAdmin(query: ListDisputesQuery): Promise<Dispu
  * Issues a Stripe refund for a dispute and updates the dispute record.
  * Runs the DB update + admin log in a single transaction to ensure consistency.
  *
- * @throws NotFoundError — dispute not found
- * @throws DisputeAlreadyClosedError — dispute is not open
- * @throws NotFoundError — reservation not found
- * @throws RefundNotEligibleError — stripe_transfer_id exists (transfer already made)
- * @throws ValidationError — refund amount exceeds amount paid
+ * @throws NotFoundError - dispute not found
+ * @throws DisputeAlreadyClosedError - dispute is not open
+ * @throws NotFoundError - reservation not found
+ * @throws ValidationError - refund amount exceeds amount paid
  */
 export async function refundDispute(
   adminId: string,
@@ -156,11 +166,6 @@ export async function refundDispute(
   if (!reservation) throw new NotFoundError('Reservation not found');
   if (!reservation.stripe_payment_id) throw new ValidationError('Reservation has no Stripe payment');
 
-  // Block refund if a transfer to the station has already been made.
-  if (reservation.stripe_transfer_id) {
-    throw new RefundNotEligibleError();
-  }
-
   const amountPaidCents = Math.round(parseFloat(reservation.amount_paid) * 100);
 
   let refundAmountCents: number | undefined;
@@ -172,13 +177,17 @@ export async function refundDispute(
     }
   }
 
-  // Call Stripe — outside the transaction to avoid holding a DB lock during network I/O.
+  // Call Stripe - outside the transaction to avoid holding a DB lock during network I/O.
   // The idempotency key is scoped to this dispute so retries on network timeout do not
   // issue a second refund.
+  // If the station has already been paid out, reverse the transfer so the
+  // station bears the cost rather than the platform.
+  const shouldReverseTransfer = !!reservation.stripe_transfer_id;
   const stripeRefundId = await refundPaymentIntent(
     reservation.stripe_payment_id,
     refundAmountCents,
-    `refund_dispute_${disputeId}`
+    `refund_dispute_${disputeId}`,
+    shouldReverseTransfer,
   );
 
   const refundedAmountCents = refundAmountCents ?? amountPaidCents;
@@ -221,8 +230,8 @@ export async function refundDispute(
  * Closes a dispute as resolved or rejected without issuing a refund.
  * Runs the DB update + admin log in a single transaction.
  *
- * @throws NotFoundError — dispute not found
- * @throws DisputeAlreadyClosedError — dispute is not open
+ * @throws NotFoundError - dispute not found
+ * @throws DisputeAlreadyClosedError - dispute is not open
  */
 export async function closeDispute(
   adminId: string,

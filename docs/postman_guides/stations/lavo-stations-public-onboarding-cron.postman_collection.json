@@ -1,819 +1,2360 @@
 {
   "info": {
-    "_postman_id": "2ef04412-e41a-4ece-97a7-12091ab0dd12",
-    "name": "LAVO — Stations (Queue + Formats + Cron)",
-    "description": "Collection pour les endpoints non couverts par lavo-stations et lavo-reservations :\n- **Stations Publiques** : join station (get maps URL)\n- **Onboarding** : upload document (multipart)\n- **Formats** : CRUD formats de vehicule (public GET + station auth PUT/PATCH/DELETE)\n- **Client — File d'attente** : rejoindre la file, voir la file, upgrade vers reservation\n- **Station — Entries** : repositionner une entree dans la file (queue_position), picker un client walk-in\n- **Cron** : sync uploads, downgrade reservations tardives, rappels reservation (5h et 30min)\n\nNOTE : Liste des stations et detail → lavo-stations (Stations Publiques)\nNOTE : Creation reservation, consultation, annulation, confirmation presence → lavo-reservations\n\nRequired: base_url. Optional: station_id, format_id, entry_id, queue_entry_id, time_slot_id, access_token, cron_secret.",
+    "name": "Hurryline - Stations Public Onboarding Cron API (360 Matrix)",
+    "description": "Onboarding, cron, upload, docs, health, webhooks with matrix.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:3000",
-      "type": "string"
-    },
-    {
-      "key": "station_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "cron_secret",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "format_id",
-      "value": "",
-      "type": "string"
-    },
     {
       "key": "access_token",
       "value": "",
       "type": "string"
     },
     {
-      "key": "entry_id",
-      "value": "",
+      "key": "base_url",
+      "value": "http://localhost:3000",
       "type": "string"
     },
     {
-      "key": "time_slot_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "queue_entry_id",
+      "key": "cron_secret",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Stations Publiques",
-      "description": "Endpoints publics supplementaires. Pour la liste et le detail des stations, voir lavo-stations (groupe Stations Publiques).",
+      "name": "Onboarding, Cron, Upload, Webhook, Docs",
       "item": [
         {
-          "name": "Join station — get maps URL (200)",
-          "event": [
+          "name": "/cron/cleanup-orphaned-payments",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('mapsUrl present', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('mapsUrl');",
-                  "  pm.expect(json.data.mapsUrl).to.match(/^https:\\/\\/www\\.google\\.com\\/maps\\?q=/);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/join",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "{{station_id}}",
-                "join"
-              ]
-            },
-            "description": "POST /api/v1/stations/:id/join — retourne un lien Google Maps vers la station."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Onboarding",
-      "description": "Upload uniquement. Pour validate/step1, validate/step2 et submit, voir lavo-stations (groupe Station Onboarding).",
-      "item": [
-        {
-          "name": "Upload document (201)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Body has url and storage', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('url');",
-                  "  pm.expect(json.data).to.have.property('storage');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
+              "name": "GET /cron/cleanup-orphaned-payments - Success",
+              "event": [
                 {
-                  "key": "file",
-                  "type": "file",
-                  "src": ""
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
                 }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
-              "host": [
-                "{{base_url}}"
               ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "onboarding",
-                "upload"
-              ]
-            },
-            "description": "POST /api/v1/stations/onboarding/upload — multipart/form-data, champ 'file'. Sans auth. Retourne 201 avec { data: { url, storage } }. Utilisez url dans le body de submit (documents[].file_url)."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Formats (vehicle formats and pricing)",
-      "item": [
-        {
-          "name": "Get formats by station (200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Body has data array', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json).to.have.property('data');",
-                  "  pm.expect(Array.isArray(json.data)).to.be.true;",
-                  "});"
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/formats",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "{{station_id}}",
-                "formats"
-              ]
-            },
-            "description": "GET /api/v1/stations/:id/formats — public. Retourne la liste des formats de vehicule (id, station_id, label, price, is_active). 404 si la station n'existe pas ou n'est pas active."
-          },
-          "response": []
-        },
-        {
-          "name": "Create format (201)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Body has format', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('id');",
-                  "  pm.expect(json.data).to.have.property('label');",
-                  "  pm.expect(json.data).to.have.property('price');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "url": {
+                  "raw": "{{base_url}}/api/cron/cleanup-orphaned-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "cleanup-orphaned-payments"
+                  ]
+                },
+                "description": "GET /api/cron/cleanup-orphaned-payments (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 15.5,\n  \"is_active\": true\n}"
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/formats",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "formats"
-              ]
-            },
-            "description": "POST /api/v1/station/formats — auth STATION (Bearer). Body: label (1-100 chars), price (> 0), is_active (optionnel, defaut true). Cree un format pour la station connectee."
-          },
-          "response": []
-        },
-        {
-          "name": "Update format PUT (200)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+              "name": "GET /cron/cleanup-orphaned-payments - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "url": {
+                  "raw": "{{base_url}}/api/cron/cleanup-orphaned-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "cleanup-orphaned-payments"
+                  ]
+                },
+                "description": "GET /api/cron/cleanup-orphaned-payments (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"label\": \"Petit\",\n  \"price\": 18,\n  \"is_active\": true\n}"
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "formats",
-                "{{format_id}}"
-              ]
-            },
-            "description": "PUT /api/v1/station/formats/:id — auth STATION. Mise a jour complete : label, price, is_active. Le format doit appartenir a la station connectee."
-          },
-          "response": []
-        },
-        {
-          "name": "Update format PATCH (200)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+              "name": "GET /cron/cleanup-orphaned-payments - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "url": {
+                  "raw": "{{base_url}}/api/cron/cleanup-orphaned-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "cleanup-orphaned-payments"
+                  ]
+                },
+                "description": "GET /api/cron/cleanup-orphaned-payments (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"is_active\": false\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "formats",
-                "{{format_id}}"
-              ]
-            },
-            "description": "PATCH /api/v1/station/formats/:id — auth STATION. Mise a jour partielle : au moins un des champs label, price, is_active."
-          },
-          "response": []
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Delete format (200)",
-          "event": [
+          "name": "/cron/downgrade-late-reservations",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Body has deleted', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('deleted');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/formats/{{format_id}}",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/downgrade-late-reservations - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "formats",
-                "{{format_id}}"
-              ]
-            },
-            "description": "DELETE /api/v1/station/formats/:id — auth STATION. Retourne 409 si le format a des reservations ; sinon 200 avec { data: { deleted: true } }."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Client — File d'attente",
-      "description": "Endpoints file d'attente. Pour consulter ses entrees (avec pagination/filtres) et annuler, voir lavo-reservations.",
-      "item": [
-        {
-          "name": "Join queue (201)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "downgrade-late-reservations"
+                  ]
+                },
+                "description": "GET /api/cron/downgrade-late-reservations (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"vehicle_format_id\": \"{{format_id}}\"}"
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue/join",
-              "host": [
-                "{{base_url}}"
+            {
+              "name": "GET /cron/downgrade-late-reservations - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "{{station_id}}",
-                "queue",
-                "join"
-              ]
-            },
-            "description": "POST /api/v1/stations/:id/queue/join — auth client. Body: vehicle_format_id. Rejoint la file d'attente walk-in. Aucun paiement requis."
-          },
-          "response": []
-        },
-        {
-          "name": "Get queue (200)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/{{station_id}}/queue",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "{{station_id}}",
-                "queue"
-              ]
-            },
-            "description": "GET /api/v1/stations/:id/queue — liste les entrees en file d'attente pour une station."
-          },
-          "response": []
-        },
-        {
-          "name": "Upgrade to reservation (200)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "downgrade-late-reservations"
+                  ]
+                },
+                "description": "GET /api/cron/downgrade-late-reservations (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"time_slot_id\": \"{{time_slot_id}}\"}"
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/me/entries/{{entry_id}}/upgrade-to-reservation",
-              "host": [
-                "{{base_url}}"
+            {
+              "name": "GET /cron/downgrade-late-reservations - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "v1",
-                "me",
-                "entries",
-                "{{entry_id}}",
-                "upgrade-to-reservation"
-              ]
-            },
-            "description": "POST /api/v1/me/entries/:entryId/upgrade-to-reservation — auth client. Convertit une entree file d'attente en reservation. Body: time_slot_id."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Station — Entries",
-      "description": "Repositionnement en file uniquement. Pour lister les entrees et mettre a jour le statut, voir lavo-reservations.",
-      "item": [
-        {
-          "name": "PATCH entry position (200)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "downgrade-late-reservations"
+                  ]
+                },
+                "description": "GET /api/cron/downgrade-late-reservations (code-derived matrix)"
               },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"queue_position\": 1}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/station/entries/{{entry_id}}/position",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "station",
-                "entries",
-                "{{entry_id}}",
-                "position"
-              ]
-            },
-            "description": "PATCH /api/v1/station/entries/:id/position — auth STATION. Repositionne une entree dans la file. Body: queue_position (entrees queue uniquement)."
-          },
-          "response": []
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Pick client file d'attente (200)",
-          "event": [
+          "name": "/cron/mark-queue-no-shows",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Entry status = in_progress', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data.entry.status).to.eql('in_progress');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/stations/queue/{{queue_entry_id}}/pick",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/mark-queue-no-shows - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "v1",
-                "stations",
-                "queue",
-                "{{queue_entry_id}}",
-                "pick"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "mark-queue-no-shows"
+                  ]
+                },
+                "description": "GET /api/cron/mark-queue-no-shows (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "POST /api/v1/stations/queue/:queueId/pick — Auth STATION. Selectionne un client walk-in de la file pour le servir immediatement. Passe le statut a in_progress et compacte les positions restantes."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Cron — Sync / Downgrade / Rappels",
-      "item": [
-        {
-          "name": "Sync pending uploads (200)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Body has processed/succeeded/failed', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('processed');",
-                  "  pm.expect(json.data).to.have.property('succeeded');",
-                  "  pm.expect(json.data).to.have.property('failed');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-cron-secret",
-                "value": "{{cron_secret}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/mark-queue-no-shows - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "sync-pending-uploads"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "mark-queue-no-shows"
+                  ]
+                },
+                "description": "GET /api/cron/mark-queue-no-shows (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "GET /api/cron/sync-pending-uploads — synchronise les uploads locaux vers Cloudinary. Requiert x-cron-secret (ou Authorization: Bearer <CRON_SECRET>)."
-          },
-          "response": []
+            {
+              "name": "GET /cron/mark-queue-no-shows - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "mark-queue-no-shows"
+                  ]
+                },
+                "description": "GET /api/cron/mark-queue-no-shows (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Sync pending uploads — missing secret (401)",
-          "event": [
+          "name": "/cron/purge-admin-logs",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/cron/sync-pending-uploads",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/purge-admin-logs - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "sync-pending-uploads"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/purge-admin-logs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "purge-admin-logs"
+                  ]
+                },
+                "description": "GET /api/cron/purge-admin-logs (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "Test negatif : secret manquant doit retourner 401."
-          },
-          "response": []
+            {
+              "name": "GET /cron/purge-admin-logs - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/purge-admin-logs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "purge-admin-logs"
+                  ]
+                },
+                "description": "GET /api/cron/purge-admin-logs (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/purge-admin-logs - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/purge-admin-logs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "purge-admin-logs"
+                  ]
+                },
+                "description": "GET /api/cron/purge-admin-logs (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Downgrade late reservations (200)",
-          "event": [
+          "name": "/cron/recover-stalled-payments",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-cron-secret",
-                "value": "{{cron_secret}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/cron/downgrade-late-reservations",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/recover-stalled-payments - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "downgrade-late-reservations"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/recover-stalled-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "recover-stalled-payments"
+                  ]
+                },
+                "description": "GET /api/cron/recover-stalled-payments (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "GET /api/cron/downgrade-late-reservations — redeplace en file d'attente les reservations non confirmees depassant la tolerance. Requiert x-cron-secret ou Bearer CRON_SECRET."
-          },
-          "response": []
+            {
+              "name": "GET /cron/recover-stalled-payments - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/recover-stalled-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "recover-stalled-payments"
+                  ]
+                },
+                "description": "GET /api/cron/recover-stalled-payments (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/recover-stalled-payments - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/recover-stalled-payments",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "recover-stalled-payments"
+                  ]
+                },
+                "description": "GET /api/cron/recover-stalled-payments (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Rappels reservation (200)",
-          "event": [
+          "name": "/cron/send-escrow-weekly-transactions-report",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Retourne reminders_5h et reminders_30min', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('reminders_5h');",
-                  "  pm.expect(json.data).to.have.property('reminders_30min');",
-                  "  pm.expect(json.data.reminders_5h).to.have.property('processed');",
-                  "  pm.expect(json.data.reminders_30min).to.have.property('processed');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-cron-secret",
-                "value": "{{cron_secret}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/cron/send-reservation-reminders",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/send-escrow-weekly-transactions-report - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "send-reservation-reminders"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-escrow-weekly-transactions-report",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-escrow-weekly-transactions-report"
+                  ]
+                },
+                "description": "GET /api/cron/send-escrow-weekly-transactions-report (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "GET /api/cron/send-reservation-reminders — Envoie des notifications push aux clients ayant une reservation confirmee dans 5h ou 30min. Planifier toutes les 10 minutes. Requiert x-cron-secret ou Bearer CRON_SECRET."
-          },
-          "response": []
+            {
+              "name": "GET /cron/send-escrow-weekly-transactions-report - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-escrow-weekly-transactions-report",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-escrow-weekly-transactions-report"
+                  ]
+                },
+                "description": "GET /api/cron/send-escrow-weekly-transactions-report (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/send-escrow-weekly-transactions-report - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-escrow-weekly-transactions-report",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-escrow-weekly-transactions-report"
+                  ]
+                },
+                "description": "GET /api/cron/send-escrow-weekly-transactions-report (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Rappels reservation — secret manquant (401)",
-          "event": [
+          "name": "/cron/send-kyc-expiry-reminders",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/cron/send-reservation-reminders",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/send-kyc-expiry-reminders - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "send-reservation-reminders"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-kyc-expiry-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-kyc-expiry-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-kyc-expiry-reminders (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "401 — Secret manquant ou invalide."
-          },
-          "response": []
+            {
+              "name": "GET /cron/send-kyc-expiry-reminders - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-kyc-expiry-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-kyc-expiry-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-kyc-expiry-reminders (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/send-kyc-expiry-reminders - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-kyc-expiry-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-kyc-expiry-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-kyc-expiry-reminders (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "No-show file d'attente (200)",
-          "event": [
+          "name": "/cron/send-reservation-reminders",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Résultat no-show', () => {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.data).to.have.property('processed');",
-                  "  pm.expect(json.data).to.have.property('succeeded');",
-                  "  pm.expect(json.data).to.have.property('failed');",
-                  "  pm.expect(json.data).to.have.property('errors');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-cron-secret",
-                "value": "{{cron_secret}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/send-reservation-reminders - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "mark-queue-no-shows"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-reservation-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-reservation-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-reservation-reminders (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "GET /api/cron/mark-queue-no-shows — Détecte les entrées de file d'attente encore actives (pending / confirmed / late) après l'heure de fermeture de la station pour leur date effective.\n\nPour chaque no-show :\n1. Annule l'entrée en DB (status = cancelled, cancellation_reason = no_show).\n2. Capture le PaymentIntent Stripe.\n3. Rembourse partiellement (amountPaid - pénalité).\n4. Distribue la pénalité entre plateforme et station.\n5. Notifie le client (queue_no_show).\n\nLa date effective est déterminée par updated_at de l'entrée. Secrétiser via x-cron-secret ou Authorization: Bearer <CRON_SECRET>."
-          }
+            {
+              "name": "GET /cron/send-reservation-reminders - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-reservation-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-reservation-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-reservation-reminders (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/send-reservation-reminders - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/send-reservation-reminders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "send-reservation-reminders"
+                  ]
+                },
+                "description": "GET /api/cron/send-reservation-reminders (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "No-show file d'attente — secret manquant (401)",
-          "event": [
+          "name": "/cron/stripe-reconciliation",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": [],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/cron/mark-queue-no-shows",
-              "host": [
-                "{{base_url}}"
+              "name": "GET /cron/stripe-reconciliation - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "api",
-                "cron",
-                "mark-queue-no-shows"
-              ]
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/stripe-reconciliation",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "stripe-reconciliation"
+                  ]
+                },
+                "description": "GET /api/cron/stripe-reconciliation (code-derived matrix)"
+              },
+              "response": []
             },
-            "description": "Sans x-cron-secret — doit retourner 401."
-          }
+            {
+              "name": "GET /cron/stripe-reconciliation - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/stripe-reconciliation",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "stripe-reconciliation"
+                  ]
+                },
+                "description": "GET /api/cron/stripe-reconciliation (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/stripe-reconciliation - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/stripe-reconciliation",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "stripe-reconciliation"
+                  ]
+                },
+                "description": "GET /api/cron/stripe-reconciliation (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/cron/sync-pending-uploads",
+          "item": [
+            {
+              "name": "GET /cron/sync-pending-uploads - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "sync-pending-uploads"
+                  ]
+                },
+                "description": "GET /api/cron/sync-pending-uploads (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/sync-pending-uploads - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "sync-pending-uploads"
+                  ]
+                },
+                "description": "GET /api/cron/sync-pending-uploads (code-derived matrix)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /cron/sync-pending-uploads - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-cron-secret",
+                    "value": "{{cron_secret}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/cron/sync-pending-uploads",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cron",
+                    "sync-pending-uploads"
+                  ]
+                },
+                "description": "GET /api/cron/sync-pending-uploads (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/docs",
+          "item": [
+            {
+              "name": "GET /docs - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/docs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "docs"
+                  ]
+                },
+                "description": "GET /api/docs (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/health",
+          "item": [
+            {
+              "name": "GET /v1/health - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "health"
+                  ]
+                },
+                "description": "GET /api/v1/health (code-derived matrix)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/stations/onboarding/submit",
+          "item": [
+            {
+              "name": "POST /v1/stations/onboarding/submit - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/submit (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/submit - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/submit (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"invalid\":\"payload\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/submit - Conflict (409)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/submit (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/submit - Rate Limit (429)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 429', () => pm.response.to.have.status(429));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/submit (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/submit - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/submit (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/stations/onboarding/upload",
+          "item": [
+            {
+              "name": "POST /v1/stations/onboarding/upload - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/upload - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/upload - Rate Limit (429)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 429', () => pm.response.to.have.status(429));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/upload - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/stations/onboarding/validate/step1",
+          "item": [
+            {
+              "name": "POST /v1/stations/onboarding/validate/step1 - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "validate",
+                    "step1"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/validate/step1 (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/validate/step1 - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "validate",
+                    "step1"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/validate/step1 (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"invalid\":\"payload\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/stations/onboarding/validate/step2",
+          "item": [
+            {
+              "name": "POST /v1/stations/onboarding/validate/step2 - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "validate",
+                    "step2"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/validate/step2 (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/stations/onboarding/validate/step2 - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/stations/onboarding/validate/step2",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "stations",
+                    "onboarding",
+                    "validate",
+                    "step2"
+                  ]
+                },
+                "description": "POST /api/v1/stations/onboarding/validate/step2 (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"invalid\":\"payload\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/upload",
+          "item": [
+            {
+              "name": "POST /v1/upload - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/upload - Unauthorized (401)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/upload - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/upload - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/upload",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "upload"
+                  ]
+                },
+                "description": "POST /api/v1/upload (code-derived matrix)",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "/v1/webhooks/stripe",
+          "item": [
+            {
+              "name": "POST /v1/webhooks/stripe - Success",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has envelope', () => { pm.expect(j).to.be.an('object'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/webhooks/stripe",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    "stripe"
+                  ]
+                },
+                "description": "POST /api/v1/webhooks/stripe (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/webhooks/stripe - Validation (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/webhooks/stripe",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    "stripe"
+                  ]
+                },
+                "description": "POST /api/v1/webhooks/stripe (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"invalid\":\"payload\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "POST /v1/webhooks/stripe - Server Error Contract (500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                      "pm.test('JSON response', () => { pm.response.to.be.json; });",
+                      "const j = pm.response.json(); pm.test('Has error code/message', () => { pm.expect(j).to.have.property('message'); pm.expect(j).to.have.property('code'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/webhooks/stripe",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    "stripe"
+                  ]
+                },
+                "description": "POST /api/v1/webhooks/stripe (code-derived matrix)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }

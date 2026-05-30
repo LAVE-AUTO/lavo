@@ -4,8 +4,8 @@ import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminCityInput } from './AdminCityInput';
 
-// Wash types: hardcoded codes — backend resolves codes to IDs.
-// TODO: connect to API once endpoint is available (GET /admin/wash-types or similar)
+// Wash types: backend resolves these codes to the matching wash_types row.
+// Mirrors the wash_types enum in src/lib/db/schema/stations.ts.
 export const WASH_TYPE_CODES = ['hand_wash', 'automatic', 'self_service'] as const;
 export type WashTypeCode = (typeof WASH_TYPE_CODES)[number];
 
@@ -41,15 +41,15 @@ interface Props {
   onPrev:    () => void;
 }
 
-const inputBase  = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#1A1A0A] outline-none transition-all dark:text-[#F0EDD4]';
-const inputIdle  = 'border-[#D8D4C8] focus:border-[#C49A1E] focus:shadow-[0_0_0_3px_rgba(196,154,30,0.10)] dark:border-[#243020] dark:focus:border-[#C49A1E]';
+const inputBase  = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC]';
+const inputIdle  = 'border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 const inputError = 'border-red-400 focus:border-red-400';
 
 function SectionLabel({ label }: { label: string }) {
   return (
     <div className="mb-3 mt-1 flex items-center gap-2">
-      <span className="text-[11px] font-black uppercase tracking-widest text-[#C49A1E]/70">{label}</span>
-      <div className="h-px flex-1 bg-[#E8E4DC] dark:bg-[#1A2A14]" />
+      <span className="text-[11px] font-black uppercase tracking-widest text-[#DDAF3B]/70">{label}</span>
+      <div className="h-px flex-1 bg-[#FFF9EC] dark:bg-[#1A2A14]" />
     </div>
   );
 }
@@ -62,12 +62,12 @@ function ToggleCard({ selected, onClick, icon, label, sub }: {
       className={[
         'flex flex-col items-center gap-1.5 rounded-xl border-[1.5px] px-2 py-3 text-center transition-all duration-150 w-full',
         selected
-          ? 'border-[#C49A1E] bg-[#C49A1E]/8 shadow-sm'
-          : 'border-[#D8D4C8] bg-white hover:border-[#C49A1E]/50 dark:border-[#243020] dark:bg-[#0F1A0C]',
+          ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 shadow-sm'
+          : 'border-[#D8D4C8] bg-white hover:border-[#DDAF3B]/50 dark:border-[#001A05] dark:bg-dark-bg',
       ].join(' ')}>
-      <span className={selected ? 'text-[#C49A1E]' : 'text-[#888] dark:text-[#9A9A8A]'}>{icon}</span>
-      <span className={`text-[12px] font-bold leading-tight ${selected ? 'text-[#1A1A0A] dark:text-[#F0EDD4]' : 'text-[#555] dark:text-[#9A9A8A]'}`}>{label}</span>
-      <span className={`text-[11px] leading-snug ${selected ? 'text-[#C49A1E]/70' : 'text-[#999] dark:text-[#A0A090]'}`}>{sub}</span>
+      <span className={selected ? 'text-[#DDAF3B]' : 'text-foreground/55 dark:text-[#B0BFB1]'}>{icon}</span>
+      <span className={`text-[12px] font-bold leading-tight ${selected ? 'text-[#001201] dark:text-[#FFF9EC]' : 'text-foreground/70 dark:text-[#B0BFB1]'}`}>{label}</span>
+      <span className={`text-[11px] leading-snug ${selected ? 'text-[#DDAF3B]/70' : 'text-[#999] dark:text-[#B0BFB1]'}`}>{sub}</span>
     </button>
   );
 }
@@ -102,8 +102,8 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
         {/* Station name */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="stn-name" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
-            {t('field_station_name')}<span className="ml-0.5 text-[#C49A1E]">*</span>
+          <label htmlFor="stn-name" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
+            {t('field_station_name')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
           </label>
           <input id="stn-name" type="text" value={data.stationName} minLength={2} maxLength={100}
             required aria-required="true"
@@ -116,14 +116,14 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
         {/* Legal name + reg number */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="stn-legal" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_legal_name')}</label>
+            <label htmlFor="stn-legal" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_legal_name')}</label>
             <input id="stn-legal" type="text" value={data.legalName} maxLength={150}
               placeholder={t('field_legal_name_placeholder')}
               onChange={(e) => onChange({ ...data, legalName: e.target.value })}
               className={`${inputBase} ${inputIdle}`} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="stn-reg" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_reg_number')}</label>
+            <label htmlFor="stn-reg" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_reg_number')}</label>
             <input id="stn-reg" type="text" value={data.registrationNumber} maxLength={50}
               placeholder={t('field_reg_number_placeholder')}
               onChange={(e) => onChange({ ...data, registrationNumber: e.target.value })}
@@ -135,8 +135,8 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
         {/* Address */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="stn-address" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
-            {t('field_address')}<span className="ml-0.5 text-[#C49A1E]">*</span>
+          <label htmlFor="stn-address" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
+            {t('field_address')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
           </label>
           <input id="stn-address" type="text" value={data.address} minLength={5} maxLength={200}
             required aria-required="true"
@@ -153,8 +153,8 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
             placeholder={t('field_city_placeholder')} error={errors.city}
             onChange={(city) => { onChange({ ...data, city }); if (errors.city) onErrors({ ...errors, city: undefined }); }} />
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="stn-posts" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
-              {t('field_wash_posts')}<span className="ml-0.5 text-[#C49A1E]">*</span>
+            <label htmlFor="stn-posts" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
+              {t('field_wash_posts')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
             </label>
             <input id="stn-posts" type="number" min={1} max={100} value={data.washPostCount}
               required aria-required="true"
@@ -169,8 +169,8 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
         {/* Wash types */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">
-            {t('field_wash_types')}<span className="ml-0.5 text-[#C49A1E]">*</span>
+          <p className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">
+            {t('field_wash_types')}<span className="ml-0.5 text-[#DDAF3B]">*</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
             {WASH_TYPE_CODES.map((code) => {
@@ -186,7 +186,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
         {/* Service scope */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_service_scope')}</p>
+          <p className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_service_scope')}</p>
           <div className="grid grid-cols-3 gap-2">
             {SCOPE_META.map((s) => (
               <ToggleCard key={s.value} selected={data.serviceScope === s.value}
@@ -198,7 +198,7 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
         {/* Description */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="stn-desc" className="text-[13px] font-bold text-[#555] dark:text-[#9A9A8A]">{t('field_description')}</label>
+          <label htmlFor="stn-desc" className="text-[13px] font-bold text-foreground/70 dark:text-[#B0BFB1]">{t('field_description')}</label>
           <div className="relative">
             <textarea id="stn-desc" rows={3} maxLength={1000} value={data.description}
               placeholder={t('field_description_placeholder')}
@@ -213,11 +213,11 @@ export function AdminAddStationInfo({ data, errors, busy, onChange, onErrors, on
 
       <div className="flex justify-end gap-2 border-t border-[#F0EDE6] px-6 py-4 dark:border-[#1A2A14]">
         <button type="button" onClick={onPrev} disabled={busy}
-          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
+          className="rounded-lg border border-[#D8D4C8] px-4 py-2 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]">
           {t('btn_prev')}
         </button>
         <button type="button" onClick={onNext} disabled={busy}
-          className="rounded-lg bg-[#C49A1E] px-4 py-2 text-[13px] font-bold text-[#0C1209] transition-colors hover:bg-[#B08A14] disabled:opacity-50">
+          className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[13px] font-bold text-[#001201] transition-colors hover:bg-[#B08A14] disabled:opacity-50">
           {t('btn_next')}
         </button>
       </div>

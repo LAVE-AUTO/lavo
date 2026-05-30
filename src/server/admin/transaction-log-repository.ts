@@ -39,7 +39,7 @@ export async function listTransactionLogs(
 ): Promise<{ logs: TransactionLog[]; total: number }> {
   const offset = (page - 1) * perPage;
 
-  // Nullable params — when null, the WHERE condition is always TRUE (no filter applied).
+  // Nullable params - when null, the WHERE condition is always TRUE (no filter applied).
   const typeParam = filters.type ?? null;
   const stationParam = filters.station_id ?? null;
   const dateFromParam = filters.date_from ?? null;

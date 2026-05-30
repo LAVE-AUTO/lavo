@@ -13,7 +13,7 @@ import { stations, users, reservations, supportTickets } from '@/lib/db/schema';
 const ALERTS_LIMIT = 100;
 
 /**
- * Shape of a pending KYC alert — station + owner details.
+ * Shape of a pending KYC alert - station + owner details.
  * Represents a station awaiting admin validation, joined with owner information.
  */
 export type PendingKycAlert = {
@@ -31,7 +31,7 @@ export type PendingKycAlert = {
 };
 
 /**
- * Shape of an open support ticket alert — ticket + creator + assignee details.
+ * Shape of an open support ticket alert - ticket + creator + assignee details.
  * Includes the ticket metadata, creator (who raised it), and assignee (who is working on it).
  */
 export type OpenTicketAlert = {
@@ -111,7 +111,7 @@ export async function getOpenSupportTickets(): Promise<number> {
  * and match the project convention (Drizzle decimal → string).
  *
  * NOTE: Revenue is attributed to the reservation booking date (created_at), not the
- * Stripe payment capture date. This is intentional — it matches how reservations are
+ * Stripe payment capture date. This is intentional - it matches how reservations are
  * counted in the same period. If attribution by payment date is needed in the future,
  * filter on stripe_payment_succeeded_at (nullable) with an isNotNull guard instead.
  *

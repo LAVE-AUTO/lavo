@@ -34,8 +34,9 @@ type ClientHistoryAppReceipt = {
     slot_start_time: string | null;
   };
   amount: {
+    /** Total paid by the client (service + tip when applicable). */
     total: string;
-    commission: string | null;
+    /** Tip recorded for this entry, if any. Used on the receipt as a separate line. */
     tip: string | null;
     currency: 'EUR';
   };
@@ -47,14 +48,17 @@ export type ClientHistoryItem = {
   status: string;
   entry_type: 'reservation' | 'queue';
   created_at: string;
+  slot_start_time: string | null;
   station: {
     name: string | null;
     address: string | null;
     city: string | null;
+    image_url: string | null;
   };
   vehicle_format_label: string | null;
+  service_name: string | null;
+  service_category: string | null;
   amount_paid: string;
-  commission_amount: string | null;
   tip_amount: string | null;
   receipt_available: boolean;
   receipt_type: 'stripe_link' | 'app_payload' | 'none';
@@ -97,7 +101,7 @@ function hasAppReceipt(row: ClientHistoryRepositoryItem): boolean {
 }
 
 function buildTitle(row: ClientHistoryRepositoryItem): string {
-  const left = row.vehicle_format_label ?? 'Service';
+  const left = row.service_name ?? row.vehicle_format_label ?? 'Service';
   const right = row.station_name ?? 'Station';
   return `${left} - ${right}`;
 }
@@ -123,7 +127,6 @@ function buildAppReceipt(row: ClientHistoryRepositoryItem): ClientHistoryAppRece
     },
     amount: {
       total: row.amount_paid,
-      commission: row.commission_amount,
       tip: row.tip_amount,
       currency: 'EUR',
     },
@@ -145,14 +148,17 @@ function mapHistoryItem(row: ClientHistoryRepositoryItem): ClientHistoryItem {
     status: row.status,
     entry_type: row.entry_type,
     created_at: row.created_at.toISOString(),
+    slot_start_time: toIsoDate(row.slot_start_time),
     station: {
       name: row.station_name,
       address: row.station_address,
       city: row.station_city,
+      image_url: row.station_image_url,
     },
     vehicle_format_label: row.vehicle_format_label,
+    service_name: row.service_name,
+    service_category: row.service_category,
     amount_paid: row.amount_paid,
-    commission_amount: row.commission_amount,
     tip_amount: row.tip_amount,
     receipt_available: receiptAvailable,
     receipt_type: receiptType,
@@ -167,19 +173,30 @@ async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string):
   };
   const t = messages.history;
 
-  return [
-    `Slowtime - ${t['receipt_title'] ?? 'Receipt'}`,
+  /* Items breakdown: service line first, optional tip line, then total.
+   * Commission is internal accounting and never surfaced to the client. */
+  const tip = receipt.amount.tip ? Number.parseFloat(receipt.amount.tip) : 0;
+  const total = Number.parseFloat(receipt.amount.total);
+  const subtotal = Math.max(0, total - tip);
+
+  const lines: string[] = [
+    `Hurryline - ${t['receipt_title'] ?? 'Receipt'}`,
     `${t['receipt_ref'] ?? 'Reference'}: ${receipt.reference}`,
     `${t['receipt_date'] ?? 'Date'}: ${receipt.date}`,
     `${t['receipt_status'] ?? 'Status'}: ${receipt.status}`,
     `${t['receipt_station'] ?? 'Station'}: ${receipt.station.name ?? '-'}`,
     `${t['receipt_address'] ?? 'Address'}: ${receipt.station.address ?? '-'} ${receipt.station.city ?? ''}`.trim(),
-    `${t['receipt_service'] ?? 'Service'}: ${receipt.service.title ?? '-'}`,
-    `${t['receipt_entry_type'] ?? 'Entry type'}: ${receipt.service.entry_type}`,
-    `${t['receipt_total'] ?? 'Total'}: ${receipt.amount.total} ${receipt.amount.currency}`,
-    `${t['receipt_commission'] ?? 'Commission'}: ${receipt.amount.commission ?? '-'}`,
-    `${t['receipt_tip'] ?? 'Tip'}: ${receipt.amount.tip ?? '-'}`,
+    '',
+    `${t['receipt_items'] ?? 'Items'}:`,
+    `- ${receipt.service.title ?? '-'} (${receipt.service.entry_type}): ${subtotal.toFixed(2)} ${receipt.amount.currency}`,
   ];
+  if (tip > 0) {
+    lines.push(`- ${t['receipt_tip'] ?? 'Tip'}: ${tip.toFixed(2)} ${receipt.amount.currency}`);
+  }
+  lines.push('');
+  lines.push(`${t['receipt_total'] ?? 'Total'}: ${total.toFixed(2)} ${receipt.amount.currency}`);
+
+  return lines;
 }
 
 /**

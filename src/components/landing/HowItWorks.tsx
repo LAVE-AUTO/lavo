@@ -35,8 +35,8 @@ const STEPS = [
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
-    color: 'bg-lavo-success/10 text-lavo-success',
-    numColor: 'bg-lavo-success',
+    color: 'bg-Hurryline-success/10 text-Hurryline-success',
+    numColor: 'bg-Hurryline-success',
   },
 ] as const;
 
@@ -44,14 +44,14 @@ export function HowItWorks() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-white dark:bg-dark-bg transition-colors">
+    <section className="py-16 sm:py-28 bg-white dark:bg-background transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <ScrollReveal className="text-center mb-12 sm:mb-16">
-          <h2 className="text-[32px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
+          <h2 className="text-[32px] sm:text-[40px] font-black text-foreground leading-tight">
             {t('how_title')}
           </h2>
-          <p className="mt-3 text-[17px] text-[#666] dark:text-[#C0C0B0] max-w-md mx-auto">
+          <p className="mt-3 text-[17px] text-foreground/65 dark:text-[#C0C0B0] max-w-md mx-auto">
             {t('how_subtitle')}
           </p>
         </ScrollReveal>
@@ -61,7 +61,7 @@ export function HowItWorks() {
           {STEPS.map((step, i) => (
             <ScrollReveal key={step.key} delay={i * 0.12}>
               <div className="relative text-center group">
-                {/* Horizontal connector line — desktop (not on last) */}
+                {/* Horizontal connector line - desktop (not on last) */}
                 {i < STEPS.length - 1 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-gradient-to-r from-[#E0E0D0] to-transparent dark:from-tab-inactive dark:to-transparent" />
                 )}
@@ -74,14 +74,14 @@ export function HowItWorks() {
                   </span>
                 </div>
 
-                <h3 className="text-[18px] sm:text-[19px] font-bold text-[#0A0A14] dark:text-white mb-2">
+                <h3 className="text-[18px] sm:text-[19px] font-bold text-foreground mb-2">
                   {t(`${step.key}_title`)}
                 </h3>
-                <p className="text-[14px] sm:text-[15px] text-[#666] dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
+                <p className="text-[14px] sm:text-[15px] text-foreground/65 dark:text-[#C0C0B0] leading-relaxed max-w-xs mx-auto">
                   {t(`${step.key}_desc`)}
                 </p>
 
-                {/* Vertical connector — mobile only (not on last) */}
+                {/* Vertical connector - mobile only (not on last) */}
                 {i < STEPS.length - 1 && (
                   <div className="flex md:hidden justify-center py-5">
                     <div className="w-px h-8 bg-gradient-to-b from-[#D0D0C0] to-transparent dark:from-tab-inactive dark:to-transparent" />

@@ -25,6 +25,10 @@ export async function GET(request: Request) {
     service_scope: searchParams.get('service_scope') ?? undefined,
     format_id: searchParams.get('format_id') ?? undefined,
     date: searchParams.get('date') ?? undefined,
+    near_lat: searchParams.get('near_lat') ?? undefined,
+    near_lng: searchParams.get('near_lng') ?? undefined,
+    distance_min_km: searchParams.get('distance_min_km') ?? undefined,
+    distance_max_km: searchParams.get('distance_max_km') ?? undefined,
   };
   const parsed = listStationsQuerySchema.safeParse(raw);
   if (!parsed.success) {
@@ -45,8 +49,14 @@ export async function GET(request: Request) {
       wash_type_ids: parsed.data.wash_type_ids,
       service_scope: parsed.data.service_scope,
       format_id: parsed.data.format_id,
+      near_lat: parsed.data.near_lat,
+      near_lng: parsed.data.near_lng,
+      distance_min_km: parsed.data.distance_min_km,
+      distance_max_km: parsed.data.distance_max_km,
     });
-    return NextResponse.json({ data: result.data, meta: result.meta }, { status: 200 });
+    const response = NextResponse.json({ data: result.data, meta: result.meta }, { status: 200 });
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return response;
   } catch (e) {
     return error500(e);
   }

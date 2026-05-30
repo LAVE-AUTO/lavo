@@ -31,7 +31,7 @@ export function LandingService() {
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -bottom-5 right-3 sm:bottom-6 sm:right-6 rounded-xl bg-white dark:bg-dark-card border border-gold/20 px-4 py-3 shadow-lg animate-float-card">
+              <div className="absolute -bottom-5 right-3 sm:bottom-6 sm:right-6 rounded-xl bg-white dark:bg-surface border border-gold/20 px-4 py-3 shadow-lg animate-float-card">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center">
                     <svg
@@ -39,7 +39,7 @@ export function LandingService() {
                       height="18"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#af8408"
+                      stroke="#DDAF3B"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -50,10 +50,10 @@ export function LandingService() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold text-[#0A0A14] dark:text-white leading-tight">
+                    <p className="text-[14px] font-bold text-foreground leading-tight">
                       0 min
                     </p>
-                    <p className="text-[11px] text-[#888] dark:text-[#999]">
+                    <p className="text-[11px] text-foreground/55 dark:text-[#999]">
                       {t('card_wait')}
                     </p>
                   </div>
@@ -66,18 +66,18 @@ export function LandingService() {
           <ScrollReveal delay={0.15}>
             <div className="space-y-6">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lavo-success/10 border border-lavo-success/20">
-                <span className="w-2 h-2 rounded-full bg-lavo-success" />
-                <span className="text-[13px] font-bold text-lavo-success tracking-wide uppercase">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-Hurryline-success/10 border border-Hurryline-success/20">
+                <span className="w-2 h-2 rounded-full bg-Hurryline-success" />
+                <span className="text-[13px] font-bold text-Hurryline-success tracking-wide uppercase">
                   {t('service_badge')}
                 </span>
               </div>
 
-              <h2 className="text-[30px] sm:text-[40px] font-black text-[#0A0A14] dark:text-white leading-tight">
+              <h2 className="text-[30px] sm:text-[40px] font-black text-foreground leading-tight">
                 {t('service_title')}
               </h2>
 
-              <p className="text-[17px] text-[#555] dark:text-[#C0C0B0] leading-relaxed">
+              <p className="text-[17px] text-foreground/70 leading-relaxed">
                 {t('service_desc')}
               </p>
 
@@ -94,7 +94,7 @@ export function LandingService() {
                         height="12"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#af8408"
+                        stroke="#DDAF3B"
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeLinejoin="round"

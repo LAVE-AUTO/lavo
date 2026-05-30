@@ -1,112 +1,100 @@
-# LAVO Database
+# Hurryline Database
 
 ## Database Type
 
-**SQL (PostgreSQL)**. Development uses Neon; production uses Railway PostgreSQL. The persistence layer will be implemented with **Drizzle ORM** (schema and migrations are planned but not yet present in the repository).
+**SQL (PostgreSQL)** with **Drizzle ORM** schemas and repository-driven access. Development is typically configured with Neon-compatible URLs; production target is Railway PostgreSQL.
 
 ## Entity Relationship Diagram
 
 ```mermaid
 erDiagram
     USERS ||--o{ EMAIL_VERIFICATION_TOKENS : has
-    USERS ||--o{ RESERVATIONS : makes
+    USERS ||--o{ REFRESH_TOKENS : has
+    USERS ||--o{ DEVICE_TOKENS : owns
+    USERS ||--o{ RESERVATIONS : books
     USERS ||--o{ RATINGS : writes
     USERS ||--o{ SUPPORT_TICKETS : opens
 
-    ADMINS ||--o{ COMMISSION_SETTINGS : sets
-    ADMINS ||--o{ ADMIN_LOGS : writes
-    ADMINS ||--o{ SUPPORT_TICKETS : assigned_to
-    ADMINS ||--o{ STATIONS : approves
-
     STATIONS ||--|| STATION_CONFIGS : has
-    STATIONS ||--o{ VEHICLE_FORMATS : defines
+    STATIONS ||--o{ STATION_POSTS : has
+    STATIONS ||--o{ STATION_HOURS : has
+    STATIONS ||--o{ STATION_HOUR_EXCEPTIONS : has
+    STATIONS ||--o{ STATION_DOCUMENTS : has
+    STATIONS ||--o{ STATION_PHOTOS : has
     STATIONS ||--o{ TIME_SLOTS : owns
-    STATIONS ||--o{ RESERVATIONS : receives
-    STATIONS ||--o{ RATINGS : receives
-    STATIONS ||--o{ NOTIFICATIONS : receives
+    STATIONS ||--o{ VEHICLE_FORMATS : defines
 
-    TIME_SLOTS ||--o{ RESERVATIONS : contains
-    VEHICLE_FORMATS ||--o{ RESERVATIONS : priced_by
-    RESERVATIONS ||--o{ NOTIFICATIONS : emits
-    RESERVATIONS ||--|| RATINGS : rated_by
+    TIME_SLOTS ||--o{ RESERVATIONS : schedules
+    RESERVATIONS ||--o{ DELAY_REQUESTS : has
+    RESERVATIONS ||--o{ RESCHEDULE_REQUESTS : has
+    RESERVATIONS ||--o| RATINGS : rated_by
+    RESERVATIONS ||--o| RESERVATION_TIPS : tipped_by
     RESERVATIONS ||--o| NO_SHOW_FEES : may_create
+    RESERVATIONS ||--o{ DISPUTES : may_raise
+
+    USERS ||--o{ USER_NOTIFICATIONS : receives
+    USERS ||--|| USER_NOTIFICATION_PREFS : configures
 ```
 
-## Table Schemas (planned)
+## Table Schemas (implemented modules)
 
-Conventions from the technical specification:
+Conventions used across modules:
 
-- **Naming**: `snake_case` for tables and columns
-- **IDs**: UUID v4 primary keys
-- **Timestamps**: `created_at` and `updated_at` on all mutable tables
+- `snake_case` column naming
+- UUID-oriented identifiers
+- created/updated timestamps on mutable entities
+- foreign keys + relations declared in Drizzle schema index
 
-### `users`
+### Identity and access
 
-- **Purpose**: client accounts and identity
-- **Key fields**: `email (unique)`, `password_hash`, `status (pending_verification|active|suspended)`, `stripe_customer_id`
+- `users`: accounts, roles, status, profile fields
+- `email_verification_tokens`: verification/reset token lifecycle
+- `refresh_tokens`: session continuation and rotation
+- `auth_rate_limits`: anti-abuse state
 
-### `email_verification_tokens`
+### Station domain
 
-- **Purpose**: email verification and password reset tokens
-- **Key fields**: `user_id`, `token`, `type (email_verification|password_reset)`, `expires_at`, `used_at`
+- `stations`, `station_configs`
+- `station_documents`, `pending_uploads`, `station_photos`
+- `station_posts`, `station_hours`, `station_hour_exceptions`
+- `vehicle_formats`, `wash_types`, `station_wash_types`
 
-### `stations`
+### Reservation and operation domain
 
-- **Purpose**: station identity + approval lifecycle
-- **Key fields**: `status (pending|active|suspended|rejected)`, `is_open` (reserved internal/future), `stripe_account_id`, `approved_by`, `average_score`, `total_ratings`
+- `time_slots`
+- `reservations`
+- `delay_requests`, `reschedule_requests`
+- `no_show_fees`
 
-### `station_configs`
+### Commercial catalog domain
 
-- **Purpose**: operational configuration per station (1:1)
-- **Key fields**: `opening_time`, `closing_time`, `wash_duration_minutes`, `wash_post_count`, `late_tolerance_minutes`
+- `station_services`, `service_vehicle_entries`
+- `station_extras`, `extra_vehicle_entries`
+- `service_extra_compatibility`
 
-### `vehicle_formats`
+### Engagement and communication
 
-- **Purpose**: per-station pricing by vehicle size/format
-- **Key fields**: `station_id`, `label`, `price`, `is_active`
+- `ratings`, `favorites`
+- `notifications`, `user_notifications`, `user_notification_prefs`
+- `device_tokens`
 
-### `time_slots`
+### Governance and support
 
-- **Purpose**: manually created bookable slots with multi-capacity
-- **Key fields**: `station_id`, `start_time`, `end_time`, `capacity`, `booked_count`, `status (available|full|blocked)`
+- `disputes`
+- `commission_settings`
+- `support_tickets`, `support_messages`, `support_settings`
+- `admin_logs`
+- `platform_settings`, legal/settings-related tables
 
-### `reservations`
+## Indexes and constraints
 
-- **Purpose**: booking lifecycle, queueing, and financial snapshot
-- **Key fields**: `user_id`, `station_id`, `time_slot_id`, `vehicle_format_id`, `status`, `queue_position`, `amount_paid`, `commission_rate`, `commission_amount`, `station_payout`, `tip_amount`, Stripe references
+- Unique and lookup constraints for identity/token correctness.
+- Reservation and slot indexing optimized through migration set for date/station/status filtering.
+- Relation integrity defined both in SQL migrations and Drizzle relation declarations.
+- Financial columns (commission/tip/payout/reconciliation markers) persisted for traceability.
 
-### `ratings`
+## Migration status
 
-- **Purpose**: post-service rating and comment (1 rating per completed reservation)
-- **Key fields**: `reservation_id (unique)`, `score (1..5)`, `comment`, `is_visible`
+- SQL migrations in repository: **53**
+- Migration path maintained under `src/lib/db/migrations`
 
-### `notifications`
-
-- **Purpose**: audit of push/email notifications sent by event
-- **Key fields**: `type (push|email)`, `event`, `status (sent|failed|pending)`, optional `user_id`, `station_id`, `reservation_id`
-
-### `commission_settings`
-
-- **Purpose**: effective commission rate history set by admins
-- **Key fields**: `rate`, `set_by`, `effective_at`
-
-### `admins` and `admin_logs`
-
-- **Purpose**: Super Admin accounts and audit trail
-- **Key fields**: `admin_logs.action`, `target_type`, `target_id`, `details (jsonb)`
-
-### `support_tickets`
-
-- **Purpose**: support intake and admin handling
-- **Key fields**: `created_by`, `assigned_to`, `subject`, `message`, `status`, `resolved_at`
-
-### `no_show_fees` (Trello decision)
-
-- **Purpose**: dedicated record for **no-show fees after queue switch**
-- **Key fields (planned)**: `reservation_id`, `user_id`, `station_id`, `amount`, `reason`, `status (pending|paid|waived)`, Stripe references, `created_at`
-
-## Indexes & Constraints (planned)
-
-- **Uniqueness**: `users.email`, `ratings.reservation_id`, token uniqueness as needed
-- **Operational queries**: `stations (status, city)`, `time_slots (station_id, start_time, status)`, `reservations (user_id, station_id, status, created_at DESC)`
-- **Capacity safety**: update `time_slots.booked_count` using a row lock (`SELECT ... FOR UPDATE`) to prevent overbooking

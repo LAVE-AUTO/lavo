@@ -1,29 +1,35 @@
 /**
  * GET /api/v1/stations/:id/formats
- * Public. Returns vehicle formats for an active station. 404 if station not found or not active.
- * Response: { data: Array<{ id, station_id, label, price, is_active, created_at, updated_at }> }.
+ * Public. Returns all global vehicle formats (station param kept for backward compatibility).
  */
 import type { NextResponse } from 'next/server';
-import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
-import { ApiCode } from '@/types/api-codes';
-import { stationIdParamSchema, mapZodErrors } from '@/validators/station';
-import { getFormatsByStationIdPublic } from '@/server/station/format-service';
-import { AppError, NotFoundError } from '@/lib/errors';
+import { successResponse, error500, fromAppError } from '@/lib/responses';
+import { getFormatsPaginated } from '@/server/station/format-service';
+import { AppError } from '@/lib/errors';
 import { serializeFormat } from '@/server/station/serializers';
+import { z } from 'zod';
 
 type Params = { params: Promise<{ id: string }> };
+const querySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
 
-export async function GET(_request: Request, { params }: Params): Promise<NextResponse> {
-  const { id } = await params;
-  const parsed = stationIdParamSchema.safeParse({ id });
-  if (!parsed.success) {
-    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error));
-  }
+export async function GET(request: Request, _ctx: Params): Promise<NextResponse> {
   try {
-    const formats = await getFormatsByStationIdPublic(parsed.data.id);
-    return successResponse(formats.map(serializeFormat));
+    const { searchParams } = new URL(request.url);
+    const parsed = querySchema.parse(Object.fromEntries(searchParams));
+    const result = await getFormatsPaginated(parsed.page, parsed.per_page);
+    return successResponse({
+      items: result.items.map(serializeFormat),
+      meta: {
+        total: result.total,
+        page: parsed.page,
+        per_page: parsed.per_page,
+        total_pages: Math.max(1, Math.ceil(result.total / parsed.per_page)),
+      },
+    });
   } catch (e) {
-    if (e instanceof NotFoundError) return error404(e.message);
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }

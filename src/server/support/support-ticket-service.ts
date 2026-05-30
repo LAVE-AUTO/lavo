@@ -1,5 +1,7 @@
 import * as repo from "./support-ticket-repository";
 import { notifyEntry } from "@/server/notifications/notification-service";
+import { notifyClientFeed } from "@/server/notifications/client-feed-notifications";
+import { notifyAdminEvent } from "@/server/notifications/admin-notification-service";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import { z } from "zod";
@@ -73,6 +75,15 @@ export async function createSupportTicket(
         entryId: ticket.id,
         type: "support_ticket_created",
       });
+      await notifyClientFeed({
+        userId,
+        entryId: ticket.id,
+        kind: 'support_ticket_created',
+        body: 'Votre demande a été enregistrée avec succès.',
+      });
+      await notifyAdminEvent({
+        type: 'support_ticket_created',
+      });
 
       return ticket;
     } catch (err: unknown) {
@@ -83,8 +94,8 @@ export async function createSupportTicket(
       // Postgres unique_violation code is 23505. Retry only on that error.
       const code =
         err &&
-        typeof err === "object" &&
-        "code" in err
+          typeof err === "object" &&
+          "code" in err
           ? (err as { code?: string }).code
           : undefined;
       if (code === "23505") {
@@ -139,10 +150,24 @@ export async function addSupportMessage(
       entryId: ticket.id,
       type: "support_message_received",
     });
+    // Only push to client feed when an admin replies; client-to-admin messages target the admin's feed.
+    if (isAdmin) {
+      await notifyClientFeed({
+        userId: recipientId,
+        entryId: ticket.id,
+        kind: 'support_message_received',
+        body: 'Vous avez reçu une réponse à votre ticket.',
+      });
+    }
   }
   // TODO: When ticket.assigned_to is null and a client sends a message, no admin
   // receives a notification. A future improvement should query for users with the
   // 'admin' role and notify them all (or use a dedicated admin notification channel).
+  if (!isAdmin) {
+    await notifyAdminEvent({
+      type: 'support_message_received',
+    });
+  }
 
   return message;
 }
@@ -153,7 +178,8 @@ export async function addSupportMessage(
 export async function getTicketDetails(
   userId: string,
   role: string,
-  ticketId: string
+  ticketId: string,
+  options?: { limit?: number; cursor?: string }
 ) {
   const ticket = await repo.findTicketById(ticketId);
   if (!ticket) throw new AppError("Ticket not found", HTTP_STATUS.NOT_FOUND);
@@ -163,7 +189,19 @@ export async function getTicketDetails(
     throw new AppError("Forbidden", HTTP_STATUS.FORBIDDEN);
   }
 
-  return ticket;
+  const messagesPage = await repo.listTicketMessagesCursor(ticketId, {
+    limit: options?.limit ?? 50,
+    cursor: options?.cursor,
+  });
+
+  return {
+    ...ticket,
+    messages: messagesPage.items,
+    messages_meta: {
+      next_cursor: messagesPage.next_cursor,
+      has_more: Boolean(messagesPage.next_cursor),
+    },
+  };
 }
 
 /**
@@ -172,7 +210,8 @@ export async function getTicketDetails(
 export async function getSupportTickets(
   userId: string,
   role: string,
-  status?: SupportStatus
+  status?: SupportStatus,
+  options?: { limit?: number; cursor?: string }
 ) {
   const filters: { userId?: string; status?: SupportStatus } = {};
   if (role !== "admin") {
@@ -182,7 +221,9 @@ export async function getSupportTickets(
     filters.status = status;
   }
 
-  return await repo.listTickets(filters);
+  const limit = options?.limit ?? 50;
+  const cursor = options?.cursor;
+  return await repo.listTicketsCursor({ ...filters, limit, cursor });
 }
 
 /**
@@ -190,15 +231,15 @@ export async function getSupportTickets(
  * A closed ticket cannot be re-opened or moved to any other state.
  */
 const ALLOWED_TRANSITIONS: Record<SupportStatus, SupportStatus[]> = {
-  ouvert:   ["en_cours", "resolu", "ferme"],
+  ouvert: ["en_cours", "resolu", "ferme"],
   en_cours: ["ouvert", "resolu", "ferme"],
-  resolu:   ["ouvert", "en_cours", "ferme"],
-  ferme:    [],
+  resolu: ["ouvert", "en_cours", "ferme"],
+  ferme: [],
 };
 
 /**
  * Updates a ticket status (Admin only).
- * Enforces allowed transitions — a closed (ferme) ticket cannot be re-opened.
+ * Enforces allowed transitions - a closed (ferme) ticket cannot be re-opened.
  */
 export async function updateSupportTicketStatus(
   ticketId: string,
@@ -223,7 +264,7 @@ export async function updateSupportTicketStatus(
 /**
  * Retrieves global support settings with .env fallback for support email.
  * `...dbSettings` is spread first so that the explicit `support_email` key
- * always wins — it applies the fallback chain even when the DB value is an
+ * always wins - it applies the fallback chain even when the DB value is an
  * empty string (which would otherwise be returned as-is via the spread).
  */
 export async function getSupportSettings(): Promise<Record<string, string>> {
@@ -233,7 +274,7 @@ export async function getSupportSettings(): Promise<Record<string, string>> {
     support_email:
       dbSettings.support_email ||
       process.env.SUPPORT_EMAIL ||
-      "support@lavo.ca",
+      "support@Hurryline.ca",
   };
 }
 

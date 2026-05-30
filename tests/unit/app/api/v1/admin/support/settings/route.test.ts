@@ -25,7 +25,7 @@ import { AppError } from '@/lib/errors';
 const adminAuth = { sub: 'admin-uuid-0001', role: 'admin' };
 
 const settingsFixture = {
-  support_email: 'support@lavo.ca',
+  support_email: 'support@Hurryline.ca',
   max_open_tickets_per_user: '3',
 };
 
@@ -59,13 +59,13 @@ describe('GET /api/v1/admin/support/settings', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data.support_email).toBe('support@lavo.ca');
+    expect(body.data.support_email).toBe('support@Hurryline.ca');
     expect(body.data.max_open_tickets_per_user).toBe('3');
     expect(mockGetSupportSettings).toHaveBeenCalledTimes(1);
   });
 
   it('always includes support_email in the response (fallback enforced)', async () => {
-    mockGetSupportSettings.mockResolvedValueOnce({ support_email: 'ops@lavo.ca' });
+    mockGetSupportSettings.mockResolvedValueOnce({ support_email: 'ops@Hurryline.ca' });
 
     const res = await GET(makeGetRequest());
 
@@ -136,23 +136,23 @@ describe('PATCH /api/v1/admin/support/settings', () => {
 
   it('returns 200 on valid settings update with string values', async () => {
     const res = await PATCH(
-      makePatchRequest({ support_email: 'help@lavo.ca', max_open_tickets_per_user: '5' })
+      makePatchRequest({ support_email: 'help@Hurryline.ca', max_open_tickets_per_user: '5' })
     );
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data).toEqual({});
     expect(mockUpdateSupportSettings).toHaveBeenCalledWith({
-      support_email: 'help@lavo.ca',
+      support_email: 'help@Hurryline.ca',
       max_open_tickets_per_user: '5',
     });
   });
 
   it('returns 200 on a single key update', async () => {
-    const res = await PATCH(makePatchRequest({ support_email: 'new@lavo.ca' }));
+    const res = await PATCH(makePatchRequest({ support_email: 'new@Hurryline.ca' }));
 
     expect(res.status).toBe(200);
-    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: 'new@lavo.ca' });
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: 'new@Hurryline.ca' });
   });
 
   it('returns 200 on an empty settings object (no-op is valid)', async () => {
@@ -192,10 +192,10 @@ describe('PATCH /api/v1/admin/support/settings', () => {
   });
 
   it('accepts a valid support_email value', async () => {
-    const res = await PATCH(makePatchRequest({ support_email: 'ops@lavo.ca' }));
+    const res = await PATCH(makePatchRequest({ support_email: 'ops@Hurryline.ca' }));
 
     expect(res.status).toBe(200);
-    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: 'ops@lavo.ca' });
+    expect(mockUpdateSupportSettings).toHaveBeenCalledWith({ support_email: 'ops@Hurryline.ca' });
   });
 
   it('returns 400 when max_open_tickets_per_user is a negative integer string', async () => {
@@ -225,7 +225,7 @@ describe('PATCH /api/v1/admin/support/settings', () => {
     expect(mockUpdateSupportSettings).not.toHaveBeenCalled();
   });
 
-  it('accepts max_open_tickets_per_user = "0" (hard block — no open tickets allowed)', async () => {
+  it('accepts max_open_tickets_per_user = "0" (hard block - no open tickets allowed)', async () => {
     const res = await PATCH(makePatchRequest({ max_open_tickets_per_user: '0' }));
 
     expect(res.status).toBe(200);
@@ -348,7 +348,7 @@ describe('PATCH /api/v1/admin/support/settings', () => {
   it('maps AppError from service to a controlled response', async () => {
     mockUpdateSupportSettings.mockRejectedValueOnce(new AppError('Write conflict', 409));
 
-    const res = await PATCH(makePatchRequest({ support_email: 'ops@lavo.ca' }));
+    const res = await PATCH(makePatchRequest({ support_email: 'ops@Hurryline.ca' }));
 
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -358,7 +358,7 @@ describe('PATCH /api/v1/admin/support/settings', () => {
   it('returns 500 on unexpected non-AppError exception from service', async () => {
     mockUpdateSupportSettings.mockRejectedValueOnce(new Error('Unexpected DB failure'));
 
-    const res = await PATCH(makePatchRequest({ support_email: 'ops@lavo.ca' }));
+    const res = await PATCH(makePatchRequest({ support_email: 'ops@Hurryline.ca' }));
 
     expect(res.status).toBe(500);
     const body = await res.json();

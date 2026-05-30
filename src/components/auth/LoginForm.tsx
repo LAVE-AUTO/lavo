@@ -59,7 +59,7 @@ interface LoginFormProps {
 }
 
 /**
- * Login form — email + password + remember me + forgot-password link + social buttons.
+ * Login form - email + password + remember me + forgot-password link + social buttons.
  * On success: persists session via AuthContext and redirects by role.
  * When allowedRole is set, blocks cross-space logins and shows a redirect banner.
  */
@@ -130,7 +130,7 @@ export function LoginForm({
         const userRole = String(data.user.role || 'client') as UserRole;
 
         /* Cross-space login guard: block if role does not match this login page.
-           The backend already set a refresh_token cookie — call logout to clear it
+           The backend already set a refresh_token cookie - call logout to clear it
            before showing the error, otherwise AuthProvider will log the user in anyway. */
         if (allowedRole && userRole !== allowedRole) {
           await postWithApi('/auth/logout', {});
@@ -179,7 +179,8 @@ export function LoginForm({
       } else if (data?.code === 'BUSINESS_REJECTED') {
         showError(t('error_account_rejected'));
       } else if (data?.code === 'FORBIDDEN') {
-        // TODO: connect to API once backend returns distinct codes for all statuses at login
+        // Generic fallback for any non-approved status the backend may return
+        // without a more specific code (e.g. ACCOUNT_SUSPENDED).
         showError(t('error_account_not_active'));
       } else if (data?.code === 'INVALID_CREDENTIALS' || data?.code === 'UNAUTHORIZED') {
         setErrors({
@@ -224,8 +225,10 @@ export function LoginForm({
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            className="text-[#888] hover:text-[#555] dark:hover:text-[#ccc] transition-colors"
+            aria-pressed={showPassword}
+            className="text-foreground/55 hover:text-foreground/70 dark:hover:text-[#ccc] transition-colors"
           >
             <EyeIcon open={showPassword} />
           </button>
@@ -239,9 +242,9 @@ export function LoginForm({
             id="remember-me"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-tab-inactive accent-gold cursor-pointer"
+            className="w-4 h-4 rounded border-[#CCCCCC] dark:border-border accent-gold cursor-pointer"
           />
-          <span className="text-[14px] text-[#555] dark:text-lavo-muted">
+          <span className="text-[14px] text-foreground/70 dark:text-Hurryline-muted">
             {t('remember_me')}
           </span>
         </label>
@@ -258,10 +261,10 @@ export function LoginForm({
         {isLoading ? t('loading') : t('submit')}
       </Button>
 
-      {/* Wrong space banner — shown when user logs in with the wrong account type */}
+      {/* Wrong space banner - shown when user logs in with the wrong account type */}
       {wrongSpaceHref && (
         <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gold/30 bg-gold/5 animate-fade-in">
-          <p className="text-[13px] text-[#555] dark:text-lavo-muted leading-snug">
+          <p className="text-[13px] text-foreground/70 dark:text-Hurryline-muted leading-snug">
             {t('error_wrong_space')}
           </p>
           <Link

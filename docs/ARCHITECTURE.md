@@ -1,148 +1,125 @@
-# LAVO Architecture
+# Hurryline Architecture
 
 ## Project Tree Structure
 
-```
-lavo/
-├── docs/                    # Project documentation
-│   ├── ARCHITECTURE.md
-│   ├── CHARTS_PROVIDER.md
-│   ├── DATABASE.md
-│   ├── DEPLOYMENT.md
-│   ├── FEATURES.md
-│   ├── INSTALLATION.md
-│   ├── PAGE_LISTING.md
-│   ├── PROJECT_SUMMARY.md
-│   └── TESTING_STRATEGY.md
-├── messages/                # next-intl locale files
-│   ├── en.json
-│   └── fr.json
-├── public/                  # Static assets
+```text
+Hurryline/
+├── docs/                            # Architecture, features, data, testing, pages, charts
+├── messages/                        # i18n message catalogs (fr/en)
+├── public/                          # Static assets, icons, logos, PWA files
+├── scripts/                         # Migration and seed scripts
 ├── src/
 │   ├── app/
-│   │   ├── api/v1/          # REST API route handlers
-│   │   │   ├── admin/dashboard/
-│   │   │   ├── auth/register/
-│   │   │   ├── health/
-│   │   │   ├── history/
-│   │   │   │   ├── client/
-│   │   │   │   └── station/
-│   │   │   ├── ratings/
-│   │   │   ├── reservations/
-│   │   │   ├── station/config/
-│   │   │   ├── stations/
-│   │   │   ├── support/
-│   │   │   └── webhooks/stripe/
-│   │   ├── [locale]/        # Locale-prefixed UI routes
-│   │   │   ├── (admin)/admin/      # Super Admin pages
-│   │   │   ├── (client)/client/   # Client dashboard pages
-│   │   │   ├── (public)/          # Public pages (home, login, register, stations)
-│   │   │   ├── (station)/station/  # Station dashboard pages
-│   │   │   └── layout.tsx
+│   │   ├── [locale]/                # UI routes grouped by role (public/client/station/admin)
+│   │   ├── api/
+│   │   │   ├── v1/                  # Main versioned business API
+│   │   │   ├── cron/                # Protected scheduled job endpoints
+│   │   │   ├── docs/                # OpenAPI/Swagger endpoint
+│   │   │   └── auth/[...nextauth]/  # NextAuth route
+│   │   ├── layout.tsx
 │   │   ├── globals.css
-│   │   └── layout.tsx
-│   ├── components/
-│   │   ├── admin/           # Admin-specific components
-│   │   ├── auth/            # LoginForm, RegisterForm
-│   │   ├── history/         # ClientHistoryTable
-│   │   ├── layout/          # MainLayout, ClientLayout, StationLayout, AdminLayout, etc.
-│   │   ├── ratings/         # StarRating, RatingForm
-│   │   ├── reservations/   # ReservationCard, SlotPicker
-│   │   ├── stations/        # StationCard, StationDetail, SearchBar
-│   │   └── ui/              # Button, Input, Card, Modal, Badge, Spinner, etc.
-│   ├── context/            # Auth, Theme, Toast providers
-│   ├── helpers/             # constants, validators, string-helper, date-helper
-│   ├── i18n/                # routing, request, navigation (next-intl)
-│   ├── lib/                 # errors, responses; db/ (Drizzle placeholder)
-│   ├── server/              # Domain services (auth, stations, reservations, payments, admin, etc.)
-│   ├── services/            # axios, local-storage, cookie, memory-cache
-│   ├── types/               # Shared TypeScript types (placeholder)
-│   └── middleware.ts        # next-intl locale middleware
+│   │   └── manifest.ts
+│   ├── components/                  # UI components by domain/role
+│   ├── context/                     # React providers (auth, theme, toast, commission)
+│   ├── helpers/                     # Shared helpers/constants/concurrency/date
+│   ├── i18n/                        # next-intl routing/navigation/request
+│   ├── jobs/                        # Job implementations (reminders, cleanup, reports)
+│   ├── lib/
+│   │   ├── db/
+│   │   │   ├── schema/              # Drizzle schemas and relations
+│   │   │   └── migrations/          # SQL migrations
+│   │   ├── openapi/                 # OpenAPI assembly
+│   │   ├── stripe.ts
+│   │   ├── jwt.ts
+│   │   └── redis*.ts
+│   ├── server/                      # Domain services and repositories
+│   ├── services/                    # Client-side service adapters
+│   ├── types/                       # Shared API/domain types
+│   └── validators/                  # Zod validation schemas
 ├── tests/
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
-├── .env.example
-├── jest.config.ts
-├── jest.setup.ts
-├── next.config.ts
+├── middleware.ts
 ├── package.json
-├── postcss.config.mjs
-├── tsconfig.json
 └── README.md
 ```
 
-Route groups `(public)`, `(client)`, `(station)`, `(admin)` do not appear in URLs; only `[locale]` and the page path do (e.g. `/fr/login`, `/en/client/dashboard`).
+Route groups `(public)`, `(client)`, `(station)`, `(admin)` do not appear in URLs; only `[locale]` and page path are visible (for example `/fr/stations`, `/en/admin/dashboard`).
 
 ## System Overview
 
-LAVO is a full-stack Next.js application that combines a web UI (clients, stations, and Super Admin) with REST API endpoints under `/api/v1`. The codebase is structured by business domains and follows a layered approach to keep pages/routes thin and concentrate business rules inside server-side services.
+Hurryline is a full-stack Next.js application that combines multilingual web UI and a large API surface in one codebase. It follows a layered architecture: route handlers receive and validate requests, domain services orchestrate business logic, repositories interact with PostgreSQL through Drizzle, and provider adapters connect to Stripe, Resend, Firebase, Redis, and Cloudinary.
 
 ## Architecture Diagram
 
 ```mermaid
 flowchart TD
-    ClientUser[Client User] -->|Browse and book| WebUI[Next.js Web UI]
-    StationUser[Station User] -->|Manage slots and validate| WebUI
-    AdminUser[Super Admin] -->|Govern platform| WebUI
+    ClientUser[Client User] -->|Browse and reserve| WebUI[Next.js Web UI]
+    StationUser[Station Operator] -->|Operate queue/services| WebUI
+    AdminUser[Admin] -->|Govern platform| WebUI
 
-    WebUI -->|Calls| ApiRoutes[Next.js API routes]
-    ApiRoutes -->|Delegates| DomainServices[Domain Services src/server]
-    DomainServices -->|Reads/Writes| DataLayer[Data Access Layer - Drizzle planned]
-    DataLayer -->|SQL| Postgres[(PostgreSQL)]
+    WebUI -->|HTTP| ApiRoutes[Next.js API Routes /api/v1]
+    ApiRoutes -->|Validate + orchestrate| DomainServices[src/server domain services]
+    DomainServices -->|Persistence| Drizzle[Drizzle ORM layer]
+    Drizzle -->|SQL| Postgres[(PostgreSQL)]
 
-    DomainServices -->|Payments| Stripe[Stripe Connect]
-    DomainServices -->|Email| Resend[Resend]
-    DomainServices -->|Push| Fcm[Firebase FCM]
-    WebUI -->|Navigation link| Maps[Google Maps]
-    WebUI -->|Tracking via metas| Analytics[Google Analytics and PageSense]
+    ApiRoutes --> CronRoutes[/api/cron route handlers]
+    CronRoutes --> Jobs[src/jobs]
+    Jobs --> DomainServices
 
-    CronJobs[Cron / Scheduled Tasks] -->|Reminders, queue switch| DomainServices
-    Stripe -->|Webhooks| ApiRoutes
+    DomainServices --> Stripe[Stripe Connect]
+    DomainServices --> Resend[Resend Email]
+    DomainServices --> Fcm[Firebase FCM]
+    DomainServices --> Redis[Upstash Redis]
+    DomainServices --> Cloudinary[Cloudinary]
+
+    Stripe -->|Webhook events| ApiRoutes
 ```
 
 ## Component Breakdown
 
 ### Web UI (App Router)
 
-The UI is implemented as locale-prefixed routes (`/fr`, `/en`) using `next-intl`. Route groups separate concerns for public, client, station, and admin areas while keeping URLs clean. Pages should focus on rendering, orchestration, and calling API endpoints or server actions. Cross-cutting UI concerns (theme, auth state, toast notifications) are managed with React context providers.
+The frontend is locale-prefixed (`/fr`, `/en`) and split into role route groups. Public pages handle discovery and authentication, while protected client/station/admin areas expose operational workflows. Context providers centralize session, toast, theme, and commission state.
 
-### API Routes (`/api/v1`)
+### API Routes (`/api/v1`, `/api/cron`)
 
-API endpoints are implemented using Next.js App Router route handlers. Routes are grouped by domain (auth, stations, reservations, payments/webhooks, ratings, history, admin, support). Input validation is planned to be enforced at every boundary using Zod. Response and error handling are standardized via shared helpers to keep contract consistency.
-
-**Admin role naming:** The database and JWT store the platform operator role as the string `'admin'`. The UI may show “Super Admin” or `SUPER_ADMIN` as a label only — API and authorization checks must use `'admin'`, not a separate `super_admin` enum value unless the schema is explicitly migrated.
+The platform currently exposes broad API coverage (`/api/v1`) plus protected cron endpoints for background automation. Domain slicing includes auth, stations, station ops, reservations, ratings, support, admin governance, history, and legal content. OpenAPI docs are generated and served at `/api/docs`.
 
 ### Domain Services (`src/server/*`)
 
-Domain services are the canonical place for business rules such as slot capacity handling, queue switching, commission calculations, and notification triggers. This layer is designed to be framework-light and callable from both API routes and future background jobs. Services orchestrate external providers (Stripe, Resend, FCM) behind a stable internal interface. This keeps the application testable and prevents provider-specific logic from spreading into the UI and route handlers.
+Business rules are concentrated in service modules (auth, reservations, queue, payments, notifications, admin). Repositories encapsulate data access and reduce route-level coupling. This structure supports both synchronous request flows and asynchronous cron execution.
 
-### Data Access Layer (Drizzle planned)
+### Data Access Layer (`src/lib/db/*`)
 
-Persistence will be implemented using Drizzle ORM with PostgreSQL. The data model is defined by the technical specification and Trello (notably a dedicated no-show fee table and QR booking commission rules). Migrations and indexing strategy are considered part of the “foundation” work to ensure consistency across environments. Development will use Neon; production will use Railway PostgreSQL.
+Persistence is implemented with Drizzle schemas and explicit relations, backed by SQL migrations tracked in source control. Reservation, queue, dispute, and commission-oriented tables are already represented in schema modules.
 
 ### External Integrations
 
-Stripe Connect handles payment capture and split payouts (including optional tips). Resend handles transactional email flows such as verification, booking confirmations, and admin summaries. Firebase FCM handles push notifications for reminders, status changes, and operational events. Google Maps is used via a simple outgoing link to avoid embedded map complexity. Analytics scripts are planned to be injected only via application metas, keeping tracking isolated from business logic.
+- Stripe Connect handles payment intents, webhooks, reimbursements/refunds, and payout-related logic.
+- Resend powers transactional email workflows.
+- Firebase FCM powers push notifications.
+- Upstash Redis supports caching/rate-limiting resilience.
+- Cloudinary supports upload storage workflows.
 
 ## Technology Decisions
 
 | Decision | Choice | Why | Alternatives considered |
 |---|---|---|---|
-| Web framework | Next.js (App Router) | One codebase for UI + API; strong routing and SSR/SEO | Express + separate SPA |
-| Localization | next-intl | Locale routing, message loading, ergonomic APIs | next-i18next |
-| ORM | Drizzle ORM | Type-safe schema-first approach, SQL-friendly | Prisma (originally referenced in spec) |
-| Validation | Zod | Runtime validation with TypeScript inference | Yup, Joi |
-| Payments | Stripe Connect | Platform commission model and payouts to stations | PayPal, Adyen |
-| Email | Resend | Simple transactional email API | SendGrid, Mailgun |
-| Push notifications | Firebase FCM | Standard push delivery for mobile/web | OneSignal |
-| Database hosting | Neon (dev), Railway (prod) | Simple dev provisioning; production infra on Railway | Supabase, RDS |
+| Web framework | Next.js (App Router) | Single runtime for UI, API, cron endpoints | Split frontend/backend stack |
+| Localization | next-intl | Locale-prefixed routes with predictable i18n setup | next-i18next |
+| ORM | Drizzle ORM | Strong SQL control with typed schema | Prisma |
+| Validation | Zod | Runtime input guards + TS inference | Yup, Joi |
+| Payments | Stripe Connect | Native platform split/payout model | PayPal, Adyen |
+| Notifications | Resend + FCM | Email + push coverage | SendGrid + OneSignal |
+| Caching/rate-limits | Upstash Redis | Shared distributed store for protection logic | Self-hosted Redis |
 
 ## Design Patterns
 
-- **Layered architecture**: UI/API routes delegate to domain services; data access is isolated.
-- **Domain-first structure**: folders reflect business modules (auth, stations, reservations, payments, admin, notifications).
-- **Boundary validation**: Zod schemas at API boundaries (planned) to protect business logic.
-- **Standardized responses and errors**: shared helpers to keep API contracts consistent.
-- **Cross-cutting concerns via providers**: theme/auth/toast contexts avoid prop drilling and centralize global behavior.
+- **Layered architecture**: UI/routes delegate to services, services delegate to repositories.
+- **Domain-first structure**: folders map to product/business boundaries.
+- **Boundary validation**: Zod validators at request boundaries.
+- **Service/repository split**: business logic isolated from persistence details.
+- **Job orchestration**: cron route handlers trigger isolated job modules.
 

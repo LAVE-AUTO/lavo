@@ -3,20 +3,21 @@ import {
   supportMessages,
   supportSettings,
   supportTickets,
+  users,
 } from "@/lib/db/schema";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, lt, or, sql } from "drizzle-orm";
 import { AppError } from "@/lib/errors";
 import { HTTP_STATUS } from "@/helpers/constants";
 import type { z } from "zod";
 import type { supportStatusSchema } from "@/validators/support";
 
-/** Preview of the most recent message on a ticket — content truncated to 200 chars. */
+/** Preview of the most recent message on a ticket - content truncated to 200 chars. */
 export type LastMessagePreview = {
   content: string;
   created_at: Date;
 } | null;
 
-/** Status type derived from the canonical Zod schema — single source of truth. */
+/** Status type derived from the canonical Zod schema - single source of truth. */
 type TicketStatus = z.infer<typeof supportStatusSchema>;
 
 export type Ticket = typeof supportTickets.$inferSelect;
@@ -140,58 +141,230 @@ export async function findTicketById(id: string) {
   });
 }
 
+/** Safe user columns projected into each ticket row. */
+const SAFE_USER_SELECT = {
+  id: users.id,
+  first_name: users.first_name,
+  last_name: users.last_name,
+  email: users.email,
+  role: users.role,
+} as const;
+
 /**
- * Lists tickets with optional user and status filters.
- * Each ticket includes a `lastMessage` preview: the most recent message's
- * content (truncated to 200 chars) and creation date. Fetching only the
- * last message per ticket avoids loading full message threads in the list view.
+ * Lists tickets with optional user, status, and pagination filters.
+ *
+ * Uses a single SQL query with a LEFT JOIN LATERAL to fetch the most recent
+ * message per ticket in one round-trip, eliminating the N+1 pattern that
+ * `findMany({ with: { messages: { limit: 1 } } })` produces.
+ *
+ * Defaults: page=1, perPage=500 - backward-compatible with callers that pass no
+ * pagination params. A COUNT query runs in parallel for the total row count.
  */
 export async function listTickets(
-  filters: { userId?: string; status?: TicketStatus } = {}
+  filters: {
+    userId?: string;
+    status?: TicketStatus;
+    page?: number;
+    perPage?: number;
+  } = {}
 ) {
-  const conditions = [];
-  if (filters.userId) conditions.push(eq(supportTickets.created_by, filters.userId));
-  if (filters.status) conditions.push(eq(supportTickets.status, filters.status));
+  const { userId, status, page = 1, perPage = 500 } = filters;
+  const limit = Math.min(Math.floor(perPage), 500);
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
 
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (userId) conditions.push(eq(supportTickets.created_by, userId));
+  if (status) conditions.push(eq(supportTickets.status, status));
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const tickets = await db.query.supportTickets.findMany({
-    where: whereClause,
-    orderBy: [desc(supportTickets.updated_at)],
-    with: {
-      createdByUser: {
-        columns: SAFE_USER_COLUMNS,
-      },
-      messages: {
-        orderBy: [desc(supportMessages.created_at)],
-        limit: 1,
-        columns: {
-          content: true,
-          created_at: true,
-        },
-      },
-    },
+  const ticketCols = getTableColumns(supportTickets);
+
+  const [countRows, rows] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(supportTickets)
+      .where(whereClause),
+    db
+      .select({
+        ...ticketCols,
+        createdByUser: SAFE_USER_SELECT,
+        lm_content: sql<string | null>`lm.content`,
+        // Drizzle does not hydrate Date objects from lateral sub-select columns;
+        // the raw value is an ISO string. We type it as string and convert below.
+        lm_created_at: sql<string | null>`lm.created_at`,
+      })
+      .from(supportTickets)
+      .leftJoin(users, eq(supportTickets.created_by, users.id))
+      .leftJoin(
+        sql`LATERAL (
+          SELECT content, created_at
+          FROM support_messages
+          WHERE ticket_id = ${supportTickets.id}
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) lm`,
+        sql`true`
+      )
+      .where(whereClause)
+      .orderBy(desc(supportTickets.updated_at))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const total = countRows[0]?.count ?? 0;
+
+  const data = rows.map((row) => {
+    const { lm_content, lm_created_at, ...ticket } = row;
+    const lastMessage: LastMessagePreview =
+      lm_content != null && lm_created_at != null
+        ? {
+            content:
+              lm_content.length > 200
+                ? lm_content.slice(0, 200) + "…"
+                : lm_content,
+            // lm_created_at comes from the lateral sub-select as a raw ISO string;
+            // convert explicitly to avoid passing a string where Date is expected.
+            created_at: new Date(lm_created_at),
+          }
+        : null;
+    return { ...ticket, lastMessage };
   });
 
-  return tickets.map((ticket) => {
-    const { messages, ...rest } = ticket;
-    const last = messages[0] ?? null;
-    const lastMessage: LastMessagePreview = last
-      ? {
-          content: last.content.length > 200
-            ? last.content.slice(0, 200) + "…"
-            : last.content,
-          created_at: last.created_at,
-        }
-      : null;
-    return { ...rest, lastMessage };
+  return { data, total };
+}
+
+export async function listTicketsCursor(
+  filters: {
+    userId?: string;
+    status?: TicketStatus;
+    limit: number;
+    cursor?: string;
+  }
+): Promise<{ items: Awaited<ReturnType<typeof listTickets>>["data"]; next_cursor: string | null }> {
+  const { userId, status, cursor } = filters;
+  const safeLimit = Math.min(Math.max(1, Math.floor(filters.limit)), 100);
+
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (userId) conditions.push(eq(supportTickets.created_by, userId));
+  if (status) conditions.push(eq(supportTickets.status, status));
+
+  if (cursor) {
+    try {
+      const [cursorTs, cursorId] = Buffer.from(cursor, "base64").toString().split("|");
+      const cursorDate = new Date(cursorTs ?? "");
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!Number.isNaN(cursorDate.getTime()) && cursorId && UUID_RE.test(cursorId)) {
+        conditions.push(
+          or(
+            lt(supportTickets.updated_at, cursorDate),
+            and(eq(supportTickets.updated_at, cursorDate), lt(supportTickets.id, cursorId))
+          )!
+        );
+      }
+    } catch {
+      // ignore invalid cursor and return from first page
+    }
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const ticketCols = getTableColumns(supportTickets);
+
+  const rows = await db
+    .select({
+      ...ticketCols,
+      createdByUser: SAFE_USER_SELECT,
+      lm_content: sql<string | null>`lm.content`,
+      lm_created_at: sql<string | null>`lm.created_at`,
+    })
+    .from(supportTickets)
+    .leftJoin(users, eq(supportTickets.created_by, users.id))
+    .leftJoin(
+      sql`LATERAL (
+        SELECT content, created_at
+        FROM support_messages
+        WHERE ticket_id = ${supportTickets.id}
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) lm`,
+      sql`true`
+    )
+    .where(whereClause)
+    .orderBy(desc(supportTickets.updated_at), desc(supportTickets.id))
+    .limit(safeLimit + 1);
+
+  const hasMore = rows.length > safeLimit;
+  const pageRows = hasMore ? rows.slice(0, safeLimit) : rows;
+
+  const items = pageRows.map((row) => {
+    const { lm_content, lm_created_at, ...ticket } = row;
+    const lastMessage: LastMessagePreview =
+      lm_content != null && lm_created_at != null
+        ? {
+            content: lm_content.length > 200 ? lm_content.slice(0, 200) + "…" : lm_content,
+            created_at: new Date(lm_created_at),
+          }
+        : null;
+    return { ...ticket, lastMessage };
   });
+
+  let next_cursor: string | null = null;
+  if (hasMore && items.length > 0) {
+    const last = items[items.length - 1]!;
+    next_cursor = Buffer.from(`${last.updated_at.toISOString()}|${last.id}`).toString("base64");
+  }
+
+  return { items, next_cursor };
+}
+
+export async function listTicketMessagesCursor(
+  ticketId: string,
+  options: { limit: number; cursor?: string }
+): Promise<{ items: Message[]; next_cursor: string | null }> {
+  const safeLimit = Math.min(Math.max(1, Math.floor(options.limit)), 100);
+  const conditions = [eq(supportMessages.ticket_id, ticketId)];
+
+  if (options.cursor) {
+    try {
+      const [cursorTs, cursorId] = Buffer.from(options.cursor, "base64").toString().split("|");
+      const cursorDate = new Date(cursorTs ?? "");
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!Number.isNaN(cursorDate.getTime()) && cursorId && UUID_RE.test(cursorId)) {
+        conditions.push(
+          or(
+            lt(supportMessages.created_at, cursorDate),
+            and(eq(supportMessages.created_at, cursorDate), lt(supportMessages.id, cursorId))
+          )!
+        );
+      }
+    } catch {
+      // ignore invalid cursor and return from first page
+    }
+  }
+
+  const rows = await db.query.supportMessages.findMany({
+    where: and(...conditions),
+    orderBy: [desc(supportMessages.created_at), desc(supportMessages.id)],
+    limit: safeLimit + 1,
+  });
+
+  const hasMore = rows.length > safeLimit;
+  const page = hasMore ? rows.slice(0, safeLimit) : rows;
+  // Keep oldest-to-newest rendering to preserve current UI behavior.
+  const items = [...page].reverse();
+
+  let next_cursor: string | null = null;
+  if (hasMore && page.length > 0) {
+    const last = page[page.length - 1]!;
+    next_cursor = Buffer.from(`${last.created_at.toISOString()}|${last.id}`).toString("base64");
+  }
+
+  return { items, next_cursor };
 }
 
 /**
  * Updates a ticket status and sets resolved_at if status is 'resolu'.
  * When transitioning away from 'resolu' (e.g. back to 'en_cours'), resolved_at
- * is cleared to null — this is intentional, not a default.
+ * is cleared to null - this is intentional, not a default.
  */
 export async function updateTicketStatus(
   id: string,

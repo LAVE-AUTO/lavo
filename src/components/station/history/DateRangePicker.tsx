@@ -100,8 +100,8 @@ export function DateRangePicker({ value, onChange }: Props) {
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-2 rounded-[10px] px-4 py-2 text-[13px] font-bold transition-all active:scale-[0.98] ${
           value.from
-            ? 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-            : 'bg-[#C8C8B4] text-[#000717]/70 hover:bg-[#BDBDA8] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/70 dark:hover:bg-[#2A3626]'
+            ? 'bg-[#C09A18] text-[#001201] shadow-sm'
+            : 'bg-[#C8C8B4] text-[#000717]/70 hover:bg-[#BDBDA8] dark:bg-[#001A05] dark:text-[#FFFFF0]/70 dark:hover:bg-[#2A3626]'
         }`}
       >
         <CalendarIcon />
@@ -113,7 +113,7 @@ export function DateRangePicker({ value, onChange }: Props) {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[340px] animate-fade-in rounded-2xl border border-[#CCCCCC] bg-[#E8E8D8] p-4 shadow-xl dark:border-[#3A4A36] dark:bg-[#1E2A1A]">
+        <div className="absolute left-0 top-full z-50 mt-2 w-[340px] animate-fade-in rounded-2xl border border-[#CCCCCC] bg-surface p-4 shadow-xl dark:border-[#3A4A36] dark:bg-[#001A05]">
           {/* Presets */}
           <div className="mb-3 flex flex-wrap gap-1.5">
             <button
@@ -121,8 +121,8 @@ export function DateRangePicker({ value, onChange }: Props) {
               onClick={clearRange}
               className={`rounded-[8px] px-2.5 py-1 text-[12px] font-bold transition-all active:scale-[0.97] ${
                 !value.from
-                  ? 'bg-[#C09A18] text-[#1A2116]'
-                  : 'bg-[#C8C8B4] text-[#000717]/50 hover:bg-[#BDBDA8] dark:bg-[#243020] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]'
+                  ? 'bg-[#C09A18] text-[#001201]'
+                  : 'bg-[#C8C8B4] text-[#000717]/50 hover:bg-[#BDBDA8] dark:bg-[#001A05] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]'
               }`}
             >
               {t('period_all')}
@@ -132,7 +132,7 @@ export function DateRangePicker({ value, onChange }: Props) {
                 key={key}
                 type="button"
                 onClick={() => applyPreset(key)}
-                className="rounded-[8px] bg-[#C8C8B4] px-2.5 py-1 text-[12px] font-bold text-[#000717]/50 transition-all hover:bg-[#BDBDA8] active:scale-[0.97] dark:bg-[#243020] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]"
+                className="rounded-[8px] bg-[#C8C8B4] px-2.5 py-1 text-[12px] font-bold text-[#000717]/50 transition-all hover:bg-[#BDBDA8] active:scale-[0.97] dark:bg-[#001A05] dark:text-[#FFFFF0]/50 dark:hover:bg-[#2A3626]"
               >
                 {t(`period_${key}`)}
               </button>
@@ -223,12 +223,12 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
     <div className="mt-3">
       {/* Month nav */}
       <div className="mb-3 flex items-center justify-between">
-        <button type="button" onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 dark:hover:bg-[#243020]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/60 dark:text-[#FFF8EC]/60"><polyline points="15 18 9 12 15 6" /></svg>
+        <button type="button" onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 dark:hover:bg-[#001A05]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/60 dark:text-foreground/60"><polyline points="15 18 9 12 15 6" /></svg>
         </button>
-        <span className="text-[14px] font-bold capitalize text-[#000C1F] dark:text-[#FFF8EC]">{monthLabel}</span>
-        <button type="button" onClick={nextMonth} disabled={!canGoNext} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 disabled:opacity-20 dark:hover:bg-[#243020]">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/60 dark:text-[#FFF8EC]/60"><polyline points="9 18 15 12 9 6" /></svg>
+        <span className="text-[14px] font-bold capitalize text-foreground">{monthLabel}</span>
+        <button type="button" onClick={nextMonth} disabled={!canGoNext} className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#C8C8B4] active:scale-95 disabled:opacity-20 dark:hover:bg-[#001A05]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/60 dark:text-foreground/60"><polyline points="9 18 15 12 9 6" /></svg>
         </button>
       </div>
 
@@ -268,12 +268,12 @@ function CalendarGrid({ locale, range, onChange }: CalendarGridProps) {
                 isFuture
                   ? 'cursor-not-allowed text-[#000717]/15 dark:text-[#FFFFF0]/15'
                   : isSelected
-                    ? 'z-10 rounded-lg bg-[#C09A18] font-bold text-[#1A2116] shadow-sm'
+                    ? 'z-10 rounded-lg bg-[#C09A18] font-bold text-[#001201] shadow-sm'
                     : inRange
-                      ? 'bg-[#C09A18]/15 text-[#000C1F] dark:bg-[#C09A18]/20 dark:text-[#FFF8EC]'
+                      ? 'bg-[#C09A18]/15 text-foreground dark:bg-[#C09A18]/20 dark:text-foreground'
                       : isToday
                         ? 'font-bold text-[#C09A18]'
-                        : 'text-[#000C1F]/70 hover:bg-[#C8C8B4] dark:text-[#FFF8EC]/70 dark:hover:bg-[#243020]'
+                        : 'text-foreground/70 hover:bg-[#C8C8B4] dark:text-foreground/70 dark:hover:bg-[#001A05]'
               }`}
             >
               {day}

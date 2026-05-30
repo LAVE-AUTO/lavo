@@ -1,5 +1,5 @@
 /**
- * POST `/api/v1/webhooks/stripe` — signature verification, then idempotent handlers.
+ * POST `/api/v1/webhooks/stripe` - signature verification, then idempotent handlers.
  * Manual capture: authorize → confirm entry → capture on completion → `succeeded` (push + success email).
  * Events: `amount_capturable_updated`, `payment_failed` / `canceled`, `succeeded`, `transfer.created`.
  */
@@ -23,6 +23,7 @@ import {
 import { users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -30,12 +31,17 @@ const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_]+$/;
 const OPAQUE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 
-// %%%%% ROUTE — POST handler %%%%%
+// %%%%% ROUTE - POST handler %%%%%
 // Verifies Stripe signature; dispatches by event type; 500 only on infra errors (Stripe retries).
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (!webhookSecret) {
-    console.error('STRIPE_WEBHOOK_SECRET is not configured');
+    // CRITICAL: every Stripe webhook call returns 500 until this is fixed.
+    // Stripe will retry for 72h then disable the endpoint, leaving ALL paid
+    // reservations stuck in pending_payment. Fix by setting STRIPE_WEBHOOK_SECRET.
+    console.error('[STRIPE_WEBHOOK] CRITICAL — STRIPE_WEBHOOK_SECRET is not configured. All webhook events are being dropped. Set STRIPE_WEBHOOK_SECRET immediately to prevent stuck reservations.', {
+      timestamp: new Date().toISOString(),
+    });
     return errorResponse('Webhook not configured', 500, { code: ApiCode.INTERNAL_ERROR });
   }
 
@@ -57,7 +63,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // On infrastructure errors (DB failures), return 500 so Stripe retries automatically.
   // Handlers are idempotent: they check entry status before acting, so retries are safe.
-  // Expected non-error cases (entry not found, wrong status) are handled with early returns — no throw.
+  // Expected non-error cases (entry not found, wrong status) are handled with early returns - no throw.
   try {
     switch (event.type) {
       case 'transfer.created':
@@ -120,10 +126,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 
-// %%%%% END - ROUTE — POST handler %%%%%
+// %%%%% END - ROUTE - POST handler %%%%%
 
 
-// %%%%% MODULE — ID sanitizers %%%%%
+// %%%%% MODULE - ID sanitizers %%%%%
 // Stripe and opaque IDs for logs and DB lookups.
 
 function sanitizeStripeId(value: unknown, expectedPrefix?: string): string | null {
@@ -143,10 +149,10 @@ function sanitizeOpaqueId(value: unknown): string | null {
 }
 
 
-// %%%%% END - MODULE — ID sanitizers %%%%%
+// %%%%% END - MODULE - ID sanitizers %%%%%
 
 
-// %%%%% HANDLER — transfer.created %%%%%
+// %%%%% HANDLER - transfer.created %%%%%
 // Maps transfer to reservation: metadata.reservation_id, else charge → payment_intent → entry.
 
 /** Persists `stripe_transfer_id` idempotently; logs and returns on missing mapping. */
@@ -172,48 +178,42 @@ async function handleTransferCreated(transfer: Stripe.Transfer | Record<string, 
     return;
   }
 
-  try {
-    const charge = await stripe.charges.retrieve(sourceTransactionId);
-    const piRaw = charge.payment_intent;
-    const paymentIntentId =
-      typeof piRaw === 'string'
-        ? sanitizeStripeId(piRaw, 'pi_')
-        : piRaw && typeof piRaw === 'object' && piRaw !== null && 'id' in piRaw
-          ? sanitizeStripeId((piRaw as { id: unknown }).id, 'pi_')
-          : null;
+  // Re-throw here so the outer try/catch returns 500 → Stripe retries automatically.
+  // Swallowing DB errors would silently lose the transfer_id mapping.
+  const charge = await stripe.charges.retrieve(sourceTransactionId);
+  const piRaw = charge.payment_intent;
+  const paymentIntentId =
+    typeof piRaw === 'string'
+      ? sanitizeStripeId(piRaw, 'pi_')
+      : piRaw && typeof piRaw === 'object' && piRaw !== null && 'id' in piRaw
+        ? sanitizeStripeId((piRaw as { id: unknown }).id, 'pi_')
+        : null;
 
-    if (!paymentIntentId) {
-      console.warn('[WEBHOOK transfer.created] Charge has no payment_intent', {
-        transferId,
-        sourceTransactionId,
-      });
-      return;
-    }
-
-    const entry = await findEntryByStripePaymentId(paymentIntentId);
-    if (!entry) {
-      console.warn('[WEBHOOK transfer.created] No reservation found for payment_intent', {
-        transferId,
-        paymentIntentId,
-      });
-      return;
-    }
-
-    await setStripeTransferIdIfMissing(entry.id, transferId);
-  } catch (err) {
-    console.error('[WEBHOOK transfer.created] Fallback mapping failed; acking without retry', {
+  if (!paymentIntentId) {
+    console.warn('[WEBHOOK transfer.created] Charge has no payment_intent — cannot map transfer', {
       transferId,
       sourceTransactionId,
-      error: err instanceof Error ? err.message : String(err),
     });
+    return;
   }
+
+  const entry = await findEntryByStripePaymentId(paymentIntentId);
+  if (!entry) {
+    console.warn('[WEBHOOK transfer.created] No reservation found for payment_intent', {
+      transferId,
+      paymentIntentId,
+    });
+    return;
+  }
+
+  await setStripeTransferIdIfMissing(entry.id, transferId);
 }
 
 
-// %%%%% END - HANDLER — transfer.created %%%%%
+// %%%%% END - HANDLER - transfer.created %%%%%
 
 
-// %%%%% HANDLER — payment_intent.succeeded %%%%%
+// %%%%% HANDLER - payment_intent.succeeded %%%%%
 // Idempotent: succeeded_at + notified_at; client push, success email, optional station/admin push.
 
 /** When entry is `completed`, notifies once and sends transactional success email. */
@@ -230,19 +230,32 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
 
   await setStripePaymentSucceededAtIfMissing(entry.id, succeededAt);
 
-  // Only notify on the moment the station has marked the service complete.
-  if (entry.status !== 'completed') return;
+  // Re-fetch after writing succeeded_at to catch races where the station marked the entry
+  // as 'completed' between our initial findEntryByStripePaymentId and now. Without this
+  // re-fetch, the entry.status snapshot is stale and we would skip notifying a freshly
+  // completed reservation (bug #5).
+  const fresh = await findEntryByStripePaymentId(paymentIntentId);
+  if (!fresh || fresh.status !== 'completed') return;
 
   const shouldNotify = await setStripePaymentSucceededNotifiedAtIfMissing(
-    entry.id,
+    fresh.id,
     succeededAt
   );
   if (!shouldNotify) return;
 
   try {
-    await sendEscrowReleasedNotificationsForEntry(entry, succeededAt);
+    await sendEscrowReleasedNotificationsForEntry(fresh, succeededAt);
   } catch (err) {
-    await clearStripePaymentSucceededNotifiedAt(entry.id);
+    // Wrap the clear in its own try/catch so a DB failure here does not mask the original
+    // notification error (bug #20). If both fail, log the second error explicitly.
+    try {
+      await clearStripePaymentSucceededNotifiedAt(fresh.id);
+    } catch (clearErr) {
+      console.error('[WEBHOOK payment_intent.succeeded] CRITICAL: failed to clear notified_at after notification failure — escrow notification will not retry', {
+        entryId: fresh.id,
+        clearError: clearErr instanceof Error ? clearErr.message : String(clearErr),
+      });
+    }
     const error = err instanceof Error ? err.message : String(err);
     console.error('[WEBHOOK payment_intent.succeeded] Escrow released notifications failed', { error });
     throw err;
@@ -250,10 +263,10 @@ async function handlePaymentSucceeded(paymentIntentId: string, created: number |
 }
 
 
-// %%%%% END - HANDLER — payment_intent.succeeded %%%%%
+// %%%%% END - HANDLER - payment_intent.succeeded %%%%%
 
 
-// %%%%% HANDLER — payment_intent.amount_capturable_updated %%%%%
+// %%%%% HANDLER - payment_intent.amount_capturable_updated %%%%%
 // Confirms pending_payment entry after card authorization (funds held, not captured).
 
 /** Confirms reservation; push `reservation_confirmed`. */
@@ -274,6 +287,13 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
       stationId: entry.station_id,
       type: 'reservation_confirmed',
     });
+    await notifyClientFeed({
+      userId: entry.user_id,
+      entryId: entry.id,
+      stationId: entry.station_id,
+      kind: 'reservation_confirmed',
+      body: 'Votre réservation est confirmée. À bientôt !',
+    });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('Webhook: notification failed for reservation_confirmed', { entryId: entry.id, error });
@@ -281,10 +301,10 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
 }
 
 
-// %%%%% END - HANDLER — payment_intent.amount_capturable_updated %%%%%
+// %%%%% END - HANDLER - payment_intent.amount_capturable_updated %%%%%
 
 
-// %%%%% HANDLER — payment_intent failed / canceled %%%%%
+// %%%%% HANDLER - payment_intent failed / canceled %%%%%
 // Cancels entry, decrements slot, push + failure email.
 
 /** Cancels eligible entry and notifies client (push + email). */
@@ -312,6 +332,13 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
       stationId: cancelled.station_id,
       type: 'entry_cancelled',
     });
+    await notifyClientFeed({
+      userId: cancelled.user_id,
+      entryId: cancelled.id,
+      stationId: cancelled.station_id,
+      kind: 'entry_cancelled',
+      body: 'Votre réservation a été annulée.',
+    });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('Webhook: notification failed for payment_failed', { entryId: cancelled.id, error });
@@ -336,4 +363,4 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
 }
 
 
-// %%%%% END - HANDLER — payment_intent failed / canceled %%%%%
+// %%%%% END - HANDLER - payment_intent failed / canceled %%%%%

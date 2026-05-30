@@ -50,6 +50,9 @@ jest.mock('@/server/reservations/entry-repository', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('@/server/notifications/fcm-service', () => ({
   sendPushNotification: (...args: unknown[]) => mockSendPushNotification(...args),
@@ -64,6 +67,7 @@ jest.mock('@/server/admin/platform-settings-service', () => {
   const truthy = (v: string | null) => v?.trim().toLowerCase() === 'true';
   return {
     getPlatformSetting: mockGetPlatformSetting,
+    getPlatformSettingWithFallback: (key: string) => mockGetPlatformSetting(key),
     isAdminEscrowPushEnabled: async () => {
       const canonical = await mockGetPlatformSetting('stripe_admin_notifications_enabled');
       if (canonical !== null) return truthy(canonical);

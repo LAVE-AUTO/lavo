@@ -42,7 +42,7 @@ const STATION_AUTH = { sub: 'station-user-uuid-0001', role: 'station', force_pas
 const STATION = {
   id: 'station-uuid-0001',
   user_id: STATION_AUTH.sub,
-  name: 'Lavo Express Douala',
+  name: 'Hurryline Express Douala',
   status: 'active',
 };
 

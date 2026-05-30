@@ -17,9 +17,9 @@
  *   { data: { entry } }
  *
  * Errors:
- *   403 FORBIDDEN    — no station linked to this account
- *   404 NOT_FOUND    — queue is empty (no active entries)
- *   409 CONFLICT     — entry not in a pickable state
+ *   403 FORBIDDEN    - no station linked to this account
+ *   404 NOT_FOUND    - queue is empty (no active entries)
+ *   409 CONFLICT     - entry not in a pickable state
  *   500 INTERNAL_ERROR
  */
 import { requireRole } from '@/lib/require-role';

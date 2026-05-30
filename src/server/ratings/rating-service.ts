@@ -33,13 +33,17 @@ import {
   insertRating,
   listAdminRatings,
   listPublicRatingsByStation,
+  listRatingsByUser,
   recalcStationRating,
   updateRatingVisibility,
   type AdminRatingItem,
   type AdminRatingsFilters,
+  type PublicRatingItem,
   type Rating,
+  type UserRatingItem,
 } from './ratings-repository';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
+import { refreshStationStats } from '@/server/station/station-stats-service';
 
 
 // %%%%% Types %%%%%
@@ -97,7 +101,7 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
   }
 
   // 4. Configurable rating window since completed_at (fallback updated_at)
-  const completedAt = owned.completed_at ?? owned.updated_at;
+  const completedAt = owned.completed_at ?? owned.created_at;
   const ratingWindowDaysRaw = parseInt(
     await getPlatformSettingWithFallback('rating_window_days', 'PLATFORM_RATING_WINDOW_DAYS', '7'),
     10
@@ -116,9 +120,10 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
 
   // 6. Transaction: insert + recalc. Catch DB-level unique constraint violation
   // (race condition between pre-check and insert) and surface as 409 ALREADY_RATED.
+  let rating: Rating;
   try {
-    return await db.transaction(async (tx) => {
-      const rating = await insertRating(
+    rating = await db.transaction(async (tx) => {
+      const inserted = await insertRating(
         {
           reservation_id: body.reservation_id,
           user_id: userId,
@@ -129,7 +134,7 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
         tx
       );
       await recalcStationRating(owned.station_id, tx);
-      return rating;
+      return inserted;
     });
   } catch (err) {
     // PostgreSQL unique_violation code is '23505'
@@ -138,6 +143,17 @@ export async function submitRating(userId: string, body: SubmitRatingData): Prom
     }
     throw err;
   }
+
+  // Refresh station_stats so average_rating and total_ratings stay current.
+  // Fire-and-forget: do not block the response if the view refresh is slow or errors.
+  refreshStationStats().catch((err) => {
+    console.error('[STATION_STATS_REFRESH] Failed after rating insert', {
+      reservationId: body.reservation_id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+
+  return rating;
 }
 
 
@@ -152,13 +168,29 @@ export async function getPublicRatings(
   page: number,
   limit: number
 ): Promise<{
-  items: Pick<Rating, 'id' | 'score' | 'comment' | 'created_at'>[];
+  items: PublicRatingItem[];
   meta: PaginationMeta;
 }> {
   const station = await findStationById(stationId);
   if (!station) throw new NotFoundError('Station not found');
 
   const { items, total } = await listPublicRatingsByStation(stationId, page, limit);
+  return { items, meta: buildMeta(total, page, limit) };
+}
+
+
+// %%%%% Client rating listing %%%%%
+// Get ratings submitted by the current client
+
+/**
+ * Lists ratings submitted by a client, paginated by recency.
+ */
+export async function getMyRatings(
+  userId: string,
+  page: number,
+  limit: number
+): Promise<{ items: UserRatingItem[]; meta: PaginationMeta }> {
+  const { items, total } = await listRatingsByUser(userId, page, limit);
   return { items, meta: buildMeta(total, page, limit) };
 }
 
@@ -196,7 +228,7 @@ export async function toggleRatingVisibility(
   if (!preCheck) throw new NotFoundError('Rating not found');
 
   // Transaction: re-read inside tx to prevent duplicate audit logs on concurrent PATCH
-  return await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const rating = await findRatingById(ratingId, tx);
     if (!rating) throw new NotFoundError('Rating not found');
 
@@ -224,4 +256,17 @@ export async function toggleRatingVisibility(
     );
     return { ...updatedRating, updated: true };
   });
+
+  // Refresh station_stats when visibility actually changed (result.updated = true).
+  // Fire-and-forget: do not block the response if the view refresh is slow or errors.
+  if (result.updated) {
+    refreshStationStats().catch((err) => {
+      console.error('[STATION_STATS_REFRESH] Failed after rating visibility toggle', {
+        ratingId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
+
+  return result;
 }

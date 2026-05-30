@@ -95,7 +95,7 @@ export async function sendPushNotification(
   if (!isFirebaseConfigured()) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
-        '[FCM] FIREBASE_PROJECT_ID is not set — falling back to stub. ' +
+        '[FCM] FIREBASE_PROJECT_ID is not set - falling back to stub. ' +
           `Notification skipped for user ${userId}: "${payload.title}"`
       );
     }

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.com';
 const LOCALES = ['fr', 'en'] as const;
 
 /**

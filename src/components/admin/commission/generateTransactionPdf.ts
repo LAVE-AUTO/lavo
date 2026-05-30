@@ -18,8 +18,8 @@ export interface PdfLabels {
 
 const STATUS_RGB: Record<TxStatus, [number, number, number]> = {
   succeeded: [90, 138, 80],
-  refunded:  [29, 78, 216],
-  failed:    [190, 18, 60],
+  refunded: [29, 78, 216],
+  failed: [190, 18, 60],
 };
 
 function fmt(n: number) {
@@ -34,11 +34,11 @@ function formatDT(d: string) {
 async function fetchAsDataUrl(url: string): Promise<string> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch asset: ${res.status}`);
-  const blob  = await res.blob();
+  const blob = await res.blob();
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror  = reject;
+    reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
 }
@@ -46,13 +46,13 @@ async function fetchAsDataUrl(url: string): Promise<string> {
 export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Promise<void> {
   const logoDataUrl = await fetchAsDataUrl('/logo/logo_2.png');
 
-  const doc  = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  const W    = 210;
-  const mx   = 18;
-  const cw   = W - mx * 2;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const W = 210;
+  const mx = 18;
+  const cw = W - mx * 2;
   const [sr, sg, sb] = STATUS_RGB[tx.status];
 
-  // ─── White header with Slowtime logo ──────────────────────────────────
+  // ─── White header with Hurryline logo ──────────────────────────────────
   // logo_2.png aspect ratio ≈ 3.04 : 1 (width : height)
   const logoW = 58;
   const logoH = 19;
@@ -198,10 +198,10 @@ export async function generateTransactionPdf(tx: TxRow, labels: PdfLabels): Prom
   doc.setTextColor(150, 148, 136);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('Slowtime Inc. — Document confidentiel / Confidential document', mx, y);
+  doc.text('Hurryline Inc. - Document confidentiel / Confidential document', mx, y);
 
   const today = new Date().toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.text(`${labels.generatedOn} ${today}`, W - mx, y, { align: 'right' });
 
-  doc.save(`slowtime-tx-${tx.stripe_id.slice(-8).toLowerCase()}.pdf`);
+  doc.save(`Hurryline-tx-${tx.stripe_id.slice(-8).toLowerCase()}.pdf`);
 }

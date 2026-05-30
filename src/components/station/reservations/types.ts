@@ -20,6 +20,22 @@ export interface ReservationEntry {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  user?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+  /* Denormalised by the rich-station serializer so the merchant card can show
+   * "what was booked" without an extra fetch. service.name is the merchant
+   * label (Lavage Premium…) — preferred over the bare vehicle format. */
+  vehicle_format?: { id: string; label: string } | null;
+  service?: { id: string; name: string; category: string } | null;
+  slot_start_time?: string | null;
+  slot_end_time?: string | null;
+  /* Walk-in identity. Filled only when the merchant added the client
+   * manually with an email that does not match a registered account. */
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
+  is_walk_in?: boolean;
 }
 
 export type StatusTab = 'all' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'late';

@@ -12,7 +12,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       version: '1.0.0',
     },
-    'LAVO API is running',
+    'Hurryline API is running',
     HTTP_STATUS.OK
   );
 }

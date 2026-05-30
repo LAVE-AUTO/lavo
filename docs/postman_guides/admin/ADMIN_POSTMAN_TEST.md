@@ -1,7 +1,7 @@
-## LAVO — Admin API (Postman Test Guide)
+## Hurryline - Admin API (Postman Test Guide)
 
 This guide complements the importable Postman collection:
-- `lavo/docs/postman_guides/admin/lavo-admin.postman_collection.json`
+- `Hurryline/docs/postman_guides/admin/Hurryline-admin.postman_collection.json`
 
 ### Base URL
 
@@ -9,7 +9,7 @@ This guide complements the importable Postman collection:
 
 ### Environment variables
 
-Import: `lavo/docs/postman_guides/lavo.local.postman_environment.json`
+Import: `Hurryline/docs/postman_guides/Hurryline.local.postman_environment.json`
 
 Required:
 - **`base_url`**

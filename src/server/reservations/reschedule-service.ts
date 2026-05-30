@@ -3,14 +3,14 @@
  *
  * Two cases depending on the cancellation policy window:
  *
- * Case 1 — Free reschedule (before penalty window):
+ * Case 1 - Free reschedule (before penalty window):
  *   - Old entry cancelled (reason='rescheduled'), old slot decremented.
  *   - New entry created in 'confirmed' state, reusing the existing PaymentIntent.
  *   - Stripe PI metadata updated to point to the new reservation (non-fatal if it fails).
  *   - stripe_payment_succeeded_at copied to new entry so escrow notifications fire on completion.
  *   - No new charge; clientSecret is null.
  *
- * Case 2 — Late reschedule (within penalty window):
+ * Case 2 - Late reschedule (within penalty window):
  *   - Old entry cancelled with penalty applied (capture + partial refund + penalty distribution).
  *   - New entry created in 'pending_payment' state with a brand-new PaymentIntent.
  *   - Client must complete payment using the returned clientSecret.
@@ -22,19 +22,23 @@
  * A reschedule_request record is always created on success for audit purposes.
  */
 import { db } from '@/lib/db';
-import { rescheduleRequests } from '@/lib/db/schema';
+import { rescheduleRequests, timeSlots as timeSlotsTable } from '@/lib/db/schema';
 import { ConflictError, NotFoundError, SlotFullError } from '@/lib/errors';
 import { MAX_ADVANCE_BOOKING_DAYS } from '@/helpers/constants';
 import { getCancellationPolicy } from '@/server/admin/platform-settings-service';
 import {
   capturePaymentIntent,
+  classifyStripeError,
   createPaymentIntent,
   distributePenalty,
   refundPaymentIntent,
   updatePaymentIntentMetadata,
 } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { findStationById } from '@/server/station/station-repository';
+import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
+import { findSlotById } from '@/server/station/slot-repository';
 import {
   countReservationsBySlotId,
   incrementSlotBookedCount,
@@ -46,9 +50,11 @@ import {
   findEntryByIdAndUser,
   findReservationWithSlot,
   setStripePaymentSucceededAtIfMissing,
+  setStripeTransferIdIfMissing,
   updateEntry,
   type Entry,
 } from './entry-repository';
+import { sql as sqlInline } from 'drizzle-orm';
 
 export type RescheduleResult = {
   originalEntry: Entry;
@@ -61,6 +67,97 @@ export type RescheduleResult = {
 };
 
 const RESCHEDULABLE_STATUSES = ['confirmed'] as const;
+
+
+// %%%%% Reschedule by start time %%%%%
+// Modern flow: caller provides an ISO start_time (from /stations/:id/availability).
+// The server picks an active wash post, atomically inserts a new time_slots row,
+// then delegates to rescheduleReservation with the freshly created slot id.
+
+/**
+ * Reschedules a confirmed reservation to a target ISO start_time.
+ * The duration is inferred from the original reservation's slot length.
+ */
+export async function rescheduleReservationByStartTime(
+  reservationId: string,
+  userId: string,
+  newStartTimeIso: string,
+  stationStripeAccountId: string,
+): Promise<RescheduleResult> {
+  const reservation = await findReservationWithSlot(reservationId, userId);
+  if (!reservation) throw new NotFoundError('Reservation not found');
+  if (reservation.entry_type !== 'reservation') {
+    throw new ConflictError('Only reservations can be rescheduled');
+  }
+  if (!(RESCHEDULABLE_STATUSES as readonly string[]).includes(reservation.status)) {
+    throw new ConflictError(`Reservation cannot be rescheduled from status '${reservation.status}'`);
+  }
+
+  /* Duration is inherited from the original slot — same service, same format,
+   * same expected time. Default to 30 min when the original slot is missing. */
+  let durationMin = 30;
+  if (reservation.time_slot_id) {
+    const originalSlot = await findSlotById(reservation.time_slot_id);
+    if (originalSlot?.start_time && originalSlot?.end_time) {
+      durationMin = Math.max(
+        1,
+        Math.round((originalSlot.end_time.getTime() - originalSlot.start_time.getTime()) / 60_000),
+      );
+    }
+  }
+
+  const newStart = new Date(newStartTimeIso);
+  if (Number.isNaN(newStart.getTime())) {
+    throw new ConflictError('Invalid new_start_time');
+  }
+  if (reservation.slotStartTime && newStart.getTime() === reservation.slotStartTime.getTime()) {
+    throw new ConflictError('New time slot is the same as the current one');
+  }
+
+  /* Pre-check (cheap, non-locking): make sure at least one post is free at
+   * `newStart`. The transactional insert below is the source of truth. */
+  const preMatch = await findMatchingAvailabilitySlot(
+    reservation.station_id,
+    newStartTimeIso,
+    durationMin,
+  );
+  if (!preMatch) throw new SlotFullError();
+
+  const endTime = new Date(newStart.getTime() + durationMin * 60_000);
+
+  /* Insert the one-shot time slot inside a short transaction that locks the
+   * station's posts (mirrors createReservationByStartTime). booked_count
+   * starts at 0 so the existing rescheduleReservation flow can lock it,
+   * verify capacity, and increment. */
+  const newSlotId = await db.transaction(async (tx) => {
+    await tx.execute(
+      sqlInline`SELECT id FROM station_posts WHERE station_id = ${reservation.station_id} AND is_active = true FOR UPDATE`,
+    );
+
+    const fresh = await findMatchingAvailabilitySlot(
+      reservation.station_id,
+      newStartTimeIso,
+      durationMin,
+    );
+    if (!fresh) throw new SlotFullError();
+
+    const [slot] = await tx
+      .insert(timeSlotsTable)
+      .values({
+        station_id: reservation.station_id,
+        start_time: newStart,
+        end_time: endTime,
+        capacity: 1,
+        booked_count: 0,
+        status: 'available',
+      })
+      .returning();
+    if (!slot) throw new Error('Insert time slot for reschedule failed');
+    return slot.id;
+  });
+
+  return rescheduleReservation(reservationId, userId, newSlotId, stationStripeAccountId);
+}
 
 /**
  * Reschedules a confirmed reservation to a new time slot.
@@ -132,9 +229,23 @@ export async function rescheduleReservation(
         user_id: userId,
         station_id: reservation.station_id,
         vehicle_format_id: reservation.vehicle_format_id,
+        // Preserve the service, post, booking source and ticket code from the original
+        // reservation. Without these, the station cannot validate the ticket code at start
+        // (InvalidTicketCodeError), the receipt PDF loses its service label, and the per-post
+        // availability layer cannot reuse the same wash bay.
+        service_id: reservation.service_id ?? null,
+        post_id: reservation.post_id ?? null,
+        booking_source: (reservation.booking_source as 'standard' | 'qr') ?? 'standard',
+        ticket_code: reservation.ticket_code ?? null,
         time_slot_id: newTimeSlotId,
         status: newStatus,
         amount_paid: reservation.amount_paid,
+        // Commission policy on FREE reschedule: keep the original commission_rate / amounts.
+        // Reason: in Case 1 the PaymentIntent is reused, and Stripe's application_fee_amount
+        // is fixed at PI creation — recomputing the rate here would create a mismatch between
+        // what Stripe withholds and what we record. The client made their commitment under the
+        // commission rate in force at booking time; reschedule is not a re-pricing event.
+        // For LATE reschedule (Case 2 below), a fresh PI is created with the current rate.
         commission_rate: reservation.commission_rate,
         commission_amount: reservation.commission_amount ?? undefined,
         station_payout: reservation.station_payout ?? undefined,
@@ -180,31 +291,65 @@ export async function rescheduleReservation(
     // If the original PI had no payment (no stripe_payment_id), skip capture/refund entirely
     // and proceed directly to creating the new PI.
     if (reservation.stripe_payment_id) {
-      let captured = false;
+      let captureResult: Awaited<ReturnType<typeof capturePaymentIntent>> | null = null;
       try {
-        await capturePaymentIntent(reservation.stripe_payment_id);
-        captured = true;
+        captureResult = await capturePaymentIntent(reservation.stripe_payment_id);
       } catch (e) {
+        const err = classifyStripeError(e);
         console.error('[RESCHEDULE_CAPTURE_FAILED]', {
           reservationId,
           stripe_payment_id: reservation.stripe_payment_id,
-          error: e instanceof Error ? e.message : String(e),
+          error_class: err.class,
+          error_code: err.code,
+          error: err.message,
         });
       }
 
-      if (!captured) {
-        // The original payment authorization could not be settled. Creating a new PI now would
-        // leave two active authorizations on the client's card. Abort and surface the error.
+      if (!captureResult) {
+        // A non-recoverable Stripe error (network, invalid request) prevented capture.
+        // Creating a new PI now would leave two active authorizations on the client's card.
+        // Abort so the caller returns a 5xx and the client can retry.
         throw new Error(
           `[RESCHEDULE_CAPTURE_FAILED] Could not capture original PaymentIntent ${reservation.stripe_payment_id} — reschedule aborted to prevent double charge. Manual resolution required for reservation ${reservationId}.`
         );
       }
 
-      if (captured && refundedAmount > 0) {
+      // charged=false: PI was already cancelled (expired). No funds moved — skip penalty/refund
+      // and proceed directly to creating a new PI at the standard (non-late) rate.
+      const charged = captureResult.charged;
+      const chargeId = captureResult.chargeId;
+      const transferId = captureResult.transferId;
+
+      if (charged && chargeId) {
+        try {
+          await updateEntry(reservationId, { stripe_charge_id: chargeId });
+        } catch (e) {
+          console.error('[RESCHEDULE_STRIPE_CHARGE_ID_UPDATE_FAILED]', {
+            reservationId,
+            chargeId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+
+      if (charged && transferId) {
+        // Persist stripe_transfer_id on the now-cancelled original reservation so a future
+        // dispute refund (rare, since the old row is cancelled) correctly bills the station.
+        await setStripeTransferIdIfMissing(reservationId, transferId).catch((e) => {
+          console.error('[RESCHEDULE_TRANSFER_ID_PERSIST_FAILED]', {
+            reservationId,
+            transferId,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        });
+      }
+
+      if (charged && refundedAmount > 0) {
         try {
           const refundId = await refundPaymentIntent(
             reservation.stripe_payment_id,
-            Math.round(refundedAmount * 100)
+            Math.round(refundedAmount * 100),
+            `rescheduled-refund:${reservationId}`
           );
           await updateEntry(reservationId, { stripe_refund_id: refundId });
         } catch (e) {
@@ -216,12 +361,15 @@ export async function rescheduleReservation(
         }
       }
 
-      if (captured && penaltyAmount > 0) {
+      if (charged && penaltyAmount > 0) {
         try {
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
-            policy.stationPenaltyShare
+            policy.stationPenaltyShare,
+            `rescheduled-penalty:${reservationId}`,
+            chargeId ?? undefined,
+            transferId ?? undefined,
           );
         } catch (e) {
           console.error('[RESCHEDULE_PENALTY_DISTRIBUTION_FAILED]', {
@@ -248,7 +396,7 @@ export async function rescheduleReservation(
         metadata: {
           reservation_id: newEntry.id,
           time_slot_id: newTimeSlotId,
-          vehicle_format_id: reservation.vehicle_format_id,
+          vehicle_format_id: reservation.vehicle_format_id ?? '',
           rescheduled_from: reservationId,
         },
       });
@@ -256,8 +404,8 @@ export async function rescheduleReservation(
       clientSecret = cs;
     } catch (e) {
       // New PI failed: new reservation is stuck in pending_payment with no stripe_payment_id.
-      // Log for manual resolution — do not silently swallow.
-      console.error('[RESCHEDULE_NEW_PI_FAILED] New PaymentIntent creation failed — manual resolution required', {
+      // Log for manual resolution - do not silently swallow.
+      console.error('[RESCHEDULE_NEW_PI_FAILED] New PaymentIntent creation failed - manual resolution required', {
         newReservationId: newEntry.id,
         error: e instanceof Error ? e.message : String(e),
       });
@@ -325,6 +473,13 @@ export async function rescheduleReservation(
       stationId: reservation.station_id,
       type: 'reservation_rescheduled',
       payload: { isLateCancellation, penaltyAmount, refundedAmount },
+    });
+    await notifyClientFeed({
+      userId,
+      entryId: newEntry.id,
+      stationId: reservation.station_id,
+      kind: 'reservation_rescheduled',
+      body: 'Votre réservation a été déplacée vers un nouveau créneau.',
     });
   } catch (e) {
     console.error('[RESCHEDULE_CLIENT_NOTIFY_FAILED]', {

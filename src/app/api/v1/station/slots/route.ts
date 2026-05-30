@@ -1,7 +1,7 @@
 /**
  * GET /api/v1/station/slots
  * Lists slots for the station on a given date with dynamic availability.
- * Auth STATION. Query: date (YYYY-MM-DD, optional — defaults to today).
+ * Auth STATION. Query: date (YYYY-MM-DD, optional - defaults to today).
  *
  * POST /api/v1/station/slots
  * Creates a single time slot. Auth STATION. Body: start_time, end_time, capacity.

@@ -15,14 +15,14 @@ import type { NextResponse } from 'next/server';
  * Falls back to local disk if Cloudinary is unreachable.
  * Requires authentication (any role).
  *
- * Body: multipart/form-data — field: "file"
+ * Body: multipart/form-data - field: "file"
  * Accepted types: image/jpeg, image/png, image/webp, image/gif, application/pdf
  * Max size: 10 MB
  *
  * Responses:
  *   201 { data: { url, storage } }
- *   400 VALIDATION_FAILED — missing file or unsupported type
- *   413 VALIDATION_FAILED — file exceeds size limit
+ *   400 VALIDATION_FAILED - missing file or unsupported type
+ *   413 VALIDATION_FAILED - file exceeds size limit
  *   401 UNAUTHORIZED
  *   500 INTERNAL_ERROR
  */

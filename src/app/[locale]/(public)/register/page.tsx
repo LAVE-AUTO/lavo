@@ -8,25 +8,27 @@ import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ ref?: string; ref_code?: string; source?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'register' });
-  return { title: `Slowtime — ${t('tab_register')}` };
+  return { title: `Hurryline - ${t('tab_register')}` };
 }
 
 /**
  * Public registration page.
  */
-export default async function RegisterPage({ params }: Props) {
+export default async function RegisterPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'register' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <AuthPageLayout>
         <div className="w-full max-w-xl animate-fade-in">
           <AuthHeader
@@ -37,7 +39,7 @@ export default async function RegisterPage({ params }: Props) {
 
           <AuthModeSwitcher mode="client" />
 
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
+          <div className="bg-white dark:bg-surface rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden">
             <div className="px-8 pt-6 pb-2">
               <TabSwitcher
                 activeTab="register"
@@ -45,7 +47,7 @@ export default async function RegisterPage({ params }: Props) {
                 registerLabel={t('tab_register')}
               />
             </div>
-            <RegisterForm />
+            <RegisterForm promoCode={resolvedSearchParams.ref_code ?? resolvedSearchParams.ref ?? null} />
           </div>
         </div>
       </AuthPageLayout>

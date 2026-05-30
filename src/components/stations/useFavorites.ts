@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-const STORAGE_KEY = 'lavo_favorites';
+const STORAGE_KEY = 'Hurryline_favorites';
 
 function readIds(): string[] {
   if (typeof window === 'undefined') return [];
@@ -21,7 +21,7 @@ function writeIds(ids: string[]): void {
 
 /**
  * Manages a persisted set of favourite station IDs in localStorage.
- * Safe for SSR — reads only in effects/callbacks.
+ * Safe for SSR - reads only in effects/callbacks.
  */
 export function useFavorites() {
   const [ids, setIds] = useState<string[]>([]);

@@ -1,5 +1,5 @@
 /**
- * E2E — Admin dashboard page.
+ * E2E - Admin dashboard page.
  *
  * Authentication required: tests in this file log in as an admin before
  * navigating to the protected /fr/admin/dashboard route.
@@ -31,8 +31,7 @@ test.describe('admin dashboard page', () => {
       timeout: 15_000,
     });
 
-    const nextErrorOverlay = page.locator('nextjs-portal, [data-nextjs-dialog]');
-    await expect(nextErrorOverlay).toHaveCount(0);
+    await expect(page.locator('text=/application error|runtime error|hydration failed/i')).toHaveCount(0);
   });
 
   test('four KPI cards are visible on the dashboard', async ({ page }) => {

@@ -27,7 +27,7 @@ type DashboardPeriod = {
 };
 
 /**
- * All-time stock KPIs — independent of date range.
+ * All-time stock KPIs - independent of date range.
  * Represents current state of the platform (active stations, total clients, etc.).
  */
 type DashboardTotals = {
@@ -48,7 +48,7 @@ type DashboardMetrics = {
 };
 
 /**
- * Actionable alert lists — current state, no date filter.
+ * Actionable alert lists - current state, no date filter.
  * Admin-facing lists of items requiring immediate attention.
  */
 type DashboardAlerts = {
@@ -73,7 +73,7 @@ export type DashboardData = {
  * All 6 repository queries are run in parallel via Promise.all to minimise
  * wall-clock latency (total time = slowest query, not sum of all).
  *
- * Promise.all: fail-fast — if any single DB query rejects, the whole dashboard returns 500.
+ * Promise.all: fail-fast - if any single DB query rejects, the whole dashboard returns 500.
  * This is intentional for simplicity; the dashboard is an admin-only tool and partial data
  * is not surfaced. If resilience to individual query failures becomes a requirement,
  * switch to Promise.allSettled and surface partial data in the response shape.

@@ -11,19 +11,19 @@ import type { NextResponse } from 'next/server';
 /**
  * POST /api/v1/reservations/:id/tip
  * Sends a tip (pourboire) for a completed reservation.
- * The full tip amount is transferred to the station via Stripe — no platform commission.
+ * The full tip amount is transferred to the station via Stripe - no platform commission.
  * Returns a Stripe client_secret for the frontend to confirm payment with the client's card.
  *
  * Role: client only.
  *
  * Responses:
  *   201 { data: { tip, clientSecret } }
- *   400 VALIDATION_FAILED  — invalid UUID param or body
+ *   400 VALIDATION_FAILED  - invalid UUID param or body
  *   401 UNAUTHORIZED
- *   403 FORBIDDEN          — reservation does not belong to authenticated client
- *   404 NOT_FOUND          — reservation or station not found
- *   409 TIP_ALREADY_EXISTS — a tip has already been sent for this reservation
- *   422 UNPROCESSABLE_ENTITY — reservation not completed, or station not payment-ready
+ *   403 FORBIDDEN          - reservation does not belong to authenticated client
+ *   404 NOT_FOUND          - reservation or station not found
+ *   409 TIP_ALREADY_EXISTS - a tip has already been sent for this reservation
+ *   422 UNPROCESSABLE_ENTITY - reservation not completed, or station not payment-ready
  *   500 INTERNAL_ERROR
  */
 export async function POST(

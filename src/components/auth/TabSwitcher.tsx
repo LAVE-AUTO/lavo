@@ -6,6 +6,10 @@ interface TabSwitcherProps {
   activeTab: 'login' | 'register';
   loginLabel: string;
   registerLabel: string;
+  /** Override the login route (defaults to `/login`). Used by the station auth pages. */
+  loginHref?: string;
+  /** Override the register route (defaults to `/register`). Used by the station auth pages. */
+  registerHref?: string;
 }
 
 /**
@@ -14,12 +18,21 @@ interface TabSwitcherProps {
  * @param activeTab - Currently active tab identifier
  * @param loginLabel - Translated label for the login tab
  * @param registerLabel - Translated label for the register tab
+ * @param loginHref - Target path for the login tab (defaults to `/login`)
+ * @param registerHref - Target path for the register tab (defaults to `/register`)
  */
-export function TabSwitcher({ activeTab, loginLabel, registerLabel }: TabSwitcherProps) {
+export function TabSwitcher({
+  activeTab,
+  loginLabel,
+  registerLabel,
+  loginHref = '/login',
+  registerHref = '/register',
+}: TabSwitcherProps) {
   const router = useRouter();
 
   const goTo = (tab: 'login' | 'register') => {
-    if (tab !== activeTab) router.push(`/${tab}`);
+    if (tab === activeTab) return;
+    router.push(tab === 'login' ? loginHref : registerHref);
   };
 
   const activeClass = 'bg-gold text-dark-bg font-bold';
@@ -27,7 +40,7 @@ export function TabSwitcher({ activeTab, loginLabel, registerLabel }: TabSwitche
     'bg-transparent text-[#333] dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5';
 
   return (
-    <div className="flex mb-4 bg-[#E0E0D0] dark:bg-tab-inactive rounded-[10px] p-1 gap-1">
+    <div className="flex mb-4 bg-surface dark:bg-tab-inactive rounded-[10px] p-1 gap-1">
       {(
         [
           { key: 'login', label: loginLabel },

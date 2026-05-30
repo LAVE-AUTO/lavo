@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
-import { RESERVATIONS_MOCK_ENABLED, findMockReservation } from '@/data/reservations-mock';
 import type { AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
 
@@ -13,7 +12,7 @@ import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessVi
 /* Shapes API                                                           */
 /* ------------------------------------------------------------------ */
 
-interface ApiEntry {
+interface ApiRichEntry {
   id: string;
   entry_type: 'reservation' | 'queue';
   time_slot_id: string | null;
@@ -22,23 +21,27 @@ interface ApiEntry {
   status: string;
   amount_paid: string | null;
   created_at: string;
+  slot_start_time: string | null;
+  slot_end_time: string | null;
+  station: { id: string; name: string } | null;
+  vehicle_format: { id: string; label: string; price: string } | null;
 }
 
-interface ApiTimeSlot {
-  id: string;
+interface ApiAvailabilitySlot {
   start_time: string;
-  status: string;
-  booked_count: number;
-  capacity: number;
+  end_time: string;
 }
 
-interface ApiStation {
-  id: string;
-  name: string;
-  vehicleFormats: Array<{ id: string; label: string; price: string }>;
-  timeSlots: ApiTimeSlot[];
-  stationConfig?: { wash_duration_minutes: number } | null;
+interface ApiAvailabilityResponse {
+  data: {
+    date: string;
+    slots: ApiAvailabilitySlot[];
+  };
 }
+
+/* How many days ahead we expose in the date picker. Bound at 14 to keep the
+ * parallel availability fetches cheap; matches the typical booking horizon. */
+const RESCHEDULE_HORIZON_DAYS = 14;
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                              */
@@ -99,100 +102,85 @@ export default function RescheduleReservationPage() {
     setLoading(true);
     setLoadError(false);
 
-    // TODO: remove mock block once booking flow is connected to Stripe
-    if (RESERVATIONS_MOCK_ENABLED) {
-      const mock = findMockReservation(id);
-      if (!mock) { setLoadError(true); setLoading(false); return; }
+    /* Fetch the rich entry directly (denormalised station + vehicle format +
+     * slot times) to avoid an N+1 list scan. */
+    const [entryOk, entryData] = await getFromApi(`/me/entries/${id}`);
+    if (!mountedRef.current) return;
 
-      const now = Date.now();
-      const slotDate = new Date(`${mock.date}T${mock.timeSlot}`);
-      const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-        weekday: 'short', day: 'numeric', month: 'short',
-      }) + ' ' + mock.timeSlot;
-      setCurrentLabel(label);
+    if (!entryOk) { setLoadError(true); setLoading(false); return; }
 
-      const minutesUntil = (slotDate.getTime() - now) / 60000;
-      setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
-
-      setForfaitLabel(mock.forfaitName);
-      setStationName(mock.stationName);
-      setAmount(mock.totalPrice);
-
-      /* Créneaux fictifs disponibles sur les 5 prochains jours */
-      const hours = [8, 9, 10, 11, 14, 15, 16, 17];
-      const fullSlots = new Set([1, 4, 6]); /* indices marqués complets pour réalisme */
-      const mockSlots: AvailableSlot[] = [];
-      let idx = 0;
-      for (let day = 1; day <= 5; day++) {
-        const base = new Date(now);
-        base.setDate(base.getDate() + day);
-        for (const hour of hours) {
-          const s = new Date(base);
-          s.setHours(hour, 0, 0, 0);
-          mockSlots.push({ id: `mock-slot-${idx}`, startTime: s.toISOString(), isFull: fullSlots.has(idx) });
-          idx++;
-        }
-      }
-      setAvailableSlots(mockSlots);
-      setLoading(false);
-      return;
+    const entry = (entryData as { data: ApiRichEntry })?.data;
+    if (!entry || entry.entry_type !== 'reservation') {
+      setLoadError(true); setLoading(false); return;
     }
-
-    const [entriesOk, entriesData] = await getFromApi('/me/entries?per_page=100');
-    if (!mountedRef.current) return;
-
-    if (!entriesOk) { setLoadError(true); setLoading(false); return; }
-
-    const entries: ApiEntry[] = (entriesData as { data: { entries: ApiEntry[] } })?.data?.entries ?? [];
-    const entry = entries.find((e) => e.id === id && e.entry_type === 'reservation');
-
-    if (!entry) { setLoadError(true); setLoading(false); return; }
-
-    const [stationOk, stationData] = await getFromApi(`/stations/${entry.station_id}`);
-    if (!mountedRef.current) return;
-
-    if (!stationOk) { setLoadError(true); setLoading(false); return; }
-
-    const station = (stationData as { data: ApiStation }).data;
-
-    /* Créneau actuel */
-    const currentSlot = entry.time_slot_id
-      ? station.timeSlots.find((s) => s.id === entry.time_slot_id)
-      : null;
 
     const now = Date.now();
 
-    if (currentSlot) {
-      const slotDate = new Date(currentSlot.start_time);
+    /* Current slot label + late-fee detection from the original slot times. */
+    let currentSlotMs = 0;
+    if (entry.slot_start_time) {
+      const slotDate = new Date(entry.slot_start_time);
+      currentSlotMs = slotDate.getTime();
       const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
         weekday: 'short', day: 'numeric', month: 'short',
       }) + ' ' + String(slotDate.getHours()).padStart(2, '0') + ':' + String(slotDate.getMinutes()).padStart(2, '0');
       setCurrentLabel(label);
 
-      const minutesUntil = (slotDate.getTime() - now) / 60000;
+      const minutesUntil = (currentSlotMs - now) / 60000;
       setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
     }
 
-    const format = station.vehicleFormats.find((f) => f.id === entry.vehicle_format_id);
-    setForfaitLabel(format?.label ?? '—');
-    setStationName(station.name);
+    setForfaitLabel(entry.vehicle_format?.label ?? '-');
+    setStationName(entry.station?.name ?? '-');
     setAmount(safeFloat(entry.amount_paid));
 
-    /* Créneaux disponibles : futurs, pas pleins, différents du créneau actuel */
-    const future: AvailableSlot[] = station.timeSlots
-      .filter((s) => new Date(s.start_time).getTime() > now && s.id !== entry.time_slot_id)
-      .map((s) => ({
-        id: s.id,
-        startTime: s.start_time,
-        isFull: s.status === 'full' || s.booked_count >= s.capacity,
-      }));
-    setAvailableSlots(future);
+    /* Duration is inherited from the original slot. Used as `duration_min`
+     * for every availability call. Default to 30 min when missing. */
+    let durationMin = 30;
+    if (entry.slot_start_time && entry.slot_end_time) {
+      durationMin = Math.max(
+        1,
+        Math.round((new Date(entry.slot_end_time).getTime() - new Date(entry.slot_start_time).getTime()) / 60_000),
+      );
+    }
+
+    /* Build the next 14 calendar days, skipping today if we are past closing.
+     * Then fan out availability calls in parallel. The composite slot id is
+     * the ISO start_time itself — that's what the modern booking flow uses
+     * and what the reschedule endpoint expects in `new_start_time`. */
+    const candidateDays: string[] = [];
+    for (let day = 0; day < RESCHEDULE_HORIZON_DAYS; day++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + day);
+      candidateDays.push(toLocalDateKey(d));
+    }
+
+    const results = await Promise.all(
+      candidateDays.map((date) =>
+        getFromApi(`/stations/${entry.station_id}/availability?date=${date}&duration_min=${durationMin}`),
+      ),
+    );
+    if (!mountedRef.current) return;
+
+    const aggregated: AvailableSlot[] = [];
+    for (const [ok, data] of results) {
+      if (!ok) continue;
+      const payload = (data as ApiAvailabilityResponse | null)?.data;
+      const slots = payload?.slots ?? [];
+      for (const s of slots) {
+        const startMs = new Date(s.start_time).getTime();
+        if (Number.isNaN(startMs) || startMs <= now) continue;
+        if (currentSlotMs && startMs === currentSlotMs) continue;
+        aggregated.push({ id: s.start_time, startTime: s.start_time, isFull: false });
+      }
+    }
+    setAvailableSlots(aggregated);
     setLoading(false);
   }, [id, locale]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  /* Dates disponibles — une entrée par jour ayant au moins un créneau */
+  /* Dates disponibles - une entrée par jour ayant au moins un créneau */
   const availableDates = useMemo(() => {
     const seen = new Set<string>();
     const result: { key: string; dayShort: string; dateNum: number }[] = [];
@@ -236,7 +224,7 @@ export default function RescheduleReservationPage() {
     });
     const h = String(d.getHours()).padStart(2, '0');
     const m = String(d.getMinutes()).padStart(2, '0');
-    return `${datePart} — ${h}:${m}`;
+    return `${datePart} - ${h}:${m}`;
   }, [selectedSlotId, availableSlots, locale]);
 
   /* Focus trap pour la modale de confirmation */
@@ -275,7 +263,9 @@ export default function RescheduleReservationPage() {
     setShowConfirmModal(false);
     setSubmitting(true);
 
-    const [ok] = await postWithApi(`/reservations/${id}/reschedule`, { new_time_slot_id: selectedSlotId });
+    /* selectedSlotId is the ISO start_time (composite id from the availability
+     * endpoint). The backend creates the time_slots row server-side. */
+    const [ok] = await postWithApi(`/reservations/${id}/reschedule`, { new_start_time: selectedSlotId });
     if (!mountedRef.current) return;
     setSubmitting(false);
     if (ok) { setDone(true); return; }
@@ -287,7 +277,7 @@ export default function RescheduleReservationPage() {
   /* État chargement */
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex items-center justify-center pb-24 sm:pb-8">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24 sm:pb-8">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -296,8 +286,8 @@ export default function RescheduleReservationPage() {
   /* État erreur */
   if (loadError) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8">
-        <p className="text-[15px] font-semibold text-[#555] dark:text-[#B0B0A0] text-center px-4">
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 pb-24 sm:pb-8">
+        <p className="text-[15px] font-semibold text-foreground/70 text-center px-4">
           {t('error_load')}
         </p>
         <button
@@ -315,7 +305,7 @@ export default function RescheduleReservationPage() {
   const canConfirm = selectedSlotId !== null && !submitting;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-[#0F0F0D] pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* En-tête */}
       <div className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
         <Link
@@ -327,7 +317,7 @@ export default function RescheduleReservationPage() {
           </svg>
           {t('btn_back')}
         </Link>
-        <h1 className="text-[22px] font-black text-[#0A0A14] dark:text-white mt-3">
+        <h1 className="text-[22px] font-black text-foreground mt-3">
           {t('page_title')}
         </h1>
       </div>
@@ -346,16 +336,16 @@ export default function RescheduleReservationPage() {
         {hasFee && <FeeWarningBanner fee={RESCHEDULE_FEE} t={t} />}
 
         {/* Sélecteur de créneau */}
-        <section className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
-          <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">
+        <section className="bg-surface rounded-xl border border-border p-5 space-y-4">
+          <h2 className="text-[16px] font-black text-foreground">
             {t('select_slot')}
           </h2>
 
           {availableDates.length === 0 ? (
-            <p className="text-[14px] text-[#666] dark:text-[#B0B0A0]">{t('no_slots')}</p>
+            <p className="text-[14px] text-foreground/65">{t('no_slots')}</p>
           ) : (
             <>
-              {/* Sélecteur de date — défilement horizontal */}
+              {/* Sélecteur de date - défilement horizontal */}
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {availableDates.map((d) => (
                   <button
@@ -366,10 +356,10 @@ export default function RescheduleReservationPage() {
                       'flex flex-col items-center min-w-[58px] py-2 px-3 rounded-xl border-2 transition-colors cursor-pointer shrink-0',
                       selectedDate === d.key
                         ? 'bg-gold border-gold text-dark-bg'
-                        : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-[#FFF8EC] hover:border-gold/40',
+                        : 'border-border text-foreground dark:text-foreground hover:border-gold/40',
                     ].join(' ')}
                   >
-                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-[#888]'}`}>
+                    <span className={`text-[11px] font-bold uppercase ${selectedDate === d.key ? 'text-dark-bg' : 'text-foreground/55'}`}>
                       {d.dayShort}
                     </span>
                     <span className="text-[18px] font-black leading-snug">{d.dateNum}</span>
@@ -391,10 +381,10 @@ export default function RescheduleReservationPage() {
                         className={[
                           'py-2.5 rounded-[10px] text-[14px] font-bold border transition-all font-[family-name:var(--font-roboto-mono)]',
                           slot.isFull
-                            ? 'border-[#D0D0C0] dark:border-tab-inactive text-[#CCC] dark:text-[#555] cursor-not-allowed opacity-50'
+                            ? 'border-border text-[#CCC] dark:text-foreground/70 cursor-not-allowed opacity-50'
                             : isSelected
                               ? 'border-gold bg-gold text-dark-bg shadow-sm cursor-pointer'
-                              : 'border-[#D0D0C0] dark:border-tab-inactive text-[#0A0A14] dark:text-white hover:border-gold/60 cursor-pointer',
+                              : 'border-border text-foreground hover:border-gold/60 cursor-pointer',
                         ].join(' ')}
                       >
                         {slot.time}
@@ -434,21 +424,21 @@ export default function RescheduleReservationPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="confirm-reschedule-title"
-              className="bg-[#F5F5E6] dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+              className="bg-background dark:bg-[#1A1A18] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4"
             >
               <div className="w-14 h-14 rounded-full bg-gold/15 flex items-center justify-center mx-auto">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#af8408" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
 
               <h3
                 id="confirm-reschedule-title"
-                className="text-[18px] font-black text-[#0A0A14] dark:text-white text-center"
+                className="text-[18px] font-black text-foreground text-center"
               >
                 {t('confirm_modal_title')}
               </h3>
-              <p className="text-[14px] text-[#555] dark:text-[#B0B0A0] text-center leading-relaxed">
+              <p className="text-[14px] text-foreground/70 text-center leading-relaxed">
                 {t('confirm_modal_desc')}
               </p>
               <div className="bg-gold/10 border border-gold/30 rounded-xl px-4 py-3 text-center">
@@ -457,7 +447,7 @@ export default function RescheduleReservationPage() {
 
               {hasFee && (
                 <div className="flex justify-between text-[14px] px-1">
-                  <span className="text-[#999] dark:text-[#888]">{t('fee_label')}</span>
+                  <span className="text-[#999] dark:text-foreground/55">{t('fee_label')}</span>
                   <span className="font-bold text-[#FF8800]">+{RESCHEDULE_FEE.toFixed(2)}$</span>
                 </div>
               )}
@@ -467,7 +457,7 @@ export default function RescheduleReservationPage() {
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={submitting}
-                  className="flex-1 py-3 border-2 border-[#D0D0C0] dark:border-tab-inactive rounded-xl text-[14px] font-bold text-[#555] dark:text-[#B0B0A0] hover:bg-[#E0E0D0] dark:hover:bg-dark-surface transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3 border-2 border-border rounded-xl text-[14px] font-bold text-foreground/70 hover:bg-surface dark:hover:bg-dark-surface transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('confirm_modal_keep')}
                 </button>
@@ -507,14 +497,14 @@ function CurrentBookingCard({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-3">
-      <h2 className="text-[16px] font-black text-[#0A0A14] dark:text-white">{t('current_booking')}</h2>
+    <div className="bg-surface rounded-xl border border-border p-5 space-y-3">
+      <h2 className="text-[16px] font-black text-foreground">{t('current_booking')}</h2>
       <div className="space-y-2 text-[14px]">
         <Row label={t('label_station')} value={stationName} />
         <Row label={t('label_forfait')} value={forfait} />
         {currentLabel && <Row label={t('label_date')} value={currentLabel} />}
-        <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex items-center justify-between">
-          <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
+        <div className="pt-2 border-t border-border flex items-center justify-between">
+          <span className="font-bold text-foreground">{t('total')}</span>
           <span className="text-[18px] font-black text-gold">{amount.toFixed(2)}$</span>
         </div>
       </div>
@@ -548,10 +538,10 @@ function ConfirmSection({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5 space-y-4">
+    <div className="bg-surface rounded-xl border border-border p-5 space-y-4">
       {hasFee && (
         <div className="space-y-2 text-[14px]">
-          <div className="flex justify-between text-[#555] dark:text-[#C0C0B0]">
+          <div className="flex justify-between text-foreground/70">
             <span>{t('subtotal')}</span>
             <span>{amount.toFixed(2)}$</span>
           </div>
@@ -559,7 +549,7 @@ function ConfirmSection({
             <span>{t('fee_label')}</span>
             <span>+{fee.toFixed(2)}$</span>
           </div>
-          <div className="pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive flex justify-between font-black text-[#0A0A14] dark:text-white text-[16px]">
+          <div className="pt-2 border-t border-border flex justify-between font-black text-foreground text-[16px]">
             <span>{t('total')}</span>
             <span className="text-gold">{(amount + fee).toFixed(2)}$</span>
           </div>
@@ -581,7 +571,7 @@ function ConfirmSection({
       </button>
 
       {hasFee && (
-        <p className="text-[11px] text-[#999] dark:text-[#888] text-center flex items-center justify-center gap-1.5">
+        <p className="text-[11px] text-[#999] dark:text-foreground/55 text-center flex items-center justify-center gap-1.5">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
@@ -595,8 +585,8 @@ function ConfirmSection({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="text-[#999] dark:text-[#888] shrink-0">{label}</span>
-      <span className="font-semibold text-[#0A0A14] dark:text-white text-right">{value}</span>
+      <span className="text-[#999] dark:text-foreground/55 shrink-0">{label}</span>
+      <span className="font-semibold text-foreground text-right">{value}</span>
     </div>
   );
 }

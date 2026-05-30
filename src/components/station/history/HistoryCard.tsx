@@ -9,16 +9,18 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  confirmed:   { bg: '#057960ff', text: '#FFFFFF' },
   completed:   { bg: '#00C851', text: '#FFFFFF' },
   cancelled:   { bg: '#FF2525', text: '#FFFFFF' },
   pending:     { bg: '#FF8800', text: '#FFFFFF' },
   in_progress: { bg: '#00C851', text: '#FFFFFF' },
-  late:        { bg: '#FF8800', text: '#FFFFFF' },
+  late:        { bg: '#ae024dff', text: '#FFFFFF' },
 };
 
 const ACCENT: Record<string, string> = {
+  confirmed: '#057960ff',
   completed: '#00C851', cancelled: '#FF2525', pending: '#FF8800',
-  in_progress: '#00C851', late: '#FF8800',
+  in_progress: '#00C851', late: '#ae024dff',
 };
 
 export function HistoryCard({ entry }: Props) {
@@ -51,10 +53,25 @@ export function HistoryCard({ entry }: Props) {
     { hour: '2-digit', minute: '2-digit' },
   );
 
-  const statusKey = `status_${entry.status}` as const;
+  /* Defensive lookup: any new status emitted by the backend that we
+   * have not localised yet falls back to a generic 'Unknown status'
+   * label so the whole history list never crashes on a missing key. */
+  const KNOWN_STATUSES = new Set([
+    'pending',
+    'pending_payment',
+    'confirmed',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'late',
+    'no_show',
+  ]);
+  const statusKey = KNOWN_STATUSES.has(entry.status)
+    ? (`status_${entry.status}` as const)
+    : ('status_unknown' as const);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#1E2A1A]">
+    <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-[#001A05]">
       <div className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
 
       {/* Clickable row */}
@@ -64,15 +81,15 @@ export function HistoryCard({ entry }: Props) {
         className="flex w-full items-center gap-3 p-4 pl-5 text-left sm:gap-4"
       >
         {/* Date block */}
-        <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#243020]">
+        <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-white/60 dark:bg-[#001A05]">
           <span className="text-[9px] font-bold tracking-wide text-[#000717]/40 dark:text-[#FFFFF0]/40">{monthShort}</span>
-          <span className="font-mono text-[16px] font-bold leading-none text-[#000C1F] dark:text-[#FFF8EC]">{dayNum}</span>
+          <span className="font-mono text-[16px] font-bold leading-none text-foreground">{dayNum}</span>
         </div>
 
         {/* Client + service */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[14px] font-semibold text-[#000C1F] dark:text-[#FFF8EC]">
+            <span className="truncate text-[14px] font-semibold text-foreground">
               {clientName}
             </span>
             <span className={`shrink-0 rounded px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide ${
@@ -85,10 +102,10 @@ export function HistoryCard({ entry }: Props) {
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
             <span className="font-mono font-semibold">{timeLabel}</span>
-            {entry.vehicle_format_label && (
+            {(entry.service_name ?? entry.vehicle_format_label) && (
               <>
                 <span className="text-[#000717]/20 dark:text-[#FFFFF0]/20">|</span>
-                <span>{entry.vehicle_format_label}</span>
+                <span>{entry.service_name ?? entry.vehicle_format_label}</span>
               </>
             )}
           </div>
@@ -122,8 +139,14 @@ export function HistoryCard({ entry }: Props) {
               <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('col_date')} value={dateLabel} />
               <DetailRow label={t('col_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
-              {entry.vehicle_format_label && (
-                <DetailRow label={t('col_service')} value={entry.vehicle_format_label} />
+              {(entry.service_name ?? entry.vehicle_format_label) && (
+                <DetailRow
+                  label={t('col_service')}
+                  value={entry.service_name ?? entry.vehicle_format_label ?? ''}
+                />
+              )}
+              {entry.vehicle_format_label && entry.service_name && (
+                <DetailRow label={t('detail_vehicle_format')} value={entry.vehicle_format_label} />
               )}
               {entry.reservation_ref && (
                 <DetailRow label={t('col_ref')} value={`#${entry.reservation_ref.slice(0, 12)}`} mono />
@@ -131,7 +154,7 @@ export function HistoryCard({ entry }: Props) {
             </div>
 
             {/* Financial section */}
-            <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#243020]/60">
+            <div className="mt-3 rounded-xl bg-white/40 p-3 dark:bg-[#001A05]/60">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
                 {t('col_amount')}
               </p>
@@ -168,7 +191,7 @@ function DetailRow({ label, value, mono, gold, danger }: {
       <span className={`text-right font-semibold ${
         gold ? 'text-[#C09A18]' :
         danger ? 'text-[#FF2525]' :
-        'text-[#000C1F] dark:text-[#FFF8EC]'
+        'text-foreground'
       } ${mono ? 'font-mono' : ''}`}>
         {value}
       </span>
@@ -179,7 +202,7 @@ function DetailRow({ label, value, mono, gold, danger }: {
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-    className={`shrink-0 text-[#000C1F]/30 transition-transform duration-200 dark:text-[#FFF8EC]/30 ${expanded ? 'rotate-180' : ''}`}
+    className={`shrink-0 text-foreground/30 transition-transform duration-200 dark:text-foreground/30 ${expanded ? 'rotate-180' : ''}`}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>

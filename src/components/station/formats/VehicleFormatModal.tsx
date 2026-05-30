@@ -4,8 +4,21 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { VehicleLabelAutocomplete } from './VehicleLabelAutocomplete';
 import type { VehicleFormat } from './types';
+
+// Predefined vehicle format suggestions
+const SUGGESTIONS_FR = [
+  'Micro / Mini', 'Compact', 'Berline', 'Coupé', 'Décapotable',
+  'Hatchback', 'Break', 'SUV', 'VUS', 'Crossover',
+  'Minivan', 'Fourgonnette', 'Pickup', 'Camion léger',
+  'Véhicule électrique', 'Véhicule hybride',
+];
+
+const SUGGESTIONS_EN = [
+  'Micro / Mini', 'Compact', 'Sedan', 'Coupe', 'Convertible',
+  'Hatchback', 'Wagon', 'SUV', 'Crossover', 'Minivan',
+  'Van', 'Pickup Truck', 'Light Truck', 'Electric Vehicle', 'Hybrid',
+];
 
 interface Props {
   format: VehicleFormat | null;
@@ -85,7 +98,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     if (ok) {
       onSaved((data as { data: VehicleFormat }).data);
     } else {
-      // Never expose raw server messages — map known codes to i18n strings only
+      // Never expose raw server messages - map known codes to i18n strings only
       const err = data as { code?: string };
       setApiError(err?.code === 'CONFLICT' ? t('format_label_conflict') : t('format_save_error'));
     }
@@ -97,12 +110,12 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
         className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        <div className="w-full max-w-sm rounded-xl border border-[#E8E4DC] bg-white shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
+        <div className="w-full max-w-sm rounded-xl border border-[#FFF9EC] bg-white shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
             <div>
-              <div className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">
+              <div className="text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                 {isEdit ? t('format_modal_edit') : t('format_modal_new')}
               </div>
               {!isEdit && (
@@ -114,7 +127,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
             <button
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#243020] dark:hover:text-[#F0EDD4]"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
               aria-label={t('aria_close')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -124,19 +137,47 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
           </div>
 
           <form onSubmit={handleSaveClick} className="flex flex-col gap-4 p-5">
-            {/* Label field */}
+            {/* Label field - Dropdown select */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_label')} <span className="text-[#EF4444]">*</span>
               </label>
-              <VehicleLabelAutocomplete
+              
+              {/* Dropdown with predefined suggestions */}
+              <select
                 value={label}
-                onChange={(v) => { setLabel(v); setApiError(null); }}
-                onEnter={focusPrice}
-                existingLabels={existingLabels}
-                locale={locale}
-                placeholder={t('format_placeholder_label')}
-              />
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setApiError(null);
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && focusPrice()}
+                className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+              >
+                <option value="">{t('format_placeholder_label')}</option>
+                <optgroup label="Suggestions">
+                  {(locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).map((fmt) => (
+                    <option key={fmt} value={fmt} disabled={existingLabels.includes(fmt)}>
+                      {fmt}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+
+              {/* Custom input fallback (hidden if using preset) */}
+              {label && !((locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).includes(label)) && (
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => {
+                    setLabel(e.target.value);
+                    setApiError(null);
+                  }}
+                  placeholder="Custom format name"
+                  maxLength={100}
+                  className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
+                />
+              )}
+
               {isDuplicate && (
                 <p className="flex items-center gap-1 text-[12px] font-semibold text-[#FF8800]">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -149,15 +190,15 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
 
             {/* Price field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#9A9A8A]">
+              <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_price')} <span className="text-[#EF4444]">*</span>
               </label>
-              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#F7F6F2] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:bg-[#0F1A0C] ${
+              <div className={`flex items-center gap-2 rounded-[8px] border bg-[#FFF9EC] px-3 py-2.5 transition-all focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-dark-bg ${
                 priceError
                   ? 'border-[#EF4444] focus-within:border-[#EF4444] dark:border-[#6A1A0A]'
-                  : 'border-[#D8D4C8] focus-within:border-[#C49A1E] dark:border-[#243020] dark:focus-within:border-[#C49A1E]'
+                  : 'border-[#D8D4C8] focus-within:border-[#DDAF3B] dark:border-[#001A05] dark:focus-within:border-[#DDAF3B]'
               }`}>
-                <span className="shrink-0 font-mono text-[14px] font-bold text-[#C49A1E]">$</span>
+                <span className="shrink-0 font-mono text-[14px] font-bold text-[#DDAF3B]">$</span>
                 <input
                   ref={priceRef}
                   type="number"
@@ -168,7 +209,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                   onBlur={() => price && validatePrice(price)}
                   placeholder="0.00"
                   required
-                  className="flex-1 bg-transparent font-mono text-[14px] font-bold text-[#1A1A0A] outline-none placeholder:font-sans placeholder:text-[13px] placeholder:font-normal placeholder:text-[#BBBBAA] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A]"
+                  className="flex-1 bg-transparent font-mono text-[14px] font-bold text-[#001201] outline-none placeholder:font-sans placeholder:text-[13px] placeholder:font-normal placeholder:text-[#BBBBAA] dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A]"
                 />
                 <span className="shrink-0 text-[12px] font-semibold text-[#BBBBAA] dark:text-[#4A4A3A]">CAD</span>
               </div>
@@ -183,7 +224,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               )}
             </div>
 
-            {/* API error — i18n-mapped message only, never raw server output */}
+            {/* API error - i18n-mapped message only, never raw server output */}
             {apiError && (
               <div className="flex items-start gap-2 rounded-[8px] border border-[#FECACA] bg-[#FFF2F0] px-3 py-2.5 dark:border-[#4A0A0A] dark:bg-[#2A0A0A]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="mt-0.5 shrink-0 text-[#EF4444]">
@@ -198,14 +239,14 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#243020] dark:text-[#9A9A8A]"
+                className="rounded-[10px] border border-[#D8D4C8] px-4 py-2 text-[13px] font-medium text-[#5A5A4A] transition-opacity hover:opacity-70 dark:border-[#001A05] dark:text-[#B0BFB1]"
               >
                 {t('btn_cancel')}
               </button>
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="rounded-[10px] bg-[#C49A1E] px-5 py-2 text-[13px] font-bold text-[#0C1209] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[10px] bg-[#DDAF3B] px-5 py-2 text-[13px] font-bold text-[#001201] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {saving ? (
                   <span className="flex items-center gap-2">

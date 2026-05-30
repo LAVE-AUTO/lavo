@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useToast } from '@/context/toast-context';
+import { patchWithApi } from '@/services';
+import { TextField } from './TextField';
 
 export interface StationLocation {
   address: string;
@@ -16,13 +19,12 @@ interface Props {
   locked?: boolean;
 }
 
-const inputClass =
-  'w-full rounded-[8px] border border-[#D8D4C8] bg-[#F7F6F2] px-3 py-2.5 text-[13px] text-[#1A1A0A] outline-none transition-colors duration-150 placeholder:text-[#BBBBAA] focus:border-[#C49A1E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(196,154,30,0.12)] dark:border-[#243020] dark:bg-[#0F1A0C] dark:text-[#F0EDD4] dark:placeholder:text-[#4A4A3A] dark:focus:border-[#C49A1E] dark:focus:bg-[#182214]';
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#9A9A8A]">{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
+        {label}
+      </label>
       {children}
     </div>
   );
@@ -32,37 +34,65 @@ function ReadField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{label}</p>
-      <p className="text-[13px] font-semibold text-[#1A1A0A] dark:text-[#F0EDD4]">{value || '—'}</p>
+      <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{value || '-'}</p>
     </div>
   );
 }
 
-const GeoIcon = () => (
+const PinIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" />
-    <line x1="12" y1="2" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="22" />
-    <line x1="2" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="22" y2="12" />
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
   </svg>
 );
 
+const BuildingIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="4" y="2" width="16" height="20" rx="2" />
+    <line x1="9" y1="22" x2="9" y2="18" />
+    <line x1="15" y1="22" x2="15" y2="18" />
+    <line x1="8" y1="6" x2="16" y2="6" />
+    <line x1="8" y1="10" x2="16" y2="10" />
+    <line x1="8" y1="14" x2="16" y2="14" />
+  </svg>
+);
+
+const GeoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="3" />
+    <line x1="12" y1="2" x2="12" y2="5" />
+    <line x1="12" y1="19" x2="12" y2="22" />
+    <line x1="2" y1="12" x2="5" y2="12" />
+    <line x1="19" y1="12" x2="22" y2="12" />
+  </svg>
+);
+
+function validateCoord(val: string, min: number, max: number) {
+  if (!val) return true;
+  const n = parseFloat(val);
+  return !isNaN(n) && n >= min && n <= max;
+}
+
 export function StationLocationForm({ location, onSaved, locked = false }: Props) {
   const t = useTranslations('station_config');
+  const { success, error: showError } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [address, setAddress]     = useState(location.address);
-  const [city, setCity]           = useState(location.city);
-  const [lat, setLat]             = useState(location.latitude ?? '');
-  const [lng, setLng]             = useState(location.longitude ?? '');
+  const [address, setAddress] = useState(location.address);
+  const [city, setCity] = useState(location.city);
+  const [lat, setLat] = useState(location.latitude ?? '');
+  const [lng, setLng] = useState(location.longitude ?? '');
   const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError]     = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [feedback, setFeedback]     = useState<{ ok: boolean; msg: string } | null>(null);
+  const [geoError, setGeoError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   async function reverseGeocode(latitude: number, longitude: number) {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-        { headers: { 'Accept-Language': 'fr' } }
+        { headers: { 'Accept-Language': 'fr' } },
       );
       const data = await res.json();
       if (data?.address) {
@@ -73,7 +103,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
         if (cityName) setCity(cityName);
       }
     } catch {
-      // Reverse geocoding failed — coordinates remain set
+      // Reverse geocoding failed - coordinates remain set
     }
   }
 
@@ -92,7 +122,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
       () => {
         setGeoError(true);
         setGeoLoading(false);
-      }
+      },
     );
   }
 
@@ -102,51 +132,86 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
     setLat(location.latitude ?? '');
     setLng(location.longitude ?? '');
     setGeoError(false);
-    setFeedback(null);
+    setErrors({});
     setIsEditing(false);
-  }
-
-  function validateCoord(val: string, min: number, max: number) {
-    if (!val) return true;
-    const n = parseFloat(val);
-    return !isNaN(n) && n >= min && n <= max;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!address.trim()) {
-      setFeedback({ ok: false, msg: t('error_address_empty') });
+    const next: Record<string, boolean> = {};
+    if (!address.trim()) next.address = true;
+    if (!city.trim()) next.city = true;
+    if (lat && !validateCoord(lat, -90, 90)) next.lat = true;
+    if (lng && !validateCoord(lng, -180, 180)) next.lng = true;
+
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
+      if (next.address) showError(t('error_address_empty'));
+      else if (next.city) showError(t('error_city_empty'));
+      else if (next.lat) showError(t('geo_invalid_lat'));
+      else if (next.lng) showError(t('geo_invalid_lng'));
       return;
     }
-    if (!city.trim()) {
-      setFeedback({ ok: false, msg: t('error_city_empty') });
-      return;
-    }
-    if (lat && !validateCoord(lat, -90, 90)) {
-      setFeedback({ ok: false, msg: t('geo_invalid_lat') });
-      return;
-    }
-    if (lng && !validateCoord(lng, -180, 180)) {
-      setFeedback({ ok: false, msg: t('geo_invalid_lng') });
-      return;
-    }
+
+    setErrors({});
     setSaving(true);
-    // TODO: connect to API once endpoint is available — PATCH /station/me does not exist yet
-    setFeedback({ ok: false, msg: t('location_save_error') });
+
+    const payload = {
+      address: address.trim(),
+      city: city.trim(),
+      latitude: lat.trim() ? Number(lat) : null,
+      longitude: lng.trim() ? Number(lng) : null,
+    };
+
+    const [ok, data] = await patchWithApi('/station/me', payload);
+
+    if (ok) {
+      const station = (data as {
+        data?: {
+          address?: string;
+          city?: string;
+          latitude?: number | string | null;
+          longitude?: number | string | null;
+        };
+      })?.data;
+
+      const nextLocation: StationLocation = {
+        address: station?.address ?? payload.address,
+        city: station?.city ?? payload.city,
+        latitude:
+          station?.latitude !== undefined
+            ? (station.latitude == null ? null : String(station.latitude))
+            : (payload.latitude == null ? null : String(payload.latitude)),
+        longitude:
+          station?.longitude !== undefined
+            ? (station.longitude == null ? null : String(station.longitude))
+            : (payload.longitude == null ? null : String(payload.longitude)),
+      };
+
+      onSaved(nextLocation);
+      setAddress(nextLocation.address);
+      setCity(nextLocation.city);
+      setLat(nextLocation.latitude ?? '');
+      setLng(nextLocation.longitude ?? '');
+      success(t('location_save_success'));
+      setIsEditing(false);
+    } else {
+      showError(t('location_save_error'));
+    }
+
     setSaving(false);
   }
 
   return (
-    <section className="rounded-xl border border-[#E8E4DC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
-      {/* Header */}
+    <section className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
-        <span className="h-4 w-[3px] rounded-full bg-[#C49A1E]" />
-        <span className="flex-1 text-[13px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{t('section_location')}</span>
+        <span className="h-4 w-[3px] rounded-full bg-[#DDAF3B]" />
+        <span className="flex-1 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('section_location')}</span>
         {!isEditing && !locked && (
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 rounded-[8px] border border-[#C49A1E]/40 px-3 py-1 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E]/8"
+            className="flex items-center gap-1.5 rounded-[8px] border border-[#DDAF3B]/40 px-3 py-1 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B]/8"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -159,79 +224,122 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
 
       <div className="p-5">
         {!isEditing ? (
-          /* ── Read-only view ── */
           <div className="flex flex-col gap-4">
-            {/* Address card */}
-            <div className="flex items-start gap-4 rounded-[10px] bg-[#F7F6F2] px-4 py-3.5 dark:bg-[#0F1A0C]">
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[#C49A1E]/15">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
+            <div className="flex items-start gap-4 rounded-xl bg-[#FFF9EC] px-4 py-3.5 dark:bg-dark-bg">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[#DDAF3B]/15 text-[#DDAF3B]">
+                <PinIcon />
               </div>
               <div className="flex flex-col gap-0.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[#AAAAAA] dark:text-[#4A4A3A]">{t('field_address')}</p>
-                <p className="text-[14px] font-bold text-[#1A1A0A] dark:text-[#F0EDD4]">{location.address || '—'}</p>
-                <p className="text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">{location.city || '—'}</p>
+                <p className="text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">{location.address || '-'}</p>
+                <p className="text-[13px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{location.city || '-'}</p>
               </div>
             </div>
             {(location.latitude || location.longitude) && (
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-0.5">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C8C4B4] dark:text-[#2E3C2A]">{t('field_latitude')} / {t('field_longitude')}</p>
-                  <p className="font-mono text-[13px] font-semibold text-[#888] dark:text-[#9A9A8A]">
+                  <p className="font-mono text-[13px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
                     {[location.latitude, location.longitude].filter(Boolean).join(', ')}
                   </p>
                 </div>
               </div>
             )}
-            {feedback && (
-              <p className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>
-                {feedback.msg}
-              </p>
-            )}
           </div>
         ) : (
-          /* ── Edit form ── */
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Field label={t('field_address')}>
-                  <input type="text" className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} required maxLength={200} />
+                  <TextField
+                    value={address}
+                    onChange={(v) => {
+                      setAddress(v);
+                      if (errors.address && v.trim()) setErrors((p) => ({ ...p, address: false }));
+                    }}
+                    prefixIcon={<PinIcon />}
+                    required
+                    maxLength={200}
+                    invalid={errors.address}
+                    autoComplete="street-address"
+                  />
                 </Field>
               </div>
               <Field label={t('field_city')}>
-                <input type="text" className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} required maxLength={100} />
+                <TextField
+                  value={city}
+                  onChange={(v) => {
+                    setCity(v);
+                    if (errors.city && v.trim()) setErrors((p) => ({ ...p, city: false }));
+                  }}
+                  prefixIcon={<BuildingIcon />}
+                  required
+                  maxLength={100}
+                  invalid={errors.city}
+                  autoComplete="address-level2"
+                />
               </Field>
               <div />
               <Field label={t('field_latitude')}>
-                <input type="text" inputMode="decimal" className={inputClass + ' font-mono'} value={lat} onChange={(e) => setLat(e.target.value)} placeholder="45.5017000" maxLength={20} />
+                <TextField
+                  value={lat}
+                  onChange={(v) => {
+                    setLat(v);
+                    if (errors.lat) setErrors((p) => ({ ...p, lat: false }));
+                  }}
+                  prefixBadge="LAT"
+                  inputMode="decimal"
+                  inputClassName="font-mono"
+                  placeholder="45.5017000"
+                  maxLength={20}
+                  invalid={errors.lat}
+                />
               </Field>
               <Field label={t('field_longitude')}>
-                <input type="text" inputMode="decimal" className={inputClass + ' font-mono'} value={lng} onChange={(e) => setLng(e.target.value)} placeholder="-73.5673000" maxLength={20} />
+                <TextField
+                  value={lng}
+                  onChange={(v) => {
+                    setLng(v);
+                    if (errors.lng) setErrors((p) => ({ ...p, lng: false }));
+                  }}
+                  prefixBadge="LNG"
+                  inputMode="decimal"
+                  inputClassName="font-mono"
+                  placeholder="-73.5673000"
+                  maxLength={20}
+                  invalid={errors.lng}
+                />
               </Field>
-              <div className="col-span-2 flex flex-col gap-1">
-                <button type="button" onClick={handleGeolocate} disabled={geoLoading}
-                  className="flex w-fit items-center gap-2 rounded-[8px] border border-[#C49A1E] px-4 py-2 text-[13px] font-semibold text-[#C49A1E] transition-colors hover:bg-[#C49A1E] hover:text-[#0C1209] disabled:opacity-50">
+              <div className="col-span-2 flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleGeolocate}
+                  disabled={geoLoading}
+                  className="flex w-fit items-center gap-2 rounded-xl border border-[#DDAF3B] px-4 py-2 text-[13px] font-semibold text-[#DDAF3B] transition-colors hover:bg-[#DDAF3B] hover:text-[#001201] disabled:opacity-50"
+                >
                   <GeoIcon />
                   {geoLoading ? t('geolocating') : t('btn_geolocate')}
                 </button>
                 {geoError && <p className="text-[12px] font-semibold text-[#EF4444]">{t('geo_error')}</p>}
               </div>
             </div>
-            <div className="mt-5 flex items-center justify-between">
-              {feedback ? (
-                <span className="text-[13px] font-semibold" style={{ color: feedback.ok ? '#00C851' : '#EF4444' }}>{feedback.msg}</span>
-              ) : <span />}
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={handleCancel} disabled={saving}
-                  className="rounded-[10px] border border-[#E0DCD0] px-4 py-2.5 text-[13px] font-semibold text-[#666] transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#243020] dark:text-[#9A9A8A]">
-                  {t('btn_cancel_edit')}
-                </button>
-                <button type="submit" disabled={saving}
-                  className="rounded-[10px] bg-[#C49A1E] px-6 py-2.5 text-[13px] font-bold text-[#0C1209] transition-opacity hover:opacity-80 disabled:opacity-50">
-                  {saving ? t('btn_saving') : t('btn_save')}
-                </button>
-              </div>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={saving}
+                className="rounded-xl border border-[#FFF9EC] px-4 py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] disabled:opacity-50 dark:border-[#001A05] dark:text-[#B0BFB1]"
+              >
+                {t('btn_cancel_edit')}
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-[#DDAF3B] px-6 py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
+              >
+                {saving ? t('btn_saving') : t('btn_save')}
+              </button>
             </div>
           </form>
         )}

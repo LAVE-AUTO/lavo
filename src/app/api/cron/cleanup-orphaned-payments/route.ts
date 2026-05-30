@@ -6,9 +6,7 @@
  * Requires Authorization: Bearer <CRON_SECRET> or x-cron-secret header.
  * Reads ORPHAN_PAYMENT_TIMEOUT_MINUTES from env (default: 15).
  */
-import { headers } from 'next/headers';
-
-import { verifyCronSecret } from '@/lib/verify-cron-secret';
+import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 import { successResponse, error401, error500 } from '@/lib/responses';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { cleanupOrphanedPaymentEntries } from '@/server/reservations/orphan-cleanup-service';
@@ -22,15 +20,12 @@ const DEFAULT_TIMEOUT_MINUTES = 15;
 
 // %%%%% GET Handler %%%%%
 // Cleanup orphaned payment entries
+//
+// Idempotent: cancelOrphanedEntryIfEligible is a guarded UPDATE with status='pending_payment'
+// AND stripe_payment_id IS NULL — re-running this cron never double-cancels.
 
 export async function GET() {
-  const headersList = await headers();
-  const auth = headersList.get('authorization');
-  const bearerToken = auth?.match(/^Bearer\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const secret = headersList.get('x-cron-secret') ?? bearerToken;
-  const expected = process.env.CRON_SECRET ?? '';
-
-  if (!verifyCronSecret(secret, expected)) {
+  if (!(await isAuthorizedCronRequest())) {
     return error401('Missing or invalid cron secret');
   }
 

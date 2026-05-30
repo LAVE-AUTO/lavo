@@ -1,6 +1,6 @@
 /**
  * Unit tests for the FCM service and device token service.
- * Firebase Admin SDK is mocked — no real network calls are made.
+ * Firebase Admin SDK is mocked - no real network calls are made.
  * @jest-environment node
  */
 

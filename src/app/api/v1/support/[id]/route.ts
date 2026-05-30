@@ -4,6 +4,12 @@ import { mapZodErrors, updateTicketStatusSchema, supportTicketIdSchema } from '@
 import { getTicketDetails, updateSupportTicketStatus } from '@/server/support/support-ticket-service';
 import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const detailQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  cursor: z.string().optional(),
+});
 
 /**
  * GET /api/v1/support/[id]
@@ -22,8 +28,17 @@ export async function GET(
     return error400('Invalid ticket ID format');
   }
 
+  const { searchParams } = new URL(request.url);
+  const queryParsed = detailQuerySchema.safeParse(Object.fromEntries(searchParams));
+  if (!queryParsed.success) {
+    return error400('Validation failed');
+  }
+
   try {
-    const ticket = await getTicketDetails(auth.sub, auth.role, idResult.data);
+    const ticket = await getTicketDetails(auth.sub, auth.role, idResult.data, {
+      limit: queryParsed.data.limit,
+      cursor: queryParsed.data.cursor,
+    });
     return successResponse(ticket);
   } catch (e) {
     if (e instanceof AppError) return fromAppError(e);

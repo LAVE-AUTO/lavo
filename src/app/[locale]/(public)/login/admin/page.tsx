@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
- * Admin login page — accessible only by typing the URL directly (/login/admin).
+ * Admin login page - accessible only by typing the URL directly (/login/admin).
  * Not linked from any public navigation.
  * Split-screen: left admin brand panel (desktop) + right login form (no tabs, no mode switcher).
  */
@@ -27,10 +27,10 @@ export default async function AdminLoginPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'admin_login' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <div className="min-h-screen flex">
 
-        {/* Left brand panel — desktop only */}
+        {/* Left brand panel - desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
           <AdminBrandPanel />
         </aside>
@@ -48,7 +48,7 @@ export default async function AdminLoginPage({ params }: Props) {
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
               <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">
-                Slowtime
+                Hurryline
               </span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
@@ -60,7 +60,7 @@ export default async function AdminLoginPage({ params }: Props) {
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8980A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     <polyline points="9 12 11 14 15 10" />
                   </svg>
@@ -72,13 +72,13 @@ export default async function AdminLoginPage({ params }: Props) {
               <h1 className="text-[28px] font-bold text-dark-bg dark:text-white leading-tight">
                 {t('welcome_title')}
               </h1>
-              <p className="mt-1.5 text-[15px] text-[#5A6B54] dark:text-lavo-muted leading-snug">
+              <p className="mt-1.5 text-[15px] text-[#B0BFB1] dark:text-Hurryline-muted leading-snug">
                 {t('welcome_subtitle')}
               </p>
             </div>
 
-            {/* Login form — no TabSwitcher, no AuthModeSwitcher */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
+            {/* Login form - no TabSwitcher, no AuthModeSwitcher */}
+            <div className="bg-white dark:bg-surface rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
               <LoginForm forgotPasswordHref="/forgot-password" hideSocialButtons allowedRole="admin" />
             </div>
 

@@ -2,9 +2,9 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
-import { reservations, timeSlots, stationConfigs } from '@/lib/db/schema';
+import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users, stationServices } from '@/lib/db/schema';
 
 export type Entry = typeof reservations.$inferSelect;
 export type EntryInsert = typeof reservations.$inferInsert;
@@ -21,14 +21,18 @@ const RESERVATION_COLUMNS = {
   time_slot_id: reservations.time_slot_id,
   station_id: reservations.station_id,
   vehicle_format_id: reservations.vehicle_format_id,
+  service_id: reservations.service_id,
+  post_id: reservations.post_id,
   status: reservations.status,
   queue_position: reservations.queue_position,
+  ticket_code: reservations.ticket_code,
   amount_paid: reservations.amount_paid,
   commission_rate: reservations.commission_rate,
   commission_amount: reservations.commission_amount,
   station_payout: reservations.station_payout,
   tip_amount: reservations.tip_amount,
   stripe_payment_id: reservations.stripe_payment_id,
+  stripe_charge_id: reservations.stripe_charge_id,
   stripe_transfer_id: reservations.stripe_transfer_id,
   stripe_refund_id: reservations.stripe_refund_id,
   stripe_payment_succeeded_at: reservations.stripe_payment_succeeded_at,
@@ -36,8 +40,13 @@ const RESERVATION_COLUMNS = {
   client_confirmed: reservations.client_confirmed,
   cancellation_reason: reservations.cancellation_reason,
   penalty_amount: reservations.penalty_amount,
+  pi_cancel_failed_at: reservations.pi_cancel_failed_at,
+  refund_persist_failed_at: reservations.refund_persist_failed_at,
   confirmed_at: reservations.confirmed_at,
   completed_at: reservations.completed_at,
+  walk_in_client_email: reservations.walk_in_client_email,
+  walk_in_client_name: reservations.walk_in_client_name,
+  walk_in_receipt_sent_at: reservations.walk_in_receipt_sent_at,
   created_at: reservations.created_at,
   updated_at: reservations.updated_at,
 } as const;
@@ -46,7 +55,9 @@ const RESERVATION_COLUMNS = {
 export type CreateReservationEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
+  service_id?: string | null;
+  post_id?: string | null;
   time_slot_id: string;
   booking_source?: 'standard' | 'qr';
   status: string;
@@ -55,13 +66,17 @@ export type CreateReservationEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /** Payload for creating a queue entry: queue_position required. */
 export type CreateQueueEntryData = {
   user_id: string;
   station_id: string;
-  vehicle_format_id: string;
+  vehicle_format_id?: string | null;
+  service_id?: string | null;
   queue_position: number;
   status: string;
   amount_paid: string;
@@ -69,6 +84,9 @@ export type CreateQueueEntryData = {
   commission_amount?: string;
   station_payout?: string;
   stripe_payment_id?: string | null;
+  ticket_code?: string | null;
+  walk_in_client_email?: string | null;
+  walk_in_client_name?: string | null;
 };
 
 /**
@@ -85,6 +103,8 @@ export async function createReservationEntry(
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
+      post_id: data.post_id ?? null,
       entry_type: 'reservation',
       booking_source: data.booking_source ?? 'standard',
       time_slot_id: data.time_slot_id,
@@ -95,6 +115,9 @@ export async function createReservationEntry(
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert reservation entry failed');
@@ -112,6 +135,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       user_id: data.user_id,
       station_id: data.station_id,
       vehicle_format_id: data.vehicle_format_id,
+      service_id: data.service_id ?? null,
       entry_type: 'queue',
       booking_source: 'standard',
       time_slot_id: null,
@@ -122,6 +146,9 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
+      ticket_code: data.ticket_code ?? null,
+      walk_in_client_email: data.walk_in_client_email ?? null,
+      walk_in_client_name: data.walk_in_client_name ?? null,
     })
     .returning();
   if (!row) throw new Error('Insert queue entry failed');
@@ -184,27 +211,43 @@ export async function findEntryByIdAndStation(
 }
 
 /**
- * Lists all entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
+ * Lists entries for a station: reservations (by time_slot start_time) then queue (by queue_position).
+ * Backward-compatible pagination - defaults to perPage=500 when not provided.
  */
-export async function listEntriesByStation(stationId: string): Promise<Entry[]> {
+export async function listEntriesByStation(
+  stationId: string,
+  page = 1,
+  perPage = 500
+): Promise<Entry[]> {
+  const limit = Math.min(Math.max(1, Math.floor(perPage)), 500);
+  const offset = (Math.max(1, Math.floor(page)) - 1) * limit;
   return db
     .select(RESERVATION_COLUMNS)
     .from(reservations)
     .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
     .where(eq(reservations.station_id, stationId))
     .orderBy(
-      desc(reservations.entry_type),
+      entryTypePrimaryOrder(),
       asc(timeSlots.start_time),
       asc(reservations.queue_position)
-    );
+    )
+    .limit(limit)
+    .offset(offset);
 }
 
 /**
- * Returns all active queue entries across all stations (pending, confirmed, late)
- * created within the last 2 days. The 2-day window safely covers stations with very
- * late closing times while excluding genuinely stale entries from previous days.
+ * Returns active queue entries across all stations (pending, confirmed, late) created within
+ * the last 2 days. The 2-day window safely covers stations with very late closing times while
+ * excluding genuinely stale entries from previous days.
+ *
+ * Bounded by `limit` (default 500) so a cron pass over a growing platform cannot exhaust
+ * memory or Stripe API quotas in a single iteration (bug #16). Callers that need to drain
+ * the full set should paginate via `offset`.
  */
-export async function listActiveQueueEntries(): Promise<Entry[]> {
+export async function listActiveQueueEntries(
+  limit = 500,
+  offset = 0
+): Promise<Entry[]> {
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
   return db.query.reservations.findMany({
     where: and(
@@ -212,11 +255,24 @@ export async function listActiveQueueEntries(): Promise<Entry[]> {
       inArray(reservations.status, ['pending', 'confirmed', 'late']),
       gte(reservations.created_at, twoDaysAgo)
     ),
+    orderBy: (r, { asc }) => [asc(r.created_at)],
+    limit,
+    offset,
   });
 }
 
 /** Active statuses for a live queue entry (excludes cancelled, completed, in_progress). */
 const QUEUE_LIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'late'] as const;
+
+/**
+ * Stable primary ordering for entry lists: reservations first, queue second, then any future
+ * entry_type alphabetically afterwards. Replaces `desc(reservations.entry_type)` which happened
+ * to put 'reservation' before 'queue' by lexicographic chance and would break if a third
+ * entry_type were ever added (bug #27).
+ */
+function entryTypePrimaryOrder() {
+  return sql`CASE ${reservations.entry_type} WHEN 'reservation' THEN 0 WHEN 'queue' THEN 1 ELSE 2 END`;
+}
 
 /**
  * Lists live queue entries for a station, ordered by queue_position.
@@ -288,13 +344,15 @@ export async function listEntriesByUser(userId: string): Promise<Entry[]> {
   });
 }
 
-/** Non-terminal statuses considered "active" for duplicate reservation checks. */
+/** Non-terminal statuses considered "active" for duplicate checks. */
 const ACTIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'in_progress'];
 
 /**
- * Returns true if the user already has an active reservation or queue entry at this station.
+ * Returns true if the user already has an active queue entry (entry_type='queue') at this station.
+ * Does NOT check slot reservations — users may hold multiple reservations at the same station
+ * for different time slots.
  */
-export async function hasActiveEntryAtStation(
+export async function hasActiveQueueEntryAtStation(
   userId: string,
   stationId: string,
   tx?: DbTransaction
@@ -307,11 +365,87 @@ export async function hasActiveEntryAtStation(
       and(
         eq(reservations.user_id, userId),
         eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
         inArray(reservations.status, ACTIVE_STATUSES)
       )
     )
     .limit(1);
   return row.length > 0;
+}
+
+/**
+ * Returns true if the user already has a confirmed/in-progress/pending reservation for this slot.
+ * Excludes `pending_payment` — those are handled by the upsert logic in createReservation.
+ */
+export async function hasActiveReservationForSlot(
+  userId: string,
+  timeSlotId: string,
+  tx?: DbTransaction
+): Promise<boolean> {
+  const client = tx ?? db;
+  const row = await client
+    .select({ id: reservations.id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
+        inArray(reservations.status, ['pending', 'confirmed', 'in_progress'])
+      )
+    )
+    .limit(1);
+  return row.length > 0;
+}
+
+/**
+ * Finds an existing pending_payment reservation entry for a specific user and time slot.
+ * Used in createReservation to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentReservationForSlot(
+  userId: string,
+  timeSlotId: string
+): Promise<{ id: string; stripe_payment_id: string | null } | undefined> {
+  const row = await db
+    .select({ id: reservations.id, stripe_payment_id: reservations.stripe_payment_id })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.time_slot_id, timeSlotId),
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
+}
+
+/**
+ * Finds an existing pending_payment queue entry for a specific user at a station.
+ * Used in joinQueue to cancel stale payment attempts before issuing a new PI.
+ */
+export async function findPendingPaymentQueueEntryAtStation(
+  userId: string,
+  stationId: string
+): Promise<{ id: string; stripe_payment_id: string | null; queue_position: number | null } | undefined> {
+  const row = await db
+    .select({
+      id: reservations.id,
+      stripe_payment_id: reservations.stripe_payment_id,
+      queue_position: reservations.queue_position,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .limit(1);
+  return row[0];
 }
 
 /**
@@ -330,6 +464,10 @@ export {
   setStripePaymentSucceededAtIfMissing,
   setStripePaymentSucceededNotifiedAtIfMissing,
   clearStripePaymentSucceededNotifiedAt,
+  markPiCancelFailed,
+  clearPiCancelFailed,
+  markRefundPersistFailed,
+  clearRefundPersistFailed,
 } from './entry-stripe-repository';
 
 /** Pagination + filter options for entry listing. */
@@ -337,6 +475,11 @@ export type ListEntriesFilters = {
   status?: string;
   from?: Date;
   to?: Date;
+  /** Filter by time_slot.start_time >= slot_from (reservation entries). */
+  slot_from?: Date;
+  /** Filter by time_slot.start_time < slot_to (reservation entries). */
+  slot_to?: Date;
+  entry_type?: 'reservation' | 'queue';
   page?: number;
   per_page?: number;
 };
@@ -405,7 +548,7 @@ export async function listEntriesByStationPaginated(
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .where(where)
       .orderBy(
-        desc(reservations.entry_type),
+        entryTypePrimaryOrder(),
         asc(timeSlots.start_time),
         asc(reservations.queue_position)
       )
@@ -432,6 +575,7 @@ export async function updateEntry(
     status: string;
     entry_type: 'reservation' | 'queue';
     booking_source: 'standard' | 'qr';
+    post_id: string | null;
     time_slot_id: string | null;
     queue_position: number | null;
     amount_paid: string;
@@ -444,7 +588,9 @@ export async function updateEntry(
     cancellation_reason: string | null;
     penalty_amount: string | null;
     stripe_payment_id: string | null;
+    stripe_charge_id: string | null;
     stripe_refund_id: string | null;
+    walk_in_receipt_sent_at: Date | null;
     updated_at: Date;
   }>,
   tx?: DbTransaction
@@ -515,7 +661,7 @@ const NO_SHOW_ELIGIBLE_STATUSES = ['pending', 'confirmed', 'late'] as const;
  * Conditionally cancels a queue entry as a no-show only if it is still in an active status.
  * Returns the updated row when the guard matched; otherwise undefined. Using a conditional
  * update here prevents overlapping cron runs from each issuing the Stripe capture/refund/penalty
- * cascade on the same entry — the second run sees the row already at status='cancelled' and skips.
+ * cascade on the same entry - the second run sees the row already at status='cancelled' and skips.
  */
 export async function cancelQueueEntryForNoShowIfEligible(
   id: string,
@@ -543,11 +689,20 @@ export async function cancelQueueEntryForNoShowIfEligible(
   return row;
 }
 
-const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
+/**
+ * Only `pending_payment` entries may be cancelled by Stripe failure webhooks.
+ *
+ * `confirmed` is intentionally excluded: a `confirmed` entry means the card has
+ * already been authorized via `amount_capturable_updated`. A late `payment_failed`
+ * Stripe retry (3DS timeout, network glitch) must NOT override an authorization
+ * that already succeeded — doing so would cancel a reservation for a client whose
+ * card is legitimately held, causing them to show up at the station with no slot.
+ */
+const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment'] as const;
 
 /**
  * Cancels an entry for Stripe payment_failed / canceled webhooks only while status is still
- * pending_payment or confirmed. Returns the updated row if a row matched; otherwise undefined.
+ * pending_payment. Returns the updated row if a row matched; otherwise undefined.
  * Callers must run slot decrement in the same transaction so webhook replays cannot double-decrement.
  */
 export async function cancelEntryForStripePaymentFailureIfEligible(
@@ -567,6 +722,56 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
     )
     .returning();
   return row;
+}
+
+/**
+ * Atomically moves a queue entry to a new position, shifting neighbors to fill the gap.
+ * Safe to call within or outside a transaction.
+ */
+export async function repositionQueueEntry(
+  entryId: string,
+  stationId: string,
+  oldPos: number,
+  newPos: number,
+  tx?: DbTransaction
+): Promise<void> {
+  if (oldPos === newPos) return;
+  const client = tx ?? db;
+
+  if (newPos < oldPos) {
+    // Moving forward: shift entries in [newPos, oldPos) down by 1 to make room
+    await client
+      .update(reservations)
+      .set({ queue_position: sql`${reservations.queue_position} + 1`, updated_at: new Date() })
+      .where(
+        and(
+          eq(reservations.station_id, stationId),
+          eq(reservations.entry_type, 'queue'),
+          sql`${reservations.queue_position} >= ${newPos}`,
+          sql`${reservations.queue_position} < ${oldPos}`,
+          sql`${reservations.id} != ${entryId}`
+        )
+      );
+  } else {
+    // Moving backward: shift entries in (oldPos, newPos] up by 1 to fill the gap
+    await client
+      .update(reservations)
+      .set({ queue_position: sql`${reservations.queue_position} - 1`, updated_at: new Date() })
+      .where(
+        and(
+          eq(reservations.station_id, stationId),
+          eq(reservations.entry_type, 'queue'),
+          sql`${reservations.queue_position} > ${oldPos}`,
+          sql`${reservations.queue_position} <= ${newPos}`,
+          sql`${reservations.id} != ${entryId}`
+        )
+      );
+  }
+
+  await client
+    .update(reservations)
+    .set({ queue_position: newPos, updated_at: new Date() })
+    .where(eq(reservations.id, entryId));
 }
 
 /**
@@ -668,6 +873,354 @@ export async function findOrphanedPendingPaymentEntries(olderThanMinutes: number
     ),
   });
 }
+
+/**
+ * Returns entries stuck in pending_payment WITH a stripe_payment_id but older than
+ * olderThanMinutes — these are entries where the Stripe authorization happened but
+ * the `amount_capturable_updated` webhook never arrived (Stripe outage, bad URL,
+ * missing STRIPE_WEBHOOK_SECRET). The cron polls Stripe directly for these.
+ */
+export async function findStalledPendingPaymentEntries(olderThanMinutes: number): Promise<Entry[]> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  return db.query.reservations.findMany({
+    where: and(
+      eq(reservations.status, 'pending_payment'),
+      isNotNull(reservations.stripe_payment_id),
+      lt(reservations.created_at, cutoff)
+    ),
+    // Limit to avoid hammering Stripe with thousands of retrieve() calls in one run.
+    limit: 50,
+  });
+}
+
+/**
+ * Returns reservations whose Stripe-side cancel failed and that still hold a PI to release
+ * (bug #12). The reconciliation cron retries cancelPaymentIntent for these rows.
+ */
+export async function findReservationsNeedingPiCancel(limit = 50): Promise<Entry[]> {
+  return db.query.reservations.findMany({
+    where: and(
+      isNotNull(reservations.pi_cancel_failed_at),
+      isNotNull(reservations.stripe_payment_id)
+    ),
+    limit,
+  });
+}
+
+/**
+ * Returns reservations whose Stripe refund succeeded but whose stripe_refund_id failed to
+ * persist (bug #26). The reconciliation cron looks the refund up on Stripe and saves the id.
+ */
+export async function findReservationsNeedingRefundPersist(limit = 50): Promise<Entry[]> {
+  return db.query.reservations.findMany({
+    where: and(
+      isNotNull(reservations.refund_persist_failed_at),
+      isNotNull(reservations.stripe_payment_id),
+      isNull(reservations.stripe_refund_id)
+    ),
+    limit,
+  });
+}
+
+// %%%%% Rich entry queries - denormalized with station, format, flags %%%%%
+
+/** Denormalized entry shape returned to the client, enriched with joined data. */
+export type RichEntry = {
+  id: string;
+  user_id: string;
+  entry_type: 'reservation' | 'queue';
+  booking_source: 'standard' | 'qr';
+  time_slot_id: string | null;
+  station_id: string;
+  vehicle_format_id: string;
+  status: string;
+  queue_position: number | null;
+  ticket_code: string | null;
+  amount_paid: string;
+  created_at: Date;
+  updated_at: Date;
+  /** Completion timestamp set when the entry transitions to status='completed'. */
+  completed_at: Date | null;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    latitude: string | null;
+    longitude: string | null;
+    image_url: string | null;
+    free_cancellation_minutes: number | null;
+  };
+  vehicle_format: { id: string; label: string; price: string } | null;
+  service: { id: string; name: string; category: string } | null;
+  is_rated: boolean;
+  is_tipped: boolean;
+  estimated_wait_minutes: number | null;
+  /** Reservation slot start (denormalized from time_slots). Null for queue entries. */
+  slot_start_time: Date | null;
+  /** Reservation slot end (denormalized from time_slots). Null for queue entries. */
+  slot_end_time: Date | null;
+};
+
+/** Shared SELECT projection for rich entry queries. */
+function richEntrySelect() {
+  return {
+    ...RESERVATION_COLUMNS,
+    station_name: stations.name,
+    station_address: stations.address,
+    station_city: stations.city,
+    station_latitude: stations.latitude,
+    station_longitude: stations.longitude,
+    // station_image_url removed from the main projection: it was a correlated subquery
+    // evaluated for every returned row (bug #19). Image URLs are now fetched in a single
+    // separate query keyed by distinct station_id and merged in `mapToRichEntry`.
+    station_free_cancellation_minutes: stationConfigs.cancellation_delay_minutes,
+    station_wash_duration_minutes: stationConfigs.wash_duration_minutes,
+    station_wash_post_count: stationConfigs.wash_post_count,
+    slot_start_time: timeSlots.start_time,
+    slot_end_time: timeSlots.end_time,
+    vf_label: vehicleFormats.label,
+    vf_price: vehicleFormats.price,
+    svc_name: stationServices.name,
+    svc_category: stationServices.category,
+    is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
+    is_tipped: sql<boolean>`EXISTS (SELECT 1 FROM reservation_tips WHERE reservation_tips.reservation_id = ${reservations.id})`,
+    // Estimated wait: position × wash_duration / wash_posts (queue entries only).
+    estimated_wait_minutes: sql<number | null>`CASE WHEN ${reservations.entry_type} = 'queue' THEN CEIL(COALESCE(${reservations.queue_position}, 0) * COALESCE(${stationConfigs.wash_duration_minutes}, 0)::float / NULLIF(${stationConfigs.wash_post_count}::float, 0)) ELSE NULL END`,
+  } as const;
+}
+
+/**
+ * Fetches the first photo (by position ASC) for each station_id in a single batch query.
+ * Replaces the per-row correlated subquery (bug #19) with one round-trip keyed by distinct
+ * station ids. Returns a Map for O(1) lookup during row mapping.
+ */
+async function fetchFirstImagePerStation(
+  stationIds: readonly string[]
+): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(stationIds));
+  if (unique.length === 0) return new Map();
+  const rows = await db.execute<{ station_id: string; url: string }>(
+    sql`SELECT DISTINCT ON (station_id) station_id, url
+        FROM station_photos
+        WHERE station_id IN (${sql.join(unique.map((id) => sql`${id}`), sql`, `)})
+        ORDER BY station_id, position ASC`
+  );
+  const result = new Map<string, string>();
+  for (const row of rows as unknown as Array<{ station_id: string; url: string }>) {
+    if (row?.station_id && row?.url) result.set(row.station_id, row.url);
+  }
+  return result;
+}
+
+/** Maps a raw rich-select row to a RichEntry value object. */
+function mapToRichEntry(
+  r: Record<string, unknown>,
+  imageByStation?: Map<string, string>
+): RichEntry {
+  const stationId = r.station_id as string;
+  return {
+    id: r.id as string,
+    user_id: r.user_id as string,
+    entry_type: r.entry_type as 'reservation' | 'queue',
+    booking_source: r.booking_source as 'standard' | 'qr',
+    time_slot_id: r.time_slot_id as string | null,
+    station_id: stationId,
+    vehicle_format_id: r.vehicle_format_id as string,
+    status: r.status as string,
+    queue_position: r.queue_position as number | null,
+    ticket_code: r.ticket_code as string | null,
+    amount_paid: r.amount_paid as string,
+    created_at: r.created_at as Date,
+    updated_at: r.updated_at as Date,
+    completed_at: (r.completed_at as Date | null) ?? null,
+    station: {
+      id: stationId,
+      name: (r.station_name as string | null) ?? '',
+      address: (r.station_address as string | null) ?? '',
+      city: (r.station_city as string | null) ?? '',
+      latitude: r.station_latitude as string | null,
+      longitude: r.station_longitude as string | null,
+      image_url: imageByStation?.get(stationId) ?? null,
+      free_cancellation_minutes: r.station_free_cancellation_minutes as number | null,
+    },
+    vehicle_format: r.vf_label
+      ? {
+          id: r.vehicle_format_id as string,
+          label: r.vf_label as string,
+          price: r.vf_price as string,
+        }
+      : null,
+    service: r.svc_name
+      ? {
+          id: r.service_id as string,
+          name: r.svc_name as string,
+          category: r.svc_category as string,
+        }
+      : null,
+    is_rated: Boolean(r.is_rated),
+    is_tipped: Boolean(r.is_tipped),
+    estimated_wait_minutes: r.estimated_wait_minutes as number | null,
+    slot_start_time: (r.slot_start_time as Date | null) ?? null,
+    slot_end_time: (r.slot_end_time as Date | null) ?? null,
+  };
+}
+
+/**
+ * Lists a user's entries enriched with denormalized station, vehicle format, and computed flags.
+ * Returns the same pagination shape as listEntriesByUserPaginated.
+ */
+export async function listRichEntriesByUser(
+  userId: string,
+  filters: ListEntriesFilters = {}
+): Promise<{ rows: RichEntry[]; total: number; page: number; per_page: number }> {
+  const { status, from, to, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 100);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.user_id, userId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` }).from(reservations).where(where),
+    db
+      .select(richEntrySelect())
+      .from(reservations)
+      .leftJoin(stations, eq(stations.id, reservations.station_id))
+      .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
+      .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+      .leftJoin(stationServices, eq(stationServices.id, reservations.service_id))
+      .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
+      .where(where)
+      .orderBy(desc(reservations.created_at))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  // Batch-fetch the first image per distinct station (one query) instead of per-row subqueries.
+  const imageByStation = await fetchFirstImagePerStation(
+    rows.map((r) => (r as { station_id: string }).station_id)
+  );
+
+  return {
+    rows: rows.map((r) => mapToRichEntry(r as unknown as Record<string, unknown>, imageByStation)),
+    total: countRows[0]?.count ?? 0,
+    page,
+    per_page: limit,
+  };
+}
+
+/**
+ * Returns a single rich entry by id with ownership check (user_id = userId).
+ * Returns undefined when not found or owned by another user.
+ */
+export async function findRichEntryByIdAndUser(
+  entryId: string,
+  userId: string
+): Promise<RichEntry | undefined> {
+  const rows = await db
+    .select(richEntrySelect())
+    .from(reservations)
+    .leftJoin(stations, eq(stations.id, reservations.station_id))
+    .leftJoin(stationConfigs, eq(stationConfigs.id, reservations.station_id))
+    .leftJoin(vehicleFormats, eq(vehicleFormats.id, reservations.vehicle_format_id))
+    .leftJoin(stationServices, eq(stationServices.id, reservations.service_id))
+    .leftJoin(timeSlots, eq(timeSlots.id, reservations.time_slot_id))
+    .where(and(eq(reservations.id, entryId), eq(reservations.user_id, userId)))
+    .limit(1);
+  if (!rows[0]) return undefined;
+  const imageByStation = await fetchFirstImagePerStation([(rows[0] as { station_id: string }).station_id]);
+  return mapToRichEntry(rows[0] as unknown as Record<string, unknown>, imageByStation);
+}
+
+
+// %%%%% Rich station entry queries - denormalized with user and vehicle format %%%%%
+
+/** Station-side denormalized entry shape: includes user first_name and vehicle format label. */
+export type RichStationEntry = Entry & {
+  user_first_name: string | null;
+  user_last_name: string | null;
+  vehicle_format: { id: string; label: string } | null;
+  service: { id: string; name: string; category: string } | null;
+  slot_start_time: Date | null;
+  slot_end_time: Date | null;
+  /* Walk-in client identity, mirrored from the reservations row so the
+   * station UI can label the card with the actual merchant-set name
+   * (or fall back to the email) instead of a placeholder. */
+  walk_in_client_email: string | null;
+  walk_in_client_name: string | null;
+};
+
+/**
+ * Lists entries for a station with pagination and optional filters.
+ * Enriched with user first/last name and vehicle_format id/label via LEFT JOINs.
+ */
+export async function listRichStationEntriesPaginated(
+  stationId: string,
+  filters: ListEntriesFilters = {}
+): Promise<{ rows: RichStationEntry[]; total: number; page: number; per_page: number }> {
+  const { status, from, to, slot_from, slot_to, entry_type, page = 1, per_page = 20 } = filters;
+  const limit = Math.min(Math.max(1, per_page), 500);
+  const offset = (Math.max(1, page) - 1) * limit;
+
+  const conditions = [eq(reservations.station_id, stationId)];
+  if (status) conditions.push(eq(reservations.status, status));
+  if (entry_type) conditions.push(eq(reservations.entry_type, entry_type));
+  if (from) conditions.push(gte(reservations.created_at, from));
+  if (to) conditions.push(lte(reservations.created_at, to));
+  if (slot_from) conditions.push(gte(timeSlots.start_time, slot_from));
+  if (slot_to) conditions.push(lt(timeSlots.start_time, slot_to));
+  const where = and(...conditions);
+
+  const [countRows, rows] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .where(where),
+    db
+      .select({
+        ...RESERVATION_COLUMNS,
+        user_first_name: users.first_name,
+        user_last_name: users.last_name,
+        vf_id: vehicleFormats.id,
+        vf_label: vehicleFormats.label,
+        svc_id: stationServices.id,
+        svc_name: stationServices.name,
+        svc_category: stationServices.category,
+        slot_start_time: timeSlots.start_time,
+        slot_end_time: timeSlots.end_time,
+      })
+      .from(reservations)
+      .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+      .leftJoin(users, eq(reservations.user_id, users.id))
+      .leftJoin(vehicleFormats, eq(reservations.vehicle_format_id, vehicleFormats.id))
+      .leftJoin(stationServices, eq(reservations.service_id, stationServices.id))
+      .where(where)
+      .orderBy(entryTypePrimaryOrder(), asc(timeSlots.start_time), asc(reservations.queue_position))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  const richRows: RichStationEntry[] = rows.map((r) => ({
+    ...(r as Entry),
+    user_first_name: r.user_first_name,
+    user_last_name: r.user_last_name,
+    vehicle_format: r.vf_id ? { id: r.vf_id, label: r.vf_label ?? '' } : null,
+    service: r.svc_id ? { id: r.svc_id, name: r.svc_name ?? '', category: r.svc_category ?? '' } : null,
+    slot_start_time: r.slot_start_time ?? null,
+    slot_end_time: r.slot_end_time ?? null,
+  }));
+
+  return { rows: richRows, total: countRows[0]?.count ?? 0, page, per_page: limit };
+}
+
+
+// %%%%% END - Rich entry queries %%%%%
+
 
 /**
  * Lists confirmed reservations whose slot start_time falls within a time window

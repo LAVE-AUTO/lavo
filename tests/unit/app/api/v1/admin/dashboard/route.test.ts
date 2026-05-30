@@ -142,7 +142,7 @@ describe('GET /api/v1/admin/dashboard', () => {
   // --- Validation: from/to date range constraints ---
 
   it('returns 400 when from/to range exceeds 365 days', async () => {
-    // 2025-01-01 to 2026-02-01 is 396 days — over the limit.
+    // 2025-01-01 to 2026-02-01 is 396 days - over the limit.
     const res = await GET(makeGetRequest('from=2025-01-01&to=2026-02-01'));
 
     expect(res.status).toBe(400);

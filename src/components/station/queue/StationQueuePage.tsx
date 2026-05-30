@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * StationQueuePage — STA-1
+ * StationQueuePage - STA-1
  * Queue interface for the station: shows in_progress entries + waiting entries
  * ordered by queue_position. Auto-polls every 30 s. Call / complete actions.
  */
@@ -12,12 +12,14 @@ import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
+import { ACTIVE_QUEUE_STATUSES } from '@/components/station/dashboard/StationDashboard';
 
 const POLL_INTERVAL = 30_000;
 
 interface RawEntry {
   id: string;
   user_id: string;
+  user?: { first_name?: string | null } | null;
   entry_type: 'reservation' | 'queue';
   queue_position: number | null;
   status: string;
@@ -29,15 +31,18 @@ type ActionType = 'call' | 'complete';
 interface PendingAction { type: ActionType; entryId: string }
 
 function toQueueEntry(e: RawEntry, idx: number, isNext: boolean): QueueEntry {
+  const fallbackCode = `Client #${e.user_id.slice(0, 6).toUpperCase()}`;
+  const clientName = e.user?.first_name?.trim() || fallbackCode;
   return {
     id: e.id,
     position: e.queue_position ?? idx + 1,
-    clientName: `Client #${e.user_id.slice(0, 6).toUpperCase()}`,
+    clientName,
     entryType: e.entry_type,
     price: e.amount_paid ? parseFloat(e.amount_paid) : undefined,
     isNext,
   };
 }
+
 
 export function StationQueuePage() {
   const t = useTranslations('station_queue');
@@ -55,7 +60,10 @@ export function StationQueuePage() {
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) { setLoading(true); setLoadError(false); }
-    const [ok, data] = await getFromApi('/station/entries?per_page=100');
+    /* Strict scope: only walk-in / queue entries belong on this board.
+     * Reservations live on /station/reservations — mixing them here was
+     * confusing because slot-bound rows do not follow the queue order. */
+    const [ok, data] = await getFromApi('/station/entries?entry_type=queue&per_page=100');
     if (!mountedRef.current) return;
     if (ok) {
       const raw = (data as { data: { entries: RawEntry[] } }).data?.entries ?? [];
@@ -66,16 +74,14 @@ export function StationQueuePage() {
       showError(t('error_load'));
     }
     if (!silent) setLoading(false);
-  }, []);
+  }, [showError, t]);
 
-  /* Initial load + polling */
   useEffect(() => {
     loadData();
     const interval = setInterval(() => loadData(true), POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [loadData]);
 
-  /* Derived queues */
   const inProgressEntries = useMemo(
     () => entries.filter((e) => e.status === 'in_progress'),
     [entries]
@@ -83,16 +89,18 @@ export function StationQueuePage() {
   const waitingEntries = useMemo(
     () =>
       entries
-        .filter((e) => e.status === 'pending' || e.status === 'waiting')
+        .filter((e) => (ACTIVE_QUEUE_STATUSES as readonly string[]).includes(e.status))
         .sort((a, b) => (a.queue_position ?? 999) - (b.queue_position ?? 999)),
     [entries]
   );
 
-  const reservedCount = useMemo(() => waitingEntries.filter((e) => e.entry_type === 'reservation').length, [waitingEntries]);
-  const walkInCount   = useMemo(() => waitingEntries.filter((e) => e.entry_type === 'queue').length,        [waitingEntries]);
+  const completedTodayCount = useMemo(
+    () => entries.filter((e) => e.status === 'completed').length,
+    [entries]
+  );
 
   async function executeAction() {
-    if (!pending) return;
+    if (!pending || actionLoading) return;
     setActionLoading(true);
     setActionError(null);
     const newStatus = pending.type === 'call' ? 'in_progress' : 'completed';
@@ -134,11 +142,10 @@ export function StationQueuePage() {
     ? t('last_updated', { time: lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
     : '';
 
-  /* ---- Render ---- */
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </div>
     );
   }
@@ -146,9 +153,9 @@ export function StationQueuePage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <span className="text-[14px] font-semibold text-foreground/55">{t('error_load')}</span>
         <button type="button" onClick={() => loadData()}
-          className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10">
+          className="rounded-xl border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-bold text-gold transition-colors hover:bg-gold/10">
           {t('btn_retry')}
         </button>
       </div>
@@ -158,41 +165,49 @@ export function StationQueuePage() {
   const totalWaiting = waitingEntries.length;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
-      {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-4 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('page_title')}</h1>
-            <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      {/* = Header */}
+      <div className="border-b border-border bg-surface px-6 pb-4 pt-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 11v6" />
+                  <path d="M19 14h6" />
+                </svg>
+              </span>
+              <h1 className="text-[20px] font-black tracking-tight text-foreground">{t('page_title')}</h1>
+            </div>
+            <p className="mt-1 text-[13px] text-foreground/60">
               {totalWaiting > 0 ? t('waiting_n', { n: totalWaiting }) : t('queue_empty_short')}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {inProgressEntries.length > 0 && (
-              <StatChip count={inProgressEntries.length} color="#C09A18" label={t('stat_in_progress')} />
-            )}
-            {reservedCount > 0 && <StatChip count={reservedCount} color="#00C851" label={t('stat_reserved')} />}
-            {walkInCount > 0   && <StatChip count={walkInCount}   color="#0044FF" label={t('stat_walkin')} />}
+            <StatChip count={inProgressEntries.length} color="#DDAF3B" label={t('stat_in_progress')} />
+            <StatChip count={totalWaiting} color="#1E40AF" label={t('stat_waiting')} />
+            <StatChip count={completedTodayCount} color="#00C851" label={t('stat_completed_today')} />
             <button type="button" onClick={() => loadData()}
-              className="flex items-center gap-1.5 rounded-[8px] border border-[#C0C0B0] bg-[#C8C8B4] px-3 py-1.5 text-[12px] font-semibold text-[#000717]/60 transition-colors hover:border-[#C09A18]/50 hover:text-[#C09A18] dark:border-[#3A4A36] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/50">
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-[12px] font-bold text-foreground/70 transition-colors hover:border-gold hover:text-gold">
               <RefreshIcon />
               {t('btn_refresh')}
             </button>
           </div>
         </div>
         {lastUpdatedLabel && (
-          <div className="mt-1.5 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C851] opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00C851]" />
             </span>
-            <p className="text-[11px] text-[#000717]/30 dark:text-[#FFFFF0]/25">{lastUpdatedLabel}</p>
+            <p className="text-[11px] font-semibold text-foreground/45">{lastUpdatedLabel}</p>
           </div>
         )}
       </div>
 
-      {/* Content */}
+      {/* = Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {inProgressEntries.length === 0 && waitingEntries.length === 0 ? (
           <EmptyState label={t('queue_empty')} />
@@ -223,7 +238,7 @@ export function StationQueuePage() {
               <section>
                 <SectionLabel label={t('section_waiting')} />
                 <div className="mt-2 flex flex-col gap-4 lg:flex-row">
-                  {/* First in line — big card */}
+                  {/* First in line - big card */}
                   <div className="lg:w-2/5 lg:shrink-0">
                     <QueueCard
                       entry={toQueueEntry(waitingEntries[0], 0, true)}
@@ -253,7 +268,7 @@ export function StationQueuePage() {
         )}
       </div>
 
-      {/* Confirm modal */}
+      {/* = Confirm modal */}
       <ConfirmDialog
         open={pending !== null}
         title={pending?.type === 'call' ? t('confirm_call_title') : t('confirm_complete_title')}
@@ -262,7 +277,7 @@ export function StationQueuePage() {
           : pending?.type === 'call' ? t('confirm_call_message') : t('confirm_complete_message')}
         confirmLabel={pending?.type === 'call' ? t('btn_call') : t('btn_complete')}
         cancelLabel={t('btn_cancel')}
-        variant={pending?.type === 'complete' ? 'default' : 'default'}
+        variant="default"
         loading={actionLoading}
         blocking
         onConfirm={executeAction}
@@ -272,14 +287,13 @@ export function StationQueuePage() {
   );
 }
 
-/* ---- Sub-components ---- */
 
 function StatChip({ count, color, label }: { count: number; color: string; label: string }) {
   return (
-    <div className="hidden items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 sm:flex dark:bg-[#1E2A1A]">
+    <div className="hidden items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 sm:flex">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{count}</span>
-      <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="font-mono text-[14px] font-black text-foreground tabular-nums">{count}</span>
+      <span className="text-[10.5px] font-bold uppercase tracking-wider text-foreground/55">{label}</span>
     </div>
   );
 }
@@ -287,8 +301,8 @@ function StatChip({ count, color, label }: { count: number; color: string; label
 function SectionLabel({ label, color }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color ?? '#888' }} />
-      <span className="text-[12px] font-bold uppercase tracking-wider text-[#000717]/50 dark:text-[#FFFFF0]/40">{label}</span>
+      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color ?? '#B0BFB1' }} />
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-foreground/65">{label}</span>
     </div>
   );
 }
@@ -296,12 +310,12 @@ function SectionLabel({ label, color }: { label: string; color?: string }) {
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-[#000C1F]/15 dark:text-[#FFF8EC]/15" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/15 dark:text-foreground/15" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
         <path d="M8 18h.01M12 18h.01M16 18h.01" />
       </svg>
-      <span className="text-[13px] font-semibold text-[#000C1F]/40 dark:text-[#FFF8EC]/30">{label}</span>
+      <span className="text-[13px] font-semibold text-foreground/40 dark:text-foreground/30">{label}</span>
     </div>
   );
 }

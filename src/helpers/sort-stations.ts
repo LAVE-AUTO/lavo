@@ -12,6 +12,9 @@ export const STATION_SORT_CRITERIA = [
   'total_ratings_desc',
   'completed_count_asc',
   'completed_count_desc',
+  /** Distance from the user; only effective when both `near_lat` and `near_lng` are provided. */
+  'distance_asc',
+  'distance_desc',
 ] as const;
 
 export type StationSortCriterion = (typeof STATION_SORT_CRITERIA)[number];

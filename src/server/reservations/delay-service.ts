@@ -1,7 +1,7 @@
 /**
  * Delay request business logic: client signals a late arrival, station accepts or refuses.
  * Delay requests are a communication layer on top of the existing reservation workflow.
- * They do NOT alter the reservation status — the cron remains the sole arbiter of actual
+ * They do NOT alter the reservation status - the cron remains the sole arbiter of actual
  * late detection and queue downgrade.
  */
 import { and, eq, inArray } from 'drizzle-orm';
@@ -11,6 +11,8 @@ import { delayRequests } from '@/lib/db/schema';
 import { ConflictError, NotFoundError } from '@/lib/errors';
 import { findStationById } from '@/server/station/station-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { findEntryByIdAndStation, findEntryByIdAndUser } from './entry-repository';
 import {
   listDelayRequestsByStation,
@@ -30,7 +32,10 @@ export type { DelayRequestWithReservation, ListDelaysOptions };
 // Status enumerations for delay requests
 
 const ACTIVE_DELAY_STATUSES = ['pending', 'accepted'] as const;
-const SIGNAL_ALLOWED_STATUSES = ['confirmed'] as const;
+/* Frontend treats pending / pending_payment as visually confirmed (Stripe
+ * settles asynchronously). Allow signalling for that whole set so the UX and
+ * backend agree on what "confirmed" means from the client's perspective. */
+const SIGNAL_ALLOWED_STATUSES = ['confirmed', 'pending', 'pending_payment'] as const;
 
 // %%%%% List operations %%%%%
 // Retrieve delay requests with optional filtering
@@ -109,6 +114,18 @@ export async function signalDelay(
     }
   }
 
+  /* Drop a row in the in-app feed so the merchant sees the bell badge update
+   * even when FCM is not configured (typical in dev). The repo already gates
+   * on the manager's notification preferences. */
+  await notifyStationFeed({
+    stationId: entry.station_id,
+    entryId: reservationId,
+    kind: 'delay_request',
+    body: (message ?? '').trim().length > 0
+      ? `Message du client : ${(message ?? '').trim().slice(0, 200)}`
+      : 'Le client signale un retard pour sa réservation.',
+  });
+
   return row;
 }
 
@@ -119,7 +136,7 @@ export async function signalDelay(
 /**
  * Station accepts a pending delay request.
  * Updates status to 'accepted' and notifies the client.
- * The reservation status is unchanged — normal cron processing continues.
+ * The reservation status is unchanged - normal cron processing continues.
  */
 export async function acceptDelay(
   reservationId: string,
@@ -154,6 +171,16 @@ export async function acceptDelay(
     console.error('[DELAY_ACCEPT] Failed to notify client', { reservationId, error: e instanceof Error ? e.message : String(e) });
   }
 
+  /* In-app feed: surfaces in the client's notification bell even when FCM
+   * is not configured (typical in dev). */
+  await notifyClientFeed({
+    userId: entry.user_id,
+    entryId: reservationId,
+    stationId,
+    kind: 'delay_accepted',
+    body: 'La station accepte votre arrivée tardive. Présentez-vous dès que possible.',
+  });
+
   return updated;
 }
 
@@ -164,7 +191,7 @@ export async function acceptDelay(
 /**
  * Station refuses a pending delay request.
  * Updates status to 'refused' and notifies the client.
- * The reservation status is unchanged — normal cron processing continues.
+ * The reservation status is unchanged - normal cron processing continues.
  */
 export async function refuseDelay(
   reservationId: string,
@@ -199,6 +226,16 @@ export async function refuseDelay(
   } catch (e) {
     console.error('[DELAY_REFUSE] Failed to notify client', { reservationId, error: e instanceof Error ? e.message : String(e) });
   }
+
+  await notifyClientFeed({
+    userId: entry.user_id,
+    entryId: reservationId,
+    stationId,
+    kind: 'delay_refused',
+    body: refusalReason && refusalReason.trim().length > 0
+      ? `La station ne peut pas vous accueillir en retard. Motif : ${refusalReason.trim().slice(0, 200)}`
+      : 'La station ne peut pas vous accueillir en retard. Présentez-vous à l\'heure prévue.',
+  });
 
   return updated;
 }

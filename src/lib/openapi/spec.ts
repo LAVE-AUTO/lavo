@@ -1,5 +1,5 @@
 /**
- * OpenAPI 3.1 specification definition for the Lavo API.
+ * OpenAPI 3.1 specification definition for the Hurryline API.
  *
  * Centralizes the base swagger definition (info, servers, security schemes,
  * and reusable component schemas). The full spec is assembled at runtime by
@@ -17,14 +17,14 @@ import type { OAS3Definition } from 'swagger-jsdoc';
 export const swaggerDefinition: OAS3Definition = {
   openapi: '3.1.0',
   info: {
-    title: 'Lavo API',
+    title: 'Hurryline API',
     version: '1.0.0',
     description:
-      'REST API for the Lavo car-wash platform. ' +
+      'REST API for the Hurryline car-wash platform. ' +
       'Authentication uses Bearer JWT access tokens issued at login/register. ' +
       'The refresh token is stored in an httpOnly cookie and rotated via POST /api/v1/auth/refresh.',
     contact: {
-      name: 'Lavo Engineering',
+      name: 'Hurryline Engineering',
     },
   },
   servers: [
@@ -40,6 +40,13 @@ export const swaggerDefinition: OAS3Definition = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         description: 'JWT access token issued at login or register. Lifetime: 15 minutes.',
+      },
+      CronSecret: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-cron-secret',
+        description:
+          'Shared secret used by protected cron endpoints. Can be sent as x-cron-secret or Authorization: Bearer <CRON_SECRET>.',
       },
     },
     schemas: {
@@ -133,7 +140,7 @@ export const swaggerDefinition: OAS3Definition = {
       /* ------------------------------------------------------------------ */
       Entry: {
         type: 'object',
-        description: 'A client entry — either a confirmed reservation or a walk-in queue entry.',
+        description: 'A client entry - either a confirmed reservation or a walk-in queue entry.',
         properties: {
           id: { type: 'string', format: 'uuid' },
           station_id: { type: 'string', format: 'uuid' },

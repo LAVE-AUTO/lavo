@@ -41,7 +41,7 @@ export async function POST() {
 
   // Build the response and clear the cookie FIRST, unconditionally.
   // The client-side session must be terminated regardless of whether the DB
-  // revocation succeeds — a failed DB call must never leave the cookie active.
+  // revocation succeeds - a failed DB call must never leave the cookie active.
   const res = successResponse({ logged_out: true }, 'Logged out successfully');
   const response = NextResponse.json(await res.json(), { status: res.status });
   response.cookies.set(REFRESH_COOKIE_NAME, '', {
@@ -52,7 +52,7 @@ export async function POST() {
     maxAge: 0,
   });
 
-  // Best-effort DB revocation — errors are logged but do not affect the response.
+  // Best-effort DB revocation - errors are logged but do not affect the response.
   // The access token is short-lived; the cookie is already cleared above.
   if (accessToken) {
     const payload = await verifyJwt(accessToken);

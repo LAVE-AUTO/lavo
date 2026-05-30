@@ -28,22 +28,24 @@
  *   - Unique constraint on stripe_payment_intent_id prevents PI re-use
  */
 import { db } from '@/lib/db';
-import { reservations, stations } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { reservations, reservationTips, stations } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { AppError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/helpers/constants';
+import { DEFAULT_PLATFORM_CURRENCY } from '@/helpers/server-constants';
 import { createTipPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
+import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import * as repo from './tip-repository';
 import type { CreateTipInput } from '@/validators/tip';
 
 
 // %%%%% Constants %%%%%
-// Fallback defaults for platform settings
+// Fallback default for platform settings (currency is shared with payment-service via
+// server-constants to keep tip and reservation flows aligned — bug #25).
 
-const DEFAULT_PLATFORM_CURRENCY = 'cad';
-const DEFAULT_TIP_MAX_AMOUNT = 500;
+const DEFAULT_TIP_MAX_AMOUNT = 50000;
 
 
 // %%%%% Types %%%%%
@@ -95,7 +97,7 @@ export async function createTip(
     throw new AppError('Reservation not found', HTTP_STATUS.NOT_FOUND);
   }
 
-  // 2. Ownership check — only the client who made the reservation can tip.
+  // 2. Ownership check - only the client who made the reservation can tip.
   if (reservation.user_id !== userId) {
     throw new AppError('Forbidden', HTTP_STATUS.FORBIDDEN);
   }
@@ -137,11 +139,14 @@ export async function createTip(
     getPlatformSettingWithFallback('max_tip_amount_xaf', 'PLATFORM_MAX_TIP_AMOUNT_XAF', String(DEFAULT_TIP_MAX_AMOUNT)),
     getPlatformSettingWithFallback('platform_currency', 'PLATFORM_CURRENCY', DEFAULT_PLATFORM_CURRENCY),
   ]);
-  const maxAmount = parseFloat(maxRaw);
+  // Strip whitespace before parsing (e.g. "50 000" → 50000) to guard against
+  // locale-formatted values stored by an admin ("50 000 XAF", "50,000").
+  const maxAmount = parseInt(maxRaw.replace(/[\s,]/g, ''), 10);
   const currency = currencyRaw.trim().toLowerCase() || DEFAULT_PLATFORM_CURRENCY;
-  if (!Number.isFinite(maxAmount) || data.amount > maxAmount) {
+  const effectiveMax = Number.isFinite(maxAmount) && maxAmount > 0 ? maxAmount : DEFAULT_TIP_MAX_AMOUNT;
+  if (data.amount > effectiveMax) {
     throw new AppError(
-      `Tip amount must not exceed ${Number.isFinite(maxAmount) ? maxAmount : DEFAULT_TIP_MAX_AMOUNT}`,
+      `Tip amount must not exceed ${effectiveMax}`,
       HTTP_STATUS.UNPROCESSABLE_ENTITY
     );
   }
@@ -149,32 +154,74 @@ export async function createTip(
   // 7. Convert amount to cents (Stripe requires integers).
   const amountCents = Math.round(data.amount * 100);
 
-  // 8. Create the Stripe PaymentIntent first.
-  //    If the DB insert fails after this point the PI will remain uncaptured and expire.
-  //    The reverse (DB record without a PI) would be worse, so PI creation goes first.
-  const { paymentIntentId, clientSecret } = await createTipPaymentIntent({
-    amountCents,
-    currency,
-    userId,
-    stationId: reservation.station_id,
-    stationStripeAccountId: station.stripe_account_id,
-    reservationId,
+  // 8. Reserve unicity at the DB level BEFORE creating the Stripe PI.
+  // Two concurrent tip requests for the same reservation must not both reach the
+  // Stripe API: capture_method='automatic' means each PI charges the client immediately.
+  // We insert a placeholder row (stripe_payment_intent_id='pending:<uuid>') under the
+  // unique constraint; the loser gets 23505 → 409. The winner then creates the PI
+  // and updates the row with the real intent id.
+  const placeholderPiId = `pending:${reservationId}`;
+  let reservedTip: typeof reservationTips.$inferSelect;
+  try {
+    [reservedTip] = await db
+      .insert(reservationTips)
+      .values({
+        reservation_id: reservationId,
+        client_id: userId,
+        station_id: reservation.station_id,
+        amount: data.amount.toFixed(2),
+        stripe_payment_intent_id: placeholderPiId,
+        status: 'pending',
+      })
+      .returning();
+  } catch (err: unknown) {
+    const code = err && typeof err === 'object' && 'code' in err
+      ? (err as { code?: string }).code
+      : undefined;
+    if (code === '23505') {
+      throw new AppError('A tip has already been sent for this reservation', HTTP_STATUS.CONFLICT);
+    }
+    throw err;
+  }
+
+  // 9. Create the Stripe PaymentIntent with a stable idempotency key so a network
+  //    retry on this exact reservation returns the same PI rather than minting a new one.
+  let paymentIntentId: string;
+  let clientSecret: string;
+  try {
+    const pi = await createTipPaymentIntent({
+      amountCents,
+      currency,
+      userId,
+      stationId: reservation.station_id,
+      stationStripeAccountId: station.stripe_account_id,
+      reservationId,
+      idempotencyKey: `tip-create:${reservationId}`,
+    });
+    paymentIntentId = pi.paymentIntentId;
+    clientSecret = pi.clientSecret;
+  } catch (err) {
+    // Roll back the placeholder so the client can retry the whole flow (e.g. card details fix).
+    // Best-effort: a failed delete just leaves a 'pending' row the orphan-tip cron can sweep later.
+    await db.delete(reservationTips).where(eq(reservationTips.id, reservedTip.id)).catch(() => undefined);
+    throw err;
+  }
+
+  // 10. Replace placeholder with real PI id + denormalize tip_amount on the reservation.
+  const tip = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(reservationTips)
+      .set({ stripe_payment_intent_id: paymentIntentId, updated_at: new Date() })
+      .where(eq(reservationTips.id, reservedTip.id))
+      .returning();
+    await tx
+      .update(reservations)
+      .set({ tip_amount: data.amount.toFixed(2), updated_at: sql`now()` })
+      .where(eq(reservations.id, reservationId));
+    return updated ?? reservedTip;
   });
 
-  // 9. Persist the tip record.
-  const tip = await repo.createTip({
-    reservation_id: reservationId,
-    client_id: userId,
-    station_id: reservation.station_id,
-    amount: data.amount.toFixed(2),
-    stripe_payment_intent_id: paymentIntentId,
-    status: 'pending',
-  });
-
-  // 10. Denormalize tip_amount onto the reservation row.
-  await repo.setReservationTipAmount(reservationId, data.amount.toFixed(2));
-
-  // 11. Notify station — fire-and-forget (notification failure must not abort the tip).
+  // 11. Notify station - fire-and-forget (notification failure must not abort the tip).
   if (station.user_id) {
     notifyEntry({
       userId: station.user_id,
@@ -184,11 +231,18 @@ export async function createTip(
     }).catch(() => undefined);
   }
 
-  // 12. Notify client (confirmation) — fire-and-forget.
+  // 12. Notify client (confirmation) - fire-and-forget.
   notifyEntry({
     userId,
     entryId: reservationId,
     type: 'tip_sent',
+  }).catch(() => undefined);
+  notifyClientFeed({
+    userId,
+    entryId: reservationId,
+    stationId: reservation.station_id,
+    kind: 'tip_sent',
+    body: 'Votre pourboire a bien été envoyé. Merci !',
   }).catch(() => undefined);
 
   return { tip, clientSecret };

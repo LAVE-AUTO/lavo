@@ -8,8 +8,8 @@ import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { listEntriesQuerySchema, mapZodErrors } from '@/validators/entry';
-import { listMyEntries } from '@/server/reservations/reservation-service';
-import { serializeEntry } from '@/server/reservations/entry-serializer';
+import { listMyRichEntries } from '@/server/reservations/reservation-service';
+import { serializeRichEntry } from '@/server/reservations/entry-serializer';
 import { AppError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
@@ -29,7 +29,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const { status, from, to, page, per_page } = queryParsed.data;
 
   try {
-    const result = await listMyEntries(auth.sub, {
+    const result = await listMyRichEntries(auth.sub, {
       status,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
@@ -38,7 +38,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     });
     return applyNoStoreHeaders(
       successResponse({
-        entries: result.rows.map(serializeEntry),
+        entries: result.rows.map(serializeRichEntry),
         total: result.total,
         page: result.page,
         per_page: result.per_page,

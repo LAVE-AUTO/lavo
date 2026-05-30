@@ -8,13 +8,13 @@ import { useTheme } from '@/context/theme-context';
 /* Dashboard mockup                                                     */
 /* ------------------------------------------------------------------ */
 
-/* Decorative dashboard mockup — all text is intentionally hardcoded as it is purely visual/illustrative. */
+/* Decorative dashboard mockup - all text is intentionally hardcoded as it is purely visual/illustrative. */
 function AdminMockup({ isDark }: { isDark: boolean }) {
-  const cardBg  = isDark ? '#1E2A1A' : '#F5F0E4';
-  const borderC = isDark ? '#2E3E2A' : '#D4C88A';
-  const textCol = isDark ? '#FFF8EC' : '#1A2116';
-  const mutedC  = isDark ? '#7A9A7D' : '#6B7A64';
-  const goldC   = '#C8980A';
+  const cardBg  = isDark ? '#001A05' : '#FFF9EC';
+  const borderC = isDark ? '#001A05' : '#DDAF3B';
+  const textCol = isDark ? '#FFEECA' : '#001201';
+  const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
+  const goldC   = '#DDAF3B';
 
   const stats = [
     { val: '48',      label: 'Stations actives' },
@@ -24,7 +24,7 @@ function AdminMockup({ isDark }: { isDark: boolean }) {
 
   const rows = [
     { name: 'Station Nord',  status: 'active',   amount: '324 $' },
-    { name: 'Station Sud',   status: 'pending',  amount: '—' },
+    { name: 'Station Sud',   status: 'pending',  amount: '-' },
     { name: 'Station Est',   status: 'active',   amount: '198 $' },
   ];
 
@@ -41,10 +41,10 @@ function AdminMockup({ isDark }: { isDark: boolean }) {
       >
         {/* Header */}
         <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center justify-between">
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#0d1f0f]">
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">
             Tableau de bord
           </span>
-          <span className="text-[11px] font-semibold text-[#0d1f0f] opacity-70">Admin</span>
+          <span className="text-[11px] font-semibold text-[#001201] opacity-70">Admin</span>
         </div>
 
         {/* KPI row */}
@@ -88,7 +88,7 @@ function AdminMockup({ isDark }: { isDark: boolean }) {
 /* AdminBrandPanel                                                      */
 /* ------------------------------------------------------------------ */
 
-/* Decorative feature list — content is intentionally hardcoded French as it is part of the branding panel
+/* Decorative feature list - content is intentionally hardcoded French as it is part of the branding panel
    visual design, not functional UI. Update manually if brand copy changes. */
 const FEATURES = [
   { label: 'Gestion des stations',  sub: 'Valider, suspendre, configurer chaque station.' },
@@ -107,8 +107,8 @@ export function AdminBrandPanel() {
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
-  const textPrimary   = isDark ? 'text-white'       : 'text-[#1A1A1A]';
-  const textSecondary = isDark ? 'text-[#7A9A7D]'   : 'text-[#4A6A4D]';
+  const textPrimary   = isDark ? 'text-white'       : 'text-[#001201]';
+  const textSecondary = isDark ? 'text-[#B0BFB1]'   : 'text-[var(--foreground)]';
   const featureCardBg = isDark ? 'bg-white/5 border border-white/8' : 'bg-black/5 border border-black/6';
 
   return (
@@ -132,7 +132,7 @@ export function AdminBrandPanel() {
       />
 
       {/* Gold shimmer top bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#C8980A] animate-gold-shimmer" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#DDAF3B] animate-gold-shimmer" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
@@ -141,18 +141,18 @@ export function AdminBrandPanel() {
         <div className="animate-fade-in">
           {isDark ? (
             <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/95 p-1 border border-[rgba(200,152,10,0.25)] shadow-sm shrink-0">
+              <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
                 <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white tracking-wide">Slowtime</span>
-                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] leading-none">Administration</p>
+                <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">Administration</p>
               </div>
             </div>
           ) : (
             <div>
-              <Image src={lightLogoSrc} alt="Slowtime" width={160} height={44} className="object-contain h-9 w-auto" />
-              <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C8980A] mt-1">Administration</p>
+              <Image src={lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
+              <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">Administration</p>
             </div>
           )}
         </div>
@@ -163,7 +163,7 @@ export function AdminBrandPanel() {
           <div>
             <h2 className={`text-3xl xl:text-[2.4rem] font-bold leading-tight ${textPrimary}`}>
               Pilotez la plateforme{' '}
-              <span className="text-[#C8980A]">en temps réel</span>
+              <span className="text-[#DDAF3B]">en temps réel</span>
             </h2>
             <p className={`mt-3 text-[15px] leading-relaxed ${textSecondary}`}>
               Gérez les stations, les clients et les finances depuis un seul espace sécurisé.
@@ -175,7 +175,7 @@ export function AdminBrandPanel() {
         <div className="flex flex-col gap-2.5">
           {FEATURES.map(({ label, sub }) => (
             <div key={label} className={`flex items-start gap-4 rounded-2xl p-4 ${featureCardBg}`}>
-              <div className="w-2 h-2 rounded-full bg-[#C8980A] mt-1.5 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-[#DDAF3B] mt-1.5 shrink-0" />
               <div>
                 <p className={`text-[15px] font-bold leading-tight ${textPrimary}`}>{label}</p>
                 <p className={`text-[12px] mt-1 leading-relaxed ${textSecondary}`}>{sub}</p>

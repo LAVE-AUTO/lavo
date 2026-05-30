@@ -14,10 +14,10 @@ export function LandingMerchantCTA() {
   const t = useTranslations('landing');
 
   return (
-    <section className="py-16 sm:py-28 bg-[#F4F3EE] dark:bg-dark-card/60 transition-colors">
+    <section className="py-16 sm:py-28 bg-[#F4F3EE] dark:bg-surface/60 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <ScrollReveal>
-          <div className="rounded-3xl bg-gradient-to-br from-[#0A0A14] to-[#1A1A2E] dark:from-dark-bg dark:to-[#1E2A1A] border border-[#1E1E2E] dark:border-tab-inactive p-8 sm:p-14 lg:p-20 relative overflow-hidden">
+          <div className="rounded-3xl bg-gradient-to-br from-[#0A0A14] to-[#1A1A2E] dark:from-dark-bg dark:to-[#001A05] border border-[#1E1E2E] dark:border-border p-8 sm:p-14 lg:p-20 relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-gold/8 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-72 h-72 bg-gold/5 rounded-full blur-3xl" />
@@ -54,7 +54,7 @@ export function LandingMerchantCTA() {
                           height="12"
                           viewBox="0 0 24 24"
                           fill="none"
-                          stroke="#af8408"
+                          stroke="#DDAF3B"
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -92,7 +92,7 @@ export function LandingMerchantCTA() {
                 </div>
               </div>
 
-              {/* Dashboard preview — desktop full */}
+              {/* Dashboard preview - desktop full */}
               <div className="hidden lg:block">
                 <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-sm">
                   {/* Header bar */}
@@ -101,7 +101,7 @@ export function LandingMerchantCTA() {
                     <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
                     <div className="w-3 h-3 rounded-full bg-green-400/80" />
                     <span className="ml-3 text-[12px] text-white/40 font-mono">
-                      dashboard.slowtime.app
+                      dashboard.Hurryline.app
                     </span>
                   </div>
 
@@ -147,7 +147,7 @@ export function LandingMerchantCTA() {
                 </div>
               </div>
 
-              {/* Dashboard preview — mobile compact */}
+              {/* Dashboard preview - mobile compact */}
               <div className="lg:hidden mt-8">
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
                   <div className="flex items-center gap-2 mb-4">
@@ -155,7 +155,7 @@ export function LandingMerchantCTA() {
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                     <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
                     <span className="ml-2 text-[11px] text-white/30 font-mono">
-                      dashboard.slowtime.app
+                      dashboard.Hurryline.app
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">

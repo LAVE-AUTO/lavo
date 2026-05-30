@@ -1,20 +1,7 @@
 import { z } from 'zod';
-import { phoneSchema, mapZodErrors } from './shared';
+import { phoneSchema, mapZodErrors, passwordSchema } from './shared';
 
 export { mapZodErrors };
-
-/**
- * Shared password validation rules used in register and reset-password schemas.
- */
-const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[@$!%*#?&_\-+=]/, 'Password must contain at least one special character. Allowed: @ $ ! % * # ? & _ - + =')
-  .regex(/^[A-Za-z0-9@$!%*#?&_\-+=]+$/, 'Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @ $ ! % * # ? & _ - + =');
 
 export const registerSchema = z
   .object({
@@ -25,7 +12,9 @@ export const registerSchema = z
       .email()
       .max(320, 'Email must not exceed 320 characters')
       .refine((s) => !s.includes('..'), { message: 'Email cannot contain consecutive dots' }),
-    phone: phoneSchema,
+    /* Phone is optional on client sign-up: the users.phone column is nullable
+     * and the public frontend marks the field as optional. */
+    phone: phoneSchema.optional(),
     password: passwordSchema,
     confirm_password: z.string().min(1, 'Password confirmation is required'),
     remember_me: z.boolean().optional().default(false),
@@ -75,3 +64,26 @@ export const resetPasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirm_new_password'],
   });
+
+/**
+ * PATCH /api/v1/me/profile — partial update of user personal info.
+ * At least one field is required.
+ *
+ * `.strict()` is used so unknown keys (e.g. an attempt to smuggle `email`,
+ * `password_hash`, `role`, `status`, etc.) are rejected with a validation
+ * error rather than silently dropped. This is intentional defense-in-depth
+ * for an endpoint that writes to the user record.
+ */
+export const updateProfileBodySchema = z
+  .object({
+    first_name: z.string().min(2, 'First name must be at least 2 characters').max(100).optional(),
+    last_name:  z.string().min(2, 'Last name must be at least 2 characters').max(100).optional(),
+    phone:      phoneSchema.optional(),
+  })
+  .strict()
+  .refine(
+    (data) => data.first_name !== undefined || data.last_name !== undefined || data.phone !== undefined,
+    { message: 'At least one field must be provided' }
+  );
+
+export type UpdateProfileDto = z.infer<typeof updateProfileBodySchema>;

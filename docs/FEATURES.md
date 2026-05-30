@@ -1,138 +1,78 @@
-# LAVO Features
+# Hurryline Features
 
 ## Feature Overview
 
-Most business features are **planned** (the repository currently contains route and service scaffolding). This document reflects the validated technical specification and Trello backlog.
-
 | Category | Feature | Description | Status |
 |---|---|---|---|
-| Auth | Account lifecycle | Register, verify email, login, password reset, session handling | [Planned] |
-| Stations | Discovery | List/search stations and view station details | [Planned] |
-| Reservations | Booking | Choose vehicle format, pick an available slot, confirm booking | [Planned] |
-| Payments | Stripe Connect | Pay online, commission capture, station payout, refunds, tips | [Planned] |
-| Operations | Late & queue | Reminders, client confirmation, late → queue switch, no-show fees | [Planned] |
-| Ratings | Post-service rating | Rate station after completed service; moderation controls | [Planned] |
-| Station space | Slot & pricing management | Configure posts, create slots manually, manage formats/prices | [Planned] |
-| Admin | Governance | KPIs, KYC approvals, disputes/refunds, commission settings, logs | [Planned] |
-| Support | Tickets | Client/station ticket creation and admin triage | [Planned] |
-| Analytics | Tracking | Google Analytics / PageSense via application meta integration | [Planned] |
-| Growth | Station QR | QR links to station details; QR bookings with special commission rule | [Planned] |
+| Auth | Account lifecycle | Register, verify email, login/logout, refresh, reset/change password, role checks | [Implemented] |
+| Stations | Discovery | List/search stations, station details, ratings, favorites, join/navigation links | [Implemented] |
+| Stations | Onboarding & KYC | Submit station application, upload docs, validation steps, admin review flow | [Implemented] |
+| Reservations | Booking | Vehicle format selection, slot booking, reservation lifecycle actions | [Implemented] |
+| Queue & delays | Live operations | Delay signal/accept/refuse, queue join/pick/priority/start, no-show handling | [Implemented] |
+| Payments | Stripe Connect | Webhook integration, tips, disputes/refund paths, reconciliation endpoints/jobs | [Implemented] |
+| Notifications | Multi-channel | Email, push, user notifications feed, unread counters, preferences | [Implemented] |
+| Station space | Configuration | Services/extras/formats, availability, hours, capacity, station profile/config | [Implemented] |
+| Admin | Governance | Dashboard, legal content, disputes, logs, ratings moderation, platform settings | [Implemented] |
+| Support | Tickets and messages | Support ticket creation, ticket thread messaging, admin assignment/settings | [Implemented] |
+| Analytics | Tracking and KPI routes | Client/station/admin analytics routes and UI components | [Implemented] |
+| Background jobs | Scheduled tasks | Reminders, stalled payment recovery, reconciliation, cleanup, KYC reminders | [Implemented] |
 
-## Main User Journeys
+## Main User Journey
 
 ```mermaid
 flowchart TD
-    Visitor[Visitor] -->|Register| AuthRegister[Create account]
-    AuthRegister -->|Verify email| AuthVerify[Email verification]
-    AuthVerify -->|Login| AuthLogin[Session established]
+    Visitor[Visitor] --> Register[Create account]
+    Register --> Verify[Verify email]
+    Verify --> Login[Login]
 
-    AuthLogin -->|Search| StationList[Stations listing]
-    StationList -->|Open| StationDetail[Station details]
-    StationDetail -->|Select| VehicleFormat[Vehicle format]
-    VehicleFormat -->|Pick| SlotSelect[Time slot selection]
-    SlotSelect -->|Pay| StripeCheckout[Stripe payment]
-    StripeCheckout -->|Success| BookingConfirmed[Reservation confirmed]
+    Login --> Discover[Search stations]
+    Discover --> StationDetail[Station details]
+    StationDetail --> Book[Create reservation]
+    Book --> Pay[Stripe payment flow]
+    Pay --> Confirmed[Reservation confirmed]
 
-    BookingConfirmed -->|Reminder 5h| Reminder5h[Push reminder]
-    BookingConfirmed -->|Reminder 30m| Reminder30m[Push reminder with actions]
-    Reminder30m -->|Confirm presence| Presence[Client confirmed]
-    Reminder30m -->|Late/no action| LateFlow[Late tolerance reached]
-    LateFlow -->|Queue switch| Queue[Queue position updated]
-
-    Presence -->|Service validated| Completed[Service completed]
-    Completed -->|Rate| Rating[Rating and comment]
-    Completed -->|Optional tip| Tip[Tip payment]
-    Completed -->|Receipt| History[History and receipts]
+    Confirmed --> Reminders[Automated reminders]
+    Reminders --> Presence[Confirm presence]
+    Presence --> Service[Service execution]
+    Service --> History[Receipt/history]
+    Service --> RateTip[Rate and tip]
 ```
 
 ## Feature Details
 
-### Authentication and roles
+### Authentication and role-based access
 
-Clients, stations, and Super Admins authenticate to different areas of the same web app. Accounts are activated through email verification, and protected endpoints require a valid session token. Authorization is role-based (CLIENT, STATION, SUPER_ADMIN) and applied consistently across UI routes and API endpoints. **Status**: [Planned]
+Authentication supports full credential lifecycle and refresh token rotation, with separate protected spaces for client, station, and admin roles. Verification and reset flows are implemented through dedicated endpoints and mail flows. Access rules are enforced in APIs and route-level guards.
 
-```mermaid
-flowchart TD
-    User[User] --> Register[Register]
-    Register --> Verify[Verify email]
-    Verify --> Login[Login]
-    Login --> RoleGate{Role}
-    RoleGate -->|CLIENT| ClientArea[Client area]
-    RoleGate -->|STATION| StationArea[Station area]
-    RoleGate -->|SUPER_ADMIN| AdminArea[Admin area]
-```
+**Status**: [Implemented]
 
-### Station discovery
+### Station discovery and onboarding
 
-Clients can browse stations, search by text, and open a station detail page. Availability is presented via the station’s configured slots; “Join” redirects to Google Maps using GPS coordinates. Station closure is represented operationally by the absence of available slots (with `is_open` reserved for internal/future use). **Status**: [Planned]
+Public users can browse stations, open detailed pages, and save favorites. Station onboarding includes multi-step validation and document upload endpoints; admins can then approve/reject submissions with governance traces.
 
-```mermaid
-flowchart TD
-    Client[Client] --> List[List stations]
-    List --> Search[Search bar filter]
-    Search --> Card[Station card]
-    Card --> Detail[Station details]
-    Detail --> Join[Join - Google Maps]
-    Detail --> Slots[Next slots]
-```
+**Status**: [Implemented]
 
-### Reservations and payments
+### Reservations, delays, and queue orchestration
 
-Booking requires choosing a vehicle format (pricing depends on it), selecting an available slot, and completing payment. A reservation is confirmed only after Stripe confirms payment; slot capacity is updated atomically to avoid overbooking. Commission is captured at payment time and applied at payout time, with a separate “QR booking” rule allowing 0% commission for eligible reservations. **Status**: [Planned]
+Reservation APIs cover creation and lifecycle operations (confirm presence, cancel, reschedule, signal delay). Queue APIs add station-side live controls such as picking queue entries, prioritization, and service start. No-show and late-handling logic is supported through dedicated services/jobs.
 
-```mermaid
-flowchart TD
-    Client[Client] --> Format[Select vehicle format]
-    Format --> Slot[Select time slot]
-    Slot --> Pay[Stripe payment]
-    Pay -->|Success| Confirmed[Reservation confirmed]
-    Pay -->|Fail| Failed[Payment failed]
-    Confirmed --> Webhook[Stripe webhook]
-    Webhook --> Ledger[Commission and payout recorded]
-```
+**Status**: [Implemented]
 
-### Late handling, queue switch, and no-show fees
+### Payments, disputes, and finance flows
 
-Two reminders are sent before the slot, including an action to confirm presence. If a client does not confirm within the station-defined tolerance window, the reservation moves to a queue position and may be switched with the head of the queue. If the client remains absent after the switched client’s service, the reservation is marked as no-show and a dedicated no-show fee record is created. **Status**: [Planned]
+Stripe webhooks and payment-oriented services support booking payments, tip flows, and dispute/refund operations. Commission and transaction endpoints plus reconciliation jobs provide finance-level visibility and operational safety.
 
-```mermaid
-flowchart TD
-    Reminder[30m reminder] --> Action{Client action}
-    Action -->|Confirm| Confirmed[client_confirmed]
-    Action -->|No action| Tolerance[Late tolerance reached]
-    Tolerance --> Queue[Queue position assigned]
-    Queue --> Switch[Switch with queue head]
-    Switch --> Absent{Still absent?}
-    Absent -->|Yes| NoShow[no_show and fee record]
-    Absent -->|No| Continue[Service continues]
-```
+**Status**: [Implemented]
 
-### Post-service rating and tip
+### Notifications and support workflows
 
-After a station validates a completed service, the client is invited to rate the station (1–5 stars with an optional comment). Clients may optionally leave a tip paid via Stripe and transferred fully to the station (no platform commission). Rating visibility can be moderated by the admin. **Status**: [Planned]
+The platform includes device token registration, notification feed endpoints, unread counters, and preference updates. Support includes ticket creation, ticket message threads, admin assignment actions, and support settings management.
 
-```mermaid
-flowchart TD
-    Station[Station] --> Validate[Validate service]
-    Validate --> Notify[Notify client]
-    Notify --> Rate[Submit rating]
-    Notify --> Tip[Leave tip optional]
-    Rate --> Aggregate[Update station average]
-    Rate --> AdminMod[Admin moderation]
-```
+**Status**: [Implemented]
 
-### Admin governance (KYC, disputes, commissions)
+### Admin governance
 
-The Super Admin dashboard prioritizes KPIs and anomalies such as pending KYC and open disputes. Admins can approve or reject station applications (KYC), manage disputes and trigger refunds, update commission settings for future transactions, and audit actions via admin logs. This is the operational backbone of the platform and drives trust and compliance. **Status**: [Planned]
+Admin pages and APIs provide KPI dashboards, station/client/user management, disputes, legal content editing, ratings moderation, platform settings, and audit logs.
 
-```mermaid
-flowchart TD
-    Admin[Super Admin] --> Kyc[Review station KYC]
-    Kyc -->|Approve| Activate[Activate station]
-    Kyc -->|Reject| Reject[Reject with reason]
-    Admin --> Disputes[Handle disputes]
-    Disputes --> Refund[Trigger Stripe refund]
-    Admin --> Commission[Set commission rate]
-    Admin --> Logs[Admin logs audit]
-```
+**Status**: [Implemented]
 

@@ -24,21 +24,19 @@ import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 // %%%%% Constants %%%%%
 // Email configuration
 
-const FROM = process.env.EMAIL_FROM ?? 'noreply@lavo.app';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.app';
 
 type Locale = 'fr' | 'en';
 
 
-// %%%%% Resend client (singleton) %%%%%
-// Lazy initialization with warnings
+// %%%%% END - Constants %%%%%
+
+
+// %%%%% Resend client %%%%%
+// Lazy singleton - never passes undefined to the SDK
 
 let warnedResendApiKeyMissing = false;
 let resendClient: Resend | null | undefined;
-
-
-// %%%%% MODULE — Resend client %%%%%
-// Lazy singleton; never pass undefined to the SDK.
-
 
 /**
  * Returns a Resend client when `RESEND_API_KEY` is set; otherwise null.
@@ -71,7 +69,6 @@ function warnResendMissingOnce(context: string): void {
 
 // %%%%% Security & validation %%%%%
 // HTML escaping, URL validation, recipient sanity checks
-
 
 /**
  * Escapes HTML special characters to prevent injection in email bodies.
@@ -125,23 +122,23 @@ function isReasonableRecipientEmail(to: string): boolean {
 // %%%%% END - Security & validation %%%%%
 
 
-// %%%%% Bilingual email templates %%%%%
+// %%%%% i18n copy (TEXTS) %%%%%
 // Subjects, bodies, and footer text per locale (fr / en)
 
 const TEXTS = {
   verification: {
     fr: {
-      subject: 'Vérifiez votre compte Slowtime',
+      subject: 'Vérifiez votre compte Hurryline',
       greeting: (name: string) => `Bonjour ${name},`,
-      body: 'Merci de vous être inscrit sur Slowtime. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
+      body: 'Merci de vous être inscrit sur Hurryline. Veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.',
       cta: 'Vérifier mon compte',
       expiry: 'Ce lien expire dans 24 heures.',
       ignore: "Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Verify your Slowtime account',
+      subject: 'Verify your Hurryline account',
       greeting: (name: string) => `Hi ${name},`,
-      body: 'Thank you for signing up for Slowtime. Please confirm your email address by clicking the button below.',
+      body: 'Thank you for signing up for Hurryline. Please confirm your email address by clicking the button below.',
       cta: 'Verify my account',
       expiry: 'This link expires in 24 hours.',
       ignore: 'If you did not create an account, you can safely ignore this email.',
@@ -149,7 +146,7 @@ const TEXTS = {
   },
   passwordReset: {
     fr: {
-      subject: 'Réinitialisation de votre mot de passe Slowtime',
+      subject: 'Réinitialisation de votre mot de passe Hurryline',
       greeting: (name: string) => `Bonjour ${name},`,
       body: 'Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en définir un nouveau.',
       cta: 'Réinitialiser mon mot de passe',
@@ -157,7 +154,7 @@ const TEXTS = {
       ignore: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
     },
     en: {
-      subject: 'Reset your Slowtime password',
+      subject: 'Reset your Hurryline password',
       greeting: (name: string) => `Hi ${name},`,
       body: 'You requested a password reset. Click the button below to set a new password.',
       cta: 'Reset my password',
@@ -167,51 +164,51 @@ const TEXTS = {
   },
   stationRejection: {
     fr: {
-      subject: (name: string) => `[Slowtime] Votre demande pour la station ${name} n'a pas été approuvée`,
+      subject: (name: string) => `[Hurryline] Votre demande pour la station ${name} n'a pas été approuvée`,
       greeting: 'Bonjour,',
       body: (name: string) =>
         `Nous vous informons que votre demande d'adhésion pour la station <strong>${name}</strong> n'a malheureusement pas été approuvée par notre équipe.`,
       reasonLabel: 'Motif du refus :',
       extra: 'Vous pouvez corriger les informations et resoumettre votre dossier depuis votre espace. Pour toute question, n\'hésitez pas à contacter notre support.',
       cta: 'Resoumettre mon dossier',
-      closing: 'L\'équipe Slowtime',
+      closing: 'L\'équipe Hurryline',
     },
     en: {
-      subject: (name: string) => `[Slowtime] Your application for station ${name} was not approved`,
+      subject: (name: string) => `[Hurryline] Your application for station ${name} was not approved`,
       greeting: 'Hello,',
       body: (name: string) =>
         `We regret to inform you that your membership application for station <strong>${name}</strong> has not been approved by our team.`,
       reasonLabel: 'Reason for rejection:',
       extra: 'You may correct the information and resubmit your application from your account. If you have any questions, please contact our support team.',
       cta: 'Resubmit my application',
-      closing: 'The Slowtime team',
+      closing: 'The Hurryline team',
     },
   },
   stationApproval: {
     fr: {
-      subject: (name: string) => `[Slowtime] Votre station ${name} a été approuvée`,
+      subject: (name: string) => `[Hurryline] Votre station ${name} a été approuvée`,
       greeting: 'Bonjour,',
       body: (name: string) =>
-        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Slowtime.`,
+        `Nous avons le plaisir de vous informer que votre station <strong>${name}</strong> a été approuvée et est maintenant active sur Hurryline.`,
       extra: 'Vous pouvez dès à présent vous connecter avec votre adresse e-mail et le mot de passe choisi lors de votre inscription.',
       stripePrompt: 'Pour recevoir vos paiements, veuillez compléter la configuration de votre compte Stripe en cliquant sur le bouton ci-dessous.',
       stripeCta: 'Configurer mon compte Stripe',
-      cta: 'Se connecter à Slowtime',
-      closing: 'Bienvenue dans la communauté Slowtime !',
+      cta: 'Se connecter à Hurryline',
+      closing: 'Bienvenue dans la communauté Hurryline !',
       qrLabel: 'QR réservation :',
       qrAlt: 'QR de réservation station',
       qrLinkLabel: 'Lien de réservation QR :',
     },
     en: {
-      subject: (name: string) => `[Slowtime] Your station ${name} has been approved`,
+      subject: (name: string) => `[Hurryline] Your station ${name} has been approved`,
       greeting: 'Hello,',
       body: (name: string) =>
-        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Slowtime.`,
+        `We are pleased to inform you that your station <strong>${name}</strong> has been approved and is now active on Hurryline.`,
       extra: 'You can now log in using the email address and password you chose during registration.',
       stripePrompt: 'To receive payments, please complete your Stripe account setup by clicking the button below.',
       stripeCta: 'Set up my Stripe account',
-      cta: 'Log in to Slowtime',
-      closing: 'Welcome to the Slowtime community!',
+      cta: 'Log in to Hurryline',
+      closing: 'Welcome to the Hurryline community!',
       qrLabel: 'Booking QR:',
       qrAlt: 'Station booking QR',
       qrLinkLabel: 'Booking QR link:',
@@ -219,57 +216,85 @@ const TEXTS = {
   },
   paymentSuccess: {
     fr: {
-      subject: 'Paiement confirmé — Slowtime',
+      subject: 'Paiement confirmé - Hurryline',
       greeting: 'Bonjour,',
       lead: 'Votre paiement a bien été prélevé et votre prestation est terminée.',
       stationPrefix: 'Station :',
       refPrefix: 'Référence réservation :',
-      closing: "Merci d'avoir choisi Slowtime.",
-      cta: 'Ouvrir Slowtime',
+      closing: "Merci d'avoir choisi Hurryline.",
+      cta: 'Ouvrir Hurryline',
     },
     en: {
-      subject: 'Payment confirmed — Slowtime',
+      subject: 'Payment confirmed - Hurryline',
       greeting: 'Hello,',
       lead: 'Your payment has been captured and your service is complete.',
       stationPrefix: 'Station:',
       refPrefix: 'Reservation reference:',
-      closing: 'Thank you for choosing Slowtime.',
-      cta: 'Open Slowtime',
+      closing: 'Thank you for choosing Hurryline.',
+      cta: 'Open Hurryline',
+    },
+  },
+  walkInReceipt: {
+    fr: {
+      subject: 'Votre lavage est terminé — Hurryline',
+      greeting: 'Bonjour,',
+      lead: "Votre véhicule vient d'être lavé. Voici le récapitulatif de votre passage.",
+      stationLabel: 'Station',
+      serviceLabel: 'Service',
+      formatLabel: 'Format véhicule',
+      dateLabel: 'Date',
+      ctaIntro:
+        "Ce service a été enregistré hors plateforme. Pour réserver vos prochains lavages en quelques secondes, suivre vos passages et profiter d'offres dédiées, créez votre compte gratuitement.",
+      ctaLabel: 'Créer mon compte Hurryline',
+      closing: 'Merci de votre confiance et à très vite.',
+    },
+    en: {
+      subject: 'Your wash is complete — Hurryline',
+      greeting: 'Hello,',
+      lead: 'Your car has just been washed. Here is a quick recap of your visit.',
+      stationLabel: 'Station',
+      serviceLabel: 'Service',
+      formatLabel: 'Vehicle format',
+      dateLabel: 'Date',
+      ctaIntro:
+        'This service was logged off-platform. Create a free Hurryline account to book your next washes in seconds, track your visits and unlock member perks.',
+      ctaLabel: 'Create my Hurryline account',
+      closing: 'Thanks for your trust — see you soon.',
     },
   },
   paymentFailed: {
     fr: {
-      subject: 'Paiement non abouti — Slowtime',
+      subject: 'Paiement non abouti - Hurryline',
       greeting: 'Bonjour,',
       body: "Nous n'avons pas pu finaliser votre paiement. Votre réservation a été annulée. Vous pouvez réessayer depuis l'application lorsque vous le souhaitez.",
       reasonLabel: 'Motif indiqué :',
-      cta: 'Réessayer sur Slowtime',
+      cta: 'Réessayer sur Hurryline',
     },
     en: {
-      subject: 'Payment could not be completed — Slowtime',
+      subject: 'Payment could not be completed - Hurryline',
       greeting: 'Hello,',
       body: 'We could not complete your payment. Your reservation has been cancelled. You can try again from the app whenever you are ready.',
       reasonLabel: 'Details:',
-      cta: 'Try again on Slowtime',
+      cta: 'Try again on Hurryline',
     },
   },
   footer: {
     fr: {
-      teamLine: "L'équipe Slowtime",
+      teamLine: "L'équipe Hurryline",
       autoMessage: 'Cet e-mail a été envoyé automatiquement. Merci de ne pas y répondre.',
     },
     en: {
-      teamLine: 'The Slowtime Team',
+      teamLine: 'The Hurryline Team',
       autoMessage: 'This email was sent automatically. Please do not reply.',
     },
   },
 } as const;
 
 
-// %%%%% END - MODULE — i18n copy (TEXTS) %%%%%
+// %%%%% END - i18n copy (TEXTS) %%%%%
 
 
-// %%%%% MODULE — Branded HTML layout %%%%%
+// %%%%% Branded HTML layout %%%%%
 // Table-based template; optional CTA and footnote.
 
 function brandedEmail(
@@ -293,7 +318,7 @@ function brandedEmail(
         <td align="center" style="padding: 28px 0 8px;">
           <a href="${safeCtaHref}" target="_blank" rel="noopener noreferrer" style="
             display: inline-block;
-            background-color: #af8408;
+            background-color: #DDAF3B;
             color: #ffffff;
             font-family: 'Rajdhani', 'Segoe UI', Tahoma, sans-serif;
             font-size: 16px;
@@ -317,10 +342,10 @@ function brandedEmail(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Slowtime</title>
+  <title>Hurryline</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f2ec; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f2ec; padding: 40px 16px;">
+<body style="margin: 0; padding: 0; background-color: #FFEECA; font-family: 'Rajdhani', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFEECA; padding: 40px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%;">
@@ -328,7 +353,7 @@ function brandedEmail(
           <!-- Logo header -->
           <tr>
             <td align="center" style="padding: 0 0 24px;">
-              <img src="${logoUrl}" alt="Slowtime" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
+              <img src="${logoUrl}" alt="Hurryline" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
             </td>
           </tr>
 
@@ -346,7 +371,7 @@ function brandedEmail(
                   <td style="
                     font-size: 18px;
                     font-weight: 700;
-                    color: #1A1A1A;
+                    color: #001201;
                     padding-bottom: 16px;
                     line-height: 1.4;
                   ">${escapeHtmlPlain(opts.greeting)}</td>
@@ -385,9 +410,9 @@ function brandedEmail(
           <!-- Footer -->
           <tr>
             <td align="center" style="padding: 20px 0 0;">
-              <p style="margin: 0 0 4px; font-size: 13px; color: #af8408; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
+              <p style="margin: 0 0 4px; font-size: 13px; color: #DDAF3B; font-weight: 600; letter-spacing: 0.04em;">${f.teamLine}</p>
               <p style="margin: 0 0 4px; font-size: 12px; color: #aaaaaa;">${f.autoMessage}</p>
-              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Slowtime. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
+              <p style="margin: 0; font-size: 12px; color: #aaaaaa;">© ${new Date().getFullYear()} Hurryline. ${locale === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.'}</p>
             </td>
           </tr>
 
@@ -400,11 +425,11 @@ function brandedEmail(
 }
 
 
-// %%%%% END - MODULE — Branded HTML layout %%%%%
+// %%%%% END - Branded HTML layout %%%%%
 
 
-// %%%%% MODULE — Transactional sends %%%%%
-// Verification, password reset, station lifecycle, payment notices.
+// %%%%% Transactional sends %%%%%
+// Verification, password reset, station lifecycle, payment notices
 
 export async function sendVerificationEmail(
   to: string,
@@ -506,12 +531,12 @@ export async function sendStationApprovalEmail(
 
   const qrBlock = safeQrUrl
     ? (
-        qrImageDataUrl
-          ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+      qrImageDataUrl
+        ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
              <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
              <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-          : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-      )
+        : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+    )
     : '';
 
   await client.emails.send({
@@ -554,7 +579,7 @@ export async function sendStationRejectionEmail(
     subject: t.subject(subjectName),
     html: brandedEmail(locale, {
       greeting: t.greeting,
-      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #C49A1E;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
+      bodyHtml: `${t.body(escapedName)}<br/><br/><p style="margin:0 0 6px;font-weight:bold;">${t.reasonLabel}</p><p style="margin:0;padding:12px 16px;background:#F7F6F0;border-left:3px solid #DDAF3B;border-radius:4px;line-height:1.5;">${escapedReason}</p><br/>${t.extra}`,
       ctaUrl: resubmitUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
@@ -605,23 +630,23 @@ export async function sendStationApplicationAdminNotification(
 
   const subject =
     context === 'approval'
-      ? `[Slowtime] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
-      : `[Slowtime] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+      ? `[Hurryline] Station approved with QR: ${safePlainTextSnippet(stationName, 120)}`
+      : `[Hurryline] New station application: ${safePlainTextSnippet(stationName, 120)}`;
+
   const bodyHtml = context === 'approval'
     ? `
       <p style="margin: 0 0 8px;"><strong>Station approved:</strong> ${safeName}</p>
       <p style="margin: 0 0 8px;"><strong>Station ID:</strong> ${safeId}</p>
-      ${
-        safeQrUrl
-          ? (
-              qrImageDataUrl
-                ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
+      ${safeQrUrl
+      ? (
+        qrImageDataUrl
+          ? `<p style="margin: 12px 0 8px;"><strong>Booking QR:</strong></p>
                    <p style="margin: 0 0 10px;"><img src="${qrImageDataUrl}" alt="Station booking QR" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
                    <p style="margin: 0;"><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-                : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
-            )
-          : ''
-      }
+          : `<p style="margin: 12px 0 0;"><strong>Booking QR link:</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+      )
+      : ''
+    }
     `
     : `
       <p style="margin: 0 0 8px;"><strong>Station name:</strong> ${safeName}</p>
@@ -639,6 +664,39 @@ export async function sendStationApplicationAdminNotification(
         context === 'approval'
           ? 'QR image fallback to link-only is monitored and should remain rare.'
           : 'Please review the application in the admin panel.',
+    }),
+  });
+}
+
+export async function sendAdminOperationalEmail(params: {
+  to: string;
+  adminName?: string;
+  subject: string;
+  body: string;
+  actionUrl?: string;
+}): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminOperationalEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(params.to)) return;
+
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(params.adminName ?? 'Admin', 100));
+  const safeBody = escapeHtmlPlain(safePlainTextSnippet(params.body, 2000));
+  const safeActionUrl = safeHttpUrlForEmailHref(
+    params.actionUrl ? `${APP_URL}${params.actionUrl}` : undefined
+  );
+  const safeSubject = safePlainTextSnippet(params.subject, 160);
+
+  await client.emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `[Hurryline Admin] ${safeSubject}`,
+    html: brandedEmail('en', {
+      greeting: `Hello ${safeName},`,
+      bodyHtml: safeBody,
+      ...(safeActionUrl ? { ctaUrl: safeActionUrl, ctaLabel: 'Open admin panel' } : {}),
     }),
   });
 }
@@ -682,8 +740,101 @@ export async function sendPaymentSuccessEmail(params: {
         ctaLabel: t.cta,
       }),
     });
-  } catch {
-    console.error('sendPaymentSuccessEmail: Resend send failed');
+  } catch (e) {
+    console.error('sendPaymentSuccessEmail: Resend send failed', e instanceof Error ? e.message : String(e));
+  }
+}
+
+
+/**
+ * Walk-in service completion email — sent to clients who were added
+ * manually by a station merchant and have not yet registered on
+ * Hurryline. Contains a clean off-platform receipt (no payment ref
+ * because the merchant collected payment outside the app) and a CTA
+ * to create an account.
+ */
+export async function sendWalkInReceiptEmail(params: {
+  to: string;
+  locale?: Locale;
+  clientName?: string;
+  stationName?: string;
+  serviceName?: string;
+  vehicleFormatLabel?: string;
+  completedAt?: Date;
+}): Promise<void> {
+  const {
+    to,
+    locale = 'fr',
+    clientName,
+    stationName,
+    serviceName,
+    vehicleFormatLabel,
+    completedAt,
+  } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendWalkInReceiptEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.walkInReceipt[locale];
+  const greeting = clientName?.trim()
+    ? `${locale === 'en' ? 'Hello' : 'Bonjour'} ${escapeHtmlPlain(clientName.trim())},`
+    : t.greeting;
+
+  /* Build the receipt block as a clean table so it renders well in
+   * Gmail / Outlook / Apple Mail without needing inline CSS gymnastics. */
+  const rows: Array<{ label: string; value: string }> = [];
+  if (stationName?.trim()) rows.push({ label: t.stationLabel, value: stationName.trim() });
+  if (serviceName?.trim()) rows.push({ label: t.serviceLabel, value: serviceName.trim() });
+  if (vehicleFormatLabel?.trim()) rows.push({ label: t.formatLabel, value: vehicleFormatLabel.trim() });
+  if (completedAt) {
+    const formatted = completedAt.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    rows.push({ label: t.dateLabel, value: formatted });
+  }
+
+  const receiptHtml = rows.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e8e4d8;border-radius:8px;overflow:hidden;margin:18px 0;width:100%;max-width:520px;">
+        ${rows
+          .map(
+            (row, idx) => `
+              <tr>
+                <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:38%;">
+                  ${escapeHtmlPlain(row.label)}
+                </td>
+                <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:14px;color:#001201;font-weight:600;">
+                  ${escapeHtmlPlain(row.value)}
+                </td>
+              </tr>`,
+          )
+          .join('')}
+      </table>`
+    : '';
+
+  const registerUrl =
+    safeHttpUrlForEmailHref(`${APP_URL}/${locale}/register?source=walk_in`) ??
+    safeHttpUrlForEmailHref(`${APP_URL}/${locale}/register`) ??
+    '';
+
+  const bodyHtml = `${t.lead}${receiptHtml}<p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#444;">${t.ctaIntro}</p><br/>${t.closing}`;
+
+  try {
+    await client.emails.send({
+      from: FROM,
+      to,
+      subject: t.subject,
+      html: brandedEmail(locale, {
+        greeting,
+        bodyHtml,
+        ctaUrl: registerUrl || undefined,
+        ctaLabel: t.ctaLabel,
+      }),
+    });
+  } catch (e) {
+    console.error('sendWalkInReceiptEmail: Resend send failed', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -722,17 +873,241 @@ export async function sendPaymentFailedEmail(params: {
         ctaLabel: t.cta,
       }),
     });
-  } catch {
-    console.error('sendPaymentFailedEmail: Resend send failed');
+  } catch (e) {
+    console.error('sendPaymentFailedEmail: Resend send failed', e instanceof Error ? e.message : String(e));
   }
 }
 
 
-// %%%%% END - MODULE — Transactional sends %%%%%
+/**
+ * Sends a KYC document expiry reminder email to a station owner or an admin.
+ *
+ * @param params.toEmail       - Recipient email address
+ * @param params.documentType  - The document type string (e.g. 'kbis', 'assurance')
+ * @param params.expiryDate    - The date the document expires
+ * @param params.thresholdDays - How many days remain before expiry
+ * @param params.stationName   - Name of the station that owns the document
+ * @param params.isAdmin       - True when the recipient is an admin (adjusts copy)
+ */
+export async function sendKycExpiryReminderEmail(params: {
+  toEmail: string;
+  documentType: string;
+  expiryDate: Date;
+  thresholdDays: number;
+  stationName: string;
+  isAdmin: boolean;
+}): Promise<void> {
+  const { toEmail, documentType, expiryDate, thresholdDays, stationName, isAdmin } = params;
+
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendKycExpiryReminderEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeDocType = escapeHtmlPlain(safePlainTextSnippet(documentType, 50));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(stationName, 200));
+  const formattedExpiry = expiryDate.toLocaleDateString('fr-FR');
+
+  const subject = isAdmin
+    ? `[Hurryline Admin] Document KYC expirant dans ${thresholdDays} jours - ${safePlainTextSnippet(stationName, 100)}`
+    : `[Hurryline] Votre document KYC expire dans ${thresholdDays} jours`;
+
+  const greeting = isAdmin ? 'Notification administrateur KYC' : 'Bonjour,';
+
+  const bodyHtml = isAdmin
+    ? `
+      <p style="margin: 0 0 8px;">Un document KYC arrive à expiration sous <strong>${thresholdDays} jours</strong>.</p>
+      <p style="margin: 0 0 8px;"><strong>Station :</strong> ${safeName}</p>
+      <p style="margin: 0 0 8px;"><strong>Type de document :</strong> ${safeDocType}</p>
+      <p style="margin: 0 0 8px;"><strong>Date d'expiration :</strong> ${formattedExpiry}</p>
+      <p style="margin: 0; color: #888; font-size: 14px;">Veuillez contacter la station si aucune action n'est entreprise.</p>
+    `
+    : `
+      <p style="margin: 0 0 8px;">
+        Votre document <strong>${safeDocType}</strong> pour la station <strong>${safeName}</strong>
+        expire le <strong>${formattedExpiry}</strong>, soit dans <strong>${thresholdDays} jours</strong>.
+      </p>
+      <p style="margin: 0; color: #444;">
+        Veuillez renouveler ce document et le soumettre depuis votre espace station avant la date d'expiration
+        afin d'éviter toute interruption de service.
+      </p>
+    `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject,
+    html: brandedEmail('fr', {
+      greeting,
+      bodyHtml,
+      footNote: isAdmin
+        ? 'Cet e-mail est envoyé automatiquement au(x) administrateur(s) de la plateforme.'
+        : "Si vous avez déjà renouvelé ce document, veuillez l'envoyer depuis votre espace station.",
+    }),
+  });
+}
 
 
-// %%%%% MODULE — Weekly escrow report & locale %%%%%
-// Admin table email and Accept-Language parsing.
+// %%%%% Admin OTP & welcome emails %%%%%
+
+/**
+ * Sends a 6-digit OTP code to an admin for sensitive operations.
+ *
+ * @param toEmail   - Recipient email address.
+ * @param adminName - Admin display name for the greeting.
+ * @param code      - The raw 6-digit OTP code.
+ * @param purpose   - Whether this OTP is for email or password change.
+ */
+export async function sendAdminOtpEmail(
+  toEmail: string,
+  adminName: string,
+  code: string,
+  purpose: 'email_change' | 'password_change'
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminOtpEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeCode = escapeHtmlPlain(safePlainTextSnippet(code, 6));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(adminName, 100));
+
+  const subjectFr =
+    purpose === 'email_change'
+      ? 'Code de vérification — Changement d\'adresse e-mail'
+      : 'Code de vérification — Changement de mot de passe';
+  const purposeLabelFr =
+    purpose === 'email_change'
+      ? 'changement d\'adresse e-mail'
+      : 'changement de mot de passe';
+
+  const bodyHtml = `
+    <p style="margin: 0 0 16px;">
+      Voici votre code de vérification pour votre <strong>${purposeLabelFr}</strong>.
+    </p>
+    <div style="margin: 0 0 16px; text-align: center;">
+      <span style="
+        display: inline-block;
+        background-color: #FFEECA;
+        border: 1.5px solid #DDAF3B;
+        border-radius: 12px;
+        padding: 16px 32px;
+        font-size: 32px;
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        color: #001201;
+        font-family: 'Courier New', Courier, monospace;
+      ">${safeCode}</span>
+    </div>
+    <p style="margin: 0 0 8px; font-size: 14px; color: #666;">
+      Ce code est valable pendant <strong>10 minutes</strong>.
+    </p>
+    <p style="margin: 0; font-size: 13px; color: #999;">
+      Si vous n'avez pas demandé ce code, ignorez cet e-mail.
+      Votre compte reste sécurisé.
+    </p>
+  `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: subjectFr,
+    html: brandedEmail('fr', {
+      greeting: `Bonjour ${safeName},`,
+      bodyHtml,
+      footNote: 'Ce code expire dans 10 minutes et ne peut être utilisé qu\'une seule fois.',
+    }),
+  });
+}
+
+
+/**
+ * Sends a welcome email with a temporary password to a newly created admin-provisioned account.
+ *
+ * @param toEmail      - Recipient email address.
+ * @param firstName    - First name for the greeting.
+ * @param tempPassword - The plain-text temporary password (will be escaped for HTML).
+ * @param role         - The account role ('client', 'admin', 'station').
+ */
+export async function sendAdminWelcomeEmail(
+  toEmail: string,
+  firstName: string,
+  tempPassword: string,
+  role: string
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendAdminWelcomeEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(toEmail)) return;
+
+  const safeName     = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
+  const safePassword = escapeHtmlPlain(safePlainTextSnippet(tempPassword, 128));
+  const loginUrl     = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
+
+  const roleLabelFr: Record<string, string> = {
+    client:  'client',
+    admin:   'administrateur',
+    station: 'station',
+  };
+  const roleLabel = roleLabelFr[role] ?? role;
+
+  const bodyHtml = `
+    <p style="margin: 0 0 12px;">
+      Un compte <strong>${escapeHtmlPlain(roleLabel)}</strong> a été créé pour vous sur la plateforme Hurryline.
+    </p>
+    <p style="margin: 0 0 16px;">Voici vos identifiants de connexion :</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="padding: 8px 12px; background: #FFEECA; border-radius: 8px 8px 0 0; border: 1px solid #e8e4da;">
+          <span style="font-size: 13px; color: #888;">Adresse e-mail</span><br/>
+          <strong style="font-size: 14px; color: #001201;">${escapeHtmlPlain(toEmail)}</strong>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; background: #FFEECA; border-radius: 0 0 8px 8px; border: 1px solid #e8e4da; border-top: none;">
+          <span style="font-size: 13px; color: #888;">Mot de passe temporaire</span><br/>
+          <strong style="font-size: 16px; font-family: 'Courier New', Courier, monospace; letter-spacing: 0.08em; color: #001201;">${safePassword}</strong>
+        </td>
+      </tr>
+    </table>
+    <div style="padding: 12px 16px; background: #FFF8E8; border-left: 3px solid #DDAF3B; border-radius: 4px; margin: 0 0 12px;">
+      <p style="margin: 0; font-size: 13px; color: #7A5E0A;">
+        Vous devrez changer ce mot de passe lors de votre première connexion.
+      </p>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #888;">
+      Conservez ces informations en lieu sûr. Ne partagez jamais votre mot de passe.
+    </p>
+  `;
+
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: 'Bienvenue sur Hurryline — Vos identifiants de connexion',
+    html: brandedEmail('fr', {
+      greeting: `Bonjour ${safeName},`,
+      bodyHtml,
+      ctaUrl:   loginUrl || undefined,
+      ctaLabel: 'Se connecter',
+      footNote: 'Si vous n\'avez pas sollicité la création de ce compte, contactez le support immédiatement.',
+    }),
+  });
+}
+
+// %%%%% END - Admin OTP & welcome emails %%%%%
+
+
+// %%%%% END - Transactional sends %%%%%
+
+
+// %%%%% Weekly escrow report & locale %%%%%
+// Admin table email and Accept-Language parsing
 
 /** Parses `Accept-Language`; returns `fr` or `en` (default `fr`). */
 export function extractLocale(headerValue: string | null): Locale {
@@ -773,9 +1148,16 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     rows: WeeklyEscrowTransactionRow[];
   }
 ): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendWeeklyEscrowTransactionsReportEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
   const { locale, weekStart, weekEnd, rows } = params;
 
-  const subjectFr = `Rapport hebdomadaire — Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
+  const subjectFr = `Rapport hebdomadaire - Transactions escrow (${weekStart.toLocaleDateString('fr-FR')} → ${weekEnd.toLocaleDateString('fr-FR')})`;
   const subjectEn = `Weekly escrow transactions report (${weekStart.toLocaleDateString('en-GB')} → ${weekEnd.toLocaleDateString('en-GB')})`;
   const subject = locale === 'en' ? subjectEn : subjectFr;
 
@@ -789,16 +1171,16 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     rows.length === 0
       ? `<tr><td colspan="9" style="padding: 10px 8px; color: #888;">${emptyRowMessage}</td></tr>`
       : rows
-          .map((r) => {
-            const at = escapeHtmlPlain(
-              r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')
-            );
-            const stName = escapeHtmlPlain(safePlainTextSnippet(r.stationName, 500));
-            const cEmail = escapeHtmlPlain(safePlainTextSnippet(r.clientEmail, 320));
-            const resId = escapeHtmlPlain(safePlainTextSnippet(r.reservationId, 128));
-            const resStat = escapeHtmlPlain(safePlainTextSnippet(r.reservationStatus, 64));
-            const xfer = escapeHtmlPlain(safePlainTextSnippet(r.stripeTransferId ?? '', 128));
-            return `<tr>
+        .map((r) => {
+          const at = escapeHtmlPlain(
+            r.succeededAt.toLocaleString(locale === 'en' ? 'en-GB' : 'fr-FR')
+          );
+          const stName = escapeHtmlPlain(safePlainTextSnippet(r.stationName, 500));
+          const cEmail = escapeHtmlPlain(safePlainTextSnippet(r.clientEmail, 320));
+          const resId = escapeHtmlPlain(safePlainTextSnippet(r.reservationId, 128));
+          const resStat = escapeHtmlPlain(safePlainTextSnippet(r.reservationStatus, 64));
+          const xfer = escapeHtmlPlain(safePlainTextSnippet(r.stripeTransferId ?? '', 128));
+          return `<tr>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${at}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;"><strong>${stName}</strong></td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${cEmail}</td>
@@ -809,8 +1191,8 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.stationPayout)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${xfer}</td>
             </tr>`;
-          })
-          .join('');
+        })
+        .join('');
 
   const bodyHtml = `
     <p style="margin: 0 0 12px;">${locale === 'en' ? 'Here is the weekly summary of escrow transactions captured through Stripe.' : 'Voici le récapitulatif hebdomadaire des transactions escrow capturées via Stripe.'}</p>
@@ -840,13 +1222,6 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     </table>
   `;
 
-  const client = getResendClient();
-  if (!client) {
-    warnResendMissingOnce('sendWeeklyEscrowTransactionsReportEmail');
-    return;
-  }
-  if (!isReasonableRecipientEmail(to)) return;
-
   await client.emails.send({
     from: FROM,
     to,
@@ -859,4 +1234,4 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
 }
 
 
-// %%%%% END - MODULE — Weekly escrow report & locale %%%%%
+// %%%%% END - Weekly escrow report & locale %%%%%

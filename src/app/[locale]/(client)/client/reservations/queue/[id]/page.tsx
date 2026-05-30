@@ -17,6 +17,7 @@ interface ApiEntry {
   entry_type: 'reservation' | 'queue';
   station_id: string;
   vehicle_format_id: string | null;
+  service: { id: string; name: string; category: string } | null;
   status: string;
   queue_position: number | null;
   amount_paid: string | null;
@@ -32,6 +33,7 @@ interface ApiStation {
   latitude: string | null;
   longitude: string | null;
   vehicleFormats: ApiVehicleFormat[];
+  stationConfig?: { wash_duration_minutes: number } | null;
 }
 
 interface QueueEntry {
@@ -44,23 +46,15 @@ interface QueueEntry {
   forfaitName: string;
   position: number;
   totalPrice: number;
+  washDurationMinutes: number;
   status: 'waiting' | 'in_progress';
 }
 
 /* ------------------------------------------------------------------ */
-/* Simulate real-time position by decrementing every 30s               */
+/* Polling config                                                       */
 /* ------------------------------------------------------------------ */
 
-function useRealtimePosition(initial: number) {
-  const [position, setPosition] = useState(initial);
-  useEffect(() => { setPosition(initial); }, [initial]);
-  useEffect(() => {
-    if (position <= 1) return;
-    const id = setInterval(() => setPosition((p) => (p > 1 ? p - 1 : p)), 30_000);
-    return () => clearInterval(id);
-  }, [position]);
-  return position;
-}
+const POLL_INTERVAL_MS = 15_000;
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                 */
@@ -81,7 +75,7 @@ export default function QueueDetailPage({ params }: PageProps) {
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
-  const [entry, setEntry]   = useState<QueueEntry | null>(null);
+  const [entry, setEntry] = useState<QueueEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
@@ -114,9 +108,10 @@ export default function QueueDetailPage({ params }: PageProps) {
         stationAddress: station ? `${station.address}, ${station.city}` : '',
         stationLatitude: parseFloat(station?.latitude ?? '0'),
         stationLongitude: parseFloat(station?.longitude ?? '0'),
-        forfaitName: format?.label ?? '—',
+        forfaitName: found.service?.name ?? format?.label ?? '-',
         position: found.queue_position ?? 1,
         totalPrice: parseFloat(found.amount_paid ?? '0'),
+        washDurationMinutes: station?.stationConfig?.wash_duration_minutes ?? 15,
         status: found.status === 'in_progress' ? 'in_progress' : 'waiting',
       });
     } catch {
@@ -124,17 +119,82 @@ export default function QueueDetailPage({ params }: PageProps) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [id]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     if (!authLoading) loadEntry();
   }, [authLoading, loadEntry]);
 
-  const position = useRealtimePosition(entry?.position ?? 1);
+  // Real-time position polling.
+  // Starts once the initial entry load completes; keeps running every
+  // POLL_INTERVAL_MS until the entry transitions to in_progress or the
+  // page unmounts. Pauses while the tab is hidden to avoid needless
+  // background requests and resumes when it becomes visible again.
+  const entryLoaded = entry !== null;
+  useEffect(() => {
+    if (!entryLoaded) return;
+
+    let cancelled = false;
+    let stopped = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const schedule = () => {
+      if (cancelled || stopped) return;
+      timeoutId = setTimeout(tick, POLL_INTERVAL_MS);
+    };
+
+    const tick = async () => {
+      if (cancelled || stopped || !mountedRef.current) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        schedule();
+        return;
+      }
+
+      const [ok, data] = await getFromApi('/me/entries?per_page=100');
+      if (cancelled || stopped || !mountedRef.current) return;
+
+      if (ok) {
+        const res = data as { data: { entries: ApiEntry[] } } | null;
+        const found = (res?.data?.entries ?? []).find(
+          (e) => e.id === id && e.entry_type === 'queue',
+        );
+        if (found) {
+          const nextStatus: 'waiting' | 'in_progress' =
+            found.status === 'in_progress' ? 'in_progress' : 'waiting';
+          const nextPosition = found.queue_position ?? 1;
+          setEntry((prev) =>
+            prev ? { ...prev, position: nextPosition, status: nextStatus } : prev,
+          );
+          if (nextStatus === 'in_progress') { stopped = true; return; }
+        }
+      }
+      schedule();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !cancelled && !stopped) {
+        if (timeoutId) clearTimeout(timeoutId);
+        tick();
+      }
+    };
+
+    schedule();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
+    };
+  }, [entryLoaded, id]);
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex items-center justify-center pb-24">
+      <main className="min-h-screen bg-background flex items-center justify-center pb-24">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </main>
     );
@@ -142,8 +202,8 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   if (missing || !entry) {
     return (
-      <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg flex flex-col items-center justify-center gap-4 pb-24">
-        <p className="text-[14px] font-semibold text-[#555] dark:text-[#B0B0A0]">{t('error_not_found')}</p>
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 pb-24">
+        <p className="text-[14px] font-semibold text-foreground/70">{t('error_not_found')}</p>
         <Link
           href="/client/reservations"
           className="rounded-[10px] border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-semibold text-gold hover:bg-gold/10 transition-colors"
@@ -156,70 +216,75 @@ export default function QueueDetailPage({ params }: PageProps) {
 
   const q        = entry;
   const isActive = q.status === 'in_progress';
+  const waitMinutes = isActive ? 0 : Math.max(0, (q.position - 1)) * q.washDurationMinutes;
 
   const mapsUrl = q.stationLatitude !== 0
     ? `https://www.google.com/maps/dir/?api=1&destination=${q.stationLatitude},${q.stationLongitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${q.stationName}, ${q.stationAddress}`)}`;
 
   return (
-    <main className="min-h-screen bg-[#F5F5E6] dark:bg-dark-bg pb-24 sm:pb-8">
+    <main className="min-h-screen bg-background pb-24 sm:pb-8">
       {/* Header */}
       <div className="px-4 pt-6 pb-4 max-w-2xl mx-auto flex items-center gap-3">
         <Link
           href="/client/reservations"
-          className="w-9 h-9 rounded-full bg-[#E8E8D8] dark:bg-dark-card flex items-center justify-center hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive transition-colors"
+          className="w-9 h-9 rounded-full bg-surface flex items-center justify-center hover:bg-[#D0D0C0] dark:hover:bg-tab-inactive transition-colors"
           aria-label={t('back')}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
-        <h1 className="text-[20px] font-black text-[#0A0A14] dark:text-white">{t('title')}</h1>
+        <h1 className="text-[20px] font-black text-foreground">{t('title')}</h1>
       </div>
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
 
         {/* Station card */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4">
-          <h2 className="text-[17px] font-black text-[#0A0A14] dark:text-white">{q.stationName}</h2>
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-0.5">{q.stationAddress}</p>
-          <p className="text-[13px] text-[#666] dark:text-[#B0B0A0] mt-1">{q.forfaitName}</p>
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <h2 className="text-[17px] font-black text-foreground">{q.stationName}</h2>
+          <p className="text-[13px] text-foreground/65 mt-0.5">{q.stationAddress}</p>
+          <p className="text-[13px] text-foreground/65 mt-1">{q.forfaitName}</p>
         </div>
 
         {/* Live position panel */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-5">
+        <div
+          className="bg-surface rounded-xl border border-border p-5"
+          aria-live="polite"
+          aria-atomic="false"
+        >
           <div className="flex items-center gap-2 mb-4">
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-lavo-success'}`} />
-            <span className="text-[12px] font-bold text-[#555] dark:text-[#A0A090] uppercase tracking-wider">
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${isActive ? 'bg-gold' : 'bg-Hurryline-success'}`} />
+            <span className="text-[12px] font-bold text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider">
               {isActive ? t('status_in_progress') : t('status_waiting')}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-gold leading-none">#{position}</div>
-              <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('your_position')}</div>
+            <div className="bg-white/50 dark:bg-background/40 rounded-xl py-5">
+              <div className="text-[44px] font-black text-gold leading-none">#{q.position}</div>
+              <div className="text-[13px] text-foreground/70 mt-2 font-semibold">{t('your_position')}</div>
             </div>
-            <div className="bg-white/50 dark:bg-dark-bg/40 rounded-xl py-5">
-              <div className="text-[44px] font-black text-[#0A0A14] dark:text-white leading-none">{position}</div>
-              <div className="text-[13px] text-[#555] dark:text-[#B0B0A0] mt-2 font-semibold">{t('wait_minutes')}</div>
+            <div className="bg-white/50 dark:bg-background/40 rounded-xl py-5">
+              <div className="text-[44px] font-black text-foreground leading-none">{waitMinutes}</div>
+              <div className="text-[13px] text-foreground/70 mt-2 font-semibold">{t('wait_minutes')}</div>
             </div>
           </div>
 
-          {position === 1 && (
-            <div className="mt-4 px-4 py-3 bg-lavo-success/10 border border-lavo-success/30 rounded-xl text-center">
-              <span className="text-[14px] font-bold text-lavo-success">{t('next_up')}</span>
+          {q.position === 1 && !isActive && (
+            <div className="mt-4 px-4 py-3 bg-Hurryline-success/10 border border-Hurryline-success/30 rounded-xl text-center">
+              <span className="text-[14px] font-bold text-Hurryline-success">{t('next_up')}</span>
             </div>
           )}
         </div>
 
         {/* Service summary */}
-        <div className="bg-[#E8E8D8] dark:bg-dark-card rounded-xl border border-[#D0D0C0] dark:border-tab-inactive p-4 space-y-2">
-          <h3 className="text-[14px] font-black text-[#555] dark:text-[#A0A090] uppercase tracking-wider mb-3">{t('summary')}</h3>
+        <div className="bg-surface rounded-xl border border-border p-4 space-y-2">
+          <h3 className="text-[14px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-wider mb-3">{t('summary')}</h3>
           <div className="flex justify-between text-[14px]">
-            <span className="text-[#555] dark:text-[#B0B0A0]">{t('service')}</span>
-            <span className="font-bold text-[#0A0A14] dark:text-white">{q.forfaitName}</span>
+            <span className="text-foreground/70">{t('service')}</span>
+            <span className="font-bold text-foreground">{q.forfaitName}</span>
           </div>
-          <div className="flex justify-between text-[14px] pt-2 border-t border-[#D0D0C0] dark:border-tab-inactive">
-            <span className="font-bold text-[#0A0A14] dark:text-white">{t('total')}</span>
+          <div className="flex justify-between text-[14px] pt-2 border-t border-border">
+            <span className="font-bold text-foreground">{t('total')}</span>
             <span className="text-[17px] font-black text-gold">{q.totalPrice.toFixed(2)}$</span>
           </div>
         </div>

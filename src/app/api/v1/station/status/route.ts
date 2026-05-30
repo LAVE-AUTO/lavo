@@ -9,13 +9,13 @@ import type { NextResponse } from 'next/server';
 /**
  * GET /api/v1/station/status
  * Returns the current status and rejection reason for the authenticated station user.
- * Does NOT require the station to be active — works for pending and rejected stations.
+ * Does NOT require the station to be active - works for pending and rejected stations.
  * Used by the frontend to display the rejection reason on the KYC rejected page.
  *
  * Responses:
  *   200 { data: { status, name, rejection_reason } }
- *   403 FORBIDDEN — if user is not a station
- *   404 NOT_FOUND — if no station found for this user
+ *   403 FORBIDDEN - if user is not a station
+ *   404 NOT_FOUND - if no station found for this user
  *   500 INTERNAL_ERROR
  */
 export async function GET(request: Request) {

@@ -80,7 +80,12 @@ describe('GET /api/v1/support/[id]', () => {
     const body = await res.json();
     expect(body.data.id).toBe(ticketId);
     expect(body.data.ticket_number).toBe('SUP-ABCD1234');
-    expect(mockGetTicketDetails).toHaveBeenCalledWith(clientAuth.sub, clientAuth.role, ticketId);
+    expect(mockGetTicketDetails).toHaveBeenCalledWith(
+      clientAuth.sub,
+      clientAuth.role,
+      ticketId,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   it('returns 200 and includes messages array when ticket has a thread', async () => {
@@ -110,7 +115,12 @@ describe('GET /api/v1/support/[id]', () => {
     const res = await GET(makeGetRequest(ticketId), { params: buildParams(ticketId) });
 
     expect(res.status).toBe(200);
-    expect(mockGetTicketDetails).toHaveBeenCalledWith(adminAuth.sub, adminAuth.role, ticketId);
+    expect(mockGetTicketDetails).toHaveBeenCalledWith(
+      adminAuth.sub,
+      adminAuth.role,
+      ticketId,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   it('station user can view their own ticket', async () => {
@@ -120,7 +130,12 @@ describe('GET /api/v1/support/[id]', () => {
     const res = await GET(makeGetRequest(ticketId), { params: buildParams(ticketId) });
 
     expect(res.status).toBe(200);
-    expect(mockGetTicketDetails).toHaveBeenCalledWith(stationAuth.sub, stationAuth.role, ticketId);
+    expect(mockGetTicketDetails).toHaveBeenCalledWith(
+      stationAuth.sub,
+      stationAuth.role,
+      ticketId,
+      { limit: 50, cursor: undefined }
+    );
   });
 
   // --- Permission enforcement ---
@@ -206,7 +221,7 @@ describe('GET /api/v1/support/[id]', () => {
 });
 
 // ---------------------------------------------------------------------------
-// PATCH /api/v1/support/[id] — Admin only, status update
+// PATCH /api/v1/support/[id] - Admin only, status update
 // ---------------------------------------------------------------------------
 
 describe('PATCH /api/v1/support/[id]', () => {

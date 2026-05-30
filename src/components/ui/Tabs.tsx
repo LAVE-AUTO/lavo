@@ -30,7 +30,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
     <div
       role="tablist"
       className={[
-        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-tab-inactive',
+        'flex gap-1 overflow-x-auto scrollbar-none border-b border-[#CCCCCC] dark:border-border',
         className,
       ]
         .filter(Boolean)
@@ -50,7 +50,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
               'transition-colors border-b-2 -mb-px',
               isActive
                 ? 'border-gold text-gold'
-                : 'border-transparent text-lavo-muted hover:text-[#1A1A1A] dark:hover:text-white',
+                : 'border-transparent text-Hurryline-muted hover:text-[#001201] dark:hover:text-white',
             ].join(' ')}
           >
             {tab.icon && (
@@ -65,7 +65,7 @@ export function Tabs({ tabs, activeTabId, onTabChange, className = '' }: TabsPro
                   'text-[11px] font-bold px-1.5 py-0.5 rounded-full',
                   isActive
                     ? 'bg-gold/20 text-gold'
-                    : 'bg-[#CCCCCC]/40 dark:bg-tab-inactive/40 text-lavo-muted',
+                    : 'bg-[#CCCCCC]/40 dark:bg-tab-inactive/40 text-Hurryline-muted',
                 ].join(' ')}
               >
                 {tab.count}

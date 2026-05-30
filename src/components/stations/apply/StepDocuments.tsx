@@ -99,11 +99,11 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
               data.termsAccepted
                 ? 'bg-gold border-gold'
                 : errors.terms
-                ? 'border-lavo-error bg-[#FFF8F7] dark:bg-[#2A1A18]'
-                : 'border-[#CCCCCC] dark:border-tab-inactive bg-white dark:bg-dark-card group-hover:border-gold',
+                ? 'border-Hurryline-error bg-[#FFF9EC] dark:bg-[#FF383C]'
+                : 'border-[#CCCCCC] dark:border-border bg-white dark:bg-surface group-hover:border-gold',
             ].join(' ')}>
               {data.termsAccepted && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1A2116" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#001201" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
@@ -114,7 +114,7 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
           </span>
         </label>
         {errors.terms && (
-          <p id="terms-error" role="alert" className="mt-1.5 text-[13px] font-medium text-lavo-error flex items-center gap-1">
+          <p id="terms-error" role="alert" className="mt-1.5 text-[13px] font-medium text-Hurryline-error flex items-center gap-1">
             <span aria-hidden="true">!</span>
             {errors.terms}
           </p>

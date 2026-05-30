@@ -49,7 +49,7 @@ export function StationHistoryPage() {
     const params = new URLSearchParams();
     params.set('page', String(fetchPage));
     params.set('limit', String(PAGE_LIMIT));
-    // Use local date string (YYYY-MM-DD) — backend expects this format, and toISOString() shifts UTC
+    // Use local date string (YYYY-MM-DD) - backend expects this format, and toISOString() shifts UTC
     if (dateRange.from) params.set('from', toLocalDateStr(dateRange.from));
     if (dateRange.to) params.set('to', toLocalDateStr(dateRange.to));
     if (status !== 'all') params.set('status', status);
@@ -69,7 +69,7 @@ export function StationHistoryPage() {
         setLoading(false);
         return;
       }
-      // API succeeded but returned empty — show empty state (not error)
+      // API succeeded but returned empty - show empty state (not error)
       if (Array.isArray(inner?.items)) {
         setEntries([]);
         setMeta(inner.meta ?? null);
@@ -78,14 +78,14 @@ export function StationHistoryPage() {
       }
     }
 
-    // API failed — show error screen instead of silently falling back to mock
+    // API failed - show error screen instead of silently falling back to mock
     if (!ok) {
       setLoadError(true);
       setLoading(false);
       return;
     }
 
-    // API returned ok but unexpected shape — show empty state
+    // API returned ok but unexpected shape - show empty state
     setEntries([]);
     setMeta(null);
     setLoading(false);
@@ -120,8 +120,8 @@ export function StationHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-[#EDEDED] dark:bg-[#1A2116]">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#C09A18] border-t-transparent" />
+      <div className="flex flex-1 items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />
       </div>
     );
   }
@@ -129,11 +129,11 @@ export function StationHistoryPage() {
   if (loadError) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <span className="text-[14px] font-semibold text-[#000C1F]/50 dark:text-[#FFF8EC]/40">{t('error_load')}</span>
+        <span className="text-[14px] font-semibold text-foreground/55">{t('error_load')}</span>
         <button
           type="button"
           onClick={() => fetchHistory(page)}
-          className="rounded-[10px] border-[1.5px] border-[#C09A18]/50 px-4 py-2 text-[13px] font-semibold text-[#C09A18] transition-colors hover:bg-[#C09A18]/10"
+          className="rounded-xl border-[1.5px] border-gold/50 px-4 py-2 text-[13px] font-bold text-gold transition-colors hover:bg-gold/10"
         >
           {t('btn_retry')}
         </button>
@@ -142,27 +142,37 @@ export function StationHistoryPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EDEDED] dark:bg-[#1A2116]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
-      <div className="border-b border-[#CCCCCC] bg-[#E0E0D0] px-6 pb-5 pt-5 dark:border-[#3A4A36] dark:bg-[#243020]">
-        <div className="flex items-center justify-between gap-4">
+      <div className="border-b border-border bg-surface px-6 pb-5 pt-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[20px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">
-              {t('page_title')}
-            </h1>
-            <p className="mt-0.5 text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/50">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/15 text-gold" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="9" y1="13" x2="15" y2="13" />
+                  <line x1="9" y1="17" x2="15" y2="17" />
+                </svg>
+              </span>
+              <h1 className="text-[20px] font-black tracking-tight text-foreground">
+                {t('page_title')}
+              </h1>
+            </div>
+            <p className="mt-1 text-[13px] text-foreground/60">
               {t('page_subtitle')}
             </p>
           </div>
-          {/* KPI chips — desktop */}
+          {/* KPI chips - desktop */}
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            <KpiChip value={String(stats.count)} color="#0044FF" label={t('stat_total_entries')} />
-            <KpiChip value={`${stats.revenue.toFixed(0)}$`} color="#C09A18" label={t('stat_total_revenue')} />
+            <KpiChip value={String(stats.count)} color="#1E40AF" label={t('stat_total_entries')} />
+            <KpiChip value={`${stats.revenue.toFixed(0)}$`} color="#DDAF3B" label={t('stat_total_revenue')} />
             <KpiChip value={`${stats.payouts.toFixed(0)}$`} color="#00C851" label={t('stat_total_payout')} />
           </div>
         </div>
 
-        {/* KPI cards — mobile only */}
+        {/* KPI cards - mobile only */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
           <StatCard label={t('stat_total_entries')} value={String(stats.count)} />
           <StatCard label={t('stat_total_revenue')} value={`${stats.revenue.toFixed(2)}$`} gold />
@@ -172,9 +182,9 @@ export function StationHistoryPage() {
 
         {/* Filters */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-          {/* Period — calendar */}
+          {/* Period - calendar */}
           <div>
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
+            <p className="mb-1.5 text-[10.5px] font-black uppercase tracking-[0.15em] text-foreground/55">
               {t('filter_period')}
             </p>
             <DateRangePicker value={dateRange} onChange={setDateRange} />
@@ -182,7 +192,7 @@ export function StationHistoryPage() {
 
           {/* Status */}
           <div>
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
+            <p className="mb-1.5 text-[10.5px] font-black uppercase tracking-[0.15em] text-foreground/55">
               {t('filter_status')}
             </p>
             <div className="flex gap-1.5">
@@ -191,10 +201,12 @@ export function StationHistoryPage() {
                   key={key}
                   type="button"
                   onClick={() => setStatus(key)}
-                  className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[13px] font-bold transition-all active:scale-[0.97] ${
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[13px] font-bold transition-all active:scale-[0.97] ${
                     status === key
-                      ? color ? 'text-white shadow-sm' : 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-                      : 'bg-[#C8C8B4] text-[#000717]/60 hover:bg-[#BDBDA8] dark:bg-[#1E2A1A] dark:text-[#FFFFF0]/60 dark:hover:bg-[#2A3626]'
+                      ? color
+                        ? 'border-transparent text-white shadow-sm'
+                        : 'border-transparent bg-gold text-background shadow-sm'
+                      : 'border-border bg-background text-foreground/70 hover:border-gold hover:text-gold'
                   }`}
                   style={status === key && color ? { background: color } : undefined}
                 >
@@ -231,7 +243,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-[#000C1F] transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-[#FFF8EC] dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-[13px] font-bold text-foreground transition-all hover:border-gold hover:text-gold active:scale-[0.98] disabled:opacity-30"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                   {t('pagination_prev')}
@@ -245,8 +257,8 @@ export function StationHistoryPage() {
                       onClick={() => setPage(p)}
                       className={`flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-bold transition-all active:scale-[0.95] ${
                         p === page
-                          ? 'bg-[#C09A18] text-[#1A2116] shadow-sm'
-                          : 'text-[#000717]/50 hover:bg-[#C8C8B4] dark:text-[#FFFFF0]/50 dark:hover:bg-[#1E2A1A]'
+                          ? 'bg-gold text-background shadow-sm'
+                          : 'text-foreground/55 hover:bg-surface hover:text-gold'
                       }`}
                     >
                       {p}
@@ -258,7 +270,7 @@ export function StationHistoryPage() {
                   type="button"
                   disabled={page >= meta.total_pages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="flex h-9 items-center gap-1.5 rounded-[10px] bg-[#C8C8B4] px-4 text-[13px] font-bold text-[#000C1F] transition-all hover:bg-[#BDBDA8] active:scale-[0.98] disabled:opacity-30 dark:bg-[#1E2A1A] dark:text-[#FFF8EC] dark:hover:bg-[#2A3626]"
+                  className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-[13px] font-bold text-foreground transition-all hover:border-gold hover:text-gold active:scale-[0.98] disabled:opacity-30"
                 >
                   {t('pagination_next')}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -274,21 +286,21 @@ export function StationHistoryPage() {
 
 function KpiChip({ value, color, label }: { value: string; color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-[8px] bg-[#C8C8B4] px-3 py-1.5 dark:bg-[#1E2A1A]">
+    <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5">
       <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-      <span className="font-mono text-[14px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{value}</span>
-      <span className="text-[11px] font-semibold text-[#000717]/50 dark:text-[#FFFFF0]/50">{label}</span>
+      <span className="font-mono text-[14px] font-black text-foreground tabular-nums">{value}</span>
+      <span className="text-[10.5px] font-bold uppercase tracking-wider text-foreground/55">{label}</span>
     </div>
   );
 }
 
 function StatCard({ label, value, gold }: { label: string; value: string; gold?: boolean }) {
   return (
-    <div className="rounded-2xl bg-[#C8C8B4] p-3 dark:bg-[#1E2A1A]">
-      <div className={`text-[18px] font-bold leading-tight ${gold ? 'text-[#C09A18]' : 'text-[#000C1F] dark:text-[#FFF8EC]'}`}>
+    <div className="rounded-2xl border border-border bg-background p-3">
+      <div className={`text-[18px] font-black leading-tight tabular-nums ${gold ? 'text-gold' : 'text-foreground'}`}>
         {value}
       </div>
-      <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-[#000717]/40 dark:text-[#FFFFF0]/35">
+      <div className="mt-0.5 text-[10.5px] font-black uppercase tracking-[0.15em] text-foreground/55">
         {label}
       </div>
     </div>
@@ -298,17 +310,17 @@ function StatCard({ label, value, gold }: { label: string; value: string; gold?:
 function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C8C8B4] dark:bg-[#243020]">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-[#000717]/25 dark:text-[#FFFFF0]/25">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-surface">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-foreground/30">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
           <polyline points="14 2 14 8 20 8" />
           <line x1="16" y1="13" x2="8" y2="13" />
           <line x1="16" y1="17" x2="8" y2="17" />
         </svg>
       </div>
-      <div>
-        <p className="text-[15px] font-bold text-[#000C1F] dark:text-[#FFF8EC]">{t('empty_title')}</p>
-        <p className="mt-1 max-w-xs text-[13px] text-[#000717]/50 dark:text-[#FFFFF0]/40">{t('empty_desc')}</p>
+      <div className="max-w-xs">
+        <p className="text-[15px] font-black text-foreground">{t('empty_title')}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-foreground/55">{t('empty_desc')}</p>
       </div>
     </div>
   );

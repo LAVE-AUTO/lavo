@@ -12,17 +12,18 @@ import { StationsPreviewSection } from '@/components/home/StationsPreviewSection
 import { NotificationsSection } from '@/components/home/NotificationsSection';
 import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { FaqSection } from '@/components/home/FaqSection';
+import { getLegalContent } from '@/server/admin/legal-content-service';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lavo.cm';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://Hurryline.cm';
 
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'LAVO',
+  name: 'Hurryline',
   url: APP_URL,
   logo: `${APP_URL}/icons/icon-192x192.png`,
   description:
-    'LAVO is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
+    'Hurryline is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
   sameAs: [],
 };
 
@@ -56,6 +57,14 @@ export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
+  const safeLocale: 'fr' | 'en' = locale === 'en' ? 'en' : 'fr';
+  const [steps, faq, howHtml, faqHtml] = await Promise.all([
+    getTranslations({ locale, namespace: 'home.steps' }),
+    getTranslations({ locale, namespace: 'home.faq' }),
+    getLegalContent('landing_how_it_works', { withDefault: true, locale: safeLocale }),
+    getLegalContent('landing_faq',          { withDefault: true, locale: safeLocale }),
+  ]);
+
   return (
     <>
       <script
@@ -64,15 +73,25 @@ export default async function LandingPage({ params }: Props) {
       />
       <HomeRedirectGuard />
       <PublicNavbar />
-      <main className="min-h-screen bg-[#EDEDED] dark:bg-[#0d1f0f] transition-colors">
+      <main className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
         <HeroSection />
         <MarqueeBanner />
         <FeaturesSection />
-        <HowItWorksSection />
+        <HowItWorksSection
+          tag={steps('tag')}
+          title={steps('title')}
+          titleAccent={steps('title_accent')}
+          html={howHtml ?? ''}
+        />
         <StationsPreviewSection />
         <NotificationsSection />
         <TestimonialsSection />
-        <FaqSection />
+        <FaqSection
+          tag={faq('tag')}
+          title={faq('title')}
+          titleAccent={faq('title_accent')}
+          html={faqHtml ?? ''}
+        />
       </main>
       <div className="hidden sm:block">
         <PublicFooter />

@@ -1,46 +1,40 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
-import { StationConfigForm, type StationConfig, type StationPost } from './StationConfigForm';
-import { StationProfileForm, type StationProfile } from './StationProfileForm';
-import { StationLocationForm, type StationLocation } from './StationLocationForm';
-import { StationSlotList } from './StationSlotList';
-import { SlotModal, type CreatedSlot } from './SlotModal';
-import { StationPhotosForm } from './StationPhotosForm';
+import type { StationConfig, StationPost } from './types';
+import type { StationProfile } from './StationProfileForm';
+import type { StationLocation } from './StationLocationForm';
+import { ConfigTabs, type ConfigTab, type ConfigTabId } from './ConfigTabs';
+import { CommerceIcon, HoursIcon, CapacityIcon, NotificationsIcon, PaymentsIcon } from './tab-icons';
+import { CommerceTab } from './tabs/CommerceTab';
+import { CapacityTab } from './tabs/CapacityTab';
+import { HoursTab } from './tabs/HoursTab';
+import { NotificationsTab } from './tabs/NotificationsTab';
+import { PaymentsTab } from './tabs/PaymentsTab';
+import { PageLoader } from '@/components/ui/PageLoader';
 
-const INITIAL_SLOTS: CreatedSlot[] = [];
-
-// Fallback config used when GET /station/config is unavailable
-const MOCK_CONFIG: StationConfig = {
-  id: 'mock',
-  opening_time: '08:00',
-  closing_time: '20:00',
-  break_start: '12:00',
-  break_end: '13:00',
-  wash_duration_minutes: 30,
-  late_tolerance_minutes: 10,
-  cancellation_delay_minutes: 60,
-  max_concurrent_posts: 3,
-  margin_before_minutes: 5,
-  margin_after_minutes: 5,
-  reservation_surcharge: '2.00',
+const EMPTY_CONFIG: StationConfig = {
+  id: '',
+  opening_time: null,
+  closing_time: null,
+  break_start: null,
+  break_end: null,
+  wash_duration_minutes: null,
+  wash_post_count: null,
+  late_tolerance_minutes: null,
+  cancellation_delay_minutes: null,
+  max_concurrent_posts: null,
+  margin_before_minutes: null,
+  margin_after_minutes: null,
+  reservation_surcharge: null,
 };
 
-const MOCK_POSTS: StationPost[] = [
-  { id: 'post-1', position: 1, is_active: true },
-  { id: 'post-2', position: 2, is_active: true },
-  { id: 'post-3', position: 3, is_active: false },
-];
-
-const MOCK_PROFILE: StationProfile = { name: '', description: null, service_scope: null };
-const MOCK_LOCATION: StationLocation = { address: '', city: '', latitude: null, longitude: null };
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+const EMPTY_PROFILE: StationProfile = { name: '', description: null, service_scope: null };
+const EMPTY_LOCATION: StationLocation = { address: '', city: '', latitude: null, longitude: null };
 
 interface StationMeData {
   data: {
@@ -54,24 +48,49 @@ interface StationMeData {
   };
 }
 
+const VALID_TABS: ConfigTabId[] = ['commerce', 'hours', 'capacity', 'notifications', 'payments'];
+
+function isValidTab(value: string | null): value is ConfigTabId {
+  return value !== null && (VALID_TABS as string[]).includes(value);
+}
+
 export function StationConfigPage() {
   const t = useTranslations('station_config');
   const { isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
 
-  const [config, setConfig] = useState<StationConfig>(MOCK_CONFIG);
-  const [posts, setPosts] = useState<StationPost[]>(MOCK_POSTS);
-  const [profile, setProfile] = useState<StationProfile>(MOCK_PROFILE);
-  const [location, setLocation] = useState<StationLocation>(MOCK_LOCATION);
-  const [slots, setSlots] = useState<CreatedSlot[]>(INITIAL_SLOTS);
-  const [selectedDate, setSelectedDate] = useState(todayISO);
+  const [config, setConfig] = useState<StationConfig>(EMPTY_CONFIG);
+  const [posts, setPosts] = useState<StationPost[]>([]);
+  const [profile, setProfile] = useState<StationProfile>(EMPTY_PROFILE);
+  const [location, setLocation] = useState<StationLocation>(EMPTY_LOCATION);
   const [loading, setLoading] = useState(true);
   const [isPendingApproval, setIsPendingApproval] = useState(false);
-  const [modal, setModal] = useState<'add' | 'generate' | 'bulk' | null>(null);
+  const initialTab = (() => {
+    const param = searchParams.get('tab');
+    return isValidTab(param) ? param : 'commerce';
+  })();
+  const [activeTab, setActiveTab] = useState<ConfigTabId>(initialTab);
+
+  // Reflect URL changes (e.g. user switches tab via the deep-link buttons in
+  // /station/availability without a full page reload).
+  useEffect(() => {
+    const param = searchParams.get('tab');
+    if (isValidTab(param) && param !== activeTab) {
+      setActiveTab(param);
+    }
+    // We intentionally only watch searchParams: we don't want to overwrite the
+    // user's manual tab clicks back to the URL value mid-session.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const loadData = useCallback(async () => {
-    const [configOk, configData] = await getFromApi('/station/config');
+    // /station/config and /station/me are independent - fetch in parallel
+    const [[configOk, configData], [meOk, meData]] = await Promise.all([
+      getFromApi('/station/config'),
+      getFromApi('/station/me'),
+    ]);
 
-    // Station not yet approved — all station API calls return 403 BUSINESS_NOT_APPROVED
+    // Station not yet approved - all station API calls return 403 BUSINESS_NOT_APPROVED
     if (!configOk && (configData as { code?: string }).code === 'BUSINESS_NOT_APPROVED') {
       setIsPendingApproval(true);
       setLoading(false);
@@ -84,7 +103,6 @@ export function StationConfigPage() {
       setPosts(res.data.posts);
     }
 
-    const [meOk, meData] = await getFromApi('/station/me');
     if (meOk) {
       const res = meData as StationMeData;
       setProfile({
@@ -100,12 +118,6 @@ export function StationConfigPage() {
       });
     }
 
-    const [slotsOk, slotsData] = await getFromApi('/station/slots');
-    if (slotsOk) {
-      const res = slotsData as { data: CreatedSlot[] };
-      setSlots(res.data ?? []);
-    }
-
     setLoading(false);
   }, []);
 
@@ -113,70 +125,80 @@ export function StationConfigPage() {
     if (!authLoading) loadData();
   }, [authLoading, loadData]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-[13px] text-[#666] dark:text-[#A0A090]">
-        {t('loading')}
-      </div>
-    );
-  }
+  const tabs: ConfigTab[] = [
+    { id: 'commerce', label: t('tab_commerce'), icon: <CommerceIcon /> },
+    { id: 'hours', label: t('tab_hours'), icon: <HoursIcon /> },
+    { id: 'capacity', label: t('tab_capacity'), icon: <CapacityIcon /> },
+    { id: 'notifications', label: t('tab_notifications'), icon: <NotificationsIcon /> },
+    { id: 'payments', label: t('tab_payments'), icon: <PaymentsIcon /> },
+  ];
 
-  const visibleSlots = slots.filter((s) => s.start_time.startsWith(selectedDate));
+  if (loading) {
+    return <PageLoader label={t('loading')} />;
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b border-[#E0DCD0] bg-white px-6 py-4 dark:border-[#1A2A14] dark:bg-[#111A0E]">
-        <div className="text-[16px] font-black text-[#1A1A0A] dark:text-[#F0EDD4]">
+      <div className="border-b border-[#FFF9EC] bg-white px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {t('page_title')}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-6">
-        {/* Pending approval banner */}
-        {isPendingApproval && (
-          <div className="flex items-start gap-4 rounded-xl border border-[#C49A1E]/25 bg-[#C49A1E]/8 px-5 py-4 dark:border-[#C49A1E]/20 dark:bg-[#C49A1E]/5">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C49A1E]/15">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C49A1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#C49A1E]">{t('pending_banner_title')}</p>
-              <p className="mt-0.5 text-[13px] text-[#8A6A00]/80 dark:text-[#C49A1E]/70">{t('pending_banner_desc')}</p>
-            </div>
-          </div>
-        )}
-        <StationProfileForm profile={profile} onSaved={setProfile} locked={isPendingApproval} />
-        <StationPhotosForm locked={isPendingApproval} />
-        <StationLocationForm location={location} onSaved={setLocation} locked={isPendingApproval} />
-        <StationConfigForm
-          config={config}
-          posts={posts}
-          locked={isPendingApproval}
-          onSaved={(c, p) => {
-            setConfig(c);
-            setPosts(p);
-          }}
-        />
-        <StationSlotList
-          slots={visibleSlots}
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          onDeleted={(id) => setSlots((prev) => prev.filter((s) => s.id !== id))}
-          onAddSlot={() => setModal('add')}
-          onGenerate={() => setModal('generate')}
-          onBulk={() => setModal('bulk')}
-        />
-      </div>
+      <ConfigTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
-      {modal && (
-        <SlotModal
-          mode={modal}
-          selectedDate={selectedDate}
-          onClose={() => setModal(null)}
-          onCreated={(newSlots) => setSlots((prev) => [...prev, ...newSlots])}
-        />
-      )}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 p-6">
+          {/* Pending approval banner */}
+          {isPendingApproval && (
+            <div className="flex items-start gap-4 rounded-xl border border-[#DDAF3B]/25 bg-[#DDAF3B]/8 px-5 py-4 dark:border-[#DDAF3B]/20 dark:bg-[#DDAF3B]/5">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/15">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-[#8A6A00] dark:text-[#DDAF3B]">{t('pending_banner_title')}</p>
+                <p className="mt-0.5 text-[13px] text-[#8A6A00]/80 dark:text-[#DDAF3B]/70">{t('pending_banner_desc')}</p>
+              </div>
+            </div>
+          )}
+
+          <div
+            id={`config-panel-${activeTab}`}
+            role="tabpanel"
+            aria-labelledby={`config-tab-${activeTab}`}
+          >
+            {activeTab === 'commerce' && (
+              <CommerceTab
+                profile={profile}
+                location={location}
+                locked={isPendingApproval}
+                onProfileSaved={setProfile}
+                onLocationSaved={setLocation}
+              />
+            )}
+            {activeTab === 'hours' && (
+              <HoursTab config={config} locked={isPendingApproval} />
+            )}
+            {activeTab === 'capacity' && (
+              <CapacityTab
+                config={config}
+                posts={posts}
+                locked={isPendingApproval}
+                onSaved={(c, p) => {
+                  setConfig(c);
+                  setPosts(p);
+                }}
+              />
+            )}
+            {activeTab === 'notifications' && <NotificationsTab locked={isPendingApproval} />}
+            {activeTab === 'payments' && <PaymentsTab locked={isPendingApproval} />}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

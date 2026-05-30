@@ -87,11 +87,11 @@ import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { entryIdParamSchema, upgradeToReservationBodySchema, mapZodErrors } from '@/validators/entry';
-import { upgradeQueueToReservation } from '@/server/reservations/reservation-service';
+import { upgradeQueueToReservation, upgradeQueueToReservationByStartTime } from '@/server/reservations/reservation-service';
 import { findEntryByIdAndUser } from '@/server/reservations/entry-repository';
 import { findStationById } from '@/server/station/station-repository';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
-import { AppError, ConflictError, NotFoundError } from '@/lib/errors';
+import { AppError, ConflictError, NotFoundError, SlotFullError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
 type Params = { params: Promise<{ entryId: string }> };
@@ -127,13 +127,21 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   }
 
   try {
-    const { entry: upgraded, clientSecret } = await upgradeQueueToReservation(
-      paramParsed.data.entryId,
-      auth.sub,
-      bodyParsed.data.time_slot_id,
-      entry.station_id,
-      station.stripe_account_id
-    );
+    const { entry: upgraded, clientSecret } = bodyParsed.data.start_time
+      ? await upgradeQueueToReservationByStartTime(
+          paramParsed.data.entryId,
+          auth.sub,
+          bodyParsed.data.start_time,
+          entry.station_id,
+          station.stripe_account_id
+        )
+      : await upgradeQueueToReservation(
+          paramParsed.data.entryId,
+          auth.sub,
+          bodyParsed.data.time_slot_id!,
+          entry.station_id,
+          station.stripe_account_id
+        );
     return successResponse(
       {
         reservation_id: upgraded.id,
@@ -145,12 +153,8 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     );
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);
-    if (e instanceof ConflictError) {
-      const code = e.message.includes('full')
-        ? ApiCode.SLOT_FULL
-        : ApiCode.CONFLICT;
-      return error409(e.message, code);
-    }
+    if (e instanceof SlotFullError) return error409(e.message, ApiCode.SLOT_FULL);
+    if (e instanceof ConflictError) return error409(e.message, ApiCode.CONFLICT);
     if (e instanceof AppError) return fromAppError(e);
     return error500(e);
   }

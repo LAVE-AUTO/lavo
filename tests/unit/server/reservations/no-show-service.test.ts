@@ -36,6 +36,9 @@ jest.mock('@/server/payments/payment-service', () => ({
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
 }));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('@/helpers/concurrency', () => ({
   runWithConcurrencyLimit: (...args: unknown[]) => mockRunWithConcurrencyLimit(...args),
@@ -137,7 +140,7 @@ describe('markQueueNoShows', () => {
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
     mockUpdateEntry.mockResolvedValue(entry);
-    mockCapturePaymentIntent.mockResolvedValue(undefined);
+    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
     mockRefundPaymentIntent.mockResolvedValue('re_test');
     mockDistributePenalty.mockResolvedValue(undefined);
     mockNotifyEntry.mockResolvedValue(undefined);
@@ -216,7 +219,7 @@ describe('markQueueNoShows', () => {
     const entry = makeEntry({ amount_paid: '-10.00' });
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
-    mockCapturePaymentIntent.mockResolvedValue(undefined);
+    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
     mockNotifyEntry.mockResolvedValue(undefined);
 
     const result = await markQueueNoShows();
@@ -231,7 +234,7 @@ describe('markQueueNoShows', () => {
     const entry = makeEntry();
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
-    mockCapturePaymentIntent.mockResolvedValue(undefined);
+    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
     mockRefundPaymentIntent.mockResolvedValue('re_test');
     mockDistributePenalty.mockResolvedValue(undefined);
     mockNotifyEntry.mockRejectedValue(new Error('FCM down'));

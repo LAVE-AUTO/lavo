@@ -16,15 +16,15 @@ const VARIANT_CONFIG: Record<
 > = {
   success: {
     containerClass:
-      'bg-lavo-success/10 border-l-4 border-lavo-success text-lavo-success',
+      'bg-Hurryline-success/10 border-l-4 border-Hurryline-success text-Hurryline-success',
     iconPath: 'M5 13l4 4L19 7',
-    iconColor: 'text-lavo-success',
+    iconColor: 'text-Hurryline-success',
   },
   error: {
     containerClass:
-      'bg-lavo-error/10 border-l-4 border-lavo-error text-lavo-error',
+      'bg-Hurryline-error/10 border-l-4 border-Hurryline-error text-Hurryline-error',
     iconPath: 'M6 18L18 6M6 6l12 12',
-    iconColor: 'text-lavo-error',
+    iconColor: 'text-Hurryline-error',
   },
   warning: {
     containerClass:

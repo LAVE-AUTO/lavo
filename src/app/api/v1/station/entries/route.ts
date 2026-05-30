@@ -1,19 +1,48 @@
 /**
- * GET /api/v1/station/entries
- * List all entries (reservations then queue) for the authenticated station with pagination. Auth: station.
+ * GET  /api/v1/station/entries - list all entries for the station (paginated). Auth: station.
+ * POST /api/v1/station/entries - create a walk-in entry (no Stripe payment). Auth: station.
  *
- * Query params: status, from (ISO date), to (ISO date), page, per_page
+ * GET query params: status, from (ISO date), to (ISO date), page, per_page
+ * POST body: { vehicle_format_id: UUID, service_id?: UUID, time_slot_id?: UUID }
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { listEntriesQuerySchema, mapZodErrors } from '@/validators/entry';
 import { findStationByUserId } from '@/server/station/station-repository';
-import { listStationEntries } from '@/server/reservations/reservation-service';
-import { serializeStationEntry } from '@/server/reservations/entry-serializer';
+import { listRichStationEntries, createWalkInEntry } from '@/server/reservations/reservation-service';
+import { serializeRichStationEntry, serializeEntry } from '@/server/reservations/entry-serializer';
 import { AppError, NotFoundError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
+import { z } from 'zod';
 import type { NextResponse } from 'next/server';
+
+const walkInBodySchema = z.object({
+  /* Optional: services without any configured vehicle_format still need
+   * to allow walk-in queue entries. When absent, amount_paid falls back
+   * to the service's cheapest active vehicle entry (or 0). */
+  vehicle_format_id: z.string().uuid('Invalid vehicle_format_id').optional(),
+  /* Optional: when provided, the entry is snapshooted with the picked
+   * station service so card titles can show the merchant-set name
+   * (Lavage Premium…) instead of the bare vehicle format. */
+  service_id: z.string().uuid('Invalid service_id').optional(),
+  time_slot_id: z.string().uuid('Invalid time_slot_id').optional(),
+  /* Walk-in client capture. Email is required when the merchant uses
+   * the manual-add modal; the legacy walk-in path with neither email
+   * nor format stays supported for the existing UI. */
+  client_email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Invalid client_email')
+    .max(320, 'client_email must not exceed 320 characters')
+    .optional(),
+  client_name: z
+    .string()
+    .trim()
+    .max(200, 'client_name must not exceed 200 characters')
+    .optional(),
+});
 
 export async function GET(request: Request): Promise<NextResponse> {
   const auth = await requireRole(request, 'station');
@@ -30,19 +59,22 @@ export async function GET(request: Request): Promise<NextResponse> {
     );
   }
 
-  const { status, from, to, page, per_page } = queryParsed.data;
+  const { status, from, to, slot_from, slot_to, entry_type, page, per_page } = queryParsed.data;
 
   try {
-    const result = await listStationEntries(station.id, {
+    const result = await listRichStationEntries(station.id, {
       status,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
+      slot_from: slot_from ? new Date(slot_from) : undefined,
+      slot_to: slot_to ? new Date(slot_to) : undefined,
+      entry_type,
       page,
       per_page,
     });
     return applyNoStoreHeaders(
       successResponse({
-        entries: result.rows.map(serializeStationEntry),
+        entries: result.rows.map(serializeRichStationEntry),
         total: result.total,
         page: result.page,
         per_page: result.per_page,
@@ -52,5 +84,43 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));
+  }
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
+  const auth = await requireRole(request, 'station');
+  if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
+
+  const station = await findStationByUserId(auth.sub);
+  if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
+
+  let body: unknown;
+  try { body = await request.json(); } catch { return applyNoStoreHeaders(error400('Invalid JSON body', ApiCode.VALIDATION_FAILED)); }
+
+  const parsed = walkInBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return applyNoStoreHeaders(error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(parsed.error)));
+  }
+
+  try {
+    const entry = await createWalkInEntry({
+      stationId: station.id,
+      stationOwnerUserId: auth.sub,
+      vehicleFormatId: parsed.data.vehicle_format_id,
+      timeSlotId: parsed.data.time_slot_id,
+      serviceId: parsed.data.service_id,
+      clientEmail: parsed.data.client_email,
+      clientName: parsed.data.client_name,
+    });
+    return applyNoStoreHeaders(successResponse(serializeEntry(entry)));
+  } catch (e) {
+    if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
+    if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
+    /* Log the raw error server-side so DB drift (missing column / FK)
+     * leaves a trace; surface a short identifying message to the client
+     * so the modal can show 'check the DB migrations' instead of {}. */
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[STATION_ENTRIES_POST] Unhandled walk-in failure', { error: msg });
+    return applyNoStoreHeaders(error500(msg));
   }
 }

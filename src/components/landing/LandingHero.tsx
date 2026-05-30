@@ -14,11 +14,13 @@ export function LandingHero() {
 
   const lightLogoSrc =
     locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc =
+    locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   return (
     <section className="relative overflow-hidden min-h-[80vh] lg:min-h-[92vh] flex items-center">
       {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#F8F7F2] via-[#F2F0E8] to-[#EBE8DC] dark:from-dark-bg dark:via-[#1E2A1A] dark:to-dark-bg transition-colors" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F8F7F2] via-[#F2F0E8] to-[#EBE8DC] dark:from-dark-bg dark:via-[#001A05] dark:to-dark-bg transition-colors" />
 
       {/* Decorative orbs */}
       <div className="absolute top-20 -left-32 w-96 h-96 rounded-full bg-gold/8 blur-3xl animate-float-orb" />
@@ -44,32 +46,14 @@ export function LandingHero() {
           <div className="space-y-7 animate-fade-in-up text-center lg:text-left">
             {/* Logo */}
             <div className="mb-2 flex justify-center lg:justify-start">
-              {isDark ? (
-                <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm">
-                    <Image
-                      src="/logo/frame2.png"
-                      alt=""
-                      width={36}
-                      height={36}
-                      className="w-9 h-9 object-contain"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <span className="text-[22px] font-bold text-white tracking-wide">
-                    Slowtime
-                  </span>
-                </div>
-              ) : (
-                <Image
-                  src={lightLogoSrc}
-                  alt="Slowtime"
-                  width={150}
-                  height={40}
-                  className="h-10 w-auto object-contain"
-                  priority
-                />
-              )}
+              <Image
+                src={isDark ? darkLogoSrc : lightLogoSrc}
+                alt="Hurryline"
+                width={150}
+                height={40}
+                className="h-10 w-auto object-contain"
+                priority
+              />
             </div>
 
             {/* Badge */}
@@ -84,7 +68,7 @@ export function LandingHero() {
             </div>
 
             {/* Title */}
-            <h1 className="text-[34px] sm:text-[48px] lg:text-[64px] font-black leading-[1.05] tracking-tight text-[#0A0A14] dark:text-white">
+            <h1 className="text-[34px] sm:text-[48px] lg:text-[64px] font-black leading-[1.05] tracking-tight text-foreground">
               {t('hero_title_1')}
               <br />
               <span className="hero-title-gradient">
@@ -93,7 +77,7 @@ export function LandingHero() {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-[16px] sm:text-[19px] leading-relaxed text-[#555] dark:text-[#C0C0B0] max-w-lg mx-auto lg:mx-0">
+            <p className="text-[16px] sm:text-[19px] leading-relaxed text-foreground/70 max-w-lg mx-auto lg:mx-0">
               {t('hero_subtitle')}
             </p>
 
@@ -139,14 +123,14 @@ export function LandingHero() {
               </Link>
               <Link
                 href="/merchant"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-[#D0D0C0] dark:border-tab-inactive text-[16px] font-bold text-[#1A1A1A] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-border text-[16px] font-bold text-[#001201] dark:text-white hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transition-colors"
               >
                 {t('cta_merchant')}
               </Link>
             </div>
           </div>
 
-          {/* Right: Phone mockup — desktop */}
+          {/* Right: Phone mockup - desktop */}
           <div
             className="hidden lg:flex items-center justify-center animate-fade-in"
             style={{ animationDelay: '0.35s' }}
@@ -154,7 +138,7 @@ export function LandingHero() {
             <PhoneMockup />
           </div>
 
-          {/* Phone mockup — mobile (scaled down, centered below text) */}
+          {/* Phone mockup - mobile (scaled down, centered below text) */}
           <div
             className="flex lg:hidden items-center justify-center animate-fade-in mt-4"
             style={{ animationDelay: '0.3s' }}

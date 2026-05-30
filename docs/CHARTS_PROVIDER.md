@@ -1,208 +1,158 @@
-# LAVO Charts Provider
+# Hurryline Charts Provider
 
 ## System Architecture
-**Purpose**: High-level components and external integrations
+**Purpose**: High-level component structure and provider integrations
 
 ```mermaid
 flowchart TD
-    ClientUser[Client User] -->|Browse and book| WebUI[Next.js Web UI]
-    StationUser[Station User] -->|Manage slots and validate| WebUI
-    AdminUser[Super Admin] -->|Govern platform| WebUI
+    ClientUser[Client User] -->|Browse and reserve| WebUI[Next.js Web UI]
+    StationUser[Station Operator] -->|Manage operations| WebUI
+    AdminUser[Admin] -->|Govern platform| WebUI
 
-    WebUI -->|Calls| ApiRoutes[Next.js API Routes /api/v1]
-    ApiRoutes -->|Delegates| DomainServices[Domain Services src/server]
-    DomainServices -->|Reads/Writes| DataLayer[Data Access Layer (Drizzle planned)]
-    DataLayer -->|SQL| Postgres[(PostgreSQL)]
+    WebUI -->|HTTP| ApiRoutes[API routes /api/v1]
+    ApiRoutes --> DomainServices[Domain services src/server]
+    DomainServices --> Drizzle[Drizzle ORM]
+    Drizzle --> Postgres[(PostgreSQL)]
 
-    DomainServices -->|Payments| Stripe[Stripe Connect]
-    DomainServices -->|Email| Resend[Resend]
-    DomainServices -->|Push| Fcm[Firebase FCM]
-    WebUI -->|Navigation link| Maps[Google Maps]
-    WebUI -->|Tracking via metas| Analytics[Google Analytics / PageSense]
+    ApiRoutes --> CronRoutes["/api/cron routes"]
+    CronRoutes --> Jobs[src/jobs]
+    Jobs --> DomainServices
 
-    CronJobs[Cron / Scheduled Tasks] -->|Reminders, queue switch| DomainServices
-    Stripe -->|Webhooks| ApiRoutes
+    DomainServices --> Stripe[Stripe Connect]
+    DomainServices --> Resend[Resend]
+    DomainServices --> Fcm[Firebase FCM]
+    DomainServices --> Redis[Upstash Redis]
+    DomainServices --> Cloudinary[Cloudinary]
+
+    Stripe -->|Webhook events| ApiRoutes
 ```
 
 **Usage**: Reference in `docs/ARCHITECTURE.md`
 
 ## Domain Interaction Map
-**Purpose**: How business domains coordinate
+**Purpose**: Major domain dependencies
 
 ```mermaid
 flowchart TD
+    Auth[Auth] --> Users[Users]
     Stations[Stations] --> Reservations[Reservations]
-    Reservations --> Payments[Payments]
-    Payments --> Notifications[Notifications]
-
-    Reservations --> Queue[Queue/Late handling]
-    Queue --> NoShow[No-show fees]
-    Queue --> Notifications
-
-    Reservations --> History[History]
-    Payments --> History
-
+    Reservations --> Queue[Queue Operations]
+    Reservations --> Payments[Stripe Payments]
+    Payments --> Disputes[Disputes/Refunds]
     Reservations --> Ratings[Ratings]
-    Ratings --> Stations
-
-    Admin[Admin] --> Kyc[KYC approvals]
-    Admin --> Disputes[Disputes/Refunds]
-    Admin --> Commission[Commission settings]
-    Admin --> Support[Support tickets]
-    Admin --> Logs[Admin logs]
-
-    Kyc --> Stations
-    Disputes --> Payments
-    Commission --> Payments
+    Reservations --> Notifications[Notifications]
+    Admin[Admin Governance] --> Stations
+    Admin --> Disputes
+    Admin --> Commission[Commission Settings]
+    Admin --> Support[Support]
     Support --> Notifications
 ```
 
 **Usage**: Reference in `docs/ARCHITECTURE.md` and `docs/FEATURES.md`
 
 ## Main User Journey
-**Purpose**: Client booking flow end-to-end
+**Purpose**: End-to-end client path
 
 ```mermaid
 flowchart TD
-    Visitor[Visitor] --> AuthRegister[Create account]
-    AuthRegister --> AuthVerify[Email verification]
-    AuthVerify --> AuthLogin[Session established]
-
-    AuthLogin --> StationList[Stations listing]
-    StationList --> StationDetail[Station details]
-    StationDetail --> VehicleFormat[Vehicle format]
-    VehicleFormat --> SlotSelect[Time slot selection]
-    SlotSelect --> StripeCheckout[Stripe payment]
-    StripeCheckout --> BookingConfirmed[Reservation confirmed]
-
-    BookingConfirmed --> Reminder5h[Push reminder (5h)]
-    BookingConfirmed --> Reminder30m[Push reminder (30m)]
-    Reminder30m --> Presence[Presence confirmation]
-    Reminder30m --> LateFlow[Late tolerance]
-    LateFlow --> Queue[Queue switch]
-
-    Presence --> Completed[Service completed]
-    Completed --> Rating[Rating]
-    Completed --> Tip[Tip (optional)]
-    Completed --> History[History and receipts]
-```
-
-**Usage**: Reference in `docs/FEATURES.md`
-
-## Booking Sequence (API interactions)
-**Purpose**: Typical request/response interactions during booking
-
-```mermaid
-sequenceDiagram
-    participant Client as Client UI
-    participant API as API (/api/v1)
-    participant DB as PostgreSQL
-    participant Stripe as Stripe Connect
-
-    Client->>API: GET /stations (search/filter)
-    API->>DB: Query active stations + availability
-    DB-->>API: Stations list
-    API-->>Client: 200 OK
-
-    Client->>API: POST /reservations (slot + format)
-    API->>DB: Lock slot row and validate capacity
-    DB-->>API: Slot reserved (pending_payment)
-    API->>Stripe: Create PaymentIntent
-    Stripe-->>API: PaymentIntent created
-    API-->>Client: Client secret
-
-    Stripe-->>API: Webhook payment_succeeded
-    API->>DB: Mark reservation confirmed + increment booked_count
-    API-->>Client: Push/email triggered asynchronously
+    Visitor --> Register
+    Register --> VerifyEmail
+    VerifyEmail --> Login
+    Login --> DiscoverStations
+    DiscoverStations --> StationDetail
+    StationDetail --> Booking
+    Booking --> Payment
+    Payment --> ReservationConfirmed
+    ReservationConfirmed --> Reminder
+    Reminder --> ConfirmPresence
+    ConfirmPresence --> ServiceDone
+    ServiceDone --> RateAndTip
 ```
 
 **Usage**: Reference in `docs/FEATURES.md`
 
 ## Reservation State Model
-**Purpose**: Reservation lifecycle states described in the technical spec
+**Purpose**: Reservation lifecycle
 
 ```mermaid
 stateDiagram-v2
-    [*] --> pending_payment
-    pending_payment --> confirmed
+    [*] --> pending
+    pending --> confirmed
     confirmed --> client_confirmed
     confirmed --> cancelled
-    client_confirmed --> completed
     confirmed --> late
-    late --> completed
+    late --> in_progress
     late --> no_show
-    cancelled --> [*]
+    client_confirmed --> in_progress
+    in_progress --> completed
     completed --> [*]
     no_show --> [*]
+    cancelled --> [*]
 ```
 
 **Usage**: Reference in `docs/FEATURES.md`
 
-## ER Diagram
-**Purpose**: Core entities and relationships
+## Booking Sequence
+**Purpose**: Typical API sequence for reservation creation
+
+```mermaid
+sequenceDiagram
+    participant UI as Client UI
+    participant API as API /api/v1
+    participant DB as PostgreSQL
+    participant Stripe as Stripe
+
+    UI->>API: POST /reservations
+    API->>DB: Validate slot/capacity
+    DB-->>API: Slot available
+    API->>Stripe: Create payment intent
+    Stripe-->>API: Client secret
+    API-->>UI: Reservation + payment data
+
+    Stripe-->>API: webhook payment_succeeded
+    API->>DB: Confirm reservation + store financial fields
+    API->>API: Trigger notifications
+```
+
+**Usage**: Reference in `docs/FEATURES.md`
+
+## Core ER Diagram
+**Purpose**: Data relationships at a glance
 
 ```mermaid
 erDiagram
-    USERS ||--o{ EMAIL_VERIFICATION_TOKENS : has
-    USERS ||--o{ RESERVATIONS : makes
-    USERS ||--o{ RATINGS : writes
-    USERS ||--o{ SUPPORT_TICKETS : opens
-
-    ADMINS ||--o{ COMMISSION_SETTINGS : sets
-    ADMINS ||--o{ ADMIN_LOGS : writes
-    ADMINS ||--o{ SUPPORT_TICKETS : assigned_to
-    ADMINS ||--o{ STATIONS : approves
-
-    STATIONS ||--|| STATION_CONFIGS : has
-    STATIONS ||--o{ VEHICLE_FORMATS : defines
-    STATIONS ||--o{ TIME_SLOTS : owns
+    USERS ||--o{ RESERVATIONS : books
     STATIONS ||--o{ RESERVATIONS : receives
-    STATIONS ||--o{ RATINGS : receives
-    STATIONS ||--o{ NOTIFICATIONS : receives
-
-    TIME_SLOTS ||--o{ RESERVATIONS : contains
-    VEHICLE_FORMATS ||--o{ RESERVATIONS : priced_by
-    RESERVATIONS ||--o{ NOTIFICATIONS : emits
-    RESERVATIONS ||--|| RATINGS : rated_by
-    RESERVATIONS ||--o| NO_SHOW_FEES : may_create
+    TIME_SLOTS ||--o{ RESERVATIONS : schedules
+    RESERVATIONS ||--o| RATINGS : has
+    RESERVATIONS ||--o| RESERVATION_TIPS : has
+    RESERVATIONS ||--o| NO_SHOW_FEES : has
+    RESERVATIONS ||--o{ DISPUTES : may_raise
+    USERS ||--o{ SUPPORT_TICKETS : opens
+    USERS ||--o{ USER_NOTIFICATIONS : receives
 ```
 
 **Usage**: Reference in `docs/DATABASE.md`
 
-## Site Navigation Map
-**Purpose**: Page hierarchy and protected areas
+## Navigation Map
+**Purpose**: Frontend route hierarchy by role
 
 ```mermaid
 flowchart TD
-    Home[Home] --> Stations[Stations]
-    Stations --> StationDetail[Station details]
-    StationDetail --> Booking[Booking entry]
+    Home --> Public[Public pages]
+    Home --> ClientArea[Client area]
+    Home --> StationArea[Station area]
+    Home --> AdminArea[Admin area]
 
-    Home --> Login[Login]
-    Home --> Register[Register]
+    ClientArea --> ClientRes[Reservations]
+    ClientArea --> ClientHist[History]
 
-    Login --> ClientDash[Client dashboard]
-    Login --> StationDash[Station dashboard]
-    Login --> AdminDash[Admin dashboard]
+    StationArea --> StationQueue[Queue]
+    StationArea --> StationCfg[Config]
 
-    ClientDash --> ClientRes[Client reservations]
-    ClientRes --> ResDetail[Reservation details]
-    ClientDash --> ClientHist[Client history]
-    ClientDash --> ClientSupport[Client support]
-
-    StationDash --> StationRes[Station reservations]
-    StationDash --> StationQueue[Station queue]
-    StationDash --> StationCfg[Station config]
-    StationDash --> StationFormats[Station formats]
-    StationDash --> StationQr[Station QR]
-
-    AdminDash --> AdminStations[Admin stations]
-    AdminDash --> AdminClients[Admin clients]
-    AdminDash --> AdminDisputes[Admin disputes]
-    AdminDash --> AdminSupport[Admin support]
-    AdminDash --> AdminFin[Admin commission/transactions]
-    AdminDash --> AdminLogs[Admin logs]
+    AdminArea --> AdminStations[Stations]
+    AdminArea --> AdminDisputes[Disputes]
+    AdminArea --> AdminLogs[Logs]
 ```
 
 **Usage**: Reference in `docs/PAGE_LISTING.md`
-

@@ -1,5 +1,5 @@
 /**
- * Unit tests for reservation-service: cancelEntry — queue cancellation path (mocked deps).
+ * Unit tests for reservation-service: cancelEntry - queue cancellation path (mocked deps).
  * Covers the queue cancellation branch added in refactor/gestion-retard.
  */
 const mockFindEntryByIdAndUser = jest.fn();
@@ -46,6 +46,15 @@ jest.mock('@/server/reservations/cancellation-service', () => ({
 
 jest.mock('@/server/notifications/notification-service', () => ({
   notifyEntry: (...args: unknown[]) => mockNotifyEntry(...args),
+}));
+jest.mock('@/server/notifications/client-feed-notifications', () => ({
+  notifyClientFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/notifications/station-feed-notifications', () => ({
+  notifyStationFeed: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('@/server/auth/user-repository', () => ({
+  findById: jest.fn().mockResolvedValue(null),
 }));
 
 jest.mock('@/server/notifications/escrow-released-notifications', () => ({
@@ -127,13 +136,13 @@ beforeEach(() => {
   mockShiftQueuePositions.mockResolvedValue(undefined);
 });
 
-describe('cancelEntry — queue cancellation path', () => {
+describe('cancelEntry - queue cancellation path', () => {
   describe('confirmed queue entry with stripe_payment_id', () => {
     it('applies cancellation fees: captures PI, issues partial refund, distributes penalty', async () => {
       const entry = makeQueueEntry();
       mockFindEntryByIdAndUser.mockResolvedValue(entry);
       mockUpdateEntry.mockResolvedValue(entry);
-      mockCapturePaymentIntent.mockResolvedValue(undefined);
+      mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
       mockRefundPaymentIntent.mockResolvedValue('re_test');
       mockDistributePenalty.mockResolvedValue(undefined);
 
@@ -148,7 +157,10 @@ describe('cancelEntry — queue cancellation path', () => {
       expect(mockDistributePenalty).toHaveBeenCalledWith(
         'pi_test',
         expect.any(Number),
-        DEFAULT_POLICY.stationPenaltyShare
+        DEFAULT_POLICY.stationPenaltyShare,
+        expect.stringContaining('queue-cancel-penalty:'),
+        undefined,
+        undefined
       );
       expect(result.isLateCancellation).toBe(true);
       expect(result.penaltyAmount).toBeCloseTo(20, 5);
@@ -187,7 +199,7 @@ describe('cancelEntry — queue cancellation path', () => {
   });
 
   describe('in_progress queue entry', () => {
-    it('falls through to simple cancellation path — does not apply fees', async () => {
+    it('falls through to simple cancellation path - does not apply fees', async () => {
       // A queue entry in in_progress is already being served. Clients cannot
       // trigger the fee-bearing capture/refund path for an entry already at the
       // station; it should fall through to the simple (no-Stripe) cancel branch.

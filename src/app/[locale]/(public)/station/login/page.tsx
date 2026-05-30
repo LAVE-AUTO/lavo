@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
 import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthRedirectGuard } from '@/components/auth/AuthRedirectGuard';
 import { AuthModeSwitcher } from '@/components/auth/AuthModeSwitcher';
+import { TabSwitcher } from '@/components/auth/TabSwitcher';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 
@@ -14,11 +14,11 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'station_login' });
-  return { title: `Slowtime — ${t('meta_title')}` };
+  return { title: `Hurryline - ${t('meta_title')}` };
 }
 
 /**
- * Station login page — split-screen layout.
+ * Station login page - split-screen layout.
  * Left: animated station brand panel (desktop only).
  * Right: shared LoginForm.
  */
@@ -29,9 +29,9 @@ export default async function StationLoginPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'station_login' });
 
   return (
-    <AuthRedirectGuard>
+    <AuthRedirectGuard locale={locale}>
       <div className="min-h-screen flex">
-        {/* Left brand panel — desktop only */}
+        {/* Left brand panel - desktop only */}
         <aside className="hidden lg:block lg:w-[42%] xl:w-[45%] shrink-0 sticky top-0 h-screen">
           <StationBrandPanel />
         </aside>
@@ -47,7 +47,7 @@ export default async function StationLoginPage({ params }: Props) {
 
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
-              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Slowtime</span>
+              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <LangToggle />
@@ -58,26 +58,25 @@ export default async function StationLoginPage({ params }: Props) {
               <h1 className="text-[26px] sm:text-[30px] font-bold text-dark-bg dark:text-white mb-2">
                 {t('welcome_title')}
               </h1>
-              <p className="text-[15px] text-[#555] dark:text-lavo-muted">
+              <p className="text-[15px] text-foreground/70 dark:text-Hurryline-muted">
                 {t('welcome_subtitle')}
               </p>
             </div>
 
             <AuthModeSwitcher mode="merchant" />
 
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
+            <div className="bg-white dark:bg-surface rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-gold/10 overflow-hidden animate-fade-in-up">
+              <div className="px-8 pt-6 pb-2">
+                <TabSwitcher
+                  activeTab="login"
+                  loginLabel={t('tab_login')}
+                  registerLabel={t('tab_register')}
+                  loginHref="/station/login"
+                  registerHref="/station/apply"
+                />
+              </div>
               <LoginForm forgotPasswordHref="/station/forgot-password" allowedRole="station" />
             </div>
-
-            <p className="text-center mt-6 text-[14px] text-[#666] dark:text-lavo-muted">
-              {t('no_account')}{' '}
-              <Link
-                href="/station/apply"
-                className="text-gold font-semibold hover:underline"
-              >
-                {t('register_link')}
-              </Link>
-            </p>
           </div>
         </main>
       </div>
