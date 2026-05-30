@@ -14,7 +14,7 @@ flowchart TD
     DomainServices --> Drizzle[Drizzle ORM]
     Drizzle --> Postgres[(PostgreSQL)]
 
-    ApiRoutes --> CronRoutes[/api/cron routes]
+    ApiRoutes --> CronRoutes["/api/cron routes"]
     CronRoutes --> Jobs[src/jobs]
     Jobs --> DomainServices
 
@@ -156,4 +156,3 @@ flowchart TD
 ```
 
 **Usage**: Reference in `docs/PAGE_LISTING.md`
-
