@@ -11,6 +11,7 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
 import { swaggerDefinition } from './spec';
+import { buildInferredPaths } from './infer-paths';
 
 let cachedSpec: ReturnType<typeof swaggerJsdoc> | null = null;
 
@@ -34,7 +35,29 @@ export function buildOpenApiSpec(): ReturnType<typeof swaggerJsdoc> {
     failOnErrors: true,
   };
 
-  const spec = swaggerJsdoc(options);
+  const spec = swaggerJsdoc(options) as ReturnType<typeof swaggerJsdoc> & {
+    paths?: Record<string, Record<string, unknown>>;
+  };
+
+  // Merge code-derived endpoints so /api/docs reflects full API surface.
+  // Handwritten @swagger operations remain authoritative and override inferred ones.
+  const inferredPaths = buildInferredPaths();
+  const annotatedPaths = spec.paths ?? {};
+  const mergedPaths: Record<string, Record<string, unknown>> = {};
+
+  for (const pathKey of Object.keys(inferredPaths)) {
+    mergedPaths[pathKey] = { ...(inferredPaths[pathKey] as Record<string, unknown>) };
+  }
+
+  for (const pathKey of Object.keys(annotatedPaths)) {
+    mergedPaths[pathKey] ??= {};
+    mergedPaths[pathKey] = {
+      ...mergedPaths[pathKey],
+      ...(annotatedPaths[pathKey] as Record<string, unknown>),
+    };
+  }
+
+  spec.paths = mergedPaths;
 
   // Freeze the cached object so request handlers cannot mutate it (cache poisoning).
   cachedSpec = Object.freeze(spec) as ReturnType<typeof swaggerJsdoc>;
