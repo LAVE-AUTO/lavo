@@ -1,8 +1,8 @@
 # Hurryline
 
-Car wash station booking and payments platform.
+Car-wash booking, queue, and payment platform for clients, stations, and admins.
 
-[![Build](https://img.shields.io/badge/build-planned-lightgrey)](#) [![Version](https://img.shields.io/badge/version-0.1.0-blue)](#) [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![Build](https://img.shields.io/badge/build-jest%20%2B%20playwright-blue)](#) [![Version](https://img.shields.io/badge/version-0.1.0-blue)](#) [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ## Quick Start
 
@@ -16,29 +16,32 @@ npm run dev
 
 - App: `http://localhost:3000/fr` or `http://localhost:3000/en`
 - Health check: `http://localhost:3000/api/v1/health`
+- API docs: `http://localhost:3000/api/docs`
 
 ## Key Features
 
-- Station discovery (listing, search, detail)
-- Slot-based reservations with capacity handling
-- Stripe Connect payments (commission split, payouts, refunds, tips)
-- Notifications (email via Resend, push via Firebase FCM)
-- Late handling with queue switch and no-show fees (planned)
-- Admin governance (KYC, disputes, commission settings, audit logs)
+- Full auth lifecycle (register, login, refresh, verify email, reset password, role checks)
+- Station discovery, onboarding, KYC review, profile/config/formats/extras management
+- Reservation + queue lifecycle (delays, reschedule, no-show, confirm presence, upgrades)
+- Stripe Connect payments, tips, reconciliation, disputes/refunds, commission history
+- Notifications (email, push, in-app feed, user notification preferences)
+- Admin operations (dashboard analytics, ratings moderation, legal content, support, logs)
+- Scheduled jobs for reminders, reconciliations, cleanup, and compliance notifications
 
 ## Tech Stack
 
-- Next.js 16.1.6 (App Router), React 19.2.3, TypeScript 5
-- Tailwind CSS v4, next-intl (fr/en)
-- PostgreSQL (Neon for development; Railway PostgreSQL for production)
-- Drizzle ORM, Zod, Axios
+- Next.js `16.2.4` (App Router), React `19.2.3`, TypeScript `5`
+- Tailwind CSS `4`, next-intl `4.8.3`
+- PostgreSQL + Drizzle ORM (`53` SQL migrations in repository)
+- Stripe, Resend, Firebase Admin/FCM, Cloudinary, Upstash Redis
+- Jest + Testing Library + Playwright (`101` unit, `5` integration, `5` e2e tests)
 
 ## Deployment Status
 
 [Standalone Application]
 
-- Installation: see `docs/INSTALLATION.md`
-- Deployment: see `docs/DEPLOYMENT.md`
+- Installation: `docs/INSTALLATION.md`
+- Deployment: `docs/DEPLOYMENT.md`
 
 ## Documentation
 

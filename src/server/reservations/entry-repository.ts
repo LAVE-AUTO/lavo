@@ -40,6 +40,8 @@ const RESERVATION_COLUMNS = {
   client_confirmed: reservations.client_confirmed,
   cancellation_reason: reservations.cancellation_reason,
   penalty_amount: reservations.penalty_amount,
+  pi_cancel_failed_at: reservations.pi_cancel_failed_at,
+  refund_persist_failed_at: reservations.refund_persist_failed_at,
   confirmed_at: reservations.confirmed_at,
   completed_at: reservations.completed_at,
   walk_in_client_email: reservations.walk_in_client_email,

@@ -41,6 +41,13 @@ export const swaggerDefinition: OAS3Definition = {
         bearerFormat: 'JWT',
         description: 'JWT access token issued at login or register. Lifetime: 15 minutes.',
       },
+      CronSecret: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-cron-secret',
+        description:
+          'Shared secret used by protected cron endpoints. Can be sent as x-cron-secret or Authorization: Bearer <CRON_SECRET>.',
+      },
     },
     schemas: {
       /* ------------------------------------------------------------------ */
