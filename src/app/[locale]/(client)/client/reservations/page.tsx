@@ -690,7 +690,12 @@ function ReservationCard({
    *   - signalDelay: surfaces only within the last 2h before service start
    *     (no point warning a station 5 days in advance)
    *   - reschedule:  available for confirmed/pending entries until start */
-  const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
+  /* Reschedule mirrors the cancel/signal-delay status set so an upcoming entry
+   * shown as actionable always exposes all three actions (pending_payment is
+   * surfaced as "Confirmé" via displayStatus, so it must stay reschedulable). */
+  const canReschedule =
+    variant === 'upcoming' &&
+    (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
   /* The signal-delay button is shown on every upcoming confirmed/pending reservation
    * but only enabled within the 2h window before slotStart. Outside the window the
    * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
@@ -730,7 +735,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
+                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? r.vehicleFormatLabel ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -1036,7 +1041,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
+                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? q.vehicleFormatLabel ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}

@@ -1033,7 +1033,7 @@
         "tip_prompt_title": "Happy with the service?",
         "tip_prompt_subtitle": "Thank your service provider with a tip.",
         "signal_delay_btn": "Signal a delay",
-        "signal_delay_btn_disabled_tooltip": "Available 2 hours before service start",
+        "signal_delay_btn_disabled_tooltip": "Available only within the 2 hours before your service",
         "ticket_code_label": "Code to present",
         "reschedule_btn": "Reschedule reservation",
         "toast_cancel_success": "Reservation cancelled successfully",

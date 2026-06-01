@@ -1033,7 +1033,7 @@
         "tip_prompt_title": "Satisfait du service ?",
         "tip_prompt_subtitle": "Remerciez votre prestataire avec un pourboire.",
         "signal_delay_btn": "Signaler un retard",
-        "signal_delay_btn_disabled_tooltip": "Disponible 2 h avant le début du service",
+        "signal_delay_btn_disabled_tooltip": "Disponible uniquement dans les 2 heures précédant le service",
         "ticket_code_label": "Code à présenter",
         "reschedule_btn": "Reporter la réservation",
         "toast_cancel_success": "Réservation annulée avec succès",
