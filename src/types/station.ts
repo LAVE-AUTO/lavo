@@ -25,7 +25,19 @@ export interface Station {
   isOpen?: boolean;
   /** Distance from the user in km, computed server-side when near_lat/near_lng are passed. */
   distanceKm?: number;
+  /** Contextual open/close status used by the station card badge. */
+  stationStatus?: StationStatus;
+  /** Name of the cheapest service (matches priceFrom). Shown on the card body. */
+  serviceFrom?: string | null;
 }
+
+/** Contextual station status surfaced on the station card status badge. */
+export type StationStatus =
+  | 'open'
+  | 'opening_soon'
+  | 'closing_soon'
+  | 'closed'
+  | 'no_future_availability';
 
 /**
  * Single public review attached to a station.
