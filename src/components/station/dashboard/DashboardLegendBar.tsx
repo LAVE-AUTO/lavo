@@ -20,7 +20,7 @@ export function DashboardLegendBar() {
   ];
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#FFF9EC] bg-white px-5 py-2 dark:border-[#1A2A14] dark:bg-dark-bg">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#D8CCA0] bg-transparent px-5 py-2 dark:border-[#1A2A14] dark:bg-dark-bg">
       {items.map((item) => (
         <div key={item.labelKey} className="flex items-center gap-1.5 text-[12px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
           <div

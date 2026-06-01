@@ -713,27 +713,27 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <div className="flex rounded-lg overflow-hidden border border-[#3A4A30]">
                   <button
                     type="button"
-                    onClick={() => setIsActive(true)}
-                    aria-pressed={isActive}
-                    className={`px-4 py-1.5 text-[11px] font-bold transition-all ${
-                      isActive
-                        ? 'bg-[#DDAF3B] text-[#001201]'
-                        : 'bg-transparent text-[#B0BFB1] hover:text-[#FFF9EC]'
-                    }`}
-                  >
-                    {t('badge_active')}
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setIsActive(false)}
                     aria-pressed={!isActive}
-                    className={`px-4 py-1.5 text-[11px] font-bold transition-all border-l border-[#3A4A30] ${
+                    className={`px-4 py-1.5 text-[11px] font-bold transition-all ${
                       !isActive
                         ? 'bg-[#3A3A3A] text-[#FFF9EC]'
                         : 'bg-transparent text-[#B0BFB1] hover:text-[#FFF9EC]'
                     }`}
                   >
                     {t('badge_inactive')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(true)}
+                    aria-pressed={isActive}
+                    className={`px-4 py-1.5 text-[11px] font-bold transition-all border-l border-[#3A4A30] ${
+                      isActive
+                        ? 'bg-[#DDAF3B] text-[#001201]'
+                        : 'bg-transparent text-[#B0BFB1] hover:text-[#FFF9EC]'
+                    }`}
+                  >
+                    {t('badge_active')}
                   </button>
                 </div>
               </div>

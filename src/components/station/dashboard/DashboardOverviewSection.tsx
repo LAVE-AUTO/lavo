@@ -97,7 +97,7 @@ export function DashboardOverviewSection({ data }: Props) {
   ];
 
   return (
-    <section className="flex flex-shrink-0 flex-col border-b border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
+    <section className="flex flex-shrink-0 flex-col border-b border-[#D8CCA0] bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
       <div className="flex items-center gap-2 px-5 py-2.5">
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#B0BFB1]">
           {t('overview_title')}

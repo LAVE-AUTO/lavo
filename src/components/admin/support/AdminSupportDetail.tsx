@@ -241,7 +241,7 @@ export function AdminSupportDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="shrink-0 border-b border-[#D8CCA0] bg-transparent px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
           <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#DDAF3B] dark:text-[#B0BFB1]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('btn_back')}

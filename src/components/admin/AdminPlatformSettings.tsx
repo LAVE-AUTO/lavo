@@ -335,7 +335,7 @@ export function AdminPlatformSettings() {
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="shrink-0 flex items-center justify-between border-b border-[#D8CCA0] bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div>
           <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
           <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>

@@ -89,7 +89,7 @@ export function BayFilterMobilePills({ posts, selectedPostId, onSelect }: Props)
   if (active.length === 0) return null;
 
   return (
-    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#FFF9EC] bg-[#FFF9EC] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-dark-bg">
+    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#D8CCA0] bg-transparent px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-dark-bg">
       <MobilePill
         active={selectedPostId === 'all'}
         onClick={() => onSelect('all')}

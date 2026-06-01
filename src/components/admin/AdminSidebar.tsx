@@ -205,7 +205,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop sidebar - always visible at lg+ */}
-      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
+      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#EDE8DC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
         {sidebarContent}
       </aside>
 
@@ -217,7 +217,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         >
           <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           <aside
-            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#D8CCA0] bg-[#FFF9EC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#D8CCA0] bg-[#EDE8DC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

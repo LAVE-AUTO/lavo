@@ -197,7 +197,7 @@ export function StationSidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
+      className={`flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#EDE8DC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
         collapsed ? 'w-[72px]' : 'w-[220px]'
       }`}
     >
