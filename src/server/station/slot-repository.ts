@@ -285,8 +285,10 @@ export async function shiftSubsequentSlots(
 
 /**
  * Returns slots matching the given list of ids.
+ * Pass `tx` to run inside an existing transaction (required for TOCTOU-safe ownership checks).
  */
-export async function findSlotsByIds(slotIds: string[]): Promise<TimeSlot[]> {
+export async function findSlotsByIds(slotIds: string[], tx?: DbTransaction): Promise<TimeSlot[]> {
   if (slotIds.length === 0) return [];
-  return db.select().from(timeSlots).where(inArray(timeSlots.id, slotIds));
+  const client = tx ?? db;
+  return client.select().from(timeSlots).where(inArray(timeSlots.id, slotIds));
 }

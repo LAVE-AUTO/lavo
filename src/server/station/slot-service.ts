@@ -140,7 +140,7 @@ export async function replaceSlots(
 ): Promise<TimeSlot[]> {
   return db.transaction(async (tx) => {
     if (idsToDelete.length > 0) {
-      const existing = await findSlotsByIds(idsToDelete);
+      const existing = await findSlotsByIds(idsToDelete, tx);
 
       const deletable: string[] = [];
       for (const id of idsToDelete) {

@@ -274,10 +274,12 @@ export default function StationAvailabilityPage() {
   }
 
   async function handleDeleteGroup(ids: string[]) {
-    const results = await Promise.all(ids.map((id) => deleteWithApi(`/station/slots/${id}`)));
+    // Use the bulk DELETE endpoint so all slots are removed in one round-trip
+    // instead of N parallel individual deletes that each succeed or fail independently.
+    const [ok] = await deleteWithApi('/station/slots', { autoJoin: false, data: { ids } });
     if (!mountedRef.current) return;
 
-    if (results.some(([ok]) => !ok)) {
+    if (!ok) {
       showError(t('availability_delete_error'));
       return;
     }
