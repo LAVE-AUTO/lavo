@@ -172,7 +172,7 @@ export function StationSidebar() {
     const baseClass =
       'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
     const activeClass = 'bg-[#DDAF3B] text-[#001201] shadow-sm';
-    const idleClass = 'text-[#5A5A4A] hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
+    const idleClass = 'text-[#5A5A4A] hover:bg-[#EDE5C8] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
     const layoutClass = collapsed
       ? 'h-10 w-10 justify-center'
       : 'gap-2.5 px-3 py-2.5';
@@ -197,7 +197,7 @@ export function StationSidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
+      className={`flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
         collapsed ? 'w-[72px]' : 'w-[220px]'
       }`}
     >
@@ -208,7 +208,7 @@ export function StationSidebar() {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#EDE5C8] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -240,7 +240,7 @@ export function StationSidebar() {
 
       {/* Logout */}
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-[#D8CCA0] dark:bg-[#1A2A14]" />
         <button
           type="button"
           onClick={() => logout()}
