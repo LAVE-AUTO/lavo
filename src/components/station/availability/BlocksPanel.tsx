@@ -106,25 +106,25 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
             {blocks.map((block) => (
               <div
                 key={block.id}
-                className="rounded-xl border border-separator/25 bg-card-surface p-3 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05]"
+                className="rounded-xl border border-separator/25 bg-card-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05]"
               >
                 {/* Postes badge */}
-                <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#DDAF3B]/15 px-2.5 py-0.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#DDAF3B]">
+                <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#DDAF3B]/15 px-3 py-1">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
                     {t('availability_block_postes')}
                   </span>
-                  <span className="text-[10px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                  <span className="text-[11px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                     {formatBays(block.bayIds)}
                   </span>
                 </div>
 
                 {/* Condensed date ranges */}
-                <p className="mb-1 text-[12px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
+                <p className="mb-1 text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
                   {formatDates(block.dates)}
                 </p>
 
-                {/* Time range */}
-                <p className="mb-2.5 text-[13px] font-black text-[#DDAF3B]">
+                {/* Time range — large and prominent */}
+                <p className="mb-3 text-[20px] font-black leading-tight text-[#DDAF3B]">
                   {block.startTime} – {block.endTime}
                 </p>
 
@@ -132,10 +132,10 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                   <button
                     type="button"
                     onClick={() => onDelete(block.id)}
-                    className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#FF2525] bg-transparent px-3 py-1.5 text-[11px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
                     aria-label={`${t('availability_block_delete')} - ${formatDates(block.dates)}`}
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                     {t('availability_block_delete')}
@@ -143,10 +143,10 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                   <button
                     type="button"
                     onClick={() => onEdit(block)}
-                    className="cursor-pointer inline-flex items-center gap-1 rounded-lg bg-[#DDAF3B] px-2.5 py-1 text-[10px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
                     aria-label={`${t('availability_block_edit')} - ${formatDates(block.dates)}`}
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
