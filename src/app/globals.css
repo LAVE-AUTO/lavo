@@ -28,6 +28,8 @@
     --separator: #D8CCA0;
     --separator-hover: #B8A870;
     --sidebar-bg: #EDE8DC;
+    /* Elevated card surface — barely-warm ivory, just distinct from white page bg */
+    --card-surface: #FEFCF5;
 }
 
 .dark {
@@ -69,6 +71,7 @@
     --color-separator: var(--separator);
     --color-separator-hover: var(--separator-hover);
     --color-sidebar-bg: var(--sidebar-bg);
+    --color-card-surface: var(--card-surface);
     --color-dark-bg: #001201;
     --color-dark-card: #001A05;
     --color-dark-surface: #001A05;
