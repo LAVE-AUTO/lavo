@@ -1000,14 +1000,16 @@ async function fetchFirstImagePerStation(
 ): Promise<Map<string, string>> {
   const unique = Array.from(new Set(stationIds));
   if (unique.length === 0) return new Map();
-  const rows = await db.execute<{ station_id: string; url: string }>(
+  const queryResult = await db.execute<{ station_id: string; url: string }>(
     sql`SELECT DISTINCT ON (station_id) station_id, url
         FROM station_photos
         WHERE station_id IN (${sql.join(unique.map((id) => sql`${id}`), sql`, `)})
         ORDER BY station_id, position ASC`
   );
+  // node-postgres returns a pg.Result object: rows live under `.rows`, the result
+  // itself is not iterable. Reading it directly threw "rows is not iterable".
   const result = new Map<string, string>();
-  for (const row of rows as unknown as Array<{ station_id: string; url: string }>) {
+  for (const row of queryResult.rows) {
     if (row?.station_id && row?.url) result.set(row.station_id, row.url);
   }
   return result;
