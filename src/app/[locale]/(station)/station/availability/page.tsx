@@ -210,7 +210,11 @@ export default function StationAvailabilityPage() {
     // Slots are independent rows so cross-date edits become "rewrite the set".
     if (editingBlock) {
       const idsToDelete = editingBlock.ids ?? [editingBlock.id];
-      await Promise.all(idsToDelete.map((id) => deleteWithApi(`/station/slots/${id}`)));
+      const deleteResults = await Promise.all(idsToDelete.map((id) => deleteWithApi(`/station/slots/${id}`)));
+      if (deleteResults.some(([ok]) => !ok)) {
+        showError(t('availability_delete_error'));
+        return;
+      }
     }
 
     // Capacity: if "all bays" → use the active-bay count; otherwise the count of selected bays.
