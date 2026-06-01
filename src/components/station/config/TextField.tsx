@@ -32,10 +32,10 @@ export function TextField({
   const inputProps = type === 'number' ? { ...rest, step: undefined } : rest;
   const borderColor = invalid
     ? 'border-[#EF4444]/60 focus-within:border-[#EF4444] focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
-    : 'border-[#FFF9EC] hover:border-[#D0C8B0] focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:hover:border-[#2E3C2A]';
+    : 'border-[#D8CCA0] hover:border-[#B8A870] focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221,175,59,0.12)] dark:border-[#001A05] dark:hover:border-[#2E3C2A]';
 
   const disabledClasses = disabled
-    ? 'cursor-not-allowed border-[#FFF9EC] opacity-60 dark:border-[#1A2A14]'
+    ? 'cursor-not-allowed border-[#D8CCA0] opacity-60 dark:border-[#1A2A14]'
     : borderColor;
 
   return (
