@@ -28,8 +28,8 @@
     --separator: #D8CCA0;
     --separator-hover: #B8A870;
     --sidebar-bg: #EDE8DC;
-    /* Elevated card surface — barely-warm ivory, just distinct from white page bg */
-    --card-surface: #FEFCF5;
+    /* Elevated card surface — pure white on the cream shell bg (#FFF9EC) */
+    --card-surface: #FFFFFF;
 }
 
 .dark {

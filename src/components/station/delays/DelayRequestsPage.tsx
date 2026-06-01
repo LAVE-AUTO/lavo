@@ -214,7 +214,7 @@ export function DelayRequestsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-dark-bg">
+    <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b border-separator bg-transparent px-6 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-transparent">
         <div className="flex items-end justify-between gap-4">
