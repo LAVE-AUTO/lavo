@@ -85,8 +85,8 @@ export function NumberStepper({
     <div
       className={`group relative flex items-stretch overflow-hidden rounded-xl border bg-white transition-all duration-150 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:bg-dark-bg ${
         disabled
-          ? 'cursor-not-allowed border-[#D8CCA0] opacity-60 dark:border-[#1A2A14]'
-          : 'border-[#D8CCA0] hover:border-[#B8A870] dark:border-[#001A05] dark:hover:border-[#2E3C2A]'
+          ? 'cursor-not-allowed border-separator opacity-60 dark:border-[#1A2A14]'
+          : 'border-separator hover:border-separator-hover dark:border-[#001A05] dark:hover:border-[#2E3C2A]'
       }`}
     >
       <button

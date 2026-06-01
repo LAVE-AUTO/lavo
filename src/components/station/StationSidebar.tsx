@@ -197,7 +197,7 @@ export function StationSidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-[#D8CCA0] bg-[#EDE8DC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
+      className={`flex shrink-0 flex-col border-r border-separator bg-sidebar-bg p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
         collapsed ? 'w-[72px]' : 'w-[220px]'
       }`}
     >
@@ -240,7 +240,7 @@ export function StationSidebar() {
 
       {/* Logout */}
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#D8CCA0] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-separator dark:bg-[#1A2A14]" />
         <button
           type="button"
           onClick={() => logout()}

@@ -24,6 +24,10 @@
     --surface: #FFF9EC;
     --border: rgba(0, 18, 1, 0.08);
     --grey-2: #B0BFB1;
+    /* Panel chrome tokens (station + admin shells) */
+    --separator: #D8CCA0;
+    --separator-hover: #B8A870;
+    --sidebar-bg: #EDE8DC;
 }
 
 .dark {
@@ -62,6 +66,9 @@
        Migrating call-sites to `bg-background` / `dark:bg-background` is a
        follow-up sweep; while that lands, keeping these pointers avoids a
        big-bang regression on the existing screens. */
+    --color-separator: var(--separator);
+    --color-separator-hover: var(--separator-hover);
+    --color-sidebar-bg: var(--sidebar-bg);
     --color-dark-bg: #001201;
     --color-dark-card: #001A05;
     --color-dark-surface: #001A05;

@@ -21,7 +21,7 @@ export function ConfigTabs({ tabs, active, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Settings sections"
-      className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-[#D8CCA0] bg-transparent px-2 dark:border-[#1A2A14] dark:bg-dark-bg/95 dark:backdrop-blur-md"
+      className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-separator bg-transparent px-2 dark:border-[#1A2A14] dark:bg-dark-bg/95 dark:backdrop-blur-md"
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;

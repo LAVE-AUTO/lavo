@@ -224,7 +224,7 @@ export function AdminDisputeDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#D8CCA0] bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="shrink-0 border-b border-separator bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#DDAF3B]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('back_link')}

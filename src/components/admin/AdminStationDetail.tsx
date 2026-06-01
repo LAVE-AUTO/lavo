@@ -179,7 +179,7 @@ export function AdminStationDetail({ id }: Props) {
     <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
 
       {/* ── Sticky sub-header ── */}
-      <div className="flex items-center gap-4 border-b border-[#D8CCA0] bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="flex items-center gap-4 border-b border-separator bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#FFF9EC] dark:bg-[#001A05] dark:text-[#B0BFB1]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
@@ -360,7 +360,7 @@ export function AdminStationDetail({ id }: Props) {
 
       {/* ── Sticky action bar ── */}
       {isPending && (
-        <div className="border-t border-[#D8CCA0] bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="border-t border-separator bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           {actionError && <p className="mb-3 text-[13px] font-semibold text-[#EF4444]">{actionError}</p>}
 
           {!showReject ? (

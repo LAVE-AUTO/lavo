@@ -198,7 +198,7 @@ export function DashboardAgendaTimeline({
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-dark-bg">
       {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-[#D8CCA0] bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="flex flex-shrink-0 border-b border-separator bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="w-14 flex-shrink-0 border-r border-[#FFF9EC] dark:border-[#1A2A14]" />
         {visiblePosts.length === 0 ? (
           <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">

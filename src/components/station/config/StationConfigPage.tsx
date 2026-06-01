@@ -139,7 +139,7 @@ export function StationConfigPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b border-[#D8CCA0] bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="border-b border-separator bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {t('page_title')}
         </div>

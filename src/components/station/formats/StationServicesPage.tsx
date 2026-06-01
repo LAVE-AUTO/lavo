@@ -185,7 +185,7 @@ export function StationServicesPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Topbar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8CCA0] bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-separator bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="min-w-0">
           <h1 className="text-[22px] font-black tracking-tight text-[#001201] dark:text-[#FFF9EC]">
             {t('page_title')}

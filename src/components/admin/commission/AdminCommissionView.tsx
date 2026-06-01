@@ -66,7 +66,7 @@ export function AdminCommissionView() {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-[#D8CCA0] bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="shrink-0 border-b border-separator bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
