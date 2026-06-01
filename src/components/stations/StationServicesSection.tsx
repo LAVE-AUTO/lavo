@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { StationServicePublic } from '@/types/station';
 
@@ -88,16 +88,6 @@ export function StationServicesSection({
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(featuredDefault ? [featuredDefault.category] : categories[0] ? [categories[0].category] : []),
   );
-
-  /* Keep the category of the currently selected service open so its featured
-   * card stays visible when the selection is driven from outside (e.g. the
-   * pre-selection coming from the station detail screen). */
-  useEffect(() => {
-    if (!selectedServiceId) return;
-    const svc = services.find((s) => s.id === selectedServiceId);
-    if (!svc) return;
-    setExpanded((prev) => (prev.has(svc.category) ? prev : new Set(prev).add(svc.category)));
-  }, [selectedServiceId, services]);
 
   if (services.length === 0) {
     return (
