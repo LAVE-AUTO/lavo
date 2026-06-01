@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 const MAX_REASON = 300;
+const MIN_REASON = 3;
+const TEMPLATE_KEYS = ['refuse_template_full', 'refuse_template_planning', 'refuse_template_reschedule'] as const;
 
 interface RefuseReasonModalProps {
   open: boolean;
@@ -47,11 +49,28 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
             </div>
           </div>
 
-          {/* Reason textarea */}
+          {/* Quick templates */}
+          <div className="mb-3">
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-foreground/70/50 dark:text-[#FFFFF0]/40">{t('templates_label')}</p>
+            <div className="flex flex-wrap gap-2">
+              {TEMPLATE_KEYS.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setReason(t(key).slice(0, MAX_REASON))}
+                  disabled={loading}
+                  className="rounded-full border border-[#DDD9CC] bg-[#F5F4EE] px-3 py-1.5 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-[#FF383C]/50 hover:text-[#FF383C] disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFFFF0]/60"
+                >
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Reason textarea (required) */}
           <div>
             <label htmlFor="refusal-reason" className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-foreground/70/50 dark:text-[#FFFFF0]/40">
               {t('refuse_reason_label')}
-              <span className="ml-1 normal-case font-normal text-foreground/70/30 dark:text-[#FFFFF0]/25">({t('optional')})</span>
             </label>
             <textarea
               id="refusal-reason"
@@ -94,8 +113,8 @@ export function RefuseReasonModal({ open, loading, error, onConfirm, onCancel }:
             </button>
             <button
               type="button"
-              onClick={() => onConfirm(reason)}
-              disabled={loading}
+              onClick={() => onConfirm(reason.trim())}
+              disabled={loading || reason.trim().length < MIN_REASON}
               className="flex-1 rounded-[10px] bg-[#FF383C] py-2.5 text-[13px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-[#D43D22] hover:shadow-md disabled:opacity-60"
             >
               {loading ? (

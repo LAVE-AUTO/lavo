@@ -249,7 +249,25 @@ export default function SignalDelayPage() {
           >
             {t('message_label')}
           </label>
-          <p className="text-[13px] text-[#999] dark:text-foreground/55 mb-4">{t('message_hint')}</p>
+          <p className="text-[13px] text-[#999] dark:text-foreground/55 mb-3">{t('message_hint')}</p>
+
+          {/* Pre-written quick messages — one tap fills the field. */}
+          <div className="mb-3">
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-foreground/55">{t('templates_label')}</p>
+            <div className="flex flex-wrap gap-2">
+              {(['template_traffic', 'template_15', 'template_soon'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setMessage(t(key).slice(0, MAX_MESSAGE))}
+                  className="rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-gold/50 hover:text-gold cursor-pointer"
+                >
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <textarea
             id="delay-message"
             value={message}
