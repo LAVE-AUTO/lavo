@@ -98,7 +98,7 @@ export function DashboardOverviewSection({ data }: Props) {
 
   return (
     <section className="flex flex-shrink-0 flex-col border-b border-separator bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
-      <div className="flex items-center gap-2 px-5 py-2.5">
+      <div className="flex items-center gap-2 px-4 py-2.5 sm:px-5">
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#B0BFB1]">
           {t('overview_title')}
         </span>
@@ -119,7 +119,7 @@ export function DashboardOverviewSection({ data }: Props) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 px-5 pb-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-4 sm:px-5 xl:grid-cols-4">
         {cards.map((card, idx) => (
           <FullKpiCard
             key={card.label}

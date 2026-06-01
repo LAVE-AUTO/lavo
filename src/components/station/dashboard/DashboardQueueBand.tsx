@@ -29,7 +29,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
   return (
     <section className="flex-shrink-0 border-t border-separator dark:border-[#1A2A14]">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <button
@@ -81,7 +81,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
 
       {/* Collapsible body */}
       <div className={`overflow-hidden transition-[max-height] duration-200 ease-in-out ${collapsed ? 'max-h-0' : 'max-h-56'}`}>
-      <div className="flex gap-2.5 overflow-x-auto px-5 pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#D8D4C4] dark:[&::-webkit-scrollbar-thumb]:bg-[#1A2A14]">
+      <div className="flex gap-2.5 overflow-x-auto px-4 pb-4 sm:px-5 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#D8D4C4] dark:[&::-webkit-scrollbar-thumb]:bg-[#1A2A14]">
         {/* Call next button as the first card — starts head of queue */}
         <button
           type="button"

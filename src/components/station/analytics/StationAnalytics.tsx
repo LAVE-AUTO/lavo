@@ -134,7 +134,7 @@ export function StationAnalytics() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-[#FFF9EC] dark:bg-[#002001]">
+    <div className="space-y-6 p-4 bg-[#FFF9EC] sm:p-6 dark:bg-[#002001]">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>

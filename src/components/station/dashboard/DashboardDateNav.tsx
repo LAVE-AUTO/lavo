@@ -66,7 +66,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
   const monthLabel = MONTH_NAMES_FR[selectedDate.getMonth()];
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-separator bg-transparent px-5 py-3 dark:border-[#1A2A14] dark:bg-dark-bg">
+    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-separator bg-transparent px-4 py-3 dark:border-[#1A2A14] dark:bg-dark-bg sm:px-5">
       {/* Month bubble — shows year too in monthly view */}
       <div className="rounded-full bg-[#EDE9CC] px-4 py-1.5 text-[14px] font-bold text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]">
         {monthLabel}{view === 'monthly' ? ` ${selectedDate.getFullYear()}` : ''}
