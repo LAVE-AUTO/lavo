@@ -1174,6 +1174,12 @@ export type RichStationEntry = Entry & {
    * (or fall back to the email) instead of a placeholder. */
   walk_in_client_email: string | null;
   walk_in_client_name: string | null;
+  /** Latest delay request on this reservation (drives the dashboard badge + quick reply). */
+  delay_request: {
+    status: 'pending' | 'accepted' | 'refused';
+    message: string | null;
+    max_delay_minutes: number | null;
+  } | null;
 };
 
 /**
@@ -1215,6 +1221,9 @@ export async function listRichStationEntriesPaginated(
         svc_category: stationServices.category,
         slot_start_time: timeSlots.start_time,
         slot_end_time: timeSlots.end_time,
+        delay_status: sql<string | null>`(SELECT dr.status FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
+        delay_response_message: sql<string | null>`(SELECT CASE WHEN dr.status = 'accepted' THEN dr.accept_message WHEN dr.status = 'refused' THEN dr.refusal_reason ELSE NULL END FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
+        delay_max_minutes: sql<number | null>`(SELECT dr.max_delay_minutes FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
       })
       .from(reservations)
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
@@ -1235,6 +1244,13 @@ export async function listRichStationEntriesPaginated(
     service: r.svc_id ? { id: r.svc_id, name: r.svc_name ?? '', category: r.svc_category ?? '' } : null,
     slot_start_time: r.slot_start_time ?? null,
     slot_end_time: r.slot_end_time ?? null,
+    delay_request: r.delay_status
+      ? {
+          status: r.delay_status as 'pending' | 'accepted' | 'refused',
+          message: (r.delay_response_message as string | null) ?? null,
+          max_delay_minutes: (r.delay_max_minutes as number | null) ?? null,
+        }
+      : null,
   }));
 
   return { rows: richRows, total: countRows[0]?.count ?? 0, page, per_page: limit };

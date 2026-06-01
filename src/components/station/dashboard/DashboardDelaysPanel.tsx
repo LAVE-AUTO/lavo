@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 export interface DashboardDelayItem {
   id: string;
+  reservationId: string;
   clientName: string;
   message: string;
   requestedAt: string;
@@ -14,6 +15,9 @@ export interface DashboardDelayItem {
 interface Props {
   items: DashboardDelayItem[];
   totalPending: number;
+  /** Quick reply from the dashboard (opens the accept/refuse modal). */
+  onAccept: (item: DashboardDelayItem) => void;
+  onRefuse: (item: DashboardDelayItem) => void;
 }
 
 function timeAgo(iso: string, locale: string): string {
@@ -28,7 +32,7 @@ function timeAgo(iso: string, locale: string): string {
   return locale === 'en' ? `${d} d ago` : `il y a ${d} j`;
 }
 
-export function DashboardDelaysPanel({ items, totalPending }: Props) {
+export function DashboardDelaysPanel({ items, totalPending, onAccept, onRefuse }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
   const [collapsed, setCollapsed] = useState(false);
@@ -145,10 +149,9 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
           </div>
         ) : (
           items.map((item) => (
-            <Link
+            <div
               key={item.id}
-              href={`/${locale}/station/delays`}
-              className="group flex flex-col gap-1 rounded-xl border border-[#FFF9EC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-dark-bg"
+              className="flex flex-col gap-2 rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-[#1A2A14] dark:bg-dark-bg"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
@@ -161,11 +164,24 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
               <p className="line-clamp-2 text-[11px] leading-snug text-foreground/65 dark:text-[#B0BFB1]">
                 {item.message || t('delays_no_message')}
               </p>
-              <div className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#EF4444]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#EF4444]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#EF4444]" aria-hidden="true" />
-                {t('delays_status_pending')}
+              {/* Quick reply directly from the dashboard — no redirection. */}
+              <div className="mt-0.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onAccept(item)}
+                  className="flex-1 rounded-lg bg-[#0E8C45] py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#0B7A3C] cursor-pointer"
+                >
+                  {t('delays_accept')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRefuse(item)}
+                  className="flex-1 rounded-lg border border-[#FF383C] py-1.5 text-[11px] font-bold text-[#FF383C] transition-colors hover:bg-[#FF383C]/10 cursor-pointer"
+                >
+                  {t('delays_refuse')}
+                </button>
               </div>
-            </Link>
+            </div>
           ))
         )}
       </div>

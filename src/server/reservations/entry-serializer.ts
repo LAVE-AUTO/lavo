@@ -106,5 +106,6 @@ export function serializeRichStationEntry(entry: RichStationEntry) {
     walk_in_client_email: entry.walk_in_client_email,
     walk_in_client_name: entry.walk_in_client_name,
     is_walk_in: isWalkIn,
+    delay_request: entry.delay_request,
   };
 }

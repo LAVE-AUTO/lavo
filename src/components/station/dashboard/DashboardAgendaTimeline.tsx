@@ -15,6 +15,8 @@ export interface AgendaEntry {
   /** True for walk-in entries added manually by the merchant. The
    *  start-service flow skips the ticket code prompt for these. */
   isWalkIn?: boolean;
+  /** Latest delay request status for this reservation, or null when none. */
+  delayStatus?: 'pending' | 'accepted' | 'refused' | null;
 }
 
 export interface AgendaPost {
@@ -324,6 +326,33 @@ export function DashboardAgendaTimeline({
   );
 }
 
+/** Small icon badge flagging a delay request on an agenda slot. Colour + icon
+ *  differ per state: pending (amber clock), accepted (green check), refused (red cross). */
+function DelayBadge({ status }: { status: 'pending' | 'accepted' | 'refused' }) {
+  const t = useTranslations('station_dashboard');
+  const config = {
+    pending: { cls: 'bg-[#DDAF3B]/25 text-[#8A6D08] dark:text-[#E8C040]', label: t('delay_badge_pending') },
+    accepted: { cls: 'bg-[#2ECC71]/20 text-[#0E8C45] dark:text-[#65E69A]', label: t('delay_badge_accepted') },
+    refused: { cls: 'bg-[#FF383C]/20 text-[#B33B1F] dark:text-[#FF8866]', label: t('delay_badge_refused') },
+  }[status];
+
+  return (
+    <span
+      className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${config.cls}`}
+      title={config.label}
+      aria-label={config.label}
+    >
+      {status === 'accepted' ? (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+      ) : status === 'refused' ? (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      ) : (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+      )}
+    </span>
+  );
+}
+
 interface SlotBlockProps {
   entry: AgendaEntry;
   openMinutes: number;
@@ -367,6 +396,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
         <span className="text-[10px] font-bold tabular-nums text-[#001201] dark:text-[#FFF9EC]">
           {formatTime(start)}–{formatTime(end)}
         </span>
+        {entry.delayStatus && <DelayBadge status={entry.delayStatus} />}
         <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${styles.chip} ${styles.chipBg}`}>
           {statusLbl}
         </span>
