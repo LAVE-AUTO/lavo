@@ -29,7 +29,7 @@
     --separator-hover: #B8A870;
     --sidebar-bg: #EDE8DC;
     /* Elevated card surface — pure white on the cream shell bg (#FFF9EC) */
-    --card-surface: #FFFFFF;
+    --card-surface: #fffefc;
 }
 
 .dark {
