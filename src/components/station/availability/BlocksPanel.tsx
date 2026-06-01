@@ -5,9 +5,34 @@ import type { AvailabilityBlock } from './types';
 
 interface Props {
   blocks: AvailabilityBlock[];
-  onDelete: (id: string) => void;
+  onDelete: (ids: string[]) => void;
   onEdit: (block: AvailabilityBlock) => void;
   onCreateClick: () => void;
+}
+
+/** Merge blocks that share the same startTime+endTime into one display card. */
+function groupBlocks(blocks: AvailabilityBlock[]): AvailabilityBlock[] {
+  const map = new Map<string, AvailabilityBlock>();
+
+  for (const block of blocks) {
+    const key = `${block.startTime}|${block.endTime}`;
+    const existing = map.get(key);
+
+    if (existing) {
+      const mergedDates = Array.from(new Set([...existing.dates, ...block.dates])).sort();
+      const mergedBayIds =
+        existing.bayIds.includes('all') || block.bayIds.includes('all')
+          ? ['all']
+          : Array.from(new Set([...existing.bayIds, ...block.bayIds]));
+      const mergedIds = [...(existing.ids ?? [existing.id]), block.id];
+
+      map.set(key, { ...existing, ids: mergedIds, dates: mergedDates, bayIds: mergedBayIds });
+    } else {
+      map.set(key, { ...block, ids: [block.id] });
+    }
+  }
+
+  return Array.from(map.values());
 }
 
 /** Group consecutive ISO dates into ranges, then format the ranges compactly.
@@ -69,6 +94,8 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
     return bayIds.map((b) => `${t('availability_poste_short')}${b}`).join(', ');
   }
 
+  const grouped = groupBlocks(blocks);
+
   return (
     <div className="flex w-full max-h-72 shrink-0 flex-col border-b border-[#DDAF3B]/20 bg-[#F0EDE0] dark:border-[#DDAF3B]/10 dark:bg-[#1A2210] md:max-h-none md:w-72 md:border-b-0 md:border-r">
       {/* Title */}
@@ -80,7 +107,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {blocks.length === 0 ? (
+        {grouped.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl bg-card-surface/60 px-4 py-10 text-center dark:bg-[#001A05]/60">
             <svg
               width="32"
@@ -103,9 +130,9 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {blocks.map((block) => (
+            {grouped.map((group) => (
               <div
-                key={block.id}
+                key={(group.ids ?? [group.id]).join('|')}
                 className="rounded-xl border border-separator/25 bg-card-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05]"
               >
                 {/* Postes badge */}
@@ -114,26 +141,26 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                     {t('availability_block_postes')}
                   </span>
                   <span className="text-[11px] font-bold text-[#001201] dark:text-[#FFF9EC]">
-                    {formatBays(block.bayIds)}
+                    {formatBays(group.bayIds)}
                   </span>
                 </div>
 
                 {/* Condensed date ranges */}
                 <p className="mb-1 text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
-                  {formatDates(block.dates)}
+                  {formatDates(group.dates)}
                 </p>
 
                 {/* Time range — large and prominent */}
                 <p className="mb-3 text-[20px] font-black leading-tight text-[#DDAF3B]">
-                  {block.startTime} – {block.endTime}
+                  {group.startTime} – {group.endTime}
                 </p>
 
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => onDelete(block.id)}
+                    onClick={() => onDelete(group.ids ?? [group.id])}
                     className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#FF2525] bg-transparent px-3 py-1.5 text-[11px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
-                    aria-label={`${t('availability_block_delete')} - ${formatDates(block.dates)}`}
+                    aria-label={`${t('availability_block_delete')} - ${formatDates(group.dates)}`}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M18 6L6 18M6 6l12 12" />
@@ -142,9 +169,9 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                   </button>
                   <button
                     type="button"
-                    onClick={() => onEdit(block)}
+                    onClick={() => onEdit(group)}
                     className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
-                    aria-label={`${t('availability_block_edit')} - ${formatDates(block.dates)}`}
+                    aria-label={`${t('availability_block_edit')} - ${formatDates(group.dates)}`}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />

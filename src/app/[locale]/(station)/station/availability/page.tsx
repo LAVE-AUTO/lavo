@@ -206,10 +206,11 @@ export default function StationAvailabilityPage() {
   async function handleSave(data: Omit<AvailabilityBlock, 'id'>) {
     if (data.dates.length === 0) return;
 
-    // Edit = delete the old slot first, then bulk-create the replacement set.
+    // Edit = delete all slots in the group first, then bulk-create the replacement set.
     // Slots are independent rows so cross-date edits become "rewrite the set".
     if (editingBlock) {
-      await deleteWithApi(`/station/slots/${editingBlock.id}`);
+      const idsToDelete = editingBlock.ids ?? [editingBlock.id];
+      await Promise.all(idsToDelete.map((id) => deleteWithApi(`/station/slots/${id}`)));
     }
 
     // Capacity: if "all bays" → use the active-bay count; otherwise the count of selected bays.
@@ -267,6 +268,24 @@ export default function StationAvailabilityPage() {
     }
   }
 
+  async function handleDeleteGroup(ids: string[]) {
+    const results = await Promise.all(ids.map((id) => deleteWithApi(`/station/slots/${id}`)));
+    if (!mountedRef.current) return;
+
+    if (results.some(([ok]) => !ok)) {
+      showError(t('availability_delete_error'));
+      return;
+    }
+
+    success(t('availability_delete_success'));
+
+    const datesToRefresh = new Set<string>();
+    for (const [date, slots] of Object.entries(slotsByDate)) {
+      if (slots.some((s) => ids.includes(s.id))) datesToRefresh.add(date);
+    }
+    await Promise.all(Array.from(datesToRefresh).map(refreshDate));
+  }
+
   if (initialLoading) {
     return <PageLoader label={t('loading')} />;
   }
@@ -312,7 +331,7 @@ export default function StationAvailabilityPage() {
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <BlocksPanel
           blocks={allBlocks}
-          onDelete={handleDelete}
+          onDelete={handleDeleteGroup}
           onEdit={openEditModal}
           onCreateClick={openCreateModal}
         />
