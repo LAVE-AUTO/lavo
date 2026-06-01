@@ -63,9 +63,11 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 
   const station = await findStationById(entry.station_id);
   if (!station || station.status !== 'active') return error404('Station not found or not active');
-  if (!station.stripe_account_id) {
-    return error409('Station has no payment account configured', ApiCode.CONFLICT);
-  }
+  /* The station's Stripe account is only required when a late reschedule has to
+   * open a new PaymentIntent. A free reschedule (and not-yet-paid reservations)
+   * carries the existing PI forward, so the service enforces the requirement only
+   * where it actually applies. */
+  const stripeAccountId = station.stripe_account_id ?? '';
 
   try {
     const result = bodyParsed.data.new_start_time
@@ -73,13 +75,13 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
           paramParsed.data.id,
           auth.sub,
           bodyParsed.data.new_start_time,
-          station.stripe_account_id,
+          stripeAccountId,
         )
       : await rescheduleReservation(
           paramParsed.data.id,
           auth.sub,
           bodyParsed.data.new_time_slot_id!,
-          station.stripe_account_id,
+          stripeAccountId,
         );
 
     return successResponse(

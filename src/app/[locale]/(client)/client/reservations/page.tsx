@@ -690,12 +690,13 @@ function ReservationCard({
    *   - signalDelay: surfaces only within the last 2h before service start
    *     (no point warning a station 5 days in advance)
    *   - reschedule:  available for confirmed/pending entries until start */
-  /* Reschedule is only offered for truly confirmed reservations: the backend
-   * (POST /reservations/:id/reschedule) rejects any other status with a 409, so
-   * showing the button on pending / pending_payment entries (surfaced as
-   * "Confirmé" via displayStatus) would dead-end on an error. Cancellation, by
-   * contrast, is accepted by /me/entries/:id/cancel for pending states too. */
-  const canReschedule = variant === 'upcoming' && r.status === 'confirmed';
+  /* Reschedule mirrors the cancel/signal-delay status set: confirmed reservations
+   * plus not-yet-paid ones (pending / pending_payment, surfaced as "Confirmé" via
+   * displayStatus). The backend reschedules all three — a free reschedule carries
+   * the existing PaymentIntent forward and keeps the pending state intact. */
+  const canReschedule =
+    variant === 'upcoming' &&
+    (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
   /* The signal-delay button is shown on every upcoming confirmed/pending reservation
    * but only enabled within the 2h window before slotStart. Outside the window the
    * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
