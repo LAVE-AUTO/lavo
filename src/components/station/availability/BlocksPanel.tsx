@@ -97,7 +97,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
   const grouped = groupBlocks(blocks);
 
   return (
-    <div className="flex w-full max-h-72 shrink-0 flex-col border-b border-[#DDAF3B]/20 bg-[#F0EDE0] dark:border-[#DDAF3B]/10 dark:bg-[#1A2210] md:max-h-none md:w-72 md:border-b-0 md:border-r">
+    <div className="flex w-full shrink-0 flex-col border-b border-[#DDAF3B]/20 bg-[#F0EDE0] dark:border-[#DDAF3B]/10 dark:bg-[#1A2210] md:w-72 md:border-b-0 md:border-r">
       {/* Title */}
       <div className="px-4 pt-5 pb-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-foreground/65 dark:text-[#B0BFB1]">

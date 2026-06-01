@@ -298,7 +298,7 @@ export default function StationAvailabilityPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Page header */}
-      <div className="flex flex-col gap-3 border-b border-[#DDAF3B]/20 px-6 py-4 dark:border-[#DDAF3B]/10 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[#DDAF3B]/20 px-4 py-4 dark:border-[#DDAF3B]/10 sm:px-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-black text-[#001201] dark:text-[#FFF9EC]">
             {t('availability_title')}
@@ -332,8 +332,8 @@ export default function StationAvailabilityPage() {
         </div>
       </div>
 
-      {/* Main two-panel layout - stacked on mobile, side-by-side on desktop */}
-      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+      {/* Main two-panel layout - stacked on mobile (scrollable), side-by-side on desktop */}
+      <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
         <BlocksPanel
           blocks={allBlocks}
           onDelete={handleDeleteGroup}
