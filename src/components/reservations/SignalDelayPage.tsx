@@ -65,7 +65,10 @@ export default function SignalDelayPage() {
     const entry = (data as RichEntryResponse)?.data;
     const isReservation = entry?.entry_type === 'reservation';
     const status = entry?.status ?? '';
-    const canSignal = status === 'confirmed' || status === 'in_progress';
+    /* Mirror the backend SIGNAL_ALLOWED_STATUSES: a delay can be signalled on a
+     * confirmed reservation and on not-yet-paid ones (pending / pending_payment,
+     * shown as "Confirmé" to the client). in_progress is intentionally excluded. */
+    const canSignal = status === 'confirmed' || status === 'pending' || status === 'pending_payment';
     const slotStart = entry?.slot_start_time ? new Date(entry.slot_start_time) : null;
 
     if (!isReservation || !canSignal || !slotStart || Number.isNaN(slotStart.getTime())) {
