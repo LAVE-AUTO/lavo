@@ -194,12 +194,30 @@ export function DashboardAgendaTimeline({
   }, [entries, visiblePosts, selectedDate]);
 
   const totalHeight = totalMinutes * PX_PER_MINUTE;
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-dark-bg">
-      {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-separator bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
-        <div className="w-14 flex-shrink-0 border-r border-[#FFF9EC] dark:border-[#1A2A14]" />
+    <div className="mx-4 my-3 flex flex-col rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-dark-bg">
+      {/* Header strip — bay names, always visible */}
+      <div className="flex border-b border-separator/40 bg-transparent dark:border-[#1A2A14]">
+        {/* Collapse toggle in the gutter slot */}
+        <div className="flex w-14 flex-shrink-0 items-center justify-center border-r border-separator/25 dark:border-[#1A2A14]">
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 transition-colors hover:text-foreground/70"
+          >
+            <svg
+              width="13" height="13" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : 'rotate-0'}`}
+              aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        </div>
         {visiblePosts.length === 0 ? (
           <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
             {t('agenda_no_posts')}
@@ -211,7 +229,7 @@ export function DashboardAgendaTimeline({
             return (
               <div
                 key={post.id}
-                className="min-w-[200px] flex-1 border-l border-[#FFF9EC] px-3 py-2 dark:border-[#1A2A14]"
+                className="min-w-[200px] flex-1 border-l border-separator/25 px-3 py-2 dark:border-[#1A2A14]"
               >
                 <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('filter_post', { n: post.position })}
@@ -225,10 +243,11 @@ export function DashboardAgendaTimeline({
         )}
       </div>
 
-      {/* Scrollable body */}
-      <div className="flex flex-1 overflow-auto">
+      {/* Collapsible body */}
+      <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${collapsed ? 'max-h-0' : 'max-h-[62vh]'}`}>
+      <div className="flex h-[62vh] overflow-auto">
         {/* Hour gutter */}
-        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-separator/25 bg-card-surface dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="relative" style={{ height: totalHeight }}>
             {hours.map((h) => {
               const top = (parseHHMM(h, '00:00').h * 60 + parseHHMM(h, '00:00').m - openMinutes) * PX_PER_MINUTE;
@@ -251,7 +270,7 @@ export function DashboardAgendaTimeline({
           return (
             <div
               key={post.id}
-              className="relative min-w-[200px] flex-1 border-l border-[#FFF9EC] dark:border-[#1A2A14]"
+              className="relative min-w-[200px] flex-1 border-l border-separator/25 dark:border-[#1A2A14]"
             >
               <div className="relative" style={{ height: totalHeight }}>
                 {/* Hour grid lines */}
@@ -260,7 +279,7 @@ export function DashboardAgendaTimeline({
                   return (
                     <div
                       key={h}
-                      className="absolute left-0 right-0 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]"
+                      className="absolute left-0 right-0 h-px bg-separator/20 dark:bg-[#1A2A14]"
                       style={{ top }}
                     />
                   );
@@ -301,6 +320,7 @@ export function DashboardAgendaTimeline({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

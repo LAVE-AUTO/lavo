@@ -138,7 +138,7 @@ export function DashboardGroupedPanel({ items, view, selectedDate }: Props) {
   }, [items, view, selectedDate, locale, dayLabels]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4">
+    <div className="px-4 py-4">
       {grouped.map((g) => (
         <DaySection key={g.key} label={g.label} items={g.items} locale={locale} />
       ))}
