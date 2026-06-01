@@ -13,6 +13,7 @@ import {
   findSlotByIdAndStation,
   findSlotsByIds,
   countReservationsBySlotId,
+  countAllReservationsBySlotId,
   deleteSlotById,
   deleteSlotsByIds,
   updateSlotStatus,
@@ -147,12 +148,12 @@ export async function replaceSlots(
         if (!slot || slot.station_id !== stationId) {
           throw new NotFoundError(`Slot ${id} not found or does not belong to this station`);
         }
-        const count = await countReservationsBySlotId(id, tx);
+        // Count ALL reservations (including cancelled) — onDelete cascade would
+        // wipe cancelled records that still appear in client history.
+        const count = await countAllReservationsBySlotId(id, tx);
         if (count === 0) {
           deletable.push(id);
         }
-        // slots with reservations are silently skipped — they cannot be removed
-        // without cancelling the bookings first, so we leave them intact
       }
 
       if (deletable.length > 0) {

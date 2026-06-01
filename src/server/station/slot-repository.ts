@@ -104,6 +104,23 @@ export async function countReservationsBySlotId(
 }
 
 /**
+ * Counts ALL reservations for a slot (including cancelled).
+ * Used before deletion to preserve history — onDelete cascade would wipe
+ * cancelled records that appear in client history.
+ */
+export async function countAllReservationsBySlotId(
+  slotId: string,
+  tx?: DbTransaction,
+): Promise<number> {
+  const client = tx ?? db;
+  const result = await client
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reservations)
+    .where(eq(reservations.time_slot_id, slotId));
+  return result[0]?.count ?? 0;
+}
+
+/**
  * Locks a time slot row using SELECT FOR UPDATE within a transaction.
  * Returns the locked row or undefined if not found.
  */
