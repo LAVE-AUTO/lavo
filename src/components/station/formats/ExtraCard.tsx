@@ -79,7 +79,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className={`group flex flex-col rounded-2xl border border-[#FFF9EC] bg-white p-5 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30 ${opacityClass}`}
+        className={`group flex flex-col rounded-2xl border border-separator/25 bg-card-surface p-5 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30 ${opacityClass}`}
       >
         {/* Header */}
         <header className="mb-3 flex items-start justify-between gap-3">
@@ -99,7 +99,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
               aria-label={t('btn_delete')}
-              className="inline-flex items-center justify-center rounded-lg border border-[#FFF9EC] bg-white p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
+              className="inline-flex items-center justify-center rounded-lg border border-separator/25 bg-card-surface p-1.5 text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
             >
               <CrossIcon />
             </button>
@@ -133,7 +133,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
 
         {/* Tarifs */}
         {entries.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {entries.map((entry, idx) => (
               <div
                 /* Prefer the backend row id; fall back to format id or index
@@ -142,15 +142,15 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
                  * vehicle_format_id is empty / shared across catalogue
                  * placeholders. */
                 key={entry.id ?? entry.vehicle_format_id ?? `entry-${idx}`}
-                className="rounded-xl bg-[#FFF9EC] px-3 py-3 text-center dark:bg-dark-bg"
+                className="rounded-xl bg-[#FFF9EC] px-1.5 py-2 text-center dark:bg-dark-bg sm:px-3 sm:py-3"
               >
-                <p className="text-[9px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
+                <p className="truncate text-[8px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1] sm:text-[9px] sm:tracking-[1px]">
                   {entry.vehicle_label}
                 </p>
-                <p className="mt-1 font-mono text-[20px] font-black tabular-nums leading-none text-[#DDAF3B]">
+                <p className="mt-1 font-mono text-[17px] font-black tabular-nums leading-none text-[#DDAF3B] sm:text-[20px]">
                   {parseFloat(entry.price || '0').toFixed(0)} $
                 </p>
-                <p className="mt-1 text-[11px] text-foreground/55 dark:text-[#B0BFB1]">{entry.duration_min} min</p>
+                <p className="mt-1 text-[10px] text-foreground/55 dark:text-[#B0BFB1] sm:text-[11px]">{entry.duration_min} min</p>
               </div>
             ))}
           </div>

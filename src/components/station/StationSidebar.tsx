@@ -114,7 +114,12 @@ const CollapseIcon = ({ collapsed }: { collapsed: boolean }) => (
   </svg>
 );
 
-export function StationSidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function StationSidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const t = useTranslations('station_dashboard');
   const pathname = usePathname();
   const { logout } = useAuth();
@@ -172,7 +177,7 @@ export function StationSidebar() {
     const baseClass =
       'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
     const activeClass = 'bg-[#DDAF3B] text-[#001201] shadow-sm';
-    const idleClass = 'text-[#5A5A4A] hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
+    const idleClass = 'text-[#5A5A4A] hover:bg-[#EDE5C8] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
     const layoutClass = collapsed
       ? 'h-10 w-10 justify-center'
       : 'gap-2.5 px-3 py-2.5';
@@ -183,6 +188,7 @@ export function StationSidebar() {
         title={collapsed ? label : undefined}
         aria-label={collapsed ? label : undefined}
         className={`${baseClass} ${layoutClass} ${active ? activeClass : idleClass}`}
+        onClick={onMobileClose}
       >
         {item.icon}
         {!collapsed && <span className="truncate">{label}</span>}
@@ -197,9 +203,19 @@ export function StationSidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${
-        collapsed ? 'w-[72px]' : 'w-[220px]'
-      }`}
+      className={[
+        // Base layout
+        'flex shrink-0 flex-col border-r border-separator bg-sidebar-bg p-3',
+        'dark:border-[#1A2A14] dark:bg-dark-bg',
+        // Width based on collapsed state
+        collapsed ? 'w-[72px]' : 'w-[220px]',
+        // Mobile: fixed drawer that slides in from the left
+        'fixed inset-y-0 left-0 z-40',
+        'transition-transform duration-200 ease-in-out',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        // Desktop: static sidebar (always visible, reset transform, animate width only)
+        'md:static md:z-auto md:translate-x-0 md:transition-[width] md:duration-200',
+      ].join(' ')}
     >
       {/* Collapse toggle */}
       <div className={`flex ${collapsed ? 'justify-center' : 'justify-end'} mb-3`}>
@@ -208,7 +224,7 @@ export function StationSidebar() {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#EDE5C8] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -240,10 +256,10 @@ export function StationSidebar() {
 
       {/* Logout */}
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-separator dark:bg-[#1A2A14]" />
         <button
           type="button"
-          onClick={() => logout()}
+          onClick={() => { onMobileClose?.(); logout(); }}
           title={collapsed ? t('nav_logout') : undefined}
           aria-label={collapsed ? t('nav_logout') : undefined}
           className={`group relative flex items-center rounded-lg text-[13px] font-semibold text-foreground/55 transition-colors duration-150 hover:bg-[#FEF2F2] hover:text-[#EF4444] dark:text-[#FF383C] dark:hover:bg-[#2A0A0A] dark:hover:text-[#FF383C] ${

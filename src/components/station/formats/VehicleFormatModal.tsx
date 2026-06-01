@@ -110,7 +110,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
         className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        <div className="w-full max-w-sm rounded-xl border border-[#FFF9EC] bg-white shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
+        <div className="w-full max-w-sm rounded-xl border border-separator/30 bg-card-surface shadow-xl animate-fade-in-up dark:border-[#1A2A14] dark:bg-[#182214]">
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">

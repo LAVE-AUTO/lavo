@@ -4,14 +4,18 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { parseTimeForDate } from '@/helpers/date-helper';
+import { db } from '@/lib/db';
 import type { StationConfig } from './config-repository';
 import { getConfigByStationId } from './config-repository';
 import {
   createSlot as repoCreateSlot,
   createSlots as repoCreateSlots,
   findSlotByIdAndStation,
+  findSlotsByIds,
   countReservationsBySlotId,
+  countAllReservationsBySlotId,
   deleteSlotById,
+  deleteSlotsByIds,
   updateSlotStatus,
   type TimeSlot,
 } from './slot-repository';
@@ -120,6 +124,46 @@ export async function deleteSlot(stationId: string, slotId: string): Promise<voi
   const count = await countReservationsBySlotId(slotId);
   if (count > 0) throw new ConflictError('Cannot delete slot that has reservations');
   await deleteSlotById(slotId);
+}
+
+/**
+ * Atomically replaces a set of existing slots with a new set within a single DB transaction.
+ * - Slots that don't belong to the station → NotFoundError (hard stop).
+ * - Slots with active reservations are skipped from deletion to preserve existing bookings;
+ *   the new slots are still created alongside them.
+ * - If anything fails, the whole operation is rolled back — no orphan slots.
+ */
+export async function replaceSlots(
+  stationId: string,
+  idsToDelete: string[],
+  newSlots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+): Promise<TimeSlot[]> {
+  return db.transaction(async (tx) => {
+    if (idsToDelete.length > 0) {
+      const existing = await findSlotsByIds(idsToDelete, tx);
+
+      const deletable: string[] = [];
+      for (const id of idsToDelete) {
+        const slot = existing.find((s) => s.id === id);
+        if (!slot || slot.station_id !== stationId) {
+          throw new NotFoundError(`Slot ${id} not found or does not belong to this station`);
+        }
+        // Count ALL reservations (including cancelled) — onDelete cascade would
+        // wipe cancelled records that still appear in client history.
+        const count = await countAllReservationsBySlotId(id, tx);
+        if (count === 0) {
+          deletable.push(id);
+        }
+      }
+
+      if (deletable.length > 0) {
+        await deleteSlotsByIds(deletable, tx);
+      }
+    }
+
+    if (newSlots.length === 0) return [];
+    return repoCreateSlots(stationId, newSlots, tx);
+  });
 }
 
 /**

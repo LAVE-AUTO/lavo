@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 
@@ -30,13 +31,30 @@ function timeAgo(iso: string, locale: string): string {
 export function DashboardDelaysPanel({ items, totalPending }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex w-full max-h-[35vh] mt-2 shrink-0 flex-col overflow-hidden border-b border-[#FFF9EC] bg-[#F0EDE0] md:max-h-none md:w-[280px] md:border-b-0 md:border-r dark:border-[#1A2A14] dark:bg-[#182214]">
+    <div className="mt-2 shrink-0 overflow-hidden border-t border-separator dark:border-[#1A2A14]">
       {/* Header */}
-      <div className="border-b border-[#FFF9EC] px-4 py-3.5 dark:border-[#1A2A14]">
+      <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? t('delays_expand') : t('delays_collapse')}
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-foreground/45 transition-colors hover:text-foreground/75"
+            >
+              <svg
+                width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : 'rotate-0'}`}
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
             <div className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('delays_title')}
             </div>
@@ -53,13 +71,16 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             {t('delays_see_all')} →
           </Link>
         </div>
-        <div className="mt-0.5 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
-          {totalPending > 0 ? t('delays_pending', { n: totalPending }) : t('delays_empty')}
-        </div>
+        {!collapsed && (
+          <div className="mt-0.5 text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
+            {totalPending > 0 ? t('delays_pending', { n: totalPending }) : t('delays_empty')}
+          </div>
+        )}
       </div>
 
-      {/* List */}
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
+      {/* Collapsible list */}
+      <div className={`overflow-hidden transition-[max-height] duration-200 ease-in-out ${collapsed ? 'max-h-0' : 'max-h-[600px]'}`}>
+      <div className="flex flex-col gap-2 overflow-y-auto px-2.5 pb-3">
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
             <svg
@@ -83,7 +104,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             <Link
               key={item.id}
               href={`/${locale}/station/delays`}
-              className="group flex flex-col gap-1 rounded-xl border border-[#FFF9EC] bg-white p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-dark-bg"
+              className="group flex flex-col gap-1 rounded-xl border border-separator/25 bg-card-surface p-3 transition-all duration-150 hover:border-[#DDAF3B]/40 hover:shadow-sm dark:border-[#1A2A14] dark:bg-dark-bg"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
@@ -103,6 +124,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             </Link>
           ))
         )}
+      </div>
       </div>
     </div>
   );

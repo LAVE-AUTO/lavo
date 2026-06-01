@@ -241,7 +241,7 @@ export function AdminSupportDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="shrink-0 border-b border-separator bg-transparent px-6 pb-5 pt-5 dark:border-[#1A2A14] dark:bg-dark-bg">
           <Link href="/admin/support" className="mb-4 flex w-fit items-center gap-1.5 text-[13px] font-semibold text-foreground/55 transition-colors hover:text-[#DDAF3B] dark:text-[#B0BFB1]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('btn_back')}
@@ -338,7 +338,7 @@ export function AdminSupportDetail({ id }: Props) {
 
             {/* Reply form - only shown for open/in_progress tickets */}
             {!isClosed && !isResolved && (
-              <div className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE4] px-5 py-3 dark:border-[#1A2A14]">
                   <label htmlFor="admin-reply-field" className="text-[13px] font-bold text-[#5A5A4A] dark:text-[#B0BFB1]">{t('field_reply')}</label>
                 </div>
@@ -362,14 +362,14 @@ export function AdminSupportDetail({ id }: Props) {
 
             {/* Resolved notice */}
             {isResolved && (
-              <div className="flex items-center justify-center rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="flex items-center justify-center rounded-2xl border border-separator/25 bg-card-surface px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <p className="text-[13px] text-[#AAAAAA] dark:text-[#B0BFB1]">{t('status_resolved_notice')}</p>
               </div>
             )}
 
             {/* Closed notice */}
             {isClosed && (
-              <div className="flex items-center justify-center rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="flex items-center justify-center rounded-2xl border border-separator/25 bg-card-surface px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <p className="text-[13px] text-[#AAAAAA] dark:text-[#B0BFB1]">{t('close_success')}</p>
               </div>
             )}

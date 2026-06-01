@@ -179,7 +179,7 @@ export function AdminStationDetail({ id }: Props) {
     <div className="flex flex-1 flex-col overflow-hidden bg-[#FFF9EC] dark:bg-dark-bg">
 
       {/* ── Sticky sub-header ── */}
-      <div className="flex items-center gap-4 border-b border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="flex items-center gap-4 border-b border-separator bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <Link href={'/admin/stations' as Parameters<typeof Link>[0]['href']}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F0EDE0] text-foreground/55 transition-colors hover:bg-[#FFF9EC] dark:bg-[#001A05] dark:text-[#B0BFB1]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
@@ -197,7 +197,7 @@ export function AdminStationDetail({ id }: Props) {
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-6">
 
         {/* ── Hero card ── */}
-        <div className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+        <div className="relative rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
             <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-[#DDAF3B]/6 to-transparent dark:from-[#DDAF3B]/4" />
           </div>
@@ -242,7 +242,7 @@ export function AdminStationDetail({ id }: Props) {
         </div>
 
         {/* ── Info card ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+        <div className="rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_info')}</p>
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <InfoField label={t('label_name')}       value={station.name} />
@@ -258,7 +258,7 @@ export function AdminStationDetail({ id }: Props) {
 
         {/* ── Documents card ── */}
         {station.documents.length > 0 && (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+          <div className="rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
             <p className="mb-3 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_docs')}</p>
             <p className="mb-4 rounded-lg border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-2 text-[11px] leading-relaxed text-[#7A5A00] dark:text-[#E0C060]">
               {t('expiry_unsaved_notice')}
@@ -317,7 +317,7 @@ export function AdminStationDetail({ id }: Props) {
         )}
 
         {/* ── History timeline ── */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+        <div className="rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
           <p className="mb-5 text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('detail_history')}</p>
           <div className="flex flex-col gap-0">
             <TimelineEvent
@@ -360,7 +360,7 @@ export function AdminStationDetail({ id }: Props) {
 
       {/* ── Sticky action bar ── */}
       {isPending && (
-        <div className="border-t border-[#FFF9EC] bg-white px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="border-t border-separator bg-transparent px-7 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           {actionError && <p className="mb-3 text-[13px] font-semibold text-[#EF4444]">{actionError}</p>}
 
           {!showReject ? (

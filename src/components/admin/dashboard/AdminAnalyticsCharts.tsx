@@ -178,7 +178,7 @@ export function AdminAnalyticsCharts() {
       {/* Charts grid */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {CHARTS.map(({ metric, labelKey, color, isCurrency }) => (
-          <div key={metric} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+          <div key={metric} className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
             <div className="mb-3 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full" style={{ background: color }} />
               <span className="text-[12px] font-black uppercase tracking-wider text-[#B0BFB1] dark:text-[#B0BFB1]">{t(labelKey)}</span>

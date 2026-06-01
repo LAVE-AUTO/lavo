@@ -34,7 +34,7 @@ export function DashboardBayFilter({ posts, selectedPostId, onSelect }: Props) {
         {t('filter_bay_title')}
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col gap-1.5 overflow-y-auto pr-0.5">
+      <div className="flex flex-col gap-1.5 pr-0.5">
         <BayItem
           active={selectedPostId === 'all'}
           onClick={() => onSelect('all')}
@@ -89,7 +89,7 @@ export function BayFilterMobilePills({ posts, selectedPostId, onSelect }: Props)
   if (active.length === 0) return null;
 
   return (
-    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-[#FFF9EC] bg-[#FFF9EC] px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-dark-bg">
+    <div className="flex lg:hidden items-center gap-2 overflow-x-auto border-b border-separator bg-transparent px-4 py-2 scrollbar-hide dark:border-[#1A2A14] dark:bg-dark-bg">
       <MobilePill
         active={selectedPostId === 'all'}
         onClick={() => onSelect('all')}

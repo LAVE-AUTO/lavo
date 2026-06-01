@@ -453,7 +453,7 @@ export function StationDashboard() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
+    <div className="flex flex-col animate-fade-in">
       <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
@@ -471,7 +471,7 @@ export function StationDashboard() {
         />
       )}
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex">
         {view === 'daily' && posts.length > 0 && (
           <DashboardBayFilter
             posts={posts}
@@ -480,7 +480,7 @@ export function StationDashboard() {
           />
         )}
 
-        <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col">
           {view === 'daily' ? (
             <DashboardAgendaTimeline
               posts={posts}

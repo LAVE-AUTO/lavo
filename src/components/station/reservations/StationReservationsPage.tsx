@@ -193,9 +193,9 @@ export function StationReservationsPage() {
   const confirm = getConfirmProps();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+    <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-border bg-surface px-6 pb-4 pt-5">
+      <div className="border-b border-separator bg-transparent px-4 pb-4 pt-5 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export function StationReservationsPage() {
         </div>
 
         {/* Date navigator */}
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2 max-w-full">
           <button
             type="button"
             onClick={() => setSelectedDate((d) => { const p = new Date(d); p.setDate(p.getDate() - 1); return p; })}
@@ -234,7 +234,7 @@ export function StationReservationsPage() {
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="flex min-w-[230px] flex-col items-center rounded-xl border border-border bg-background px-4 py-1.5">
+          <div className="flex flex-1 flex-col items-center rounded-xl border border-border bg-background px-4 py-1.5 min-w-0">
             <span className="text-[13.5px] font-bold text-foreground">{dateLabel}</span>
             {today && (
               <span className="text-[9.5px] font-black uppercase tracking-[0.2em] text-gold">{t('date_today')}</span>
@@ -267,7 +267,7 @@ export function StationReservationsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5">
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gold border-t-transparent" />

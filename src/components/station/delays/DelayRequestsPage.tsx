@@ -214,9 +214,9 @@ export function DelayRequestsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-dark-bg">
+    <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-[#DDD9CC] bg-[#E8E4D4] px-6 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-[#182214]">
+      <div className="border-b border-separator bg-transparent px-4 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-transparent sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
@@ -264,7 +264,7 @@ export function DelayRequestsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5">
         {tab === 'pending' ? (
           requests.length === 0 ? (
             <EmptyState
