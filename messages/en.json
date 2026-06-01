@@ -2688,7 +2688,8 @@
         "btn_complete": "Complete",
         "btn_cancel": "Cancel",
         "error_action": "Action failed. Please try again.",
-        "error_invalid_transition": "This entry cannot be updated at this time. Please refresh and try again."
+        "error_invalid_transition": "This entry cannot be updated at this time. Please refresh and try again.",
+        "queue_manual_add": "Add manually"
     },
     "station_delays": {
         "page_title": "Delay requests",
