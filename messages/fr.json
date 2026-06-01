@@ -2673,7 +2673,10 @@
         "confirm_modal_title": "Confirmer le report ?",
         "confirm_modal_desc": "Votre réservation sera déplacée vers le créneau sélectionné.",
         "confirm_modal_keep": "Conserver",
-        "confirm_modal_confirm": "Confirmer"
+        "confirm_modal_confirm": "Confirmer",
+        "success_title": "Réservation reportée",
+        "success_desc": "Votre réservation a bien été déplacée vers le nouveau créneau.",
+        "btn_view_reservation": "Voir ma réservation"
     },
     "station_queue": {
         "page_title": "File d'attente",
