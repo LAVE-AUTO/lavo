@@ -36,6 +36,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
               type="button"
               onClick={() => setCollapsed((c) => !c)}
               aria-expanded={!collapsed}
+              aria-label={collapsed ? t('queue_band_expand') : t('queue_band_collapse')}
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-foreground/45 transition-colors hover:text-foreground/75"
             >
               <svg

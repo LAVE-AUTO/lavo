@@ -654,7 +654,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 </span>
                 {!isEdit && (
                   <p className="text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
-                    {t('pricing_override_hint') || 'Ajustez le prix et la durée par format. Les champs vides utilisent les valeurs de base.'}
+                    {t('pricing_override_hint')}
                   </p>
                 )}
                 <ServiceVehicleRows

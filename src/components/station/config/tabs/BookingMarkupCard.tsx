@@ -181,7 +181,7 @@ export function BookingMarkupCard({
         {/* Subtle "off" state hint when disabled */}
         {!enabled && (
           <p className="mt-3 text-[11px] font-semibold text-[#A09060] dark:text-[#7A6A40]">
-            {t('surcharge_off_hint') || 'Activez pour facturer un supplément sur les réservations en ligne.'}
+            {t('surcharge_off_hint')}
           </p>
         )}
       </div>

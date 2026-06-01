@@ -43,6 +43,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
               type="button"
               onClick={() => setCollapsed((c) => !c)}
               aria-expanded={!collapsed}
+              aria-label={collapsed ? t('delays_expand') : t('delays_collapse')}
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-foreground/45 transition-colors hover:text-foreground/75"
             >
               <svg

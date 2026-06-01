@@ -206,6 +206,7 @@ export function DashboardAgendaTimeline({
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-expanded={!collapsed}
+            aria-label={collapsed ? t('agenda_expand') : t('agenda_collapse')}
             className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 transition-colors hover:text-foreground/70"
           >
             <svg
