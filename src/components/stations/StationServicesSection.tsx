@@ -83,27 +83,21 @@ export function StationServicesSection({
 
   const featuredDefault = useMemo(() => pickFeatured(services), [services]);
 
-  const [activeCategory, setActiveCategory] = useState<string | null>(
-    () => featuredDefault?.category ?? categories[0]?.category ?? null,
+  /* Accordion state: each category can be expanded or collapsed independently.
+   * The category holding the featured (or selected) service is open by default. */
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(featuredDefault ? [featuredDefault.category] : categories[0] ? [categories[0].category] : []),
   );
 
-  useEffect(() => {
-    if (!activeCategory && categories.length > 0) {
-      setActiveCategory(categories[0].category);
-      return;
-    }
-    if (activeCategory && !categories.find((c) => c.category === activeCategory)) {
-      setActiveCategory(categories[0]?.category ?? null);
-    }
-  }, [categories, activeCategory]);
-
-  /* Whenever the user switches the selected service, jump to the matching tab
-   * so the highlight stays in sync with the right-column summary. */
+  /* Keep the category of the currently selected service open so its featured
+   * card stays visible when the selection is driven from outside (e.g. the
+   * pre-selection coming from the station detail screen). */
   useEffect(() => {
     if (!selectedServiceId) return;
     const svc = services.find((s) => s.id === selectedServiceId);
-    if (svc && svc.category !== activeCategory) setActiveCategory(svc.category);
-  }, [selectedServiceId, services, activeCategory]);
+    if (!svc) return;
+    setExpanded((prev) => (prev.has(svc.category) ? prev : new Set(prev).add(svc.category)));
+  }, [selectedServiceId, services]);
 
   if (services.length === 0) {
     return (
@@ -113,22 +107,48 @@ export function StationServicesSection({
     );
   }
 
-  const visibleServices = activeCategory
-    ? categories.find((c) => c.category === activeCategory)?.services ?? []
-    : services;
-
+  /* The currently highlighted service: the explicit selection, else the popular
+   * default. Rendered with the hero "FeaturedServiceCard" treatment; every other
+   * service in the category is a compact "OtherServiceCard". */
   const featured = (() => {
     if (selectedServiceId) {
-      const match = visibleServices.find((s) => s.id === selectedServiceId);
+      const match = services.find((s) => s.id === selectedServiceId);
       if (match) return match;
     }
-    const popular = visibleServices.find((s) => s.isPopular);
-    return popular ?? visibleServices[0] ?? null;
+    return featuredDefault;
   })();
 
-  const others = featured
-    ? visibleServices.filter((s) => s.id !== featured.id)
-    : [];
+  const toggleCategory = (cat: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+
+  const renderServiceList = (list: StationServicePublic[]) =>
+    list.map((svc) =>
+      svc.id === featured?.id ? (
+        <FeaturedServiceCard
+          key={svc.id}
+          service={svc}
+          selected={selectedServiceId === svc.id}
+          locale={locale}
+          selectedFormatEntryId={selectedFormatEntryId}
+          onSelectFormatEntry={onSelectFormatEntry}
+          onBook={onBook}
+          bookingLoading={bookingLoading}
+          disabledBook={disabledBook}
+        />
+      ) : (
+        <OtherServiceCard
+          key={svc.id}
+          service={svc}
+          locale={locale}
+          onSelect={() => onSelectService(svc.id)}
+        />
+      ),
+    );
 
   return (
     <div className="space-y-5">
@@ -139,66 +159,56 @@ export function StationServicesSection({
         </p>
       </div>
 
-      {categories.length > 1 && (
-        <div
-          role="tablist"
-          aria-label={t('detail_services')}
-          className="flex flex-wrap gap-2"
-        >
+      {categories.length === 1 ? (
+        <div className="space-y-2.5">{renderServiceList(categories[0].services)}</div>
+      ) : (
+        <div className="space-y-3">
           {categories.map((cat) => {
-            const isActive = cat.category === activeCategory;
+            const isOpen = expanded.has(cat.category);
+            const panelId = `service-cat-${cat.category}`;
             return (
-              <button
+              <div
                 key={cat.category}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => {
-                  setActiveCategory(cat.category);
-                  const next = cat.services.find((s) => s.isPopular) ?? cat.services[0];
-                  if (next) onSelectService(next.id);
-                }}
-                className={[
-                  'px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
-                  isActive
-                    ? 'bg-gold text-dark-bg border-gold shadow-sm'
-                    : 'bg-surface/60 text-foreground/70 border-border hover:border-gold/40 hover:text-gold',
-                ].join(' ')}
+                className="rounded-2xl border border-border bg-surface/40 overflow-hidden"
               >
-                {categoryLabel(cat.category, locale)}
-                <span className="ml-1.5 opacity-70 font-semibold">({cat.services.length})</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.category)}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left cursor-pointer hover:bg-surface/60 transition-colors"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="text-[14.5px] font-black text-foreground truncate">
+                      {categoryLabel(cat.category, locale)}
+                    </span>
+                    <span className="text-[12px] font-semibold text-foreground/55 shrink-0">
+                      ({cat.services.length})
+                    </span>
+                  </span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    className={`shrink-0 text-foreground/55 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {isOpen && (
+                  <div id={panelId} className="px-3 pb-3 space-y-2.5">
+                    {renderServiceList(cat.services)}
+                  </div>
+                )}
+              </div>
             );
           })}
-        </div>
-      )}
-
-      {featured && (
-        <FeaturedServiceCard
-          service={featured}
-          selected={selectedServiceId === featured.id}
-          locale={locale}
-          selectedFormatEntryId={selectedFormatEntryId}
-          onSelectFormatEntry={onSelectFormatEntry}
-          onBook={onBook}
-          bookingLoading={bookingLoading}
-          disabledBook={disabledBook}
-        />
-      )}
-
-      {others.length > 0 && (
-        <div className="space-y-2.5">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">
-            {t('services_other')}
-          </p>
-          {others.map((svc) => (
-            <OtherServiceCard
-              key={svc.id}
-              service={svc}
-              locale={locale}
-              onSelect={() => onSelectService(svc.id)}
-            />
-          ))}
         </div>
       )}
     </div>
@@ -282,31 +292,13 @@ function FeaturedServiceCard({
       </div>
 
       {service.description && (
-        <p className="px-5 mt-3 text-[13.5px] text-foreground/70 leading-relaxed">
-          {service.description}
-        </p>
-      )}
-
-      {service.extras.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
-            {t('services_extras_label')}
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-1.5">
+            {t('detail_description')}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {service.extras.slice(0, 4).map((extra) => (
-              <div
-                key={extra.id}
-                className="flex items-center gap-2 rounded-xl border border-border bg-white/60 dark:bg-background/50 px-3 py-2 text-[12.5px] font-semibold text-[#222] dark:text-[#D0D0C0]"
-              >
-                <span className="w-5 h-5 rounded-md bg-Hurryline-success flex items-center justify-center shrink-0">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                <span className="truncate">{extra.name}</span>
-              </div>
-            ))}
-          </div>
+          <p className="text-[13.5px] text-foreground/70 leading-relaxed">
+            {service.description}
+          </p>
         </div>
       )}
 
