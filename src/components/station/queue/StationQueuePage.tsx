@@ -13,6 +13,7 @@ import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { QueueCard, type QueueEntry } from '@/components/station/dashboard/QueueCard';
 import { ACTIVE_QUEUE_STATUSES } from '@/components/station/dashboard/StationDashboard';
+import { ManualQueueAddModal } from './ManualQueueAddModal';
 
 const POLL_INTERVAL = 30_000;
 
@@ -57,6 +58,7 @@ export function StationQueuePage() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [manualAddOpen, setManualAddOpen] = useState(false);
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) { setLoading(true); setLoadError(false); }
@@ -189,6 +191,18 @@ export function StationQueuePage() {
             <StatChip count={inProgressEntries.length} color="#DDAF3B" label={t('stat_in_progress')} />
             <StatChip count={totalWaiting} color="#1E40AF" label={t('stat_waiting')} />
             <StatChip count={completedTodayCount} color="#00C851" label={t('stat_completed_today')} />
+            <button
+              type="button"
+              onClick={() => setManualAddOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-gold px-3 py-1.5 text-[12px] font-bold text-dark-bg transition-colors hover:bg-gold-hover"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M19 8v6M22 11h-6" />
+              </svg>
+              {t('queue_manual_add')}
+            </button>
             <button type="button" onClick={() => loadData()}
               className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-[12px] font-bold text-foreground/70 transition-colors hover:border-gold hover:text-gold">
               <RefreshIcon />
@@ -282,6 +296,13 @@ export function StationQueuePage() {
         blocking
         onConfirm={executeAction}
         onCancel={() => { setPending(null); setActionError(null); }}
+      />
+
+      {/* = Manual add modal */}
+      <ManualQueueAddModal
+        isOpen={manualAddOpen}
+        onClose={() => setManualAddOpen(false)}
+        onSuccess={() => { void loadData(true); }}
       />
     </div>
   );

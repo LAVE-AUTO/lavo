@@ -93,18 +93,14 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
               className={[
                 'relative min-w-[52px] rounded-lg px-3 py-2 text-center transition-all duration-150',
                 chip.isActive
-                  ? 'bg-[#DDAF3B] text-[#001201]'
-                  : 'bg-[#FFF9EC] text-[#001201] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#FFF9EC] dark:hover:bg-[#001A05]',
+                  ? 'bg-[#DDAF3B] text-[#001201] shadow-sm'
+                  : chip.isToday
+                    ? 'border-2 border-[#DDAF3B] bg-[#FFF9EC] text-[#001201] dark:bg-[#1E2A18] dark:text-[#FFF9EC]'
+                    : 'bg-[#FFF9EC] text-[#001201] hover:bg-[#DDD8C4] dark:bg-[#1E2A18] dark:text-[#FFF9EC] dark:hover:bg-[#001A05]',
               ].join(' ')}
             >
               <div className="text-[10px] font-bold tracking-[0.06em]">{chip.name}</div>
               <div className="text-[16px] font-black">{chip.num}</div>
-              {chip.isToday && !chip.isActive && (
-                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#DDAF3B]" />
-              )}
-              {chip.isToday && chip.isActive && (
-                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-dark-bg/50" />
-              )}
             </button>
           ))}
         </div>
