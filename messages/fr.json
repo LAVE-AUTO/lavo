@@ -1928,6 +1928,8 @@
         "delays_empty": "Aucune demande en attente",
         "delays_no_message": "Pas de message",
         "delays_status_pending": "À traiter",
+        "delays_collapse": "Réduire les demandes de retard",
+        "delays_expand": "Afficher les demandes de retard",
         "availability_save_success": "Disponibilité enregistrée",
         "availability_save_error": "Impossible d’enregistrer la disponibilité. Réessaie.",
         "availability_delete_success": "Disponibilité supprimée",

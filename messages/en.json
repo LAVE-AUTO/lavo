@@ -1928,6 +1928,8 @@
         "delays_empty": "No pending request",
         "delays_no_message": "No message",
         "delays_status_pending": "To handle",
+        "delays_collapse": "Collapse delay requests",
+        "delays_expand": "Show delay requests",
         "availability_save_success": "Availability saved",
         "availability_save_error": "Could not save the availability. Please retry.",
         "availability_delete_success": "Availability removed",
