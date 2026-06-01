@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { StationServicePublic } from '@/types/station';
 
@@ -83,11 +83,27 @@ export function StationServicesSection({
 
   const featuredDefault = useMemo(() => pickFeatured(services), [services]);
 
-  /* Accordion state: each category can be expanded or collapsed independently.
-   * The category holding the featured (or selected) service is open by default. */
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(featuredDefault ? [featuredDefault.category] : categories[0] ? [categories[0].category] : []),
+  const [activeCategory, setActiveCategory] = useState<string | null>(
+    () => featuredDefault?.category ?? categories[0]?.category ?? null,
   );
+
+  useEffect(() => {
+    if (!activeCategory && categories.length > 0) {
+      setActiveCategory(categories[0].category);
+      return;
+    }
+    if (activeCategory && !categories.find((c) => c.category === activeCategory)) {
+      setActiveCategory(categories[0]?.category ?? null);
+    }
+  }, [categories, activeCategory]);
+
+  /* Whenever the user switches the selected service, jump to the matching tab
+   * so the highlight stays in sync with the right-column summary. */
+  useEffect(() => {
+    if (!selectedServiceId) return;
+    const svc = services.find((s) => s.id === selectedServiceId);
+    if (svc && svc.category !== activeCategory) setActiveCategory(svc.category);
+  }, [selectedServiceId, services, activeCategory]);
 
   if (services.length === 0) {
     return (
@@ -97,48 +113,22 @@ export function StationServicesSection({
     );
   }
 
-  /* The currently highlighted service: the explicit selection, else the popular
-   * default. Rendered with the hero "FeaturedServiceCard" treatment; every other
-   * service in the category is a compact "OtherServiceCard". */
+  const visibleServices = activeCategory
+    ? categories.find((c) => c.category === activeCategory)?.services ?? []
+    : services;
+
   const featured = (() => {
     if (selectedServiceId) {
-      const match = services.find((s) => s.id === selectedServiceId);
+      const match = visibleServices.find((s) => s.id === selectedServiceId);
       if (match) return match;
     }
-    return featuredDefault;
+    const popular = visibleServices.find((s) => s.isPopular);
+    return popular ?? visibleServices[0] ?? null;
   })();
 
-  const toggleCategory = (cat: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
-
-  const renderServiceList = (list: StationServicePublic[]) =>
-    list.map((svc) =>
-      svc.id === featured?.id ? (
-        <FeaturedServiceCard
-          key={svc.id}
-          service={svc}
-          selected={selectedServiceId === svc.id}
-          locale={locale}
-          selectedFormatEntryId={selectedFormatEntryId}
-          onSelectFormatEntry={onSelectFormatEntry}
-          onBook={onBook}
-          bookingLoading={bookingLoading}
-          disabledBook={disabledBook}
-        />
-      ) : (
-        <OtherServiceCard
-          key={svc.id}
-          service={svc}
-          locale={locale}
-          onSelect={() => onSelectService(svc.id)}
-        />
-      ),
-    );
+  const others = featured
+    ? visibleServices.filter((s) => s.id !== featured.id)
+    : [];
 
   return (
     <div className="space-y-5">
@@ -149,56 +139,66 @@ export function StationServicesSection({
         </p>
       </div>
 
-      {categories.length === 1 ? (
-        <div className="space-y-2.5">{renderServiceList(categories[0].services)}</div>
-      ) : (
-        <div className="space-y-3">
+      {categories.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={t('detail_services')}
+          className="flex flex-wrap gap-2"
+        >
           {categories.map((cat) => {
-            const isOpen = expanded.has(cat.category);
-            const panelId = `service-cat-${cat.category}`;
+            const isActive = cat.category === activeCategory;
             return (
-              <div
+              <button
                 key={cat.category}
-                className="rounded-2xl border border-border bg-surface/40 overflow-hidden"
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => {
+                  setActiveCategory(cat.category);
+                  const next = cat.services.find((s) => s.isPopular) ?? cat.services[0];
+                  if (next) onSelectService(next.id);
+                }}
+                className={[
+                  'px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
+                  isActive
+                    ? 'bg-gold text-dark-bg border-gold shadow-sm'
+                    : 'bg-surface/60 text-foreground/70 border-border hover:border-gold/40 hover:text-gold',
+                ].join(' ')}
               >
-                <button
-                  type="button"
-                  onClick={() => toggleCategory(cat.category)}
-                  aria-expanded={isOpen}
-                  aria-controls={panelId}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left cursor-pointer hover:bg-surface/60 transition-colors"
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <span className="text-[14.5px] font-black text-foreground truncate">
-                      {categoryLabel(cat.category, locale)}
-                    </span>
-                    <span className="text-[12px] font-semibold text-foreground/55 shrink-0">
-                      ({cat.services.length})
-                    </span>
-                  </span>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    className={`shrink-0 text-foreground/55 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                {isOpen && (
-                  <div id={panelId} className="px-3 pb-3 space-y-2.5">
-                    {renderServiceList(cat.services)}
-                  </div>
-                )}
-              </div>
+                {categoryLabel(cat.category, locale)}
+                <span className="ml-1.5 opacity-70 font-semibold">({cat.services.length})</span>
+              </button>
             );
           })}
+        </div>
+      )}
+
+      {featured && (
+        <FeaturedServiceCard
+          service={featured}
+          selected={selectedServiceId === featured.id}
+          locale={locale}
+          selectedFormatEntryId={selectedFormatEntryId}
+          onSelectFormatEntry={onSelectFormatEntry}
+          onBook={onBook}
+          bookingLoading={bookingLoading}
+          disabledBook={disabledBook}
+        />
+      )}
+
+      {others.length > 0 && (
+        <div className="space-y-2.5">
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em]">
+            {t('services_other')}
+          </p>
+          {others.map((svc) => (
+            <OtherServiceCard
+              key={svc.id}
+              service={svc}
+              locale={locale}
+              onSelect={() => onSelectService(svc.id)}
+            />
+          ))}
         </div>
       )}
     </div>
