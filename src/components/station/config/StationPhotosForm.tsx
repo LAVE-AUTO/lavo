@@ -136,15 +136,15 @@ export function StationPhotosForm({ locked = false }: Props) {
 
   return (
     <div className="flex flex-col rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-[#001A05]">
-      <div className="border-b border-[#F0EDE0] px-6 py-4 dark:border-[#1E2E18]">
+      <div className="border-b border-[#F0EDE0] px-4 py-4 dark:border-[#1E2E18] sm:px-6">
         <p className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{t('section_photos')}</p>
         <p className="mt-0.5 text-[12px] text-[#AAAAAA] dark:text-[#4A4A3A]">{t('section_photos_hint')}</p>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} aria-hidden="true" tabIndex={-1} />
 
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-4 md:grid-cols-8">
+        <div className="grid grid-cols-4 gap-3 md:grid-cols-8">
           {Array.from({ length: MAX_PHOTOS }).map((_, i) => {
             const url        = photos[i];
             const isUploading = uploadingIdx === i;

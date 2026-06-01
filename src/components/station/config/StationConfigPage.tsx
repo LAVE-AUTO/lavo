@@ -139,7 +139,7 @@ export function StationConfigPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b border-separator bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="border-b border-separator bg-transparent px-4 py-4 dark:border-[#1A2A14] dark:bg-dark-bg sm:px-6">
         <div className="text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
           {t('page_title')}
         </div>
@@ -148,7 +148,7 @@ export function StationConfigPage() {
       <ConfigTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-5xl flex-col gap-5 p-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 p-4 sm:p-6">
           {/* Pending approval banner */}
           {isPendingApproval && (
             <div className="flex items-start gap-4 rounded-xl border border-[#DDAF3B]/25 bg-[#DDAF3B]/8 px-5 py-4 dark:border-[#DDAF3B]/20 dark:bg-[#DDAF3B]/5">

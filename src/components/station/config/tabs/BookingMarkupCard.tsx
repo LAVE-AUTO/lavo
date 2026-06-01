@@ -79,7 +79,7 @@ export function BookingMarkupCard({
         }}
       />
 
-      <div className="relative pl-6 pr-6 pt-5 pb-5">
+      <div className="relative px-4 py-4 sm:px-6 sm:py-5">
         {/* Header row */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">

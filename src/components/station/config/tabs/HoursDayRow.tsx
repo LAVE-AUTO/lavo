@@ -107,24 +107,31 @@ export function HoursDayRow({
   onAfternoonEndChange,
 }: Props) {
   return (
-    <div className="grid grid-cols-[100px_44px_1fr] items-center gap-3 border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
-      <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{dayLabel}</span>
-      <Toggle checked={enabled} disabled={disabled} onChange={onToggle} />
-      <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${enabled ? '' : 'opacity-40'}`}>
-        <TimeRange
-          start={morningStart}
-          end={morningEnd}
-          disabled={disabled || !enabled}
-          onStartChange={onMorningStartChange}
-          onEndChange={onMorningEndChange}
-        />
-        <TimeRange
-          start={afternoonStart}
-          end={afternoonEnd}
-          disabled={disabled || !enabled}
-          onStartChange={onAfternoonStartChange}
-          onEndChange={onAfternoonEndChange}
-        />
+    <div className="border-b border-[#F0EDE4] py-3 last:border-b-0 dark:border-[#1A2A14]">
+      {/*
+        Mobile layout: day name + toggle in row 1, time inputs full-width in row 2.
+        Uses a 2-col grid that becomes the standard 3-col grid at sm+.
+        The time-ranges div spans 2 cols on mobile, 1 col on sm+.
+      */}
+      <div className="grid grid-cols-[1fr_44px] items-center gap-x-3 gap-y-2 sm:grid-cols-[100px_44px_1fr] sm:gap-3">
+        <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{dayLabel}</span>
+        <Toggle checked={enabled} disabled={disabled} onChange={onToggle} />
+        <div className={`col-span-2 grid grid-cols-1 gap-2 sm:col-span-1 sm:grid-cols-2 ${enabled ? '' : 'opacity-40'}`}>
+          <TimeRange
+            start={morningStart}
+            end={morningEnd}
+            disabled={disabled || !enabled}
+            onStartChange={onMorningStartChange}
+            onEndChange={onMorningEndChange}
+          />
+          <TimeRange
+            start={afternoonStart}
+            end={afternoonEnd}
+            disabled={disabled || !enabled}
+            onStartChange={onAfternoonStartChange}
+            onEndChange={onAfternoonEndChange}
+          />
+        </div>
       </div>
     </div>
   );

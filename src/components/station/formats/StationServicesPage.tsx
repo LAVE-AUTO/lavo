@@ -185,7 +185,7 @@ export function StationServicesPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Topbar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-separator bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-separator bg-transparent px-4 py-5 dark:border-[#1A2A14] dark:bg-dark-bg sm:px-6">
         <div className="min-w-0">
           <h1 className="text-[22px] font-black tracking-tight text-[#001201] dark:text-[#FFF9EC]">
             {t('page_title')}
@@ -212,7 +212,7 @@ export function StationServicesPage() {
       </header>
 
       {/* Main scroll area */}
-      <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-6">
+      <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6">
         {/* Services section */}
         <section>
           <div className="mb-4 flex items-center justify-between gap-3">
