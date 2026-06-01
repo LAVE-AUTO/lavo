@@ -5,13 +5,16 @@
 import { and, asc, count, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { delayRequests, reservations, timeSlots } from '@/lib/db/schema';
+import { delayRequests, reservations, timeSlots, users } from '@/lib/db/schema';
 
 
 // %%%%% Types %%%%%
 // Delay request types with reservation context
 
 export type DelayRequestWithReservation = typeof delayRequests.$inferSelect & {
+  /** Requesting client's name, for display in the station UI. Null when missing. */
+  client_first_name: string | null;
+  client_last_name: string | null;
   reservation: {
     id: string;
     scheduled_at: Date | null;
@@ -62,10 +65,13 @@ export async function listDelayRequestsByStation(
         refusal_reason: delayRequests.refusal_reason,
         created_at: delayRequests.created_at,
         updated_at: delayRequests.updated_at,
+        client_first_name: users.first_name,
+        client_last_name: users.last_name,
         reservation_vehicle_format_id: reservations.vehicle_format_id,
         slot_start_time: timeSlots.start_time,
       })
       .from(delayRequests)
+      .leftJoin(users, eq(delayRequests.user_id, users.id))
       .leftJoin(reservations, eq(delayRequests.reservation_id, reservations.id))
       .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
       .where(baseWhere)
@@ -86,6 +92,8 @@ export async function listDelayRequestsByStation(
     refusal_reason: r.refusal_reason ?? null,
     created_at: r.created_at,
     updated_at: r.updated_at,
+    client_first_name: r.client_first_name ?? null,
+    client_last_name: r.client_last_name ?? null,
     reservation: r.reservation_vehicle_format_id !== null && r.reservation_vehicle_format_id !== undefined
       ? {
           id: r.reservation_id,

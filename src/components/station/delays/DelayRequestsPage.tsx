@@ -31,7 +31,24 @@ interface RawDelayItem {
   refusal_reason: string | null;
   created_at: string;
   updated_at: string;
+  client_first_name?: string | null;
+  client_last_name?: string | null;
   reservation: RawDelayReservation | null;
+}
+
+/** Client display name from the delay payload, falling back to a short code. */
+function clientNameOf(item: RawDelayItem): string {
+  const name = [item.client_first_name, item.client_last_name].filter(Boolean).join(' ').trim();
+  return name || `Client #${item.user_id.slice(0, 4).toUpperCase()}`;
+}
+
+/** Two-letter avatar initials from a display name (handles the code fallback). */
+function getInitials(name: string): string {
+  const codeMatch = name.match(/Client #(\w{2})/);
+  if (codeMatch) return codeMatch[1].toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0] ?? name).slice(0, 2).toUpperCase();
 }
 
 interface RawFormat {
@@ -69,7 +86,7 @@ function mapPending(item: RawDelayItem, formats: Map<string, string>): DelayRequ
   return {
     id: item.id,
     reservation_id: item.reservation_id,
-    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    client_name: clientNameOf(item),
     message: item.message,
     requested_at: item.created_at,
     scheduled_at: item.reservation?.scheduled_at ?? null,
@@ -81,7 +98,7 @@ function mapResolved(item: RawDelayItem): ResolvedRequest {
   return {
     id: item.id,
     reservation_id: item.reservation_id,
-    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    client_name: clientNameOf(item),
     message: item.message,
     status: item.status === 'accepted' ? 'accepted' : 'refused',
     refusal_reason: item.refusal_reason ?? undefined,
@@ -373,7 +390,7 @@ function PendingCard({
   impactFormatFallback,
   impactScheduledFallback,
 }: PendingCardProps) {
-  const initials = request.client_name.replace('Client #', '');
+  const initials = getInitials(request.client_name);
   const scheduledText = request.scheduled_at
     ? new Date(request.scheduled_at).toLocaleString('fr-CA', {
         day: '2-digit',
@@ -464,7 +481,7 @@ interface HistoryCardProps {
 function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: HistoryCardProps) {
   const accepted = request.status === 'accepted';
   const accentColor = accepted ? '#00C851' : '#FF383C';
-  const initials = request.client_name.replace('Client #', '');
+  const initials = getInitials(request.client_name);
 
   return (
     <div

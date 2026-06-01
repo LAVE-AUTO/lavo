@@ -29,6 +29,14 @@ interface RawDelayPreview {
   message: string;
   status: 'pending' | 'accepted' | 'refused';
   created_at: string;
+  client_first_name?: string | null;
+  client_last_name?: string | null;
+}
+
+/** Client display name from the delay payload, falling back to a short code. */
+function delayClientName(d: RawDelayPreview): string {
+  const name = [d.client_first_name, d.client_last_name].filter(Boolean).join(' ').trim();
+  return name || `Client #${d.user_id.slice(0, 4).toUpperCase()}`;
 }
 
 const EMPTY_KPI: KpiData = { revenue: null, clients: null, lateFees: null, occupancy: null };
@@ -313,7 +321,7 @@ export function StationDashboard() {
           .filter((d) => d.status === 'pending')
           .map((d): DashboardDelayItem => ({
             id: d.id,
-            clientName: `Client #${d.user_id.slice(0, 4).toUpperCase()}`,
+            clientName: delayClientName(d),
             message: d.message,
             requestedAt: d.created_at,
           })),
