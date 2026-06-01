@@ -10,23 +10,55 @@ interface Props {
   onCreateClick: () => void;
 }
 
+/** Group consecutive ISO dates into ranges, then format the ranges compactly.
+ *  e.g. ["2026-02-10","2026-02-11","2026-02-15","2026-03-01","2026-03-02"]
+ *       → "10-11 févr. & 15 févr. & 1-2 mars 2026"
+ */
 function formatDates(dates: string[]): string {
   if (dates.length === 0) return '';
+
   const sorted = [...dates].sort();
-  if (sorted.length === 1) {
-    const d = new Date(sorted[0] + 'T00:00:00');
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  // Build consecutive ranges
+  const ranges: { start: string; end: string }[] = [];
+  let rangeStart = sorted[0];
+  let rangeEnd = sorted[0];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(rangeEnd + 'T00:00:00');
+    const curr = new Date(sorted[i] + 'T00:00:00');
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      rangeEnd = sorted[i];
+    } else {
+      ranges.push({ start: rangeStart, end: rangeEnd });
+      rangeStart = sorted[i];
+      rangeEnd = sorted[i];
+    }
   }
-  const first = new Date(sorted[0] + 'T00:00:00');
-  const last = new Date(sorted[sorted.length - 1] + 'T00:00:00');
-  const firstStr = first.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  const lastStr = last.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-  if (sorted.length <= 3) {
-    return sorted
-      .map((d) => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }))
-      .join(', ');
-  }
-  return `${firstStr} – ${lastStr}`;
+  ranges.push({ start: rangeStart, end: rangeEnd });
+
+  // Format each range
+  const year = new Date(sorted[sorted.length - 1] + 'T00:00:00').getFullYear();
+
+  const parts = ranges.map(({ start, end }) => {
+    const s = new Date(start + 'T00:00:00');
+    const e = new Date(end + 'T00:00:00');
+    const sDay = s.getDate();
+    const eDay = e.getDate();
+    const sMonth = s.toLocaleDateString('fr-FR', { month: 'short' });
+    const eMonth = e.toLocaleDateString('fr-FR', { month: 'short' });
+
+    if (start === end) {
+      return `${sDay} ${sMonth}`;
+    }
+    if (sMonth === eMonth) {
+      return `${sDay}-${eDay} ${sMonth}`;
+    }
+    return `${sDay} ${sMonth}-${eDay} ${eMonth}`;
+  });
+
+  return `${parts.join(' & ')} ${year}`;
 }
 
 export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
@@ -34,7 +66,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
-    return bayIds.join(', ');
+    return bayIds.map((b) => `${t('availability_poste_short')}${b}`).join(', ');
   }
 
   return (
@@ -76,30 +108,48 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                 key={block.id}
                 className="rounded-xl bg-white p-3 shadow-sm dark:bg-[#001A05]"
               >
-                <p className="mb-1 text-[11px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
-                  {t('availability_block_postes')} {formatBays(block.bayIds)}
-                </p>
-                <p className="mb-0.5 text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                {/* Postes badge */}
+                <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#DDAF3B]/15 px-2.5 py-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#DDAF3B]">
+                    {t('availability_block_postes')}
+                  </span>
+                  <span className="text-[10px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                    {formatBays(block.bayIds)}
+                  </span>
+                </div>
+
+                {/* Condensed date ranges */}
+                <p className="mb-1 text-[12px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
                   {formatDates(block.dates)}
                 </p>
+
+                {/* Time range */}
                 <p className="mb-2.5 text-[13px] font-black text-[#DDAF3B]">
                   {block.startTime} – {block.endTime}
                 </p>
+
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => onDelete(block.id)}
-                    className="cursor-pointer rounded-lg border border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
+                    className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
                     aria-label={`${t('availability_block_delete')} - ${formatDates(block.dates)}`}
                   >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                     {t('availability_block_delete')}
                   </button>
                   <button
                     type="button"
                     onClick={() => onEdit(block)}
-                    className="cursor-pointer rounded-lg bg-[#DDAF3B] px-2.5 py-1 text-[10px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
+                    className="cursor-pointer inline-flex items-center gap-1 rounded-lg bg-[#DDAF3B] px-2.5 py-1 text-[10px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
                     aria-label={`${t('availability_block_edit')} - ${formatDates(block.dates)}`}
                   >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
                     {t('availability_block_edit')}
                   </button>
                 </div>
