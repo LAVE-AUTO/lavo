@@ -52,10 +52,14 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
         ? preselectedFormatEntry
         : initialService.vehicleEntries[0] ?? null)
     : null;
+  /* After a service is locked in, the step right before "arrival" is "extras"
+   * only when the service actually has extras; otherwise we jump to "arrival". */
+  const initialPostFormatStep: Step =
+    initialService && initialService.extras.length > 0 ? 'extras' : 'arrival';
   const initialStep: Step = initialService
     ? (initialService.category === 'hand_wash'
-        ? (preselectedFormatEntry ? 'extras' : 'format')
-        : 'extras')
+        ? (preselectedFormatEntry ? initialPostFormatStep : 'format')
+        : initialPostFormatStep)
     : 'service';
 
   const [step, setStep] = useState<Step>(initialStep);
@@ -79,7 +83,14 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
   const needsFormat = selectedService?.category === 'hand_wash';
-  const activeSteps = ALL_STEPS.filter((s) => s !== 'format' || needsFormat);
+  /* The extras step is part of the flow only when the selected service offers
+   * extras; services without any extra skip it entirely. */
+  const hasExtras = (selectedService?.extras.length ?? 0) > 0;
+  const activeSteps = ALL_STEPS.filter((s) => {
+    if (s === 'format') return needsFormat;
+    if (s === 'extras') return hasExtras;
+    return true;
+  });
   const stepIndex = activeSteps.indexOf(step);
 
   const servicePrice = selectedEntry?.price ?? 0;
@@ -146,11 +157,6 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
     setSelectedExtraIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-  }, []);
-
-  const handleSkipExtras = useCallback(() => {
-    setSelectedExtraIds([]);
-    setStep('arrival');
   }, []);
 
   const handleArrivalSetMode = useCallback((mode: ArrivalMode) => {
@@ -319,7 +325,6 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
             selectedExtras={selectedExtraIds}
             onToggleExtra={toggleExtra}
             onContinue={goNext}
-            onSkip={handleSkipExtras}
             onBack={goBack}
           />
         );
