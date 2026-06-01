@@ -63,27 +63,37 @@ function formatDates(dates: string[]): string {
   }
   ranges.push({ start: rangeStart, end: rangeEnd });
 
-  // Format each range
-  const year = new Date(sorted[sorted.length - 1] + 'T00:00:00').getFullYear();
-
-  const parts = ranges.map(({ start, end }) => {
+  // Format each range; include a year suffix whenever a range's year differs
+  // from the next range (or on the final range) so cross-year sets are unambiguous.
+  const parts = ranges.map(({ start, end }, idx) => {
     const s = new Date(start + 'T00:00:00');
     const e = new Date(end + 'T00:00:00');
     const sDay = s.getDate();
     const eDay = e.getDate();
     const sMonth = s.toLocaleDateString('fr-FR', { month: 'short' });
     const eMonth = e.toLocaleDateString('fr-FR', { month: 'short' });
+    const rangeYear = e.getFullYear();
 
+    // Attach the year to this segment if it differs from the next segment's year,
+    // or if this is the final segment.
+    const nextYear = idx < ranges.length - 1
+      ? new Date(ranges[idx + 1].end + 'T00:00:00').getFullYear()
+      : null;
+    const showYear = nextYear === null || rangeYear !== nextYear;
+
+    let segment: string;
     if (start === end) {
-      return `${sDay} ${sMonth}`;
+      segment = `${sDay} ${sMonth}`;
+    } else if (sMonth === eMonth) {
+      segment = `${sDay}-${eDay} ${sMonth}`;
+    } else {
+      segment = `${sDay} ${sMonth}-${eDay} ${eMonth}`;
     }
-    if (sMonth === eMonth) {
-      return `${sDay}-${eDay} ${sMonth}`;
-    }
-    return `${sDay} ${sMonth}-${eDay} ${eMonth}`;
+
+    return showYear ? `${segment} ${rangeYear}` : segment;
   });
 
-  return `${parts.join(' & ')} ${year}`;
+  return parts.join(' & ');
 }
 
 export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
