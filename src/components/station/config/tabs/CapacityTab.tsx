@@ -43,10 +43,8 @@ function initForm(config: StationConfig, postCount: number) {
   const surchargeNumeric = config.reservation_surcharge != null ? Number(config.reservation_surcharge) : NaN;
   const surchargeEnabled = Number.isFinite(surchargeNumeric) && surchargeNumeric > 0;
   return {
-    wash_duration_minutes: config.wash_duration_minutes ?? '',
     wash_post_count: config.wash_post_count ?? postCount,
     late_tolerance_minutes: config.late_tolerance_minutes ?? '',
-    cancellation_delay_minutes: config.cancellation_delay_minutes ?? '',
     max_concurrent_posts: config.max_concurrent_posts ?? '',
     margin_before_minutes: config.margin_before_minutes ?? '',
     margin_after_minutes: config.margin_after_minutes ?? '',
@@ -113,12 +111,8 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
     setSaving(true);
 
     const payload: Record<string, unknown> = {};
-    const wd = safeInt(form.wash_duration_minutes);
-    if (wd !== undefined) payload.wash_duration_minutes = wd;
     const lt = safeInt(form.late_tolerance_minutes);
     if (lt !== undefined) payload.late_tolerance_minutes = lt;
-    const cd = safeInt(form.cancellation_delay_minutes);
-    if (cd !== undefined) payload.cancellation_delay_minutes = cd;
     const mp = safeInt(form.max_concurrent_posts);
     if (mp !== undefined) payload.max_concurrent_posts = mp;
     const mb = safeInt(form.margin_before_minutes);
@@ -207,30 +201,12 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
                 disabled={locked || saving}
               />
             </Field>
-            <Field label={t('field_cancellation_delay')} hint={t('capacity_cancellation_hint')}>
-              <NumberStepper
-                value={form.cancellation_delay_minutes}
-                onChange={(v) => set('cancellation_delay_minutes', v)}
-                min={0}
-                unit="min"
-                disabled={locked || saving}
-              />
-            </Field>
           </div>
         </Card>
       </div>
 
       <Card title={t('capacity_card_wash_settings')}>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Field label={t('field_wash_duration')}>
-            <NumberStepper
-              value={form.wash_duration_minutes}
-              onChange={(v) => set('wash_duration_minutes', v)}
-              min={1}
-              unit="min"
-              disabled={locked || saving}
-            />
-          </Field>
+        <div className="grid gap-4 md:grid-cols-2">
           <Field label={t('field_margin_before')}>
             <NumberStepper
               value={form.margin_before_minutes}

@@ -75,18 +75,16 @@ export function BookingMarkupCard({
 
   return (
     <section
-      className={`rounded-2xl border p-6 shadow-sm transition-colors duration-150 ${
+      className={`rounded-2xl border-2 p-6 shadow-sm transition-colors duration-150 ${
         enabled
-          ? 'border-[#DDAF3B]/30 bg-[#FFFDF5] dark:border-[#DDAF3B]/20 dark:bg-[#1A1808]'
-          : 'border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-[#182214]'
+          ? 'border-[#DDAF3B]/60 bg-[#FFFDF5] dark:border-[#DDAF3B]/40 dark:bg-[#1A1808]'
+          : 'border-[#DDAF3B]/30 bg-[#FFFDF5]/50 dark:border-[#DDAF3B]/20 dark:bg-[#182214]'
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              enabled ? 'bg-[#DDAF3B]/15 text-[#DDAF3B]' : 'bg-[#F0EDE0] text-foreground/55 dark:bg-[#1A2A14] dark:text-[#B0BFB1]'
-            }`}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/15 text-[#DDAF3B]"
             aria-hidden="true"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
