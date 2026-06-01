@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { getFromApi, postWithApi, deleteWithApi } from '@/services';
+import { getFromApi, postWithApi, deleteWithApi, updateWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { BlocksPanel } from '@/components/station/availability/BlocksPanel';
@@ -206,18 +206,6 @@ export default function StationAvailabilityPage() {
   async function handleSave(data: Omit<AvailabilityBlock, 'id'>) {
     if (data.dates.length === 0) return;
 
-    // Edit = delete all slots in the group first, then bulk-create the replacement set.
-    // Slots are independent rows so cross-date edits become "rewrite the set".
-    if (editingBlock) {
-      const idsToDelete = editingBlock.ids ?? [editingBlock.id];
-      const deleteResults = await Promise.all(idsToDelete.map((id) => deleteWithApi(`/station/slots/${id}`)));
-      if (deleteResults.some(([ok]) => !ok)) {
-        showError(t('availability_delete_error'));
-        return;
-      }
-    }
-
-    // Capacity: if "all bays" → use the active-bay count; otherwise the count of selected bays.
     const capacity = data.bayIds.includes('all') ? activeBays : data.bayIds.length;
     const safeCapacity = Math.max(1, capacity);
 
@@ -228,12 +216,26 @@ export default function StationAvailabilityPage() {
     }));
 
     let ok = false;
-    if (newSlots.length === 1) {
-      const [success1] = await postWithApi('/station/slots', newSlots[0]);
-      ok = success1;
+
+    if (editingBlock) {
+      // Edit path: atomic replace — delete old slots + create new ones in one transaction.
+      // If the delete fails (slot has reservations, not found, etc.) the create is rolled
+      // back too, so no orphan slots are ever produced.
+      const idsToDelete = editingBlock.ids ?? [editingBlock.id];
+      const [replaceOk] = await updateWithApi('/station/slots/replace', {
+        ids_to_delete: idsToDelete,
+        slots: newSlots,
+      });
+      ok = replaceOk;
     } else {
-      const [success1] = await postWithApi('/station/slots/bulk', { slots: newSlots });
-      ok = success1;
+      // Create path: single or bulk insert.
+      if (newSlots.length === 1) {
+        const [success1] = await postWithApi('/station/slots', newSlots[0]);
+        ok = success1;
+      } else {
+        const [success1] = await postWithApi('/station/slots/bulk', { slots: newSlots });
+        ok = success1;
+      }
     }
 
     if (!mountedRef.current) return;
@@ -246,7 +248,6 @@ export default function StationAvailabilityPage() {
     success(t('availability_save_success'));
     setEditingBlock(null);
 
-    // Refetch every affected date in parallel (also re-fetch the old date if the edit moved it)
     const datesToRefresh = new Set(data.dates);
     if (editingBlock) editingBlock.dates.forEach((d) => datesToRefresh.add(d));
     await Promise.all(Array.from(datesToRefresh).map(refreshDate));

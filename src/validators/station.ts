@@ -452,6 +452,16 @@ export const deleteSlotsBodySchema = z
   })
   .strict();
 
+/** PUT /station/slots/replace — atomic delete-then-create. */
+export const replaceSlotsBodySchema = z
+  .object({
+    ids_to_delete: z.array(z.string().uuid()).min(0).max(100),
+    slots: z.array(createSlotBodySchema).min(1).max(500),
+  })
+  .strict();
+
+export type ReplaceSlotsBody = z.infer<typeof replaceSlotsBodySchema>;
+
 /** Generate slots: date or date range; optional interval_minutes. */
 export const generateSlotsBodySchema = z
   .object({

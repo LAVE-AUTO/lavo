@@ -40,9 +40,11 @@ export async function createSlot(
 export async function createSlots(
   stationId: string,
   slots: Array<{ start_time: Date; end_time: Date; capacity: number }>,
+  tx?: DbTransaction,
 ): Promise<TimeSlot[]> {
   if (slots.length === 0) return [];
-  const rows = await db
+  const client = tx ?? db;
+  const rows = await client
     .insert(timeSlots)
     .values(
       slots.map((s) => ({
@@ -121,8 +123,18 @@ export async function lockSlotForUpdate(
 /**
  * Deletes the slot by id. Caller must ensure slot belongs to station and has no reservations.
  */
-export async function deleteSlotById(slotId: string): Promise<void> {
-  await db.delete(timeSlots).where(eq(timeSlots.id, slotId));
+export async function deleteSlotById(slotId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  await client.delete(timeSlots).where(eq(timeSlots.id, slotId));
+}
+
+/**
+ * Deletes multiple slots by id in one statement. Caller must validate ownership + no reservations.
+ */
+export async function deleteSlotsByIds(slotIds: string[], tx?: DbTransaction): Promise<void> {
+  if (slotIds.length === 0) return;
+  const client = tx ?? db;
+  await client.delete(timeSlots).where(inArray(timeSlots.id, slotIds));
 }
 
 /**
