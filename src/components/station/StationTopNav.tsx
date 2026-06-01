@@ -130,10 +130,10 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
   } as const;
 
   return (
-    <header className="relative z-40 flex-shrink-0 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+    <header className="relative z-50 flex-shrink-0 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
       {/* Edge-to-edge: station space spans the full window width with just a
           comfortable lateral padding, matching AdminTopNav. */}
-      <div className="px-6 lg:px-8 flex items-center justify-between gap-6 py-2">
+      <div className="px-4 lg:px-8 flex items-center justify-between gap-6 py-2 sm:px-6">
 
         {/* Left cluster: sidebar toggle (when provided) + logo + optional station name */}
         <div className="flex items-center gap-3">
@@ -233,7 +233,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
 
             {isOpen && (
               <div
-                className="absolute right-0 top-[calc(100%+10px)] z-50 w-96 rounded-xl p-3 shadow-xl opacity-100 backdrop-blur-0"
+                className="absolute right-0 top-[calc(100%+10px)] z-50 w-80 max-w-[calc(100vw-1rem)] rounded-xl p-3 shadow-xl sm:w-96"
                 style={notifPanelStyle}
               >
                 <div className="mb-2 flex items-center justify-between">
