@@ -13,7 +13,7 @@ import { error400, error404, error409, error500, fromAppError, successResponse }
 import { acceptDelay } from '@/server/reservations/delay-service';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { ApiCode } from '@/types/api-codes';
-import { mapZodErrors, reservationIdParamSchema } from '@/validators/entry';
+import { acceptDelayBodySchema, mapZodErrors, reservationIdParamSchema } from '@/validators/entry';
 import type { NextResponse } from 'next/server';
 
 type Params = { params: Promise<{ id: string }> };
@@ -31,8 +31,22 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(paramParsed.error));
   }
 
+  let body: unknown;
   try {
-    const delayRequest = await acceptDelay(paramParsed.data.id, station.id);
+    body = await request.json();
+  } catch {
+    return error400('Invalid JSON body', ApiCode.VALIDATION_FAILED);
+  }
+  const bodyParsed = acceptDelayBodySchema.safeParse(body);
+  if (!bodyParsed.success) {
+    return error400('Validation failed', ApiCode.VALIDATION_FAILED, mapZodErrors(bodyParsed.error));
+  }
+
+  try {
+    const delayRequest = await acceptDelay(paramParsed.data.id, station.id, {
+      message: bodyParsed.data.message,
+      maxDelayMinutes: bodyParsed.data.max_delay_minutes ?? null,
+    });
     return successResponse({ delay_request: delayRequest });
   } catch (e) {
     if (e instanceof NotFoundError) return error404(e.message);

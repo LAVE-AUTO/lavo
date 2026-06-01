@@ -46,6 +46,7 @@ export function serializeRichEntry(entry: RichEntry) {
     estimated_wait_minutes: entry.estimated_wait_minutes,
     slot_start_time: entry.slot_start_time?.toISOString() ?? null,
     slot_end_time: entry.slot_end_time?.toISOString() ?? null,
+    delay_request: entry.delay_request,
   };
 }
 

@@ -960,6 +960,14 @@ export type RichEntry = {
   slot_start_time: Date | null;
   /** Reservation slot end (denormalized from time_slots). Null for queue entries. */
   slot_end_time: Date | null;
+  /** Latest delay request for this reservation, or null when none was ever signalled. */
+  delay_request: {
+    status: 'pending' | 'accepted' | 'refused';
+    /** Station's response message (acceptance or refusal). Null while pending. */
+    message: string | null;
+    /** Maximum extra delay tolerated, in minutes (acceptance only). */
+    max_delay_minutes: number | null;
+  } | null;
 };
 
 /** Shared SELECT projection for rich entry queries. */
@@ -985,6 +993,11 @@ function richEntrySelect() {
     svc_category: stationServices.category,
     is_rated: sql<boolean>`EXISTS (SELECT 1 FROM ratings WHERE ratings.reservation_id = ${reservations.id})`,
     is_tipped: sql<boolean>`EXISTS (SELECT 1 FROM reservation_tips WHERE reservation_tips.reservation_id = ${reservations.id})`,
+    // Latest delay request for this reservation: drives the client's "Signaler un
+    // retard" button state and the station response shown back to the client.
+    delay_status: sql<string | null>`(SELECT dr.status FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
+    delay_response_message: sql<string | null>`(SELECT CASE WHEN dr.status = 'accepted' THEN dr.accept_message WHEN dr.status = 'refused' THEN dr.refusal_reason ELSE NULL END FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
+    delay_max_minutes: sql<number | null>`(SELECT dr.max_delay_minutes FROM delay_requests dr WHERE dr.reservation_id = ${reservations.id} ORDER BY dr.created_at DESC LIMIT 1)`,
     // Estimated wait: position × wash_duration / wash_posts (queue entries only).
     estimated_wait_minutes: sql<number | null>`CASE WHEN ${reservations.entry_type} = 'queue' THEN CEIL(COALESCE(${reservations.queue_position}, 0) * COALESCE(${stationConfigs.wash_duration_minutes}, 0)::float / NULLIF(${stationConfigs.wash_post_count}::float, 0)) ELSE NULL END`,
   } as const;
@@ -1065,6 +1078,13 @@ function mapToRichEntry(
     estimated_wait_minutes: r.estimated_wait_minutes as number | null,
     slot_start_time: (r.slot_start_time as Date | null) ?? null,
     slot_end_time: (r.slot_end_time as Date | null) ?? null,
+    delay_request: r.delay_status
+      ? {
+          status: r.delay_status as 'pending' | 'accepted' | 'refused',
+          message: (r.delay_response_message as string | null) ?? null,
+          max_delay_minutes: (r.delay_max_minutes as number | null) ?? null,
+        }
+      : null,
   };
 }
 
