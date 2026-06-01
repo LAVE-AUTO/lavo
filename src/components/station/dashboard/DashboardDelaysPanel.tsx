@@ -33,36 +33,48 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
   const locale = useLocale();
   const [collapsed, setCollapsed] = useState(false);
 
-  /* Collapsed: a compact strip (full-width bar on mobile, slim column on
-   * desktop) that keeps a red count badge visible so pending delays are never
-   * missed even when the section is reduced. */
+  /* Collapsed: a compact, clearly-labelled re-open affordance — a full-width bar
+   * on mobile, a slim labelled column on desktop. When delays are pending it
+   * turns into a red alert (tinted background + count) so it reads as something
+   * that needs attention and is obviously tappable to reopen. */
   if (collapsed) {
+    const hasPending = totalPending > 0;
     return (
-      <div className="mt-2 flex w-full shrink-0 items-center border-b border-[#FFF9EC] bg-[#F0EDE0] md:mt-0 md:h-full md:w-12 md:flex-col md:border-b-0 md:border-l dark:border-[#1A2A14] dark:bg-[#182214]">
+      <div className="mt-2 flex w-full shrink-0 border-b border-[#FFF9EC] bg-[#F0EDE0] md:mt-0 md:h-full md:w-14 md:flex-col md:border-b-0 md:border-l dark:border-[#1A2A14] dark:bg-[#182214]">
         <button
           type="button"
           onClick={() => setCollapsed(false)}
+          title={t('delays_expand')}
           aria-label={t('delays_expand')}
           aria-expanded={false}
-          className="flex w-full items-center gap-2 px-4 py-2.5 cursor-pointer md:h-full md:flex-col md:justify-start md:px-0 md:py-3"
+          className={`group flex w-full items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors md:h-full md:flex-col md:justify-start md:gap-3 md:px-0 md:py-3.5 ${
+            hasPending
+              ? 'bg-[#EF4444]/10 hover:bg-[#EF4444]/15'
+              : 'hover:bg-[#FFF9EC] dark:hover:bg-[#1A2A14]'
+          }`}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-[#001201] dark:text-[#FFF9EC]">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
+          {/* Expand chevron — up on mobile (panel sits below), left on desktop (panel sits to the right). */}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`shrink-0 transition-transform group-hover:scale-110 ${hasPending ? 'text-[#EF4444]' : 'text-foreground/55 dark:text-[#B0BFB1]'}`}>
+            <polyline points="18 15 12 9 6 15" className="md:hidden" />
+            <polyline points="15 18 9 12 15 6" className="hidden md:block" />
           </svg>
-          {totalPending > 0 && (
+
+          {/* Bell icon conveys "notifications to handle". */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`shrink-0 ${hasPending ? 'text-[#EF4444]' : 'text-[#001201] dark:text-[#FFF9EC]'}`}>
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 01-3.46 0" />
+          </svg>
+
+          {hasPending && (
             <span className="rounded-full bg-[#EF4444] px-2 py-0.5 text-[10px] font-black leading-tight text-white">
               {totalPending}
             </span>
           )}
-          <span className="text-[12px] font-black text-[#001201] dark:text-[#FFF9EC] md:hidden">
+
+          {/* Label: horizontal on mobile, vertical on the desktop side column. */}
+          <span className={`text-[12px] font-black md:[writing-mode:vertical-rl] md:rotate-180 ${hasPending ? 'text-[#EF4444]' : 'text-[#001201] dark:text-[#FFF9EC]'}`}>
             {t('delays_title')}
           </span>
-          {/* Expand chevron: up on mobile (panel below), left on desktop (panel right). */}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="ml-auto shrink-0 text-foreground/55 md:ml-0 md:mt-auto dark:text-[#B0BFB1]">
-            <polyline points="18 15 12 9 6 15" className="md:hidden" />
-            <polyline points="15 18 9 12 15 6" className="hidden md:block" />
-          </svg>
         </button>
       </div>
     );
@@ -93,6 +105,7 @@ export function DashboardDelaysPanel({ items, totalPending }: Props) {
             <button
               type="button"
               onClick={() => setCollapsed(true)}
+              title={t('delays_collapse')}
               aria-label={t('delays_collapse')}
               aria-expanded
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] cursor-pointer dark:hover:bg-[#1A2A14] dark:hover:text-[#FFF9EC]"
