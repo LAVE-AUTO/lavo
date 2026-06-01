@@ -127,7 +127,7 @@ export function AgendaSlotDetailModal({
 
 function InfoCell({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
   return (
-    <div className={`rounded-xl border border-[#FFF9EC] bg-white px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
+    <div className={`rounded-xl border border-separator/25 bg-card-surface px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
       <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
         {label}
       </div>

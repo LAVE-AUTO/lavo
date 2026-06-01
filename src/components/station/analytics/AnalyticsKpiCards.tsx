@@ -76,7 +76,7 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
       {kpiCards.map((card) => (
         <div
           key={card.id}
-          className="group animate-fade-in-up rounded-2xl border border-[#FFF9EC] bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+          className="group animate-fade-in-up rounded-2xl border border-separator/25 bg-card-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
           style={{ borderLeft: `4px solid ${card.borderColor}` }}
         >
           <div className="mb-3 leading-none">{card.icon}</div>

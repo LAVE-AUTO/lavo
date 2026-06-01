@@ -172,7 +172,7 @@ export function AdminPromoQr({
   const inputBase = 'w-full rounded-lg border bg-transparent px-3 py-2 text-[13px] text-[#001201] outline-none transition-all dark:text-[#FFF9EC] border-[#D8D4C8] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.10)] dark:border-[#001A05] dark:focus:border-[#DDAF3B]';
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/4 dark:bg-[#001A05] dark:ring-white/6">
+    <div className="rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/6">
 
       <div className="mb-5 flex items-start gap-2 rounded-xl border border-[#DDAF3B]/20 bg-[#DDAF3B]/8 px-4 py-3">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden="true">
@@ -257,7 +257,7 @@ export function AdminPromoQr({
         {/* Right: QR display + actions */}
         {promoUrl && (
           <div className="flex flex-col items-center gap-3">
-            <div className={`rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
+            <div className={`rounded-xl border border-separator/25 bg-card-surface p-3 dark:border-dark-surface ${qrReady ? '' : 'animate-pulse'}`}>
               <canvas ref={canvasRef} className="block" />
             </div>
 

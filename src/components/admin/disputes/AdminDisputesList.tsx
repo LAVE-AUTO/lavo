@@ -98,7 +98,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
             const amount = parseAmount(d.refunded_amount ?? d.requested_amount);
             return (
               <Link key={d.id} href={`/admin/disputes/${d.id}` as Parameters<typeof Link>[0]['href']}
-                className={`group flex overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] ${d.status === 'open' ? 'hover:border-[#F97316]/30' : ''}`}>
+                className={`group flex overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1E2E18] dark:bg-[#131E10] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] ${d.status === 'open' ? 'hover:border-[#F97316]/30' : ''}`}>
 
                 {/* Left accent bar */}
                 <div className={`w-1 shrink-0 ${s.bar}`} />

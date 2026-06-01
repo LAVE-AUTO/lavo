@@ -131,7 +131,7 @@ function QueueBandCard({ entry, position, isNext, onPrimary, primaryLabel, prima
 
   return (
     <div
-      className={`group flex h-[140px] w-[170px] animate-fade-in-up flex-shrink-0 flex-col rounded-2xl border bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-[#182214] ${
+      className={`group flex h-[140px] w-[170px] animate-fade-in-up flex-shrink-0 flex-col rounded-2xl border border-separator/25 bg-card-surface p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-[#182214] ${
         isNext
           ? 'border-[#DDAF3B] ring-1 ring-[#DDAF3B]/30'
           : 'border-[#FFF9EC] dark:border-[#1A2A14]'

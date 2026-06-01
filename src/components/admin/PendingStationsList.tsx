@@ -77,7 +77,7 @@ function StationCard({ s, locale, t }: { s: ApiStation; locale: string; t: Retur
   const docCount = s.documents?.length ?? 0;
 
   return (
-    <div className="group relative flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.05] transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] dark:bg-[#161F13] dark:ring-white/[0.06] dark:hover:ring-white/[0.10]">
+    <div className="group relative flex items-stretch overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-200 hover:-translate-y-px hover:shadow-md dark:bg-[#161F13] dark:border-white/[0.06]">
       <div className="w-[4px] shrink-0 rounded-l-2xl transition-all duration-200 group-hover:w-[5px]" style={{ background: style.barColor }} />
 
       <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-4">

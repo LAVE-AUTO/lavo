@@ -82,17 +82,17 @@ export function AdminCommissionView() {
 
       <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
         <div className="mb-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+          <div className="rounded-2xl border border-separator/25 bg-card-surface px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_rate')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC]">{savedRate}%</p>
             <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('hint_rate')}</p>
           </div>
-          <div className="rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+          <div className="rounded-2xl border border-separator/25 bg-card-surface px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('platform_share')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#DDAF3B]">{savedRate}%</p>
             <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('preview_title')}</p>
           </div>
-          <div className="rounded-2xl border border-[#FFF9EC] bg-white px-5 py-4 shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+          <div className="rounded-2xl border border-separator/25 bg-card-surface px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('station_share')}</p>
             <p className="mt-2 text-[28px] font-black leading-none text-[#5A8A50]">{100 - savedRate}%</p>
             <p className="mt-2 text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('preview_title')}</p>
@@ -103,7 +103,7 @@ export function AdminCommissionView() {
 
           {/* Left: form */}
           <div className="flex flex-col gap-4">
-            <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+            <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
               <div className="border-b border-[#F0EDE6] bg-gradient-to-r from-[#F9F8F5] to-white px-5 py-3 dark:border-[#1A2A14] dark:from-[#0E1A0C] dark:to-[#131E10]">
                 <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_current')}</p>
               </div>
@@ -149,7 +149,7 @@ export function AdminCommissionView() {
           </div>
 
           {/* Right: history */}
-          <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+          <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
             <div className="border-b border-[#F0EDE6] bg-gradient-to-r from-[#F9F8F5] to-white px-5 py-3 dark:border-[#1A2A14] dark:from-[#0E1A0C] dark:to-[#131E10]">
               <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_history')}</p>
             </div>

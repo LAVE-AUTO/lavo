@@ -86,7 +86,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
   return (
     <>
       <article
-        className="group flex flex-col rounded-2xl border border-[#FFF9EC] bg-white p-6 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30"
+        className="group flex flex-col rounded-2xl border border-separator/25 bg-card-surface p-6 transition-all duration-200 hover:border-[#DDAF3B]/30 hover:shadow-sm dark:border-[#1A2A14] dark:bg-[#182214] dark:hover:border-[#DDAF3B]/30"
       >
         {/* Header */}
         <header className="mb-4 flex items-start justify-between gap-3">
@@ -108,7 +108,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               type="button"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-separator/25 bg-card-surface px-2.5 py-1.5 text-[11px] font-bold text-foreground/55 transition-all hover:border-[#FF2525] hover:bg-[#FF2525]/5 hover:text-[#FF2525] disabled:opacity-40 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#B0BFB1]"
             >
               <CrossIcon />
               {t('btn_delete_short')}

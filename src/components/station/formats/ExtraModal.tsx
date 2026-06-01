@@ -115,7 +115,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
       }}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-[640px] xl:max-w-[760px] flex-col rounded-2xl border border-[#FFF9EC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]"
+        className="flex max-h-[92vh] w-full max-w-[640px] xl:max-w-[760px] flex-col rounded-2xl border border-separator/30 bg-card-surface shadow-xl dark:border-[#1A2A14] dark:bg-[#182214]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

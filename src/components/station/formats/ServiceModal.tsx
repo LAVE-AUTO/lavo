@@ -378,7 +378,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-2xl border border-[#FFF9EC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214] xl:max-w-6xl"
+        className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-2xl border border-separator/30 bg-card-surface shadow-xl dark:border-[#1A2A14] dark:bg-[#182214] xl:max-w-6xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -553,7 +553,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   ) : (
                     <div className="space-y-2">
                       {automaticPackages.map((pkg) => (
-                        <div key={pkg.id} className="rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-[#001A05] dark:bg-[#182214]">
+                        <div key={pkg.id} className="rounded-xl border border-separator/25 bg-card-surface p-3 dark:border-[#001A05] dark:bg-[#182214]">
                           <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                             <TextField
                               value={pkg.name}

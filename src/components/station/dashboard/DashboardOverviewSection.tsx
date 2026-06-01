@@ -145,7 +145,7 @@ function FullKpiCard({
   const Icon = card.Icon;
   return (
     <div
-      className="group relative animate-fade-in-up rounded-2xl border border-[#FFF9EC] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+      className="group relative animate-fade-in-up rounded-2xl border border-separator/25 bg-card-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="mb-2.5 leading-none">

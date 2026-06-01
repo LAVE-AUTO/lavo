@@ -82,7 +82,7 @@ function DaySection({ label, items, locale }: { label: string; items: Reservatio
           </span>
         )}
       </div>
-      <div className="rounded-xl border border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-dark-bg divide-y divide-[#F0EDE0] dark:divide-[#1A2A14]">
+      <div className="rounded-xl border border-separator/25 bg-card-surface dark:border-[#1A2A14] dark:bg-dark-bg divide-y divide-[#F0EDE0] dark:divide-[#1A2A14]">
         {items.length === 0 ? (
           <p className="px-4 py-3 text-[12px] text-[#B0B0A0] dark:text-foreground/65">—</p>
         ) : (

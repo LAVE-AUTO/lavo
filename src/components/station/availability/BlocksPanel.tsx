@@ -81,7 +81,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
         {blocks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white/60 px-4 py-10 text-center dark:bg-[#001A05]/60">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-card-surface/60 px-4 py-10 text-center dark:bg-[#001A05]/60">
             <svg
               width="32"
               height="32"
@@ -106,7 +106,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
             {blocks.map((block) => (
               <div
                 key={block.id}
-                className="rounded-xl bg-white p-3 shadow-sm dark:bg-[#001A05]"
+                className="rounded-xl border border-separator/25 bg-card-surface p-3 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05]"
               >
                 {/* Postes badge */}
                 <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#DDAF3B]/15 px-2.5 py-0.5">

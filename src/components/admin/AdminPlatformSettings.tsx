@@ -72,7 +72,7 @@ function SectionCard({ icon, title, children, colSpan }: {
 }) {
   return (
     <div className={colSpan}>
-      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
+      <div className="flex h-full flex-col rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10 text-[#DDAF3B]">{icon}</div>
           <h2 className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{title}</h2>
