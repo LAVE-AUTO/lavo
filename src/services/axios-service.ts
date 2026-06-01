@@ -316,13 +316,14 @@ export async function updateWithApi<T = unknown>(
  */
 export async function deleteWithApi<T = unknown>(
   endpoint: string,
-  options: RequestOptions & { id?: string | null; autoJoin?: boolean } = {}
+  options: RequestOptions & { id?: string | null; autoJoin?: boolean; data?: unknown } = {}
 ): Promise<[boolean, T | { message?: string }]> {
   const {
     id = null,
     autoJoin = true,
     successStatus = HTTP_STATUS.OK,
     timeout,
+    data,
     instance = getAxiosInstance(),
   } = options;
 
@@ -332,7 +333,7 @@ export async function deleteWithApi<T = unknown>(
       url = url.replace(/\/$/, '') + '/' + id;
     }
 
-    const config = timeout ? { timeout } : {};
+    const config = { ...(timeout ? { timeout } : {}), ...(data !== undefined ? { data } : {}) };
     const result = await instance.delete<T>(url, config);
 
     if (

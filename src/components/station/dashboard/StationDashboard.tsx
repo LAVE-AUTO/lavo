@@ -513,7 +513,7 @@ export function StationDashboard() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
+    <div className="flex flex-col animate-fade-in">
       <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
@@ -531,7 +531,7 @@ export function StationDashboard() {
         />
       )}
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex">
         {view === 'daily' && posts.length > 0 && (
           <DashboardBayFilter
             posts={posts}
@@ -543,8 +543,8 @@ export function StationDashboard() {
         {/* Column on mobile (delays stack below, height-capped), row on desktop
          * (delays sit in a side column) so the delays panel never squeezes the
          * schedule out of view. */}
-        <div className="flex flex-1 min-w-0 flex-col overflow-hidden md:flex-row">
-          <div className="flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden">
+        <div className="flex flex-1 min-w-0 flex-col md:flex-row">
+          <div className="flex flex-1 min-w-0 flex-col">
             {view === 'daily' ? (
               <DashboardAgendaTimeline
                 posts={posts}

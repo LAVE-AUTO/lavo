@@ -40,9 +40,11 @@ export async function createSlot(
 export async function createSlots(
   stationId: string,
   slots: Array<{ start_time: Date; end_time: Date; capacity: number }>,
+  tx?: DbTransaction,
 ): Promise<TimeSlot[]> {
   if (slots.length === 0) return [];
-  const rows = await db
+  const client = tx ?? db;
+  const rows = await client
     .insert(timeSlots)
     .values(
       slots.map((s) => ({
@@ -102,6 +104,23 @@ export async function countReservationsBySlotId(
 }
 
 /**
+ * Counts ALL reservations for a slot (including cancelled).
+ * Used before deletion to preserve history — onDelete cascade would wipe
+ * cancelled records that appear in client history.
+ */
+export async function countAllReservationsBySlotId(
+  slotId: string,
+  tx?: DbTransaction,
+): Promise<number> {
+  const client = tx ?? db;
+  const result = await client
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reservations)
+    .where(eq(reservations.time_slot_id, slotId));
+  return result[0]?.count ?? 0;
+}
+
+/**
  * Locks a time slot row using SELECT FOR UPDATE within a transaction.
  * Returns the locked row or undefined if not found.
  */
@@ -121,8 +140,18 @@ export async function lockSlotForUpdate(
 /**
  * Deletes the slot by id. Caller must ensure slot belongs to station and has no reservations.
  */
-export async function deleteSlotById(slotId: string): Promise<void> {
-  await db.delete(timeSlots).where(eq(timeSlots.id, slotId));
+export async function deleteSlotById(slotId: string, tx?: DbTransaction): Promise<void> {
+  const client = tx ?? db;
+  await client.delete(timeSlots).where(eq(timeSlots.id, slotId));
+}
+
+/**
+ * Deletes multiple slots by id in one statement. Caller must validate ownership + no reservations.
+ */
+export async function deleteSlotsByIds(slotIds: string[], tx?: DbTransaction): Promise<void> {
+  if (slotIds.length === 0) return;
+  const client = tx ?? db;
+  await client.delete(timeSlots).where(inArray(timeSlots.id, slotIds));
 }
 
 /**
@@ -256,8 +285,10 @@ export async function shiftSubsequentSlots(
 
 /**
  * Returns slots matching the given list of ids.
+ * Pass `tx` to run inside an existing transaction (required for TOCTOU-safe ownership checks).
  */
-export async function findSlotsByIds(slotIds: string[]): Promise<TimeSlot[]> {
+export async function findSlotsByIds(slotIds: string[], tx?: DbTransaction): Promise<TimeSlot[]> {
   if (slotIds.length === 0) return [];
-  return db.select().from(timeSlots).where(inArray(timeSlots.id, slotIds));
+  const client = tx ?? db;
+  return client.select().from(timeSlots).where(inArray(timeSlots.id, slotIds));
 }

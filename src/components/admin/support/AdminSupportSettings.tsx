@@ -113,7 +113,7 @@ export function AdminSupportSettings() {
   }
 
   return (
-    <form onSubmit={handleSave} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#001A05] dark:ring-white/[0.06]">
+    <form onSubmit={handleSave} className="rounded-2xl border border-separator/25 bg-card-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05] dark:ring-white/[0.06]">
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10 text-[#DDAF3B]">

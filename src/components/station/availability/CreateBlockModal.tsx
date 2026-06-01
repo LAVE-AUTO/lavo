@@ -443,74 +443,90 @@ export function CreateBlockModal({
           </div>
 
           {/* Mini-calendar */}
-          <div className="flex items-center gap-2 mb-2">
-            <button
-              type="button"
-              onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
-              aria-label="Mois précédent"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
-            >
-              ◀
-            </button>
-            <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#DDAF3B]">
-              {miniMonthLabel}
-            </p>
-            <button
-              type="button"
-              onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
-              aria-label="Mois suivant"
-              className="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-[#DDAF3B]/15 text-[#DDAF3B] text-[10px] hover:bg-[#DDAF3B]/25"
-            >
-              ▶
-            </button>
-          </div>
-          <div className="grid grid-cols-7 gap-[2px] mb-1">
-            {['L','M','M','J','V','S','D'].map((d, i) => (
-              <div key={i} className="text-center text-[8px] font-bold text-foreground/65 dark:text-[#B0BFB1] py-[2px]">{d}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-[2px]">
-            {miniCells.map(({ iso, dayNum, inMonth }) => {
-              const isPast = inMonth && iso < todayStr;
-              const isDisabled = !inMonth || isPast;
-              const isSelected = dates.includes(iso);
-              const isToday = iso === todayStr;
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => {
-                    if (isDisabled) return;
-                    if (isSelected) {
-                      setDates((prev) => prev.filter((d) => d !== iso));
-                    } else {
-                      addDate(iso);
-                    }
-                  }}
-                  className={[
-                    'rounded-[3px] py-[3px] text-center text-[9px] font-bold transition-colors',
-                    isDisabled ? 'cursor-default opacity-30' : 'cursor-pointer',
-                    !isDisabled && isSelected ? 'bg-[#DDAF3B] text-[#001201]' :
-                    !isDisabled && isToday ? 'border border-[#DDAF3B] bg-[#EDE9CC] text-[#001201] dark:bg-[#001A05] dark:text-[#FFF9EC]' :
-                    !isDisabled ? 'bg-[#F0EDE0] text-[#001201] hover:bg-[#DDAF3B]/20 dark:bg-[#001A05] dark:text-[#FFF9EC]' : '',
-                  ].join(' ')}
-                >
-                  {dayNum}
-                </button>
-              );
-            })}
-          </div>
-          {/* Mini-cal legend */}
-          <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-foreground/65 dark:text-[#B0BFB1]">
-            <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[#DDAF3B] bg-[#EDE9CC] dark:bg-[#001A05]" />
-              Aujourd'hui
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#DDAF3B]" />
-              Sélectionné
-            </span>
+          <div className="rounded-xl border border-[#DDAF3B]/20 bg-white dark:bg-[#001A05] p-3">
+            {/* Month nav */}
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
+                aria-label="Mois précédent"
+                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#DDAF3B] hover:bg-[#DDAF3B]/20 transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <p className="flex-1 text-center text-[11px] font-black tracking-wide text-[#001201] dark:text-[#FFF9EC]">
+                {miniMonthLabel}
+              </p>
+              <button
+                type="button"
+                onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
+                aria-label="Mois suivant"
+                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#DDAF3B] hover:bg-[#DDAF3B]/20 transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {['L','M','M','J','V','S','D'].map((d, i) => (
+                <div key={i} className="text-center text-[10px] font-bold text-foreground/50 dark:text-[#B0BFB1] py-1">{d}</div>
+              ))}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7 gap-[3px]">
+              {miniCells.map(({ iso, dayNum, inMonth }) => {
+                const isPast = inMonth && iso < todayStr;
+                const isDisabled = !inMonth || isPast;
+                const isSelected = dates.includes(iso);
+                const isToday = iso === todayStr;
+                return (
+                  <button
+                    key={iso}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (isDisabled) return;
+                      if (isSelected) {
+                        setDates((prev) => prev.filter((d) => d !== iso));
+                      } else {
+                        addDate(iso);
+                      }
+                    }}
+                    className={[
+                      'aspect-square w-full rounded-md text-center text-[11px] font-bold transition-colors leading-none flex items-center justify-center',
+                      isDisabled ? 'cursor-default opacity-25 text-foreground/40' : 'cursor-pointer',
+                      !isDisabled && isSelected
+                        ? 'bg-[#DDAF3B] text-[#001201]'
+                        : !isDisabled && isToday
+                          ? 'border-2 border-[#DDAF3B] text-[#001201] dark:text-[#FFF9EC]'
+                          : !isDisabled
+                            ? 'text-[#001201] hover:bg-[#DDAF3B]/20 dark:text-[#FFF9EC] dark:hover:bg-[#DDAF3B]/15'
+                            : '',
+                    ].join(' ')}
+                  >
+                    {dayNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-foreground/55 dark:text-[#B0BFB1]">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-[3px] border-2 border-[#DDAF3B]" />
+                Aujourd'hui
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-[3px] bg-[#DDAF3B]" />
+                Sélectionné
+              </span>
+            </div>
           </div>
         </div>
       </div>

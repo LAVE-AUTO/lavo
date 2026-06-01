@@ -203,7 +203,7 @@ export function StationLocationForm({ location, onSaved, locked = false }: Props
   }
 
   return (
-    <section className="rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+    <section className="rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-[#182214]">
       <div className="flex items-center gap-2.5 border-b border-[#F0EDE4] px-5 py-3.5 dark:border-[#1A2A14]">
         <span className="h-4 w-[3px] rounded-full bg-[#DDAF3B]" />
         <span className="flex-1 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('section_location')}</span>

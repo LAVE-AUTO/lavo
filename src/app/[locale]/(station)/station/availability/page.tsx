@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { getFromApi, postWithApi, deleteWithApi } from '@/services';
+import { getFromApi, postWithApi, deleteWithApi, updateWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { BlocksPanel } from '@/components/station/availability/BlocksPanel';
@@ -206,13 +206,6 @@ export default function StationAvailabilityPage() {
   async function handleSave(data: Omit<AvailabilityBlock, 'id'>) {
     if (data.dates.length === 0) return;
 
-    // Edit = delete the old slot first, then bulk-create the replacement set.
-    // Slots are independent rows so cross-date edits become "rewrite the set".
-    if (editingBlock) {
-      await deleteWithApi(`/station/slots/${editingBlock.id}`);
-    }
-
-    // Capacity: if "all bays" → use the active-bay count; otherwise the count of selected bays.
     const capacity = data.bayIds.includes('all') ? activeBays : data.bayIds.length;
     const safeCapacity = Math.max(1, capacity);
 
@@ -223,12 +216,26 @@ export default function StationAvailabilityPage() {
     }));
 
     let ok = false;
-    if (newSlots.length === 1) {
-      const [success1] = await postWithApi('/station/slots', newSlots[0]);
-      ok = success1;
+
+    if (editingBlock) {
+      // Edit path: atomic replace — delete old slots + create new ones in one transaction.
+      // If the delete fails (slot has reservations, not found, etc.) the create is rolled
+      // back too, so no orphan slots are ever produced.
+      const idsToDelete = editingBlock.ids ?? [editingBlock.id];
+      const [replaceOk] = await updateWithApi('/station/slots/replace', {
+        ids_to_delete: idsToDelete,
+        slots: newSlots,
+      });
+      ok = replaceOk;
     } else {
-      const [success1] = await postWithApi('/station/slots/bulk', { slots: newSlots });
-      ok = success1;
+      // Create path: single or bulk insert.
+      if (newSlots.length === 1) {
+        const [success1] = await postWithApi('/station/slots', newSlots[0]);
+        ok = success1;
+      } else {
+        const [success1] = await postWithApi('/station/slots/bulk', { slots: newSlots });
+        ok = success1;
+      }
     }
 
     if (!mountedRef.current) return;
@@ -241,7 +248,6 @@ export default function StationAvailabilityPage() {
     success(t('availability_save_success'));
     setEditingBlock(null);
 
-    // Refetch every affected date in parallel (also re-fetch the old date if the edit moved it)
     const datesToRefresh = new Set(data.dates);
     if (editingBlock) editingBlock.dates.forEach((d) => datesToRefresh.add(d));
     await Promise.all(Array.from(datesToRefresh).map(refreshDate));
@@ -267,6 +273,26 @@ export default function StationAvailabilityPage() {
     }
   }
 
+  async function handleDeleteGroup(ids: string[]) {
+    // Use the bulk DELETE endpoint so all slots are removed in one round-trip
+    // instead of N parallel individual deletes that each succeed or fail independently.
+    const [ok] = await deleteWithApi('/station/slots', { autoJoin: false, data: { ids } });
+    if (!mountedRef.current) return;
+
+    if (!ok) {
+      showError(t('availability_delete_error'));
+      return;
+    }
+
+    success(t('availability_delete_success'));
+
+    const datesToRefresh = new Set<string>();
+    for (const [date, slots] of Object.entries(slotsByDate)) {
+      if (slots.some((s) => ids.includes(s.id))) datesToRefresh.add(date);
+    }
+    await Promise.all(Array.from(datesToRefresh).map(refreshDate));
+  }
+
   if (initialLoading) {
     return <PageLoader label={t('loading')} />;
   }
@@ -274,7 +300,7 @@ export default function StationAvailabilityPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Page header */}
-      <div className="flex flex-col gap-3 border-b border-[#DDAF3B]/20 px-6 py-4 dark:border-[#DDAF3B]/10 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[#DDAF3B]/20 px-4 py-4 dark:border-[#DDAF3B]/10 sm:px-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-black text-[#001201] dark:text-[#FFF9EC]">
             {t('availability_title')}
@@ -308,11 +334,11 @@ export default function StationAvailabilityPage() {
         </div>
       </div>
 
-      {/* Main two-panel layout - stacked on mobile, side-by-side on desktop */}
-      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+      {/* Main two-panel layout - stacked on mobile (scrollable), side-by-side on desktop */}
+      <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
         <BlocksPanel
           blocks={allBlocks}
-          onDelete={handleDelete}
+          onDelete={handleDeleteGroup}
           onEdit={openEditModal}
           onCreateClick={openCreateModal}
         />

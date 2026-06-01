@@ -5,28 +5,95 @@ import type { AvailabilityBlock } from './types';
 
 interface Props {
   blocks: AvailabilityBlock[];
-  onDelete: (id: string) => void;
+  onDelete: (ids: string[]) => void;
   onEdit: (block: AvailabilityBlock) => void;
   onCreateClick: () => void;
 }
 
+/** Merge blocks that share the same startTime+endTime into one display card. */
+function groupBlocks(blocks: AvailabilityBlock[]): AvailabilityBlock[] {
+  const map = new Map<string, AvailabilityBlock>();
+
+  for (const block of blocks) {
+    const key = `${block.startTime}|${block.endTime}`;
+    const existing = map.get(key);
+
+    if (existing) {
+      const mergedDates = Array.from(new Set([...existing.dates, ...block.dates])).sort();
+      const mergedBayIds =
+        existing.bayIds.includes('all') || block.bayIds.includes('all')
+          ? ['all']
+          : Array.from(new Set([...existing.bayIds, ...block.bayIds]));
+      const mergedIds = [...(existing.ids ?? [existing.id]), block.id];
+
+      map.set(key, { ...existing, ids: mergedIds, dates: mergedDates, bayIds: mergedBayIds });
+    } else {
+      map.set(key, { ...block, ids: [block.id] });
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+/** Group consecutive ISO dates into ranges, then format the ranges compactly.
+ *  e.g. ["2026-02-10","2026-02-11","2026-02-15","2026-03-01","2026-03-02"]
+ *       → "10-11 févr. & 15 févr. & 1-2 mars 2026"
+ */
 function formatDates(dates: string[]): string {
   if (dates.length === 0) return '';
+
   const sorted = [...dates].sort();
-  if (sorted.length === 1) {
-    const d = new Date(sorted[0] + 'T00:00:00');
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  // Build consecutive ranges
+  const ranges: { start: string; end: string }[] = [];
+  let rangeStart = sorted[0];
+  let rangeEnd = sorted[0];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(rangeEnd + 'T00:00:00');
+    const curr = new Date(sorted[i] + 'T00:00:00');
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      rangeEnd = sorted[i];
+    } else {
+      ranges.push({ start: rangeStart, end: rangeEnd });
+      rangeStart = sorted[i];
+      rangeEnd = sorted[i];
+    }
   }
-  const first = new Date(sorted[0] + 'T00:00:00');
-  const last = new Date(sorted[sorted.length - 1] + 'T00:00:00');
-  const firstStr = first.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  const lastStr = last.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-  if (sorted.length <= 3) {
-    return sorted
-      .map((d) => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }))
-      .join(', ');
-  }
-  return `${firstStr} – ${lastStr}`;
+  ranges.push({ start: rangeStart, end: rangeEnd });
+
+  // Format each range; include a year suffix whenever a range's year differs
+  // from the next range (or on the final range) so cross-year sets are unambiguous.
+  const parts = ranges.map(({ start, end }, idx) => {
+    const s = new Date(start + 'T00:00:00');
+    const e = new Date(end + 'T00:00:00');
+    const sDay = s.getDate();
+    const eDay = e.getDate();
+    const sMonth = s.toLocaleDateString('fr-FR', { month: 'short' });
+    const eMonth = e.toLocaleDateString('fr-FR', { month: 'short' });
+    const rangeYear = e.getFullYear();
+
+    // Attach the year to this segment if it differs from the next segment's year,
+    // or if this is the final segment.
+    const nextYear = idx < ranges.length - 1
+      ? new Date(ranges[idx + 1].end + 'T00:00:00').getFullYear()
+      : null;
+    const showYear = nextYear === null || rangeYear !== nextYear;
+
+    let segment: string;
+    if (start === end) {
+      segment = `${sDay} ${sMonth}`;
+    } else if (sMonth === eMonth) {
+      segment = `${sDay}-${eDay} ${sMonth}`;
+    } else {
+      segment = `${sDay} ${sMonth}-${eDay} ${eMonth}`;
+    }
+
+    return showYear ? `${segment} ${rangeYear}` : segment;
+  });
+
+  return parts.join(' & ');
 }
 
 export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
@@ -34,11 +101,13 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
-    return bayIds.join(', ');
+    return bayIds.map((b) => `${t('availability_poste_short')}${b}`).join(', ');
   }
 
+  const grouped = groupBlocks(blocks);
+
   return (
-    <div className="flex w-full max-h-72 shrink-0 flex-col border-b border-[#DDAF3B]/20 bg-[#F0EDE0] dark:border-[#DDAF3B]/10 dark:bg-[#1A2210] md:max-h-none md:w-72 md:border-b-0 md:border-r">
+    <div className="flex w-full shrink-0 flex-col border-b border-[#DDAF3B]/20 bg-[#F0EDE0] dark:border-[#DDAF3B]/10 dark:bg-[#1A2210] md:w-72 md:border-b-0 md:border-r">
       {/* Title */}
       <div className="px-4 pt-5 pb-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-foreground/65 dark:text-[#B0BFB1]">
@@ -48,8 +117,8 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {blocks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white/60 px-4 py-10 text-center dark:bg-[#001A05]/60">
+        {grouped.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl bg-card-surface/60 px-4 py-10 text-center dark:bg-[#001A05]/60">
             <svg
               width="32"
               height="32"
@@ -71,35 +140,53 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {blocks.map((block) => (
+            {grouped.map((group) => (
               <div
-                key={block.id}
-                className="rounded-xl bg-white p-3 shadow-sm dark:bg-[#001A05]"
+                key={(group.ids ?? [group.id]).join('|')}
+                className="rounded-xl border border-separator/25 bg-card-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:bg-[#001A05]"
               >
-                <p className="mb-1 text-[11px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
-                  {t('availability_block_postes')} {formatBays(block.bayIds)}
+                {/* Postes badge */}
+                <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#DDAF3B]/15 px-3 py-1">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
+                    {t('availability_block_postes')}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                    {formatBays(group.bayIds)}
+                  </span>
+                </div>
+
+                {/* Condensed date ranges */}
+                <p className="mb-1 text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
+                  {formatDates(group.dates)}
                 </p>
-                <p className="mb-0.5 text-[12px] font-bold text-[#001201] dark:text-[#FFF9EC]">
-                  {formatDates(block.dates)}
+
+                {/* Time range — large and prominent */}
+                <p className="mb-3 text-[20px] font-black leading-tight text-[#DDAF3B]">
+                  {group.startTime} – {group.endTime}
                 </p>
-                <p className="mb-2.5 text-[13px] font-black text-[#DDAF3B]">
-                  {block.startTime} – {block.endTime}
-                </p>
+
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => onDelete(block.id)}
-                    className="cursor-pointer rounded-lg border border-[#FF2525] bg-transparent px-2.5 py-1 text-[10px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
-                    aria-label={`${t('availability_block_delete')} - ${formatDates(block.dates)}`}
+                    onClick={() => onDelete(group.ids ?? [group.id])}
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#FF2525] bg-transparent px-3 py-1.5 text-[11px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
+                    aria-label={`${t('availability_block_delete')} - ${formatDates(group.dates)}`}
                   >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                     {t('availability_block_delete')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => onEdit(block)}
-                    className="cursor-pointer rounded-lg bg-[#DDAF3B] px-2.5 py-1 text-[10px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
-                    aria-label={`${t('availability_block_edit')} - ${formatDates(block.dates)}`}
+                    onClick={() => onEdit(group)}
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
+                    aria-label={`${t('availability_block_edit')} - ${formatDates(group.dates)}`}
                   >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
                     {t('availability_block_edit')}
                   </button>
                 </div>

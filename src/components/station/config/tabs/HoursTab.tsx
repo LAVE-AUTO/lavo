@@ -99,7 +99,7 @@ function deriveTemplateFromDays(days: HourDay[]): HourTemplate {
 }
 
 const timeInputClass =
-  'w-full rounded-lg border border-[#FFF9EC] bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
+  'w-full rounded-lg border border-separator bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
 export function HoursTab({ config, locked }: Props) {
   const t = useTranslations('station_config');
@@ -228,7 +228,7 @@ export function HoursTab({ config, locked }: Props) {
   return (
     <div className="flex flex-col gap-5">
       {/* Global template — defines default hours applied to all days */}
-      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+      <section className="rounded-2xl border border-separator/25 bg-card-surface p-4 shadow- sm:p-6[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-[#182214]">
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_template_title')}
         </h3>
@@ -303,17 +303,17 @@ export function HoursTab({ config, locked }: Props) {
       </section>
 
       {/* Per-day schedule */}
-      <section className="rounded-2xl border border-[#FFF9EC] bg-white p-6 shadow-sm dark:border-[#1A2A14] dark:bg-[#182214]">
+      <section className="rounded-2xl border border-separator/25 bg-card-surface p-4 shadow- sm:p-6[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-[#182214]">
         <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
           {t('hours_per_day_title')}
         </h3>
         <p className="mb-4 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
           {t('hours_per_day_hint')}
         </p>
-        <div className="grid grid-cols-[100px_44px_1fr] gap-3 border-b border-[#FFF9EC] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
+        <div className="hidden sm:grid sm:grid-cols-[100px_44px_1fr] sm:gap-3 border-b border-[#FFF9EC] pb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#AAAAAA] dark:border-[#001A05] dark:text-[#5A5A4A]">
           <span />
           <span />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2">
             <span>{t('hours_morning')}</span>
             <span>{t('hours_afternoon')}</span>
           </div>

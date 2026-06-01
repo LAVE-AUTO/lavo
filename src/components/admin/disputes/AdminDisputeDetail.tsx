@@ -224,7 +224,7 @@ export function AdminDisputeDetail({ id }: Props) {
 
       <div className="flex min-h-full flex-col">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="shrink-0 border-b border-separator bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
           <Link href="/admin/disputes" className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-[#AAAAAA] transition-colors hover:text-[#DDAF3B]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             {t('back_link')}
@@ -279,7 +279,7 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
 
               {/* Reservation card */}
-              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_reservation')}</p>
                 </div>
@@ -316,7 +316,7 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
 
               {/* Timeline */}
-              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_timeline')}</p>
                 </div>
@@ -352,7 +352,7 @@ export function AdminDisputeDetail({ id }: Props) {
             {/* Right sidebar */}
             <div className="flex flex-col gap-4">
               {/* Actions */}
-              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_actions')}</p>
                 </div>
@@ -394,7 +394,7 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
 
               {/* Client card */}
-              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_client')}</p>
                 </div>
@@ -430,7 +430,7 @@ export function AdminDisputeDetail({ id }: Props) {
               </div>
 
               {/* Station card */}
-              <div className="overflow-hidden rounded-2xl border border-[#FFF9EC] bg-white shadow-sm dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('label_station')}</p>
                 </div>
