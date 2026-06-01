@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 
 export interface AgendaEntry {
@@ -129,6 +129,10 @@ export function DashboardAgendaTimeline({
 }: Props) {
   const t = useTranslations('station_dashboard');
   const [now, setNow] = useState<Date>(() => new Date());
+  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
+  /* Remembers the day we already auto-scrolled for, so the per-minute "now"
+   * refresh never yanks the scroll away from where the merchant left it. */
+  const autoScrolledDayRef = useRef<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -164,6 +168,20 @@ export function DashboardAgendaTimeline({
     if (m < 0 || m > totalMinutes) return null;
     return m * PX_PER_MINUTE;
   }, [now, selectedDate, openMinutes, totalMinutes]);
+
+  /* On the current day, land the merchant straight on the "now" line instead of
+   * the start of the day. Runs once per selected day (and again if they come
+   * back to today) so the minute-by-minute refresh never fights manual scroll. */
+  useEffect(() => {
+    const dayKey = selectedDate.toDateString();
+    if (autoScrolledDayRef.current === dayKey) return;
+    if (nowLineTop === null) return;
+    const el = scrollBodyRef.current;
+    if (!el) return;
+    // Offset upward by ~80px so the line sits comfortably below the header.
+    el.scrollTop = Math.max(0, nowLineTop - 80);
+    autoScrolledDayRef.current = dayKey;
+  }, [selectedDate, nowLineTop]);
 
   const visiblePosts = useMemo(() => {
     const active = posts.filter((p) => p.isActive);
@@ -226,7 +244,7 @@ export function DashboardAgendaTimeline({
       </div>
 
       {/* Scrollable body */}
-      <div className="flex flex-1 overflow-auto">
+      <div ref={scrollBodyRef} className="flex flex-1 overflow-auto">
         {/* Hour gutter */}
         <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="relative" style={{ height: totalHeight }}>

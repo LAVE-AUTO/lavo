@@ -480,36 +480,42 @@ export function StationDashboard() {
           />
         )}
 
-        <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-          {view === 'daily' ? (
-            <DashboardAgendaTimeline
-              posts={posts}
-              entries={visibleAgendaEntries}
-              selectedDate={selectedDate}
-              openingTime={config.openingTime}
-              closingTime={config.closingTime}
-              breakStart={config.breakStart}
-              breakEnd={config.breakEnd}
-              selectedPostId={selectedPostId}
-              onSelectEntry={setDetailEntry}
-            />
-          ) : (
-            <DashboardGroupedPanel
-              items={reservationItems}
-              view={view}
-              selectedDate={selectedDate}
-            />
-          )}
+        {/* Column on mobile (delays stack below, height-capped), row on desktop
+         * (delays sit in a side column) so the delays panel never squeezes the
+         * schedule out of view. */}
+        <div className="flex flex-1 min-w-0 flex-col overflow-hidden md:flex-row">
+          <div className="flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden">
+            {view === 'daily' ? (
+              <DashboardAgendaTimeline
+                posts={posts}
+                entries={visibleAgendaEntries}
+                selectedDate={selectedDate}
+                openingTime={config.openingTime}
+                closingTime={config.closingTime}
+                breakStart={config.breakStart}
+                breakEnd={config.breakEnd}
+                selectedPostId={selectedPostId}
+                onSelectEntry={setDetailEntry}
+              />
+            ) : (
+              <DashboardGroupedPanel
+                items={reservationItems}
+                view={view}
+                selectedDate={selectedDate}
+              />
+            )}
 
-          {view === 'daily' && <DashboardLegendBar />}
-          {view === 'daily' && (
-            <DashboardQueueBand
-              entries={queueEntries}
-              onStartEntry={requestQueueStart}
-              onCompleteEntry={(id) => requestAction('complete', id)}
-              onOpenManualAdd={handleOpenManualAdd}
-            />
-          )}
+            {view === 'daily' && <DashboardLegendBar />}
+            {view === 'daily' && (
+              <DashboardQueueBand
+                entries={queueEntries}
+                onStartEntry={requestQueueStart}
+                onCompleteEntry={(id) => requestAction('complete', id)}
+                onOpenManualAdd={handleOpenManualAdd}
+              />
+            )}
+          </div>
+
           {view === 'daily' && delays.length > 0 && (
             <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
           )}
