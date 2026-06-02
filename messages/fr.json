@@ -2496,7 +2496,8 @@
         "error_load": "Impossible de charger les informations de la station.",
         "btn_retry": "Réessayer",
         "print_hint": "Imprimez ce QR code et placez-le à l'entrée de votre station.",
-        "scan_label": "Scannez pour réserver"
+        "scan_label": "Scannez pour réserver",
+        "poster_caption": "Scannez pour réserver"
     },
     "admin_stations": {
         "page_title": "Stations en attente",
@@ -3441,7 +3442,9 @@
         "ref_code_label": "Code de référence enregistré",
         "saved_notice": "QR enregistré côté serveur. La régénération remplace le code précédent.",
         "error_save_failed": "Impossible d'enregistrer le QR promo.",
-        "error_session_expired": "Session expirée, veuillez vous reconnecter."
+        "error_session_expired": "Session expirée, veuillez vous reconnecter.",
+        "poster_caption_promo": "Scannez et profitez",
+        "poster_footer_promo": "Promo -{rate}%"
     },
     "admin_legal": {
         "badge_content": "Contenu",
