@@ -283,7 +283,7 @@ export function AdminDisputeDetail({ id }: Props) {
                 <div className="border-b border-[#F0EDE6] bg-[#F9F8F5] px-5 py-3 dark:border-[#1A2A14] dark:bg-[#0E1A0C]">
                   <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_reservation')}</p>
                 </div>
-                <div className="grid grid-cols-3 divide-x divide-[#F0EDE6] dark:divide-[#1A2A14]">
+                <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0 divide-[#F0EDE6] dark:divide-[#1A2A14]">
                   {[
                     {
                       label: t('label_service_date'),

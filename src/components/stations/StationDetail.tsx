@@ -100,6 +100,10 @@ export function StationDetail({ id }: StationDetailProps) {
     ? formatEntryByService[selectedServiceId] ?? null
     : null;
 
+  const photoCount = station?.photos?.length ?? 0;
+  const goPrevPhoto = () => setPhotoIndex((i) => (i - 1 + photoCount) % photoCount);
+  const goNextPhoto = () => setPhotoIndex((i) => (i + 1) % photoCount);
+
   const handleSelectService = (id: string) => {
     setSelectedServiceId(id);
   };
@@ -324,6 +328,27 @@ export function StationDetail({ id }: StationDetailProps) {
             </div>
           )}
 
+          {(station.photos?.length ?? 0) > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={goPrevPhoto}
+                aria-label={t('detail_prev_photo')}
+                className="absolute top-1/2 -translate-y-1/2 left-3 z-10 w-10 h-10 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors cursor-pointer"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+              </button>
+              <button
+                type="button"
+                onClick={goNextPhoto}
+                aria-label={t('detail_next_photo')}
+                className="absolute top-1/2 -translate-y-1/2 right-3 z-10 w-10 h-10 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors cursor-pointer"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+            </>
+          )}
+
           <Link
             href="/stations"
             className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center hover:bg-black/75 transition-colors"
@@ -445,7 +470,9 @@ export function StationDetail({ id }: StationDetailProps) {
               )}
 
               {/* Location */}
-              <button
+              <div>
+                <h2 className="text-[17px] font-black text-foreground mb-3">{t('address_title')}</h2>
+                <button
                 type="button"
                 onClick={() => setNavConfirmOpen(true)}
                 disabled={navigating}
@@ -464,7 +491,8 @@ export function StationDetail({ id }: StationDetailProps) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 group-hover/loc:translate-x-0.5 transition-transform">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </button>
+                </button>
+              </div>
 
               {/* Reviews */}
               <div>

@@ -36,6 +36,9 @@ const closingTimeExpr = sql<string | null>`(SELECT station_configs.closing_time:
 /** Minimum service duration (min) across all active service entries for the station. Null when no services configured. */
 const minDurationExpr = sql<number | null>`(SELECT MIN(sve.duration_min) FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true)`;
 
+/** Name of the service owning the cheapest active entry (the one matching price_from). Null when no services configured. */
+const serviceFromExpr = sql<string | null>`(SELECT ss.name FROM service_vehicle_entries sve JOIN station_services ss ON ss.id = sve.service_id WHERE ss.station_id = ${stations.id} AND ss.deleted_at IS NULL AND sve.is_active = true ORDER BY sve.price ASC LIMIT 1)`;
+
 export type ListActiveStationsFilters = {
   search?: string;
   city?: string;
@@ -110,6 +113,7 @@ export type StationWithAvailableSlots = Station & {
   opening_time: string | null;
   closing_time: string | null;
   min_duration: number | null;
+  service_from: string | null;
   distance_km: number | null;
 };
 
@@ -122,6 +126,7 @@ type StationEnrichedRow = Station & {
   opening_time: string | null;
   closing_time: string | null;
   min_duration: number | null;
+  service_from: string | null;
   distance_km: number | null;
 };
 
@@ -290,6 +295,7 @@ export async function listActiveStations(
       opening_time: openingTimeExpr.as('opening_time'),
       closing_time: closingTimeExpr.as('closing_time'),
       min_duration: minDurationExpr.as('min_duration'),
+      service_from: serviceFromExpr.as('service_from'),
       distance_km: distKm,
     })
     .from(stations)
@@ -345,6 +351,7 @@ export async function listActiveStationsGroup(
         opening_time: openingTimeExpr.as('opening_time'),
         closing_time: closingTimeExpr.as('closing_time'),
         min_duration: minDurationExpr.as('min_duration'),
+        service_from: serviceFromExpr.as('service_from'),
         distance_km: distKm,
       })
       .from(stations)

@@ -38,6 +38,34 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
     ? [...new Set(station.serviceCategories.flatMap((c) => c.forfaits.map((f) => f.name)))]
     : station.tags;
 
+  /* Name of the first available service shown in the card body (replaces the
+   * duplicated station name). Falls back to the first forfait tag. */
+  const primaryService = station.serviceFrom ?? forfaitNames[0] ?? null;
+
+  /* Contextual status badge shown over the photo (replaces the distance badge -
+   * distance stays in the stats row below). The "unavailable" prop forces the
+   * no-availability state so the badge always matches the greyed-out card. */
+  const statusBadge = (() => {
+    const status = unavailable ? 'no_future_availability' : station.stationStatus;
+    switch (status) {
+      case 'open':
+        return { labelKey: 'card_status_open', dot: 'bg-Hurryline-success', cls: 'bg-Hurryline-success/90 text-white' };
+      case 'opening_soon':
+        return { labelKey: 'card_status_opening_soon', dot: 'bg-white', cls: 'bg-blue-500/90 text-white' };
+      case 'closing_soon':
+        return { labelKey: 'card_status_closing_soon', dot: 'bg-dark-bg', cls: 'bg-gold text-dark-bg' };
+      case 'closed':
+        return { labelKey: 'card_status_closed', dot: 'bg-white/70', cls: 'bg-black/70 text-white' };
+      case 'no_future_availability':
+        return { labelKey: 'card_status_no_availability', dot: 'bg-white', cls: 'bg-Hurryline-error/90 text-white' };
+      default:
+        /* Fallback when the backend does not send a status: use the open flag. */
+        return station.isOpen === false
+          ? { labelKey: 'card_status_closed', dot: 'bg-white/70', cls: 'bg-black/70 text-white' }
+          : { labelKey: 'card_status_open', dot: 'bg-Hurryline-success', cls: 'bg-Hurryline-success/90 text-white' };
+    }
+  })();
+
   return (
     <article
       className="h-full flex flex-col bg-surface rounded-[14px] overflow-hidden border border-border group hover:border-gold/30 transition-all duration-300"
@@ -72,37 +100,28 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           </span>
         </div>
 
-        {unavailable && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-Hurryline-error/90 text-white text-[13px] font-bold tracking-wide">
-            {t('no_slots')}
-          </span>
-        )}
-
-        {!unavailable && distanceLabel && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[13px] font-bold flex items-center gap-1">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            {distanceLabel}
-          </span>
-        )}
+        <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[13px] font-bold tracking-wide flex items-center gap-1.5 ${statusBadge.cls}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} aria-hidden="true" />
+          {t(statusBadge.labelKey)}
+        </span>
 
       </div>
 
       {/* Card body */}
       <div className="p-4 flex flex-col flex-1">
-        {/* Name + price (hidden until backend exposes price_from on the list payload) */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-[17px] font-bold text-foreground leading-tight line-clamp-1">
-            {station.name}
-          </h3>
-          {station.priceFrom != null && (
-            <span className="text-[18px] font-bold text-gold shrink-0">
-              <span className="text-[13px] font-semibold">{t('price_unit')}</span>{station.priceFrom.toLocaleString()}
-            </span>
-          )}
-        </div>
+        {/* First available service + price (the station name lives on the photo overlay). */}
+        {(primaryService || station.priceFrom != null) && (
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="text-[16px] font-bold text-foreground leading-tight line-clamp-1">
+              {primaryService ?? ' '}
+            </h3>
+            {station.priceFrom != null && (
+              <span className="text-[18px] font-bold text-gold shrink-0">
+                <span className="text-[13px] font-semibold">{t('price_unit')}</span>{station.priceFrom.toLocaleString()}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3 text-[15px]">

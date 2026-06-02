@@ -65,6 +65,13 @@ interface ApiRichEntry {
   slot_end_time: string | null;
   is_rated?: boolean;
   is_tipped?: boolean;
+  delay_request?: DelayRequestInfo | null;
+}
+
+interface DelayRequestInfo {
+  status: 'pending' | 'accepted' | 'refused';
+  message: string | null;
+  max_delay_minutes: number | null;
 }
 
 /** Tip button is hidden after this delay since the service was completed. */
@@ -105,6 +112,8 @@ interface ClientReservation {
   freeCancellationMinutes: number;
   isRated: boolean;
   isTipped: boolean;
+  /** Latest delay request for this reservation (button state + station response). */
+  delayRequest: DelayRequestInfo | null;
 }
 
 interface ClientQueueEntry {
@@ -253,6 +262,7 @@ function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry 
       freeCancellationMinutes: entry.station?.free_cancellation_minutes ?? 60,
       isRated: Boolean(entry.is_rated),
       isTipped: Boolean(entry.is_tipped),
+      delayRequest: entry.delay_request ?? null,
     };
   }
 
@@ -690,16 +700,29 @@ function ReservationCard({
    *   - signalDelay: surfaces only within the last 2h before service start
    *     (no point warning a station 5 days in advance)
    *   - reschedule:  available for confirmed/pending entries until start */
-  const canReschedule = variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending');
+  /* Reschedule mirrors the cancel/signal-delay status set: confirmed reservations
+   * plus not-yet-paid ones (pending / pending_payment, surfaced as "Confirmé" via
+   * displayStatus). The backend reschedules all three — a free reschedule carries
+   * the existing PaymentIntent forward and keeps the pending state intact. */
+  const canReschedule =
+    variant === 'upcoming' &&
+    (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
+  /* A delay request is "active" once signalled (pending) or accepted: the button is
+   * then replaced by a greyed status pill so the client cannot signal twice. A
+   * refused request frees the affordance again so they can re-signal. */
+  const delayReq = r.delayRequest;
+  const hasActiveDelay =
+    variant === 'upcoming' && (delayReq?.status === 'pending' || delayReq?.status === 'accepted');
   /* The signal-delay button is shown on every upcoming confirmed/pending reservation
-   * but only enabled within the 2h window before slotStart. Outside the window the
-   * button stays visible (disabled + tooltip) so the affordance is always discoverable. */
+   * without an active request, but only enabled within the 2h window before slotStart.
+   * Outside the window it stays visible (disabled + tooltip) so the affordance is discoverable. */
   const showSignalDelay =
-    variant === 'upcoming' && (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment');
-  /* Enabled whenever we are in the 2h window. Status check stays loose: the
-   * frontend already shows pending/pending_payment as "Confirmé" via displayStatus,
-   * and the backend accepts the same set. */
+    variant === 'upcoming' &&
+    (r.status === 'confirmed' || r.status === 'pending' || r.status === 'pending_payment') &&
+    !hasActiveDelay;
   const signalDelayEnabled = showSignalDelay && canSignalDelay(r.slotStart);
+  /* Surface the station's response (or the pending wait) back to the client. */
+  const showDelayResponse = variant === 'upcoming' && delayReq != null;
 
   /* Past completed reservations keep rate/tip buttons until each is filled.
    * Tip prompts disappear once we are 7 days past the service so old entries
@@ -710,7 +733,7 @@ function ReservationCard({
 
   const showActions =
     variant === 'upcoming'
-      ? onCancel || canReschedule || showSignalDelay
+      ? onCancel || canReschedule || showSignalDelay || hasActiveDelay
       : showRateAction || showTipAction;
 
   return (
@@ -730,7 +753,7 @@ function ReservationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? t('service_unknown')}
+                {r.serviceName ?? serviceCategoryLabel(r.serviceCategory, locale) ?? r.vehicleFormatLabel ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusColors[displayStatus(r.status)] || 'bg-gray-200 text-gray-600'}`}>
                 {t(`status_${displayStatus(r.status)}`)}
@@ -776,6 +799,10 @@ function ReservationCard({
         )}
       </Link>
 
+      {showDelayResponse && delayReq && (
+        <DelayResponseNote delay={delayReq} t={t} />
+      )}
+
       {showActions && (
         <div className="px-4 pb-3 pt-2 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {canReschedule && (
@@ -785,6 +812,14 @@ function ReservationCard({
             >
               {t('reschedule_btn')}
             </Link>
+          )}
+          {hasActiveDelay && (
+            <span
+              className={`text-[13px] font-semibold cursor-default ${delayReq?.status === 'accepted' ? 'text-Hurryline-success' : 'text-foreground/65'}`}
+              aria-disabled="true"
+            >
+              {delayReq?.status === 'accepted' ? t('delay_accepted_btn') : t('delay_pending_btn')}
+            </span>
           )}
           {showSignalDelay && (
             signalDelayEnabled ? (
@@ -831,6 +866,49 @@ function ReservationCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Delay request response note (station answer surfaced to the client)  */
+/* ------------------------------------------------------------------ */
+
+function DelayResponseNote({
+  delay,
+  t,
+}: {
+  delay: DelayRequestInfo;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (delay.status === 'pending') {
+    return (
+      <div className="mx-4 mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-[12.5px] text-foreground/70">
+        {t('delay_pending_note')}
+      </div>
+    );
+  }
+
+  if (delay.status === 'accepted') {
+    return (
+      <div className="mx-4 mb-3 rounded-lg border border-Hurryline-success/30 bg-Hurryline-success/10 px-3 py-2">
+        <p className="text-[11px] font-black uppercase tracking-wide text-Hurryline-success">{t('delay_accepted_title')}</p>
+        {delay.max_delay_minutes != null && (
+          <p className="mt-0.5 text-[12.5px] font-semibold text-foreground">
+            {t('delay_accepted_minutes', { minutes: delay.max_delay_minutes })}
+          </p>
+        )}
+        {delay.message && <p className="mt-0.5 text-[12.5px] italic text-foreground/70">« {delay.message} »</p>}
+        <p className="mt-1 text-[12px] text-foreground/65">{t('delay_accepted_reschedule_hint')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-4 mb-3 rounded-lg border border-Hurryline-error/30 bg-Hurryline-error/10 px-3 py-2">
+      <p className="text-[11px] font-black uppercase tracking-wide text-Hurryline-error">{t('delay_refused_title')}</p>
+      {delay.message && <p className="mt-0.5 text-[12.5px] italic text-foreground/70">« {delay.message} »</p>}
+      <p className="mt-1 text-[12px] text-foreground/65">{t('delay_refused_hint')}</p>
     </div>
   );
 }
@@ -1036,7 +1114,7 @@ function QueueCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[15px] font-bold text-foreground leading-tight truncate">
-                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? t('service_unknown')}
+                {q.serviceName ?? serviceCategoryLabel(q.serviceCategory, locale) ?? q.vehicleFormatLabel ?? t('service_unknown')}
               </h3>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusBadgeClass}`}>
                 {statusLabel}

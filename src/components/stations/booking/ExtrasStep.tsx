@@ -11,7 +11,6 @@ interface ExtrasStepProps {
   selectedExtras: string[];
   onToggleExtra: (id: string) => void;
   onContinue: () => void;
-  onSkip: () => void;
   onBack: () => void;
 }
 
@@ -23,7 +22,6 @@ export function ExtrasStep({
   selectedExtras,
   onToggleExtra,
   onContinue,
-  onSkip,
   onBack,
 }: ExtrasStepProps) {
   const t = useTranslations('booking');
@@ -126,7 +124,8 @@ export function ExtrasStep({
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Actions — a single smart button always lets the user move forward:
+         * it reads "Sans extra" when nothing is picked and "N extra(s)" otherwise. */}
         <div className="flex gap-3 pb-2">
           <button
             type="button"
@@ -137,20 +136,13 @@ export function ExtrasStep({
           </button>
           <button
             type="button"
-            onClick={onSkip}
-            className="flex-1 py-3 border-2 border-border rounded-xl text-[15px] font-bold text-foreground/70 hover:border-gold/30 transition-colors cursor-pointer"
+            onClick={onContinue}
+            className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
           >
-            {t('without_extras')}
+            {selectedItems.length === 0
+              ? t('extras_continue_none')
+              : t('extras_continue_count', { count: selectedItems.length })}
           </button>
-          {extras.length > 0 && (
-            <button
-              type="button"
-              onClick={onContinue}
-              className="flex-1 py-3 bg-gold hover:bg-gold-hover rounded-xl text-[15px] font-black text-dark-bg transition-colors cursor-pointer"
-            >
-              {t('continue')}
-            </button>
-          )}
         </div>
       </div>
     </div>

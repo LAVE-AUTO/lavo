@@ -282,31 +282,13 @@ function FeaturedServiceCard({
       </div>
 
       {service.description && (
-        <p className="px-5 mt-3 text-[13.5px] text-foreground/70 leading-relaxed">
-          {service.description}
-        </p>
-      )}
-
-      {service.extras.length > 0 && (
         <div className="px-5 mt-4">
-          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-2.5">
-            {t('services_extras_label')}
+          <p className="text-[11px] font-black text-foreground/70 dark:text-[#B0BFB1] uppercase tracking-[0.15em] mb-1.5">
+            {t('detail_description')}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {service.extras.slice(0, 4).map((extra) => (
-              <div
-                key={extra.id}
-                className="flex items-center gap-2 rounded-xl border border-border bg-white/60 dark:bg-background/50 px-3 py-2 text-[12.5px] font-semibold text-[#222] dark:text-[#D0D0C0]"
-              >
-                <span className="w-5 h-5 rounded-md bg-Hurryline-success flex items-center justify-center shrink-0">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                <span className="truncate">{extra.name}</span>
-              </div>
-            ))}
-          </div>
+          <p className="text-[13.5px] text-foreground/70 leading-relaxed">
+            {service.description}
+          </p>
         </div>
       )}
 
