@@ -91,7 +91,7 @@ export function MonthCalendar({
     .toUpperCase();
 
   return (
-    <div className="flex flex-1 flex-col p-5">
+    <div className="flex flex-col p-4 sm:p-5 md:flex-1">
       {/* Calendar nav */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <button
@@ -136,7 +136,7 @@ export function MonthCalendar({
       </div>
 
       {/* Day grid */}
-      <div className="grid flex-1 grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-1.5 md:flex-1">
         {cells.map(({ iso, dayNum, isCurrentMonth }) => {
           const dayBlocks = isCurrentMonth ? getBlocksForDate(iso) : [];
           const hasBloc = dayBlocks.length > 0;
@@ -153,7 +153,7 @@ export function MonthCalendar({
               onClick={() => !isDisabled && onDayClick(iso)}
               disabled={isDisabled}
               className={[
-                'min-h-[70px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]',
+                'min-h-[58px] rounded-xl p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] md:min-h-[70px]',
                 isDisabled ? 'cursor-default opacity-40' : 'cursor-pointer',
                 isSelected
                   ? 'border-2 border-[#4A3418] bg-[#4A3418]'

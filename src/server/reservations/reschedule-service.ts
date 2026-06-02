@@ -66,7 +66,13 @@ export type RescheduleResult = {
   clientSecret: string | null;
 };
 
-const RESCHEDULABLE_STATUSES = ['confirmed'] as const;
+/**
+ * Statuses a client may reschedule. Beyond a fully confirmed reservation, a
+ * not-yet-paid one (pending / pending_payment) can also move slots: a free
+ * reschedule simply carries the existing PaymentIntent to the new slot and keeps
+ * the pending state, so the eventual payment confirmation still applies.
+ */
+const RESCHEDULABLE_STATUSES = ['confirmed', 'pending', 'pending_payment'] as const;
 
 
 // %%%%% Reschedule by start time %%%%%
@@ -219,9 +225,15 @@ export async function rescheduleReservation(
     const slotCount = await countReservationsBySlotId(newTimeSlotId, tx);
     if (slotCount >= (newSlot.capacity ?? 0)) throw new SlotFullError();
 
-    // Case 1: carry the existing PI forward; new entry is immediately confirmed.
-    // Case 2: new entry starts in pending_payment; a new PI is created after the transaction.
-    const newStatus = isLateCancellation ? 'pending_payment' : 'confirmed';
+    // Case 1 (free reschedule): carry the existing PI forward. An already
+    // confirmed reservation re-confirms immediately; a not-yet-paid one keeps its
+    // pending state so the later payment confirmation still drives it to confirmed.
+    // Case 2 (late): new entry starts in pending_payment; a new PI is created after the transaction.
+    const newStatus = isLateCancellation
+      ? 'pending_payment'
+      : current.status === 'confirmed'
+        ? 'confirmed'
+        : current.status;
     const newStripePaymentId = isLateCancellation ? null : reservation.stripe_payment_id;
 
     const created = await createReservationEntry(
@@ -254,10 +266,10 @@ export async function rescheduleReservation(
       tx
     );
 
-    // Mark as confirmed immediately for Case 1.
-    const newEntryRow = isLateCancellation
-      ? created
-      : await updateEntry(created.id, { confirmed_at: new Date() }, tx);
+    // Stamp confirmed_at only when the new entry is actually confirmed.
+    const newEntryRow = newStatus === 'confirmed'
+      ? await updateEntry(created.id, { confirmed_at: new Date() }, tx)
+      : created;
 
     // Cancel the old reservation.
     // In Case 1 (no penalty) the new entry inherits the existing stripe_payment_id; clear it on
@@ -379,6 +391,13 @@ export async function rescheduleReservation(
           });
         }
       }
+    }
+
+    // A new PaymentIntent requires the station's Stripe Connect account. This is
+    // the only branch that needs it, so a free reschedule (Case 1) can proceed
+    // even for a station without a payment account configured.
+    if (!stationStripeAccountId) {
+      throw new ConflictError('Station has no payment account configured');
     }
 
     // Create a new PaymentIntent for the rescheduled reservation.

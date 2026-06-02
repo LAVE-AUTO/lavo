@@ -72,7 +72,7 @@ function SectionCard({ icon, title, children, colSpan }: {
 }) {
   return (
     <div className={colSpan}>
-      <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.04] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
+      <div className="flex h-full flex-col rounded-2xl border border-separator/25 bg-card-surface p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-shadow duration-200 hover:shadow-md dark:bg-[#001A05] dark:ring-white/[0.06]">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#DDAF3B]/10 text-[#DDAF3B]">{icon}</div>
           <h2 className="text-[13px] font-black uppercase tracking-wider text-[#001201] dark:text-[#FFF9EC]">{title}</h2>
@@ -335,7 +335,7 @@ export function AdminPlatformSettings() {
     <form onSubmit={handleSave} className="flex min-h-full flex-col">
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b border-[#FFF9EC] bg-[#FFF9EC] px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="shrink-0 flex items-center justify-between border-b border-separator bg-transparent px-6 py-4 dark:border-[#1A2A14] dark:bg-dark-bg">
         <div>
           <h1 className="text-[18px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
           <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>

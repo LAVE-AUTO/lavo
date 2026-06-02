@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import type { QueueEntry } from './QueueCard';
@@ -15,6 +16,7 @@ interface Props {
 export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onOpenManualAdd }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
+  const [collapsed, setCollapsed] = useState(false);
 
   const inProgress = entries.filter((e) => e.status === 'in_progress');
   const waiting = entries.filter(
@@ -25,11 +27,27 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
   const headOfQueueId = waiting[0]?.id ?? null;
 
   return (
-    <section className="flex-shrink-0 border-t border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
+    <section className="flex-shrink-0 border-t border-separator dark:border-[#1A2A14]">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 px-5 pt-3">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? t('queue_band_expand') : t('queue_band_collapse')}
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-foreground/45 transition-colors hover:text-foreground/75"
+            >
+              <svg
+                width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : 'rotate-0'}`}
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
             <h2 className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">
               {t('queue_band_title')}
             </h2>
@@ -37,9 +55,11 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
               {totalWaiting}
             </span>
           </div>
-          <div className="mt-0.5 text-[11px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
-            {totalWaiting === 0 ? t('queue_empty') : t('queue_waiting', { n: totalWaiting })}
-          </div>
+          {!collapsed && (
+            <div className="mt-0.5 text-[11px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
+              {totalWaiting === 0 ? t('queue_empty') : t('queue_waiting', { n: totalWaiting })}
+            </div>
+          )}
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -60,8 +80,9 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
         </div>
       </div>
 
-      {/* Horizontal scroll */}
-      <div className="mt-3 flex gap-2.5 overflow-x-auto px-5 pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#D8D4C4] dark:[&::-webkit-scrollbar-thumb]:bg-[#1A2A14]">
+      {/* Collapsible body */}
+      <div className={`overflow-hidden transition-[max-height] duration-200 ease-in-out ${collapsed ? 'max-h-0' : 'max-h-56'}`}>
+      <div className="flex gap-2.5 overflow-x-auto px-4 pb-4 sm:px-5 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#D8D4C4] dark:[&::-webkit-scrollbar-thumb]:bg-[#1A2A14]">
         {/* Call next button as the first card — starts head of queue */}
         <button
           type="button"
@@ -108,6 +129,7 @@ export function DashboardQueueBand({ entries, onStartEntry, onCompleteEntry, onO
           </div>
         )}
       </div>
+      </div>
     </section>
   );
 }
@@ -131,7 +153,7 @@ function QueueBandCard({ entry, position, isNext, onPrimary, primaryLabel, prima
 
   return (
     <div
-      className={`group flex h-[140px] w-[170px] animate-fade-in-up flex-shrink-0 flex-col rounded-2xl border bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-[#182214] ${
+      className={`group flex h-[140px] w-[170px] animate-fade-in-up flex-shrink-0 flex-col rounded-2xl border border-separator/25 bg-card-surface p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-[#182214] ${
         isNext
           ? 'border-[#DDAF3B] ring-1 ring-[#DDAF3B]/30'
           : 'border-[#FFF9EC] dark:border-[#1A2A14]'

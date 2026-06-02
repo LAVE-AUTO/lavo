@@ -454,6 +454,14 @@ export async function getMyStation(userId: string): Promise<StationWithDocuments
  * List item for GET /api/v1/stations. Station row plus derived availability fields,
  * enriched with price_from, image_url, verified, queue_count, and opening_hours.
  */
+/** Contextual open/close status surfaced on the station card badge. */
+export type StationStatus =
+  | 'open'
+  | 'opening_soon'
+  | 'closing_soon'
+  | 'closed'
+  | 'no_future_availability';
+
 export type StationListPublicItem = Omit<
   StationWithAvailableSlots,
   'available_slots' | 'completed_count' | 'live_queue_count' | 'opening_time' | 'closing_time'
@@ -465,7 +473,42 @@ export type StationListPublicItem = Omit<
   opening_hours: { open: string; close: string } | null;
   completed_count?: number;
   min_duration: number | null;
+  service_from: string | null;
+  station_status: StationStatus;
 };
+
+/** A station counts as "soon" to open/close within this many minutes. */
+const STATION_STATUS_SOON_MINUTES = 60;
+
+/** Parses an "HH:MM[:SS]" time string into minutes since midnight, or null when malformed. */
+function timeStringToMinutes(time: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})/.exec(time);
+  if (!match) return null;
+  return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+}
+
+/**
+ * Derives the contextual station status from future availability and opening hours.
+ * Priority: no future slots wins; otherwise the current time relative to the
+ * configured opening window decides open / opening soon / closing soon / closed.
+ */
+function computeStationStatus(
+  available_slots: number,
+  opening_hours: { open: string; close: string } | null,
+  now: Date = new Date()
+): StationStatus {
+  if (available_slots <= 0) return 'no_future_availability';
+  if (!opening_hours) return 'open';
+  const open = timeStringToMinutes(opening_hours.open);
+  const close = timeStringToMinutes(opening_hours.close);
+  if (open == null || close == null || close <= open) return 'open';
+  const current = now.getHours() * 60 + now.getMinutes();
+  if (current < open) {
+    return open - current <= STATION_STATUS_SOON_MINUTES ? 'opening_soon' : 'closed';
+  }
+  if (current >= close) return 'closed';
+  return close - current <= STATION_STATUS_SOON_MINUTES ? 'closing_soon' : 'open';
+}
 
 export type ListStationsPublicMeta = {
   total: number;
@@ -515,6 +558,7 @@ function toListPublicItem(row: StationWithAvailableSlots): StationListPublicItem
     queue_count: row.live_queue_count,
     opening_hours,
     min_duration: row.min_duration,
+    station_status: computeStationStatus(available_slots, opening_hours),
     ...(completed_count !== undefined && { completed_count }),
   };
 }

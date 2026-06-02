@@ -165,14 +165,21 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
     const createModeEntries = vehicleFormats
       .filter((f) => selectedFormatIds.includes(f.id))
-      .map((f) => ({
-        vehicle_format_id: f.id,
-        vehicle_label: f.label,
-        price: basePrice,
-        duration_min: parseInt(baseDuration, 10) || 0,
-        staff_required: 0,
-        is_active: true,
-      }));
+      .map((f) => {
+        const override = entries.find((e) => e.vehicle_format_id === f.id);
+        const price = override?.price && String(override.price).trim() !== '' ? override.price : basePrice;
+        const duration = override?.duration_min && Number(override.duration_min) > 0
+          ? Number(override.duration_min)
+          : parseInt(baseDuration, 10) || 0;
+        return {
+          vehicle_format_id: f.id,
+          vehicle_label: f.label,
+          price,
+          duration_min: duration,
+          staff_required: 0,
+          is_active: true,
+        };
+      });
 
     const automaticModeEntries = automaticPackages
       .filter((pkg) => pkg.name.trim())
@@ -371,7 +378,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-2xl border border-[#FFF9EC] bg-white shadow-xl dark:border-[#1A2A14] dark:bg-[#182214] xl:max-w-6xl"
+        className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-2xl border border-separator/30 bg-card-surface shadow-xl dark:border-[#1A2A14] dark:bg-[#182214] xl:max-w-6xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -546,7 +553,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   ) : (
                     <div className="space-y-2">
                       {automaticPackages.map((pkg) => (
-                        <div key={pkg.id} className="rounded-xl border border-[#FFF9EC] bg-white p-3 dark:border-[#001A05] dark:bg-[#182214]">
+                        <div key={pkg.id} className="rounded-xl border border-separator/25 bg-card-surface p-3 dark:border-[#001A05] dark:bg-[#182214]">
                           <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                             <TextField
                               value={pkg.name}
@@ -640,11 +647,16 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               </div>
               )}
 
-              {isEdit && showFormatSection && (
+              {showFormatSection && selectedFormatIds.length > 0 && (
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {t('section_vehicle_pricing')}
                 </span>
+                {!isEdit && (
+                  <p className="text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
+                    {t('pricing_override_hint')}
+                  </p>
+                )}
                 <ServiceVehicleRows
                   formats={vehicleFormats}
                   entries={entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id))}
@@ -681,8 +693,13 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                               : 'border-[#D8D4C8] bg-[#FFF9EC] dark:border-[#001A05] dark:bg-[#182214]'
                           }`}
                         >
-                          <span className="font-semibold text-[#001201] dark:text-[#FFF9EC]">{extra.label}</span>
-                          <span className="font-mono text-[11px] font-bold text-[#DDAF3B]">+{extra.price}$</span>
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-semibold text-[#001201] dark:text-[#FFF9EC]">{extra.label}</span>
+                            {(extra.duration_min ?? 0) > 0 && (
+                              <span className="text-[10px] text-foreground/55 dark:text-[#B0BFB1]">{extra.duration_min} min</span>
+                            )}
+                          </div>
+                          <span className="font-mono text-[11px] font-bold text-[#DDAF3B] shrink-0 ml-2">+{extra.price}$</span>
                         </button>
                       );
                     })}
@@ -693,17 +710,32 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#2A3A20] bg-[#1E2A18] px-4 py-3">
                 <span className="text-[13px] font-semibold text-[#FFF9EC]">{t('toggle_active')}</span>
-                <button
-                  type="button"
-                  onClick={() => setIsActive(!isActive)}
-                  className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
-                    isActive
-                      ? 'border-[#2ecc71] bg-[rgba(46,204,113,.12)] text-[#2ecc71]'
-                      : 'border-[#888] bg-[rgba(136,136,136,.12)] text-foreground/55'
-                  }`}
-                >
-                  {isActive ? t('badge_active') : t('badge_inactive')}
-                </button>
+                <div className="flex rounded-lg overflow-hidden border border-[#3A4A30]">
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(false)}
+                    aria-pressed={!isActive}
+                    className={`px-4 py-1.5 text-[11px] font-bold transition-all ${
+                      !isActive
+                        ? 'bg-[#3A3A3A] text-[#FFF9EC]'
+                        : 'bg-transparent text-[#B0BFB1] hover:text-[#FFF9EC]'
+                    }`}
+                  >
+                    {t('badge_inactive')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsActive(true)}
+                    aria-pressed={isActive}
+                    className={`px-4 py-1.5 text-[11px] font-bold transition-all border-l border-[#3A4A30] ${
+                      isActive
+                        ? 'bg-[#DDAF3B] text-[#001201]'
+                        : 'bg-transparent text-[#B0BFB1] hover:text-[#FFF9EC]'
+                    }`}
+                  >
+                    {t('badge_active')}
+                  </button>
+                </div>
               </div>
 
               {error && <p className="text-[13px] font-semibold text-[#EF4444]">{error}</p>}

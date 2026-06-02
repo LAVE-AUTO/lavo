@@ -10,8 +10,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { RefuseReasonModal } from './RefuseReasonModal';
+import { AcceptDelayModal } from './AcceptDelayModal';
 
 const LIST_PAGE_SIZE = 100;
 
@@ -29,9 +29,28 @@ interface RawDelayItem {
   status: 'pending' | 'accepted' | 'refused';
   message: string;
   refusal_reason: string | null;
+  accept_message?: string | null;
+  max_delay_minutes?: number | null;
   created_at: string;
   updated_at: string;
+  client_first_name?: string | null;
+  client_last_name?: string | null;
   reservation: RawDelayReservation | null;
+}
+
+/** Client display name from the delay payload, falling back to a short code. */
+function clientNameOf(item: RawDelayItem): string {
+  const name = [item.client_first_name, item.client_last_name].filter(Boolean).join(' ').trim();
+  return name || `Client #${item.user_id.slice(0, 4).toUpperCase()}`;
+}
+
+/** Two-letter avatar initials from a display name (handles the code fallback). */
+function getInitials(name: string): string {
+  const codeMatch = name.match(/Client #(\w{2})/);
+  if (codeMatch) return codeMatch[1].toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0] ?? name).slice(0, 2).toUpperCase();
 }
 
 interface RawFormat {
@@ -56,6 +75,8 @@ export interface ResolvedRequest {
   message: string;
   status: 'accepted' | 'refused';
   refusal_reason?: string;
+  accept_message?: string;
+  max_delay_minutes?: number | null;
   resolved_at: string;
 }
 
@@ -69,7 +90,7 @@ function mapPending(item: RawDelayItem, formats: Map<string, string>): DelayRequ
   return {
     id: item.id,
     reservation_id: item.reservation_id,
-    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    client_name: clientNameOf(item),
     message: item.message,
     requested_at: item.created_at,
     scheduled_at: item.reservation?.scheduled_at ?? null,
@@ -81,10 +102,12 @@ function mapResolved(item: RawDelayItem): ResolvedRequest {
   return {
     id: item.id,
     reservation_id: item.reservation_id,
-    client_name: `Client #${item.user_id.slice(0, 4).toUpperCase()}`,
+    client_name: clientNameOf(item),
     message: item.message,
     status: item.status === 'accepted' ? 'accepted' : 'refused',
     refusal_reason: item.refusal_reason ?? undefined,
+    accept_message: item.accept_message ?? undefined,
+    max_delay_minutes: item.max_delay_minutes ?? null,
     resolved_at: item.updated_at,
   };
 }
@@ -154,11 +177,13 @@ export function DelayRequestsPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  async function executeAccept() {
+  async function executeAccept(message: string, maxMinutes: number | null) {
     if (!pending || pending.type !== 'accept') return;
     setActionLoading(true);
     setActionError(null);
-    const [ok] = await postWithApi(`/reservations/${pending.request.reservation_id}/accept-delay`, {});
+    const body: { message: string; max_delay_minutes?: number } = { message: message.trim().slice(0, 300) };
+    if (maxMinutes != null) body.max_delay_minutes = maxMinutes;
+    const [ok] = await postWithApi(`/reservations/${pending.request.reservation_id}/accept-delay`, body);
     if (!mountedRef.current) return;
     setActionLoading(false);
     if (ok) {
@@ -175,7 +200,7 @@ export function DelayRequestsPage() {
     if (!pending || pending.type !== 'refuse') return;
     setActionLoading(true);
     setActionError(null);
-    const body = reason.trim() ? { refusal_reason: reason.trim().slice(0, 300) } : {};
+    const body = { refusal_reason: reason.trim().slice(0, 300) };
     const [ok] = await postWithApi(`/reservations/${pending.request.reservation_id}/refuse-delay`, body);
     if (!mountedRef.current) return;
     setActionLoading(false);
@@ -214,9 +239,9 @@ export function DelayRequestsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#F0EDE0] dark:bg-dark-bg">
+    <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-[#DDD9CC] bg-[#E8E4D4] px-6 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-[#182214]">
+      <div className="border-b border-separator bg-transparent px-4 pb-0 pt-5 dark:border-[#1A2A14] dark:bg-transparent sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[20px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
@@ -264,7 +289,7 @@ export function DelayRequestsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5">
         {tab === 'pending' ? (
           requests.length === 0 ? (
             <EmptyState
@@ -305,6 +330,16 @@ export function DelayRequestsPage() {
                   animationDelay={`${idx * 50}ms`}
                   statusLabel={req.status === 'accepted' ? t('badge_accepted') : t('badge_refused')}
                   agoLabel={formatAgo(req.resolved_at, t)}
+                  acceptSummary={
+                    req.status === 'accepted'
+                      ? [
+                          req.max_delay_minutes != null ? t('accept_minutes_value', { minutes: req.max_delay_minutes }) : null,
+                          req.accept_message ?? null,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')
+                      : ''
+                  }
                 />
               ))}
             </div>
@@ -312,19 +347,12 @@ export function DelayRequestsPage() {
         )}
       </div>
 
-      {/* Accept confirm dialog */}
+      {/* Accept modal — required message + optional max tolerated delay */}
       {pending?.type === 'accept' && (
-        <ConfirmDialog
+        <AcceptDelayModal
           open
-          title={t('confirm_accept_title')}
-          message={actionError
-            ? `${t('confirm_accept_message')}\n\n${actionError}`
-            : t('confirm_accept_message')}
-          confirmLabel={t('btn_accept')}
-          cancelLabel={t('btn_cancel')}
-          variant="default"
           loading={actionLoading}
-          blocking
+          error={actionError}
           onConfirm={executeAccept}
           onCancel={() => { setPending(null); setActionError(null); }}
         />
@@ -373,7 +401,7 @@ function PendingCard({
   impactFormatFallback,
   impactScheduledFallback,
 }: PendingCardProps) {
-  const initials = request.client_name.replace('Client #', '');
+  const initials = getInitials(request.client_name);
   const scheduledText = request.scheduled_at
     ? new Date(request.scheduled_at).toLocaleString('fr-CA', {
         day: '2-digit',
@@ -459,12 +487,14 @@ interface HistoryCardProps {
   animationDelay: string;
   statusLabel: string;
   agoLabel: string;
+  /** Pre-formatted "X min · message" summary shown for accepted requests. */
+  acceptSummary: string;
 }
 
-function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: HistoryCardProps) {
+function HistoryCard({ request, animationDelay, statusLabel, agoLabel, acceptSummary }: HistoryCardProps) {
   const accepted = request.status === 'accepted';
   const accentColor = accepted ? '#00C851' : '#FF383C';
-  const initials = request.client_name.replace('Client #', '');
+  const initials = getInitials(request.client_name);
 
   return (
     <div
@@ -496,6 +526,11 @@ function HistoryCard({ request, animationDelay, statusLabel, agoLabel }: History
           {!accepted && request.refusal_reason && (
             <p className="mt-1.5 rounded-[6px] bg-[#FEF2F2] px-2.5 py-1.5 text-[11px] text-[#991B1B]/70 dark:bg-[#2A0A0A] dark:text-[#FCA5A5]/60">
               {request.refusal_reason}
+            </p>
+          )}
+          {accepted && acceptSummary && (
+            <p className="mt-1.5 rounded-[6px] bg-[#ECFDF3] px-2.5 py-1.5 text-[11px] text-[#0E8C45] dark:bg-[#0B2418] dark:text-[#65E69A]">
+              {acceptSummary}
             </p>
           )}
           <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-foreground/70/35 dark:text-[#FFFFF0]/25">

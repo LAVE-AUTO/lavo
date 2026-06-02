@@ -14,6 +14,8 @@ import { DashboardLegendBar } from './DashboardLegendBar';
 import { DashboardQueueBand } from './DashboardQueueBand';
 import { DashboardGroupedPanel } from './DashboardGroupedPanel';
 import { DashboardDelaysPanel, type DashboardDelayItem } from './DashboardDelaysPanel';
+import { AcceptDelayModal } from '../delays/AcceptDelayModal';
+import { RefuseReasonModal } from '../delays/RefuseReasonModal';
 import { DashboardBayFilter, BayFilterMobilePills } from './DashboardBayFilter';
 import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
 import { StartServiceModal } from './StartServiceModal';
@@ -25,10 +27,19 @@ const DELAYS_PREVIEW_SIZE = 5;
 
 interface RawDelayPreview {
   id: string;
+  reservation_id: string;
   user_id: string;
   message: string;
   status: 'pending' | 'accepted' | 'refused';
   created_at: string;
+  client_first_name?: string | null;
+  client_last_name?: string | null;
+}
+
+/** Client display name from the delay payload, falling back to a short code. */
+function delayClientName(d: RawDelayPreview): string {
+  const name = [d.client_first_name, d.client_last_name].filter(Boolean).join(' ').trim();
+  return name || `Client #${d.user_id.slice(0, 4).toUpperCase()}`;
 }
 
 const EMPTY_KPI: KpiData = { revenue: null, clients: null, lateFees: null, occupancy: null };
@@ -57,6 +68,11 @@ interface RawEntry {
   walk_in_client_email?: string | null;
   walk_in_client_name?: string | null;
   is_walk_in?: boolean;
+  delay_request?: {
+    status: 'pending' | 'accepted' | 'refused';
+    message: string | null;
+    max_delay_minutes: number | null;
+  } | null;
 }
 
 interface RawDashboard {
@@ -176,6 +192,7 @@ function buildAgendaEntries(raw: RawEntry[]): AgendaEntry[] {
     amountPaid: e.amount_paid ? parseFloat(e.amount_paid) : null,
     postId: e.post_id,
     isWalkIn: Boolean(e.is_walk_in),
+    delayStatus: e.delay_request?.status ?? null,
   }));
 }
 
@@ -250,6 +267,10 @@ export function StationDashboard() {
   const [detailEntry, setDetailEntry] = useState<AgendaEntry | null>(null);
   const [startEntry, setStartEntry] = useState<AgendaEntry | null>(null);
   const [manualAddOpen, setManualAddOpen] = useState(false);
+  /* Quick delay reply from the dashboard (avoids a detour to /station/delays). */
+  const [delayResponse, setDelayResponse] = useState<{ type: 'accept' | 'refuse'; item: DashboardDelayItem } | null>(null);
+  const [delayResponseLoading, setDelayResponseLoading] = useState(false);
+  const [delayResponseError, setDelayResponseError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     const { from: queueFrom, to: queueTo } = dayRange(selectedDate);
@@ -313,7 +334,8 @@ export function StationDashboard() {
           .filter((d) => d.status === 'pending')
           .map((d): DashboardDelayItem => ({
             id: d.id,
-            clientName: `Client #${d.user_id.slice(0, 4).toUpperCase()}`,
+            reservationId: d.reservation_id,
+            clientName: delayClientName(d),
             message: d.message,
             requestedAt: d.created_at,
           })),
@@ -339,6 +361,44 @@ export function StationDashboard() {
       await loadData();
     } else {
       showError(t('extra_time_error'));
+    }
+  }
+
+  async function handleDelayAccept(message: string, maxMinutes: number | null) {
+    if (!delayResponse) return;
+    setDelayResponseLoading(true);
+    setDelayResponseError(null);
+    const body: { message: string; max_delay_minutes?: number } = { message: message.trim().slice(0, 300) };
+    if (maxMinutes != null) body.max_delay_minutes = maxMinutes;
+    const [ok] = await postWithApi(`/reservations/${delayResponse.item.reservationId}/accept-delay`, body);
+    if (!mountedRef.current) return;
+    setDelayResponseLoading(false);
+    if (ok) {
+      setDelayResponse(null);
+      showSuccess(t('delays_accept_success'));
+      await loadData();
+    } else {
+      setDelayResponseError(t('delays_action_error'));
+      showError(t('delays_action_error'));
+    }
+  }
+
+  async function handleDelayRefuse(reason: string) {
+    if (!delayResponse) return;
+    setDelayResponseLoading(true);
+    setDelayResponseError(null);
+    const [ok] = await postWithApi(`/reservations/${delayResponse.item.reservationId}/refuse-delay`, {
+      refusal_reason: reason.trim().slice(0, 300),
+    });
+    if (!mountedRef.current) return;
+    setDelayResponseLoading(false);
+    if (ok) {
+      setDelayResponse(null);
+      showSuccess(t('delays_refuse_success'));
+      await loadData();
+    } else {
+      setDelayResponseError(t('delays_action_error'));
+      showError(t('delays_action_error'));
     }
   }
 
@@ -453,7 +513,7 @@ export function StationDashboard() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden animate-fade-in">
+    <div className="flex flex-col animate-fade-in">
       <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
@@ -471,7 +531,7 @@ export function StationDashboard() {
         />
       )}
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex">
         {view === 'daily' && posts.length > 0 && (
           <DashboardBayFilter
             posts={posts}
@@ -480,38 +540,49 @@ export function StationDashboard() {
           />
         )}
 
-        <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-          {view === 'daily' ? (
-            <DashboardAgendaTimeline
-              posts={posts}
-              entries={visibleAgendaEntries}
-              selectedDate={selectedDate}
-              openingTime={config.openingTime}
-              closingTime={config.closingTime}
-              breakStart={config.breakStart}
-              breakEnd={config.breakEnd}
-              selectedPostId={selectedPostId}
-              onSelectEntry={setDetailEntry}
-            />
-          ) : (
-            <DashboardGroupedPanel
-              items={reservationItems}
-              view={view}
-              selectedDate={selectedDate}
-            />
-          )}
+        {/* Column on mobile (delays stack below, height-capped), row on desktop
+         * (delays sit in a side column) so the delays panel never squeezes the
+         * schedule out of view. */}
+        <div className="flex flex-1 min-w-0 flex-col md:flex-row">
+          <div className="flex flex-1 min-w-0 flex-col">
+            {view === 'daily' ? (
+              <DashboardAgendaTimeline
+                posts={posts}
+                entries={visibleAgendaEntries}
+                selectedDate={selectedDate}
+                openingTime={config.openingTime}
+                closingTime={config.closingTime}
+                breakStart={config.breakStart}
+                breakEnd={config.breakEnd}
+                selectedPostId={selectedPostId}
+                onSelectEntry={setDetailEntry}
+              />
+            ) : (
+              <DashboardGroupedPanel
+                items={reservationItems}
+                view={view}
+                selectedDate={selectedDate}
+              />
+            )}
 
-          {view === 'daily' && <DashboardLegendBar />}
-          {view === 'daily' && (
-            <DashboardQueueBand
-              entries={queueEntries}
-              onStartEntry={requestQueueStart}
-              onCompleteEntry={(id) => requestAction('complete', id)}
-              onOpenManualAdd={handleOpenManualAdd}
-            />
-          )}
+            {view === 'daily' && <DashboardLegendBar />}
+            {view === 'daily' && (
+              <DashboardQueueBand
+                entries={queueEntries}
+                onStartEntry={requestQueueStart}
+                onCompleteEntry={(id) => requestAction('complete', id)}
+                onOpenManualAdd={handleOpenManualAdd}
+              />
+            )}
+          </div>
+
           {view === 'daily' && delays.length > 0 && (
-            <DashboardDelaysPanel items={delays} totalPending={delaysPendingTotal} />
+            <DashboardDelaysPanel
+              items={delays}
+              totalPending={delaysPendingTotal}
+              onAccept={(item) => { setDelayResponseError(null); setDelayResponse({ type: 'accept', item }); }}
+              onRefuse={(item) => { setDelayResponseError(null); setDelayResponse({ type: 'refuse', item }); }}
+            />
           )}
         </div>
       </div>
@@ -551,6 +622,26 @@ export function StationDashboard() {
         onClose={() => setManualAddOpen(false)}
         onSuccess={handleManualAddSuccess}
       />
+
+      {/* Quick delay reply modals (driven from the delays panel) */}
+      {delayResponse?.type === 'accept' && (
+        <AcceptDelayModal
+          open
+          loading={delayResponseLoading}
+          error={delayResponseError}
+          onConfirm={handleDelayAccept}
+          onCancel={() => { setDelayResponse(null); setDelayResponseError(null); }}
+        />
+      )}
+      {delayResponse?.type === 'refuse' && (
+        <RefuseReasonModal
+          open
+          loading={delayResponseLoading}
+          error={delayResponseError}
+          onConfirm={handleDelayRefuse}
+          onCancel={() => { setDelayResponse(null); setDelayResponseError(null); }}
+        />
+      )}
     </div>
   );
 }

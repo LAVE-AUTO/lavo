@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 
 export interface AgendaEntry {
@@ -15,6 +15,8 @@ export interface AgendaEntry {
   /** True for walk-in entries added manually by the merchant. The
    *  start-service flow skips the ticket code prompt for these. */
   isWalkIn?: boolean;
+  /** Latest delay request status for this reservation, or null when none. */
+  delayStatus?: 'pending' | 'accepted' | 'refused' | null;
 }
 
 export interface AgendaPost {
@@ -129,6 +131,10 @@ export function DashboardAgendaTimeline({
 }: Props) {
   const t = useTranslations('station_dashboard');
   const [now, setNow] = useState<Date>(() => new Date());
+  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
+  /* Remembers the day we already auto-scrolled for, so the per-minute "now"
+   * refresh never yanks the scroll away from where the merchant left it. */
+  const autoScrolledDayRef = useRef<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -165,6 +171,20 @@ export function DashboardAgendaTimeline({
     return m * PX_PER_MINUTE;
   }, [now, selectedDate, openMinutes, totalMinutes]);
 
+  /* On the current day, land the merchant straight on the "now" line instead of
+   * the start of the day. Runs once per selected day (and again if they come
+   * back to today) so the minute-by-minute refresh never fights manual scroll. */
+  useEffect(() => {
+    const dayKey = selectedDate.toDateString();
+    if (autoScrolledDayRef.current === dayKey) return;
+    if (nowLineTop === null) return;
+    const el = scrollBodyRef.current;
+    if (!el) return;
+    // Offset upward by ~80px so the line sits comfortably below the header.
+    el.scrollTop = Math.max(0, nowLineTop - 80);
+    autoScrolledDayRef.current = dayKey;
+  }, [selectedDate, nowLineTop]);
+
   const visiblePosts = useMemo(() => {
     const active = posts.filter((p) => p.isActive);
     if (selectedPostId === 'all') return active;
@@ -194,12 +214,31 @@ export function DashboardAgendaTimeline({
   }, [entries, visiblePosts, selectedDate]);
 
   const totalHeight = totalMinutes * PX_PER_MINUTE;
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white dark:bg-dark-bg">
-      {/* Header strip — sticky bay names */}
-      <div className="flex flex-shrink-0 border-b border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
-        <div className="w-14 flex-shrink-0 border-r border-[#FFF9EC] dark:border-[#1A2A14]" />
+    <div className="mx-4 my-3 flex flex-col rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-dark-bg">
+      {/* Header strip — bay names, always visible */}
+      <div className="flex border-b border-separator/40 bg-transparent dark:border-[#1A2A14]">
+        {/* Collapse toggle in the gutter slot */}
+        <div className="flex w-14 flex-shrink-0 items-center justify-center border-r border-separator/25 dark:border-[#1A2A14]">
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? t('agenda_expand') : t('agenda_collapse')}
+            className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 transition-colors hover:text-foreground/70"
+          >
+            <svg
+              width="13" height="13" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : 'rotate-0'}`}
+              aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        </div>
         {visiblePosts.length === 0 ? (
           <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
             {t('agenda_no_posts')}
@@ -211,7 +250,7 @@ export function DashboardAgendaTimeline({
             return (
               <div
                 key={post.id}
-                className="min-w-[200px] flex-1 border-l border-[#FFF9EC] px-3 py-2 dark:border-[#1A2A14]"
+                className="min-w-[200px] flex-1 border-l border-separator/25 px-3 py-2 dark:border-[#1A2A14]"
               >
                 <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                   {t('filter_post', { n: post.position })}
@@ -225,10 +264,12 @@ export function DashboardAgendaTimeline({
         )}
       </div>
 
-      {/* Scrollable body */}
-      <div className="flex flex-1 overflow-auto">
+      {/* Collapsible body */}
+      <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${collapsed ? 'max-h-0' : 'max-h-[62vh]'}`}>
+      <div ref={scrollBodyRef} className="flex h-[62vh] overflow-auto">
+
         {/* Hour gutter */}
-        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-[#FFF9EC] bg-white dark:border-[#1A2A14] dark:bg-dark-bg">
+        <div className="sticky left-0 z-10 w-14 flex-shrink-0 border-r border-separator/25 bg-card-surface dark:border-[#1A2A14] dark:bg-dark-bg">
           <div className="relative" style={{ height: totalHeight }}>
             {hours.map((h) => {
               const top = (parseHHMM(h, '00:00').h * 60 + parseHHMM(h, '00:00').m - openMinutes) * PX_PER_MINUTE;
@@ -251,7 +292,7 @@ export function DashboardAgendaTimeline({
           return (
             <div
               key={post.id}
-              className="relative min-w-[200px] flex-1 border-l border-[#FFF9EC] dark:border-[#1A2A14]"
+              className="relative min-w-[200px] flex-1 border-l border-separator/25 dark:border-[#1A2A14]"
             >
               <div className="relative" style={{ height: totalHeight }}>
                 {/* Hour grid lines */}
@@ -260,7 +301,7 @@ export function DashboardAgendaTimeline({
                   return (
                     <div
                       key={h}
-                      className="absolute left-0 right-0 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]"
+                      className="absolute left-0 right-0 h-px bg-separator/20 dark:bg-[#1A2A14]"
                       style={{ top }}
                     />
                   );
@@ -302,7 +343,35 @@ export function DashboardAgendaTimeline({
           );
         })}
       </div>
+      </div>
     </div>
+  );
+}
+
+/** Small icon badge flagging a delay request on an agenda slot. Colour + icon
+ *  differ per state: pending (amber clock), accepted (green check), refused (red cross). */
+function DelayBadge({ status }: { status: 'pending' | 'accepted' | 'refused' }) {
+  const t = useTranslations('station_dashboard');
+  const config = {
+    pending: { cls: 'bg-[#DDAF3B]/25 text-[#8A6D08] dark:text-[#E8C040]', label: t('delay_badge_pending') },
+    accepted: { cls: 'bg-[#2ECC71]/20 text-[#0E8C45] dark:text-[#65E69A]', label: t('delay_badge_accepted') },
+    refused: { cls: 'bg-[#FF383C]/20 text-[#B33B1F] dark:text-[#FF8866]', label: t('delay_badge_refused') },
+  }[status];
+
+  return (
+    <span
+      className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${config.cls}`}
+      title={config.label}
+      aria-label={config.label}
+    >
+      {status === 'accepted' ? (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+      ) : status === 'refused' ? (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      ) : (
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+      )}
+    </span>
   );
 }
 
@@ -349,6 +418,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
         <span className="text-[10px] font-bold tabular-nums text-[#001201] dark:text-[#FFF9EC]">
           {formatTime(start)}–{formatTime(end)}
         </span>
+        {entry.delayStatus && <DelayBadge status={entry.delayStatus} />}
         <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${styles.chip} ${styles.chipBg}`}>
           {statusLbl}
         </span>

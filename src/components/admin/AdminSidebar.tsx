@@ -83,7 +83,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
   const base = 'group relative flex items-center rounded-lg text-[13px] font-semibold transition-colors duration-150';
   const active = 'bg-[#DDAF3B] text-[#001201] shadow-sm';
-  const idle = 'text-[#5A5A4A] hover:bg-[#FFF9EC] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
+  const idle = 'text-[#5A5A4A] hover:bg-[#EDE5C8] dark:text-[#B0BFB1] dark:hover:bg-[#182214]';
   const layoutClass = collapsed ? 'h-10 w-10 justify-center' : 'gap-2.5 px-3 py-2.5';
 
   /* Close mobile sidebar on Escape */
@@ -102,7 +102,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
           aria-label={collapsed ? t('nav_expand') : t('nav_collapse')}
           aria-pressed={collapsed}
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#FFF9EC] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground/55 transition-colors hover:bg-[#EDE5C8] hover:text-[#001201] dark:text-[#B0BFB1] dark:hover:bg-[#182214] dark:hover:text-[#FFF9EC]"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
@@ -164,7 +164,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
       </nav>
 
       <div className="mt-auto pt-3">
-        <div className="mb-3 h-px bg-[#FFF9EC] dark:bg-[#1A2A14]" />
+        <div className="mb-3 h-px bg-separator dark:bg-[#1A2A14]" />
 
         {/* Profile link */}
         <Link
@@ -205,7 +205,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop sidebar - always visible at lg+ */}
-      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
+      <aside className={`hidden lg:flex shrink-0 flex-col border-r border-separator bg-sidebar-bg p-3 transition-all duration-200 dark:border-[#1A2A14] dark:bg-dark-bg ${collapsed ? 'w-[72px]' : 'w-[220px]'}`}>
         {sidebarContent}
       </aside>
 
@@ -217,7 +217,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
         >
           <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
           <aside
-            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-[#FFF9EC] bg-[#FFF9EC] p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
+            className="relative flex h-full w-[220px] shrink-0 flex-col border-r border-separator bg-sidebar-bg p-3 shadow-xl animate-fade-in dark:border-[#1A2A14] dark:bg-dark-bg"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

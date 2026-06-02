@@ -97,8 +97,8 @@ export function DashboardOverviewSection({ data }: Props) {
   ];
 
   return (
-    <section className="flex flex-shrink-0 flex-col border-b border-[#FFF9EC] bg-[#FFF9EC] dark:border-[#1A2A14] dark:bg-dark-bg">
-      <div className="flex items-center gap-2 px-5 py-2.5">
+    <section className="flex flex-shrink-0 flex-col border-b border-separator bg-transparent dark:border-[#1A2A14] dark:bg-dark-bg">
+      <div className="flex items-center gap-2 px-4 py-2.5 sm:px-5">
         <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/55 dark:text-[#B0BFB1]">
           {t('overview_title')}
         </span>
@@ -119,7 +119,7 @@ export function DashboardOverviewSection({ data }: Props) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 px-5 pb-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-4 sm:px-5 xl:grid-cols-4">
         {cards.map((card, idx) => (
           <FullKpiCard
             key={card.label}
@@ -145,7 +145,7 @@ function FullKpiCard({
   const Icon = card.Icon;
   return (
     <div
-      className="group relative animate-fade-in-up rounded-2xl border border-[#FFF9EC] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
+      className="group relative animate-fade-in-up rounded-2xl border border-separator/25 bg-card-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-[#1A2A14] dark:bg-[#182214]"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="mb-2.5 leading-none">

@@ -163,13 +163,23 @@ export const signalDelayBodySchema = z
   .strict()
   .optional();
 
-/** POST /reservations/:id/refuse-delay - optional refusal reason. */
+/** POST /reservations/:id/refuse-delay - required refusal message shown to the client. */
 export const refuseDelayBodySchema = z
   .object({
-    refusal_reason: z.string().max(500).optional(),
+    refusal_reason: z.string().trim().min(3, 'A message is required').max(500),
   })
-  .strict()
-  .optional();
+  .strict();
+
+/**
+ * POST /reservations/:id/accept-delay - required acceptance message shown to the
+ * client, plus an optional maximum tolerated delay (minutes).
+ */
+export const acceptDelayBodySchema = z
+  .object({
+    message: z.string().trim().min(3, 'A message is required').max(500),
+    max_delay_minutes: z.coerce.number().int().min(1).max(1440).optional(),
+  })
+  .strict();
 
 /** PATCH /station/entries/:entryId/position - reorder queue. */
 export const stationPatchPositionBodySchema = z
@@ -220,3 +230,4 @@ export type EntryIdParam = z.infer<typeof entryIdParamSchema>;
 export type RescheduleBody = z.infer<typeof rescheduleBodySchema>;
 export type SignalDelayBody = z.infer<typeof signalDelayBodySchema>;
 export type RefuseDelayBody = z.infer<typeof refuseDelayBodySchema>;
+export type AcceptDelayBody = z.infer<typeof acceptDelayBodySchema>;

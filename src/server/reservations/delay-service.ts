@@ -140,7 +140,8 @@ export async function signalDelay(
  */
 export async function acceptDelay(
   reservationId: string,
-  stationId: string
+  stationId: string,
+  options: { message: string; maxDelayMinutes?: number | null } = { message: '' }
 ): Promise<DelayRequest> {
   const entry = await findEntryByIdAndStation(reservationId, stationId);
   if (!entry) throw new NotFoundError('Reservation not found');
@@ -153,9 +154,17 @@ export async function acceptDelay(
   });
   if (!delayRequest) throw new ConflictError('No pending delay request found for this reservation');
 
+  const acceptMessage = options.message.trim();
+  const maxDelayMinutes = options.maxDelayMinutes ?? null;
+
   const [updated] = await db
     .update(delayRequests)
-    .set({ status: 'accepted', updated_at: new Date() })
+    .set({
+      status: 'accepted',
+      accept_message: acceptMessage.length > 0 ? acceptMessage : null,
+      max_delay_minutes: maxDelayMinutes,
+      updated_at: new Date(),
+    })
     .where(eq(delayRequests.id, delayRequest.id))
     .returning();
   if (!updated) throw new Error('Update delay request failed');
@@ -166,19 +175,25 @@ export async function acceptDelay(
       userId: entry.user_id,
       stationId,
       type: 'delay_accepted',
+      payload: { station_message: acceptMessage || null, max_delay_minutes: maxDelayMinutes },
     });
   } catch (e) {
     console.error('[DELAY_ACCEPT] Failed to notify client', { reservationId, error: e instanceof Error ? e.message : String(e) });
   }
 
   /* In-app feed: surfaces in the client's notification bell even when FCM
-   * is not configured (typical in dev). */
+   * is not configured (typical in dev). Prefer the station's own words. */
+  const feedBody = acceptMessage.length > 0
+    ? acceptMessage
+    : maxDelayMinutes != null
+      ? `La station accepte votre retard (jusqu'à ${maxDelayMinutes} min).`
+      : 'La station accepte votre arrivée tardive. Présentez-vous dès que possible.';
   await notifyClientFeed({
     userId: entry.user_id,
     entryId: reservationId,
     stationId,
     kind: 'delay_accepted',
-    body: 'La station accepte votre arrivée tardive. Présentez-vous dès que possible.',
+    body: feedBody,
   });
 
   return updated;

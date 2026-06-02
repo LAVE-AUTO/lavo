@@ -1,5 +1,5 @@
 import { getFromApi } from './axios-service';
-import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra, StationHourRow } from '@/types/station';
+import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra, StationHourRow, StationStatus } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
 /*  API response shapes (snake_case, matching backend output)          */
@@ -21,12 +21,14 @@ interface ApiStationListItem {
     available: boolean;
     completed_count?: number;
     min_duration?: number | null;
+    service_from?: string | null;
     price_from?: string | null;
     image_url?: string | null;
     verified?: boolean;
     queue_count?: number;
     opening_hours?: { open: string; close: string } | null;
     distance_km?: number | null;
+    station_status?: StationStatus | null;
     [key: string]: unknown;
 }
 
@@ -214,6 +216,8 @@ function mapApiStationToStation(s: ApiStationListItem): Station {
         imageUrl: s.image_url ?? undefined,
         verified: s.verified ?? false,
         openingHours,
+        stationStatus: s.station_status ?? undefined,
+        serviceFrom: s.service_from ?? null,
     };
 }
 

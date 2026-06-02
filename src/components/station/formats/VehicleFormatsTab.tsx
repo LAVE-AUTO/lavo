@@ -117,7 +117,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
             return (
               <div
                 key={format.id}
-                className="flex items-center gap-3 rounded-xl border border-[#FFF9EC] bg-white px-4 py-3.5 shadow-sm transition-opacity dark:border-[#1A2A14] dark:bg-[#182214]"
+                className="flex items-center gap-3 rounded-xl border border-separator/25 bg-card-surface px-4 py-3.5 shadow-sm transition-opacity dark:border-[#1A2A14] dark:bg-[#182214]"
                 style={{ opacity: busy ? 0.6 : 1 }}
               >
                 <span className={`h-2 w-2 shrink-0 rounded-full ${

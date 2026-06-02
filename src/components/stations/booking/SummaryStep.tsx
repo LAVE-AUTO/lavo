@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type {
   StationDetailData,
   StationServicePublic,
@@ -47,16 +47,36 @@ export function SummaryStep({
   onBack,
 }: SummaryStepProps) {
   const t = useTranslations('booking');
+  const locale = useLocale();
 
-  const arrivalLabel =
-    arrivalMode === 'queue_now'
-      ? t('summary_queue_now')
-      : arrivalMode === 'queue_later'
-        ? t('summary_queue_later', { time: laterTime || '' })
-        : t('summary_booked_slot', {
-            date: selectedDate || '',
-            time: selectedSlot ? selectedSlot.time : '',
-          });
+  /* True for a YYYY-MM-DD that matches the current local day. Queue modes have no
+   * explicit date (same-day by definition) so they are always treated as today. */
+  const isTodayDate = (dateStr: string | null): boolean => {
+    if (!dateStr) return true;
+    const now = new Date();
+    const local = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return dateStr === local;
+  };
+
+  const formatDate = (dateStr: string): string =>
+    new Date(`${dateStr}T00:00`).toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+
+  /* Arrival recap built as "type · date · time", inserting "aujourd'hui" when the
+   * day matches today. Covers immediate queue, deferred queue and slot booking. */
+  const arrivalLabel = (() => {
+    if (arrivalMode === 'book_slot') {
+      const datePart = isTodayDate(selectedDate) ? t('summary_today') : formatDate(selectedDate ?? '');
+      return [t('summary_type_reservation'), datePart, selectedSlot?.time]
+        .filter(Boolean)
+        .join(' · ');
+    }
+    const timePart = arrivalMode === 'queue_now' ? t('summary_now') : laterTime;
+    return [t('summary_type_queue'), t('summary_today'), timePart].filter(Boolean).join(' · ');
+  })();
 
   const entryPrice = selectedEntry?.price ?? 0;
   const entryLabel = selectedEntry?.formatLabel ?? selectedService.name;

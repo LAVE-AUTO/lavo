@@ -138,8 +138,12 @@ export async function GET(request: Request): Promise<NextResponse> {
           status: r.status,
           message: r.message,
           refusal_reason: r.refusal_reason,
+          accept_message: r.accept_message,
+          max_delay_minutes: r.max_delay_minutes,
           created_at: r.created_at,
           updated_at: r.updated_at,
+          client_first_name: r.client_first_name,
+          client_last_name: r.client_last_name,
           reservation: r.reservation
             ? {
                 id: r.reservation.id,
