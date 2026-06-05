@@ -31,7 +31,7 @@ function buildCsp(nonce: string): string {
     "object-src 'none'",
     "img-src 'self' data: https:",
     "style-src 'self' 'unsafe-inline'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://www.googletagmanager.com https://cdn.pagesense.io`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://cdn.pagesense.io`,
     "frame-src https://js.stripe.com",
     "connect-src 'self' https: https://api.stripe.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net",
     "upgrade-insecure-requests",
