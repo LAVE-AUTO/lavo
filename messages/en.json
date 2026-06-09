@@ -2346,6 +2346,7 @@
         "payments_stripe_charges": "Payments enabled",
         "payments_stripe_payouts": "Payouts enabled",
         "payments_stripe_dashboard_link": "Manage my account on Stripe",
+        "payments_stripe_dashboard_loading": "Opening…",
         "stripe_return_title": "Stripe setup complete",
         "stripe_return_desc": "Your Stripe account has been configured. You will be redirected to your settings.",
         "stripe_return_redirect": "Redirecting in 3 seconds…",
