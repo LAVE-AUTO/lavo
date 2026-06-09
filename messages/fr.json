@@ -2035,6 +2035,7 @@
         "time_label": "Heure",
         "btn_validate": "Valider le service",
         "btn_start_service": "Démarrer",
+        "actions_start_window_hint": "Démarrer et annuler seront disponibles ~{min} min avant le créneau",
         "btn_cancel_entry": "Annuler",
         "btn_cancel": "Annuler",
         "btn_extra_time": "Temps supp.",

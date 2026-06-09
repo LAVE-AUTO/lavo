@@ -2035,6 +2035,7 @@
         "time_label": "Time",
         "btn_validate": "Validate service",
         "btn_start_service": "Start",
+        "actions_start_window_hint": "Start and cancel become available ~{min} min before the slot",
         "btn_cancel_entry": "Cancel",
         "btn_cancel": "Cancel",
         "btn_extra_time": "Extra time",

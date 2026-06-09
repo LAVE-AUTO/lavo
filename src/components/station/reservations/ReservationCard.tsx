@@ -179,6 +179,12 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             </div>
 
             {/* Actions */}
+            {waitingForWindow && (
+              <p className="rounded-lg bg-white/40 px-3 py-2 text-[12px] font-medium text-[#000717]/55 dark:bg-surface/60 dark:text-[#FFFFF0]/45">
+                {t('actions_start_window_hint', { min: START_WINDOW_MINUTES })}
+                {slotStartLabel ? ` (${slotStartLabel})` : ''}
+              </p>
+            )}
             {hasActions && (
               <div className="flex flex-wrap items-center gap-2">
                 {showValidate && (
