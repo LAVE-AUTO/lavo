@@ -24,6 +24,7 @@ import {
   stationConfigs,
   stationHourExceptions,
   stationHours,
+  stationPostHours,
   stationPosts,
   timeSlots,
 } from '@/lib/db/schema';
@@ -86,6 +87,37 @@ function subtractIntervals(windows: OpenWindow[], occupied: OccupiedInterval[]):
     if (cursor < win.endMin) free.push({ startMin: cursor, endMin: win.endMin });
   }
   return free;
+}
+
+/** Intersection of two window lists (used to clamp a post's window to the station's). */
+function intersectWindows(a: OpenWindow[], b: OpenWindow[]): OpenWindow[] {
+  const out: OpenWindow[] = [];
+  for (const x of a) {
+    for (const y of b) {
+      const start = Math.max(x.startMin, y.startMin);
+      const end = Math.min(x.endMin, y.endMin);
+      if (end > start) out.push({ startMin: start, endMin: end });
+    }
+  }
+  return out;
+}
+
+/** Build window list from a per-post hours row (morning + afternoon segments). */
+function postRowWindows(row: {
+  morning_start: string | null;
+  morning_end: string | null;
+  afternoon_start: string | null;
+  afternoon_end: string | null;
+}): OpenWindow[] {
+  const ms = timeStringToMinutes(row.morning_start);
+  const me = timeStringToMinutes(row.morning_end);
+  const as_ = timeStringToMinutes(row.afternoon_start);
+  const ae = timeStringToMinutes(row.afternoon_end);
+  const w: OpenWindow[] = [];
+  if (ms != null && me != null && me > ms) w.push({ startMin: ms, endMin: me });
+  if (as_ != null && ae != null && ae > as_) w.push({ startMin: as_, endMin: ae });
+  if (w.length === 0 && ms != null && ae != null && ae > ms) w.push({ startMin: ms, endMin: ae });
+  return w;
 }
 
 /** Chunk a free interval into D-minute slots starting at `interval.startMin`. */
@@ -247,10 +279,28 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   const isToday = startOfDay.toDateString() === now.toDateString();
   const nowMin = isToday ? now.getHours() * 60 + now.getMinutes() : -Infinity;
 
+  /* Per-post hours overrides for this day of week. When a post has a row it can
+   * only narrow availability within the station window (validated on save); no
+   * row means the post inherits the full station window. */
+  const postHourRows = await db.query.stationPostHours.findMany({
+    where: and(
+      inArray(stationPostHours.station_post_id, postsRows.map((p) => p.id)),
+      eq(stationPostHours.day_of_week, dayOfWeek),
+    ),
+  });
+  const postHourByPost = new Map(postHourRows.map((r) => [r.station_post_id, r]));
+
   const slots: AvailabilitySlot[] = [];
   for (const post of postsRows) {
+    const override = postHourByPost.get(post.id);
+    let postWindows = windows;
+    if (override) {
+      if (!override.is_open) continue; // post explicitly closed this day
+      postWindows = intersectWindows(windows, postRowWindows(override));
+      if (postWindows.length === 0) continue;
+    }
     const occ = occupiedByPost.get(post.id) ?? [];
-    const free = subtractIntervals(windows, occ);
+    const free = subtractIntervals(postWindows, occ);
     for (const interval of free) {
       const startCutoff = Math.max(interval.startMin, nowMin);
       if (startCutoff >= interval.endMin) continue;
