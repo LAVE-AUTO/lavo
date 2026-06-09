@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ReservationEntry, EntryStatus } from './types';
+
+/** "Démarrer" / "Annuler" only surface this many minutes before the slot start. */
+const START_WINDOW_MINUTES = 15;
 
 interface Props {
   entry: ReservationEntry;
@@ -42,6 +45,14 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const [expanded, setExpanded] = useState(false);
   const [codeVisible, setCodeVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  // Re-evaluate the start window periodically so the buttons appear on time
+  // without the merchant needing to refresh.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   /* `pending_payment` is a transient internal lifecycle (Stripe card auth in
    * flight). The merchant doesn't need to see it - the booking exists and
@@ -68,7 +79,23 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const isReservation = entry.entry_type === 'reservation';
   const verificationCode = entry.id.slice(0, 8).toUpperCase();
 
-  const hasActions = canDoStart(entry.status) || canDoValidate(entry.status) || canDoCancel(entry.status);
+  // "Démarrer" / "Annuler" only appear within START_WINDOW_MINUTES before the
+  // scheduled slot start. Entries without a scheduled slot (queue / walk-in) are
+  // not time-gated and behave as before.
+  const slotStartMs = entry.slot_start_time ? new Date(entry.slot_start_time).getTime() : null;
+  const withinStartWindow =
+    slotStartMs === null || Number.isNaN(slotStartMs)
+      ? true
+      : now >= slotStartMs - START_WINDOW_MINUTES * 60_000;
+
+  const showValidate = canDoValidate(entry.status);
+  const showStart = canDoStart(entry.status) && withinStartWindow;
+  const showCancel = canDoCancel(entry.status) && withinStartWindow;
+  const hasActions = showStart || showValidate || showCancel;
+  // Actions exist but are held back until the window opens — explain why.
+  const waitingForWindow =
+    !showValidate && !withinStartWindow && (canDoStart(entry.status) || canDoCancel(entry.status));
+  const slotStartLabel = entry.slot_start_time ? formatHourMinute(entry.slot_start_time) : '';
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-surface">
@@ -180,9 +207,15 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             </div>
 
             {/* Actions */}
+            {waitingForWindow && (
+              <p className="rounded-lg bg-white/40 px-3 py-2 text-[12px] font-medium text-[#000717]/55 dark:bg-surface/60 dark:text-[#FFFFF0]/45">
+                {t('actions_start_window_hint', { min: START_WINDOW_MINUTES })}
+                {slotStartLabel ? ` (${slotStartLabel})` : ''}
+              </p>
+            )}
             {hasActions && (
               <div className="flex flex-wrap items-center gap-2">
-                {canDoValidate(entry.status) && (
+                {showValidate && (
                   <>
                     {showTimePicker ? (
                       <div className="w-full" onClick={(e) => e.stopPropagation()}>
@@ -214,7 +247,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                     )}
                   </>
                 )}
-                {canDoStart(entry.status) && (
+                {showStart && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
@@ -224,7 +257,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                     {t('btn_start_service')}
                   </button>
                 )}
-                {canDoCancel(entry.status) && (
+                {showCancel && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
