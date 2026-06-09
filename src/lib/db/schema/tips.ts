@@ -1,10 +1,10 @@
 /**
  * Tip (pourboire) paid by a client after a completed reservation.
  * One tip per reservation - enforced by unique constraint on reservation_id.
- * The Stripe transfer to the station is handled via destination charge (transfer_data.destination)
- * with no application_fee_amount, so 100% of the tip flows to the station.
+ * The Stripe transfer uses application_fee_amount at the active commission rate
+ * (same as reservations) so the platform earns revenue and covers processing fees.
  */
-import { decimal, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { decimal, index, numeric, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 // Note: no currency column - currency is a Stripe concern, not stored on our side.
 import { reservations } from "./reservations";
 import { stations } from "./stations";
@@ -26,6 +26,12 @@ export const reservationTips = pgTable(
       .references(() => stations.id, { onDelete: "cascade" }),
     /** Tip amount in the platform currency. */
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    /** Commission rate applied at tip creation time (e.g. 0.1350 = 13.5%). */
+    commission_rate: numeric("commission_rate", { precision: 8, scale: 4 }).notNull().default('0'),
+    /** Platform commission collected (amount × commission_rate). */
+    commission_amount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default('0'),
+    /** Amount transferred to the station (amount − commission_amount). */
+    station_payout: decimal("station_payout", { precision: 10, scale: 2 }).notNull().default('0'),
     /** Stripe PaymentIntent ID for this tip. Unique to prevent duplicate charges. */
     stripe_payment_intent_id: varchar("stripe_payment_intent_id", { length: 200 })
       .notNull()

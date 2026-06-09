@@ -10,7 +10,12 @@ if (!connectionString) {
 
 const globalForDb = globalThis as unknown as { pool?: Pool };
 
-const pool = globalForDb.pool ?? new Pool({ connectionString });
+const pool = globalForDb.pool ?? new Pool({
+  connectionString,
+  max: 20,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
+});
 
 if (process.env.NODE_ENV !== "production") {
   globalForDb.pool = pool;

@@ -17,8 +17,7 @@ export const createTipSchema = z.object({
    */
   amount: z
     .number({ invalid_type_error: 'amount must be a number' })
-    .positive('Tip amount must be greater than 0')
-    .min(0.01, 'Tip amount must be at least 0.01')
+    .min(3, 'Tip amount must be at least 3')
     .max(TIP_AMOUNT_SANITY_CAP, `Tip amount must not exceed ${TIP_AMOUNT_SANITY_CAP}`)
     .transform((v) => Math.round(v * 100) / 100),
 });

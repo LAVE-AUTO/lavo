@@ -36,7 +36,7 @@ import { DEFAULT_PLATFORM_CURRENCY } from '@/helpers/server-constants';
 import { createTipPaymentIntent } from '@/server/payments/payment-service';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
-import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
+import { getPlatformSettingWithFallback, getActiveCommissionRate } from '@/server/admin/platform-settings-service';
 import * as repo from './tip-repository';
 import type { CreateTipInput } from '@/validators/tip';
 
@@ -134,10 +134,11 @@ export async function createTip(
     );
   }
 
-  // 6. Read platform settings (max tip + currency) in parallel.
-  const [maxRaw, currencyRaw] = await Promise.all([
+  // 6. Read platform settings (max tip, currency, commission rate) in parallel.
+  const [maxRaw, currencyRaw, commissionRate] = await Promise.all([
     getPlatformSettingWithFallback('max_tip_amount_xaf', 'PLATFORM_MAX_TIP_AMOUNT_XAF', String(DEFAULT_TIP_MAX_AMOUNT)),
     getPlatformSettingWithFallback('platform_currency', 'PLATFORM_CURRENCY', DEFAULT_PLATFORM_CURRENCY),
+    getActiveCommissionRate(),
   ]);
   // Strip whitespace before parsing (e.g. "50 000" → 50000) to guard against
   // locale-formatted values stored by an admin ("50 000 XAF", "50,000").
@@ -151,8 +152,14 @@ export async function createTip(
     );
   }
 
-  // 7. Convert amount to cents (Stripe requires integers).
+  // 7. Convert amount to cents and compute commission split (same rate as reservations).
   const amountCents = Math.round(data.amount * 100);
+  const commissionRateNumber = parseFloat(commissionRate);
+  const commissionCents = Number.isFinite(commissionRateNumber) && commissionRateNumber > 0
+    ? Math.round(amountCents * commissionRateNumber)
+    : 0;
+  const commissionAmount = commissionCents / 100;
+  const stationPayout = (amountCents - commissionCents) / 100;
 
   // 8. Reserve unicity at the DB level BEFORE creating the Stripe PI.
   // Two concurrent tip requests for the same reservation must not both reach the
@@ -170,6 +177,9 @@ export async function createTip(
         client_id: userId,
         station_id: reservation.station_id,
         amount: data.amount.toFixed(2),
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount.toFixed(2),
+        station_payout: stationPayout.toFixed(2),
         stripe_payment_intent_id: placeholderPiId,
         status: 'pending',
       })
@@ -196,6 +206,7 @@ export async function createTip(
       stationId: reservation.station_id,
       stationStripeAccountId: station.stripe_account_id,
       reservationId,
+      commissionCents,
       idempotencyKey: `tip-create:${reservationId}`,
     });
     paymentIntentId = pi.paymentIntentId;

@@ -173,9 +173,11 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
       }
       if (charged && penaltyAmount > 0) {
         try {
+          const stationTransferCents = Math.round(parseFloat(entry.station_payout ?? '0') * 100);
           await distributePenalty(
             entry.stripe_payment_id,
             Math.round(penaltyAmount * 100),
+            stationTransferCents,
             policy.stationPenaltyShare,
             `no-show-penalty:${entry.id}`,
             chargeId ?? undefined,

@@ -133,7 +133,7 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 
-  const [hourRow, exceptionRow, postsRows, configRow] = await Promise.all([
+  const [hourRow, exceptionRow, postsRows, configRow, timeSlotsForDay] = await Promise.all([
     db.query.stationHours.findFirst({
       where: and(eq(stationHours.station_id, args.stationId), eq(stationHours.day_of_week, dayOfWeek)),
     }),
@@ -148,6 +148,17 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
       orderBy: (p, { asc }) => [asc(p.position)],
     }),
     db.query.stationConfigs.findFirst({ where: eq(stationConfigs.id, args.stationId) }),
+    db
+      .select({ start_time: timeSlots.start_time, end_time: timeSlots.end_time })
+      .from(timeSlots)
+      .where(
+        and(
+          eq(timeSlots.station_id, args.stationId),
+          gte(timeSlots.start_time, startOfDay),
+          lt(timeSlots.start_time, endOfDay),
+        )
+      )
+      .orderBy(timeSlots.start_time),
   ]);
 
   if (exceptionRow) {
@@ -157,22 +168,24 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
     return { date: dateKey, slots: [], closed_reason: 'no_active_post' };
   }
 
-  /* Build the day's open windows. Prefer per-day station_hours; fall back to
-   * station_configs when station_hours has no row for this day.
+  /* Build the day's open windows.
    *
-   * The merchant UI (HoursTab) saves up to 4 columns per day:
-   *   morning_start, morning_end, afternoon_start, afternoon_end
-   *
-   * Real-world data shapes we must support:
-   *   - continuous day, no break:  morning_start + afternoon_end (the break
-   *     pair is null because the template has no break configured) → one
-   *     single window from open to close
-   *   - half-day morning only:     morning_start + morning_end
-   *   - half-day afternoon only:   afternoon_start + afternoon_end
-   *   - morning + afternoon split: all four set, break in between
+   * Priority order:
+   *  1. `time_slots` configured by the station manager for this specific date
+   *     (availability page). When present, these are the authoritative windows —
+   *     station_hours is ignored. Per-post occupancy still removes booked capacity.
+   *  2. Per-day `station_hours` row (morning + afternoon segments).
+   *  3. `station_configs` global opening/closing times as last resort.
    */
   const windows: OpenWindow[] = [];
-  if (hourRow) {
+
+  if (timeSlotsForDay.length > 0) {
+    for (const slot of timeSlotsForDay) {
+      const startMin = slot.start_time.getHours() * 60 + slot.start_time.getMinutes();
+      const endMin = slot.end_time.getHours() * 60 + slot.end_time.getMinutes();
+      if (endMin > startMin) windows.push({ startMin, endMin });
+    }
+  } else if (hourRow) {
     if (!hourRow.is_open) {
       return { date: dateKey, slots: [], closed_reason: 'day_closed' };
     }

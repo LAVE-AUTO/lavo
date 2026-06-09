@@ -422,26 +422,30 @@ describe('distributePenalty', () => {
     mockTransfersCreateReversal.mockResolvedValue({ id: FAKE_REVERSAL_ID });
   });
 
+  // stationTransferCents = 1700 (station's original payout), penaltyCents = 1000
+  // stationPenaltyShare = 0.3 → stationKeepsCents = 300 → clawback = 1700 − 300 = 1400
+  const STATION_TRANSFER = 1700;
+
   it('returns null when penaltyCents is zero', async () => {
-    const result = await distributePenalty(FAKE_PI_ID, 0, 0.3);
+    const result = await distributePenalty(FAKE_PI_ID, 0, STATION_TRANSFER, 0.3);
     expect(result).toBeNull();
     expect(mockTransfersCreateReversal).not.toHaveBeenCalled();
   });
 
   it('returns null when penaltyCents is negative', async () => {
-    const result = await distributePenalty(FAKE_PI_ID, -100, 0.3);
+    const result = await distributePenalty(FAKE_PI_ID, -100, STATION_TRANSFER, 0.3);
     expect(result).toBeNull();
   });
 
   it('uses preloaded chargeId and transferId without extra Stripe calls', async () => {
-    const result = await distributePenalty(FAKE_PI_ID, 1000, 0.3, undefined, FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
+    const result = await distributePenalty(FAKE_PI_ID, 1000, STATION_TRANSFER, 0.3, undefined, FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
 
     expect(mockPaymentIntentsRetrieve).not.toHaveBeenCalled();
     expect(mockChargesRetrieve).not.toHaveBeenCalled();
-    // station keeps 30% = 300, platform claws back 70% = 700
+    // stationKeeps = 300, clawback = 1700 − 300 = 1400
     expect(mockTransfersCreateReversal).toHaveBeenCalledWith(
       FAKE_TRANSFER_ID,
-      { amount: 700 },
+      { amount: 1400 },
       undefined,
     );
     expect(result).toBe(FAKE_REVERSAL_ID);
@@ -452,7 +456,7 @@ describe('distributePenalty', () => {
     mockPaymentIntentsRetrieve.mockResolvedValue({ id: FAKE_PI_ID, latest_charge: FAKE_CHARGE_ID });
     mockChargesRetrieve.mockResolvedValue({ id: FAKE_CHARGE_ID, transfer: FAKE_TRANSFER_ID });
 
-    const result = await distributePenalty(FAKE_PI_ID, 1000, 0.3);
+    const result = await distributePenalty(FAKE_PI_ID, 1000, STATION_TRANSFER, 0.3);
 
     expect(mockPaymentIntentsRetrieve).toHaveBeenCalledWith(FAKE_PI_ID);
     expect(mockChargesRetrieve).toHaveBeenCalledWith(FAKE_CHARGE_ID);
@@ -463,22 +467,22 @@ describe('distributePenalty', () => {
     mockPaymentIntentsRetrieve.mockResolvedValue({ id: FAKE_PI_ID, latest_charge: FAKE_CHARGE_ID });
     mockChargesRetrieve.mockResolvedValue({ id: FAKE_CHARGE_ID, transfer: null });
 
-    const result = await distributePenalty(FAKE_PI_ID, 1000, 0.3);
+    const result = await distributePenalty(FAKE_PI_ID, 1000, STATION_TRANSFER, 0.3);
 
     expect(result).toBeNull();
     expect(mockTransfersCreateReversal).not.toHaveBeenCalled();
   });
 
-  it('returns null when the station keeps 100% of the penalty (no clawback)', async () => {
-    // stationPenaltyShare = 1.0 → station keeps all → clawback = 0
-    const result = await distributePenalty(FAKE_PI_ID, 1000, 1.0, undefined, FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
+  it('returns null when stationTransferCents does not exceed station penalty share (nothing to claw back)', async () => {
+    // stationTransfer = 200, stationKeeps = round(1000 × 0.3) = 300 → clawback = −100 → null
+    const result = await distributePenalty(FAKE_PI_ID, 1000, 200, 0.3, undefined, FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
 
     expect(result).toBeNull();
     expect(mockTransfersCreateReversal).not.toHaveBeenCalled();
   });
 
   it('passes the idempotency key to the reversal', async () => {
-    await distributePenalty(FAKE_PI_ID, 1000, 0.3, 'penalty-idem-key', FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
+    await distributePenalty(FAKE_PI_ID, 1000, STATION_TRANSFER, 0.3, 'penalty-idem-key', FAKE_CHARGE_ID, FAKE_TRANSFER_ID);
 
     expect(mockTransfersCreateReversal).toHaveBeenCalledWith(
       FAKE_TRANSFER_ID,
