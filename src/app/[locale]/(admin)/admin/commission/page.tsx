@@ -1,5 +1,5 @@
-import { AdminCommissionView } from '@/components/admin/commission/AdminCommissionView';
+import { AdminPricingView } from '@/components/admin/commission/AdminPricingView';
 
-export default function AdminCommissionPage() {
-  return <AdminCommissionView />;
+export default function AdminPricingPage() {
+  return <AdminPricingView />;
 }
