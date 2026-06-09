@@ -1850,6 +1850,7 @@
         "slot_block_error_reason": "Please select a reason",
         "slot_block_button": "Block slot",
         "availability_title": "Business availability",
+        "post_selector_label": "Post:",
         "post_avail_save": "Save this post",
         "post_avail_saved": "Post availability saved",
         "post_avail_save_error": "Failed to save availability",

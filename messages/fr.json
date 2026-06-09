@@ -1850,6 +1850,7 @@
         "slot_block_error_reason": "Veuillez sélectionner une raison",
         "slot_block_button": "Bloquer le créneau",
         "availability_title": "Disponibilité du commerce",
+        "post_selector_label": "Poste :",
         "post_avail_save": "Enregistrer ce poste",
         "post_avail_saved": "Disponibilité du poste enregistrée",
         "post_avail_save_error": "Échec de l'enregistrement de la disponibilité",

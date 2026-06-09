@@ -14,6 +14,8 @@ interface Props {
   /** Station opening hours — used to pre-fill the time range on a new block. */
   defaultStartTime?: string;
   defaultEndTime?: string;
+  /** When set, the block targets this single post (selector hidden, shown read-only). */
+  lockedPostLabel?: string;
   preselectedDate?: string | null;
 }
 
@@ -94,6 +96,7 @@ export function CreateBlockModal({
   numBays = 4,
   defaultStartTime = '08:00',
   defaultEndTime = '18:00',
+  lockedPostLabel,
   preselectedDate,
 }: Props) {
   const t = useTranslations('station_dashboard');
@@ -184,7 +187,7 @@ export function CreateBlockModal({
     if (dates.length === 0) newErrors.dates = t('availability_error_missing_dates');
     if (!startTime || !endTime) newErrors.hours = t('availability_error_missing_hours');
     if (startTime >= endTime) newErrors.hours = t('availability_error_end_before_start');
-    if (!allBays && selectedBays.length === 0) newErrors.bays = t('availability_error_missing_postes');
+    if (!lockedPostLabel && !allBays && selectedBays.length === 0) newErrors.bays = t('availability_error_missing_postes');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -195,7 +198,7 @@ export function CreateBlockModal({
       dates,
       startTime,
       endTime,
-      bayIds: allBays ? ['all'] : selectedBays,
+      bayIds: lockedPostLabel ? ['all'] : allBays ? ['all'] : selectedBays,
     });
     onClose();
   }
@@ -355,6 +358,14 @@ export function CreateBlockModal({
             <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_postes')}
             </p>
+            {lockedPostLabel ? (
+              <div className="inline-flex items-center gap-2 rounded-xl border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3.5 py-2.5 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {lockedPostLabel}
+              </div>
+            ) : (
             <div className="grid grid-cols-2 gap-2">
               {/* All bays option */}
               <label className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${allBays ? 'border-[#DDAF3B] bg-[#DDAF3B]/10' : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'}`}>
@@ -395,6 +406,7 @@ export function CreateBlockModal({
                 </label>
               ))}
             </div>
+            )}
             {errors.bays && (
               <p className="mt-1 text-xs text-[#FF2525]">{errors.bays}</p>
             )}
