@@ -385,7 +385,15 @@
         "history": "Statements & invoices",
         "support": "Support",
         "bottom_nav_aria": "Main navigation",
-        "appearance_aria": "Appearance"
+        "appearance_aria": "Appearance",
+        "share": "Share",
+        "share_aria": "Share Hurryline",
+        "share_message": "Discover Hurryline, the booking and payment platform for car washes.",
+        "share_whatsapp": "WhatsApp",
+        "share_facebook": "Facebook",
+        "share_x": "X",
+        "share_email": "Email",
+        "share_email_subject": "Discover Hurryline"
     },
     "footer": {
         "tagline": "The booking and payment platform for car wash stations across Canada.",

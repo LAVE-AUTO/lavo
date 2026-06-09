@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
+import { ShareMenu } from '@/components/layout/ShareMenu';
 import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context';
 import { deleteWithApi, getFromApi, patchWithApi } from '@/services/axios-service';
@@ -252,6 +253,11 @@ export function PublicNavbar({
           <div className="flex items-center gap-2.5">
             <ThemeToggle />
             <LangToggle />
+
+            {/* Share (desktop) */}
+            <div className="hidden lg:block">
+              <ShareMenu />
+            </div>
 
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-2.5 ml-1">
@@ -513,6 +519,14 @@ export function PublicNavbar({
                   </Link>
                 </>
               )}
+            </div>
+
+            {/* Share */}
+            <div className="mt-1 border-t border-[rgba(221,175,59,0.18)] pt-4">
+              <p className="mb-2.5 px-1 text-[12px] font-semibold uppercase tracking-[0.8px] text-[var(--foreground)]/60 dark:text-[#B0BFB1]">
+                {t('share')}
+              </p>
+              <ShareMenu inline />
             </div>
           </div>
         )}

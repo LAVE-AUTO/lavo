@@ -385,7 +385,15 @@
         "history": "Relevés & factures",
         "support": "Support",
         "bottom_nav_aria": "Navigation principale",
-        "appearance_aria": "Apparence"
+        "appearance_aria": "Apparence",
+        "share": "Partager",
+        "share_aria": "Partager Hurryline",
+        "share_message": "Découvrez Hurryline, la plateforme de réservation et de paiement pour le lavage auto.",
+        "share_whatsapp": "WhatsApp",
+        "share_facebook": "Facebook",
+        "share_x": "X",
+        "share_email": "E-mail",
+        "share_email_subject": "Découvrez Hurryline"
     },
     "footer": {
         "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
