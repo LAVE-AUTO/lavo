@@ -119,9 +119,10 @@ export async function createSlot(
   stationId: string,
   startTime: Date,
   endTime: Date,
-  capacity: number
+  capacity: number,
+  postId?: string | null
 ) {
-  const slot = await repoCreateSlot(stationId, startTime, endTime, capacity);
+  const slot = await repoCreateSlot(stationId, startTime, endTime, capacity, postId);
   scheduleStatsRefresh(stationId, 'create');
   return slot;
 }
@@ -131,7 +132,7 @@ export async function createSlot(
  */
 export async function createSlotsBulk(
   stationId: string,
-  slots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+  slots: Array<{ start_time: Date; end_time: Date; capacity: number; post_id?: string | null }>
 ) {
   const created = await repoCreateSlots(stationId, slots);
   scheduleStatsRefresh(stationId, 'bulk');
@@ -161,7 +162,7 @@ export async function deleteSlot(stationId: string, slotId: string): Promise<voi
 export async function replaceSlots(
   stationId: string,
   idsToDelete: string[],
-  newSlots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+  newSlots: Array<{ start_time: Date; end_time: Date; capacity: number; post_id?: string | null }>
 ): Promise<TimeSlot[]> {
   const result = await db.transaction(async (tx) => {
     if (idsToDelete.length > 0) {

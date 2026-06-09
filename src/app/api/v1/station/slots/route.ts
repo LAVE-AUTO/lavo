@@ -104,12 +104,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       station.id,
       new Date(parsed.data.start_time),
       new Date(parsed.data.end_time),
-      parsed.data.capacity
+      parsed.data.capacity,
+      parsed.data.post_id ?? null
     );
     return successResponse(
       {
         id: slot.id,
         station_id: slot.station_id,
+        post_id: slot.post_id,
         start_time: slot.start_time,
         end_time: slot.end_time,
         capacity: slot.capacity,

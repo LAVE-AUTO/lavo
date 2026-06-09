@@ -431,6 +431,7 @@ export const createSlotBodySchema = z
     start_time: z.string().datetime({ message: 'start_time must be a valid ISO 8601 datetime' }),
     end_time: z.string().datetime({ message: 'end_time must be a valid ISO 8601 datetime' }),
     capacity: z.number().int().min(1, 'Capacity must be at least 1').max(10000, 'Capacity must be at most 10000'),
+    post_id: z.string().uuid().nullable().optional(),
   })
   .refine((data) => new Date(data.start_time) < new Date(data.end_time), {
     message: 'start_time must be before end_time',

@@ -19,11 +19,13 @@ export async function createSlot(
   startTime: Date,
   endTime: Date,
   capacity: number,
+  postId?: string | null,
 ): Promise<TimeSlot> {
   const [row] = await db
     .insert(timeSlots)
     .values({
       station_id: stationId,
+      post_id: postId ?? null,
       start_time: startTime,
       end_time: endTime,
       capacity,
@@ -39,7 +41,7 @@ export async function createSlot(
  */
 export async function createSlots(
   stationId: string,
-  slots: Array<{ start_time: Date; end_time: Date; capacity: number }>,
+  slots: Array<{ start_time: Date; end_time: Date; capacity: number; post_id?: string | null }>,
   tx?: DbTransaction,
 ): Promise<TimeSlot[]> {
   if (slots.length === 0) return [];
@@ -49,6 +51,7 @@ export async function createSlots(
     .values(
       slots.map((s) => ({
         station_id: stationId,
+        post_id: s.post_id ?? null,
         start_time: s.start_time,
         end_time: s.end_time,
         capacity: s.capacity,

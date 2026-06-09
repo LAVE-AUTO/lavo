@@ -37,12 +37,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         start_time: new Date(s.start_time),
         end_time: new Date(s.end_time),
         capacity: s.capacity,
+        post_id: s.post_id ?? null,
       }))
     );
     return successResponse(
       slots.map((slot) => ({
         id: slot.id,
         station_id: slot.station_id,
+        post_id: slot.post_id,
         start_time: slot.start_time,
         end_time: slot.end_time,
         capacity: slot.capacity,
