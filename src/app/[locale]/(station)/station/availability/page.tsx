@@ -30,9 +30,16 @@ interface RawSlot {
 
 interface RawConfig {
   data: {
-    config: { wash_post_count: number | null };
+    config: { wash_post_count: number | null; opening_time?: string | null; closing_time?: string | null };
     posts: Array<{ id: string; position: number; is_active: boolean }>;
   };
+}
+
+/** Extracts the HH:MM portion from a stored time ("08:00:00", "09:00:00+00", …). */
+function extractHHMM(time: string | null | undefined, fallback: string): string {
+  if (!time) return fallback;
+  const m = String(time).match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${m[1].padStart(2, '0')}:${m[2]}` : fallback;
 }
 
 function todayISO(): string {
@@ -104,6 +111,9 @@ export default function StationAvailabilityPage() {
 
   const [slotsByDate, setSlotsByDate] = useState<Record<string, RawSlot[]>>({});
   const [activeBays, setActiveBays] = useState<number>(1);
+  // Station's configured opening hours — used to pre-fill the create modal's time range.
+  const [openingTime, setOpeningTime] = useState('08:00');
+  const [closingTime, setClosingTime] = useState('18:00');
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -163,6 +173,8 @@ export default function StationAvailabilityPage() {
         const activeCount =
           cfg.posts?.filter((p) => p.is_active).length ?? cfg.config?.wash_post_count ?? 1;
         setActiveBays(Math.max(1, activeCount));
+        setOpeningTime(extractHHMM(cfg.config?.opening_time, '08:00'));
+        setClosingTime(extractHHMM(cfg.config?.closing_time, '18:00'));
       }
       setInitialLoading(false);
     })();
@@ -362,6 +374,8 @@ export default function StationAvailabilityPage() {
         onSave={handleSave}
         editingBlock={editingBlock}
         numBays={activeBays}
+        defaultStartTime={openingTime}
+        defaultEndTime={closingTime}
         preselectedDate={preselectedDate ?? (selectedDay && selectedDay >= todayISO() ? selectedDay : null)}
       />
       <DayDetailsModal

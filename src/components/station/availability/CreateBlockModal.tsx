@@ -11,11 +11,15 @@ interface Props {
   onSave: (block: Omit<AvailabilityBlock, 'id'>) => void;
   editingBlock?: AvailabilityBlock | null;
   numBays?: number;
+  /** Station opening hours — used to pre-fill the time range on a new block. */
+  defaultStartTime?: string;
+  defaultEndTime?: string;
   preselectedDate?: string | null;
 }
 
 function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function isoToDisplay(iso: string): string {
@@ -23,6 +27,11 @@ function isoToDisplay(iso: string): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Full week (Monday → Sunday) for the current week (offset 0) or next week (offset 1). */
 function getWeekRange(offset: 0 | 1): string[] {
   const today = new Date();
   const day = today.getDay(); // 0=Sun
@@ -30,10 +39,36 @@ function getWeekRange(offset: 0 | 1): string[] {
   const monday = new Date(today);
   monday.setDate(today.getDate() + mondayOffset + offset * 7);
   const dates: string[] = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push(toISODate(d));
+  }
+  return dates;
+}
+
+/** Every day of the month at the given offset from the current month (0 = this month). */
+function getMonthRange(offset: number): string[] {
+  const base = new Date();
+  const year = base.getFullYear();
+  const monthIdx = base.getMonth() + offset;
+  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+  const dates: string[] = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    dates.push(toISODate(new Date(year, monthIdx, d)));
+  }
+  return dates;
+}
+
+/** Every day from today through the end of the (count-1)th month ahead. */
+function getNextMonthsRange(count: number): string[] {
+  const today = new Date();
+  const end = new Date(today.getFullYear(), today.getMonth() + count, 0); // last day of (current + count - 1)
+  const dates: string[] = [];
+  const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  while (cursor <= end) {
+    dates.push(toISODate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
   }
   return dates;
 }
@@ -41,7 +76,7 @@ function getWeekRange(offset: 0 | 1): string[] {
 function tomorrowISO(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
+  return toISODate(d);
 }
 
 function formatWeekLabel(dates: string[]): string {
@@ -57,6 +92,8 @@ export function CreateBlockModal({
   onSave,
   editingBlock,
   numBays = 4,
+  defaultStartTime = '08:00',
+  defaultEndTime = '18:00',
   preselectedDate,
 }: Props) {
   const t = useTranslations('station_dashboard');
@@ -85,13 +122,14 @@ export function CreateBlockModal({
       setSelectedBays(isAll ? [] : editingBlock.bayIds);
     } else {
       setDates(preselectedDate ? [preselectedDate] : []);
-      setStartTime('12:00');
-      setEndTime('13:00');
+      // Pre-fill the time range with the station's opening hours (editable).
+      setStartTime(defaultStartTime);
+      setEndTime(defaultEndTime);
       setSelectedBays([]);
       setAllBays(false);
     }
     setErrors({});
-  }, [isOpen, editingBlock, preselectedDate]);
+  }, [isOpen, editingBlock, preselectedDate, defaultStartTime, defaultEndTime]);
 
   function addDate(iso: string) {
     if (iso < todayISO()) return; // no past dates
@@ -194,6 +232,11 @@ export function CreateBlockModal({
 
   const thisWeek = getWeekRange(0);
   const nextWeek = getWeekRange(1);
+  const thisMonth = getMonthRange(0);
+  const nextMonth = getMonthRange(1);
+  const threeMonths = getNextMonthsRange(3);
+  // Sub-labels reflect the addable (future) span, since past days are skipped.
+  const futureOf = (arr: string[]) => arr.filter((d) => d >= todayStr);
   const bays = Array.from({ length: numBays }, (_, i) => String(i + 1));
 
   return (
@@ -201,9 +244,9 @@ export function CreateBlockModal({
       open={isOpen}
       onClose={onClose}
       title={t(editingBlock ? 'availability_edit_block_title' : 'availability_create_block_modal_title')}
-      size="3xl"
+      size="5xl"
     >
-      <div className="grid grid-cols-1 gap-0 md:grid-cols-[1fr_280px]">
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-[1fr_340px]">
         {/* Left: dates + hours + postes */}
         <div className="space-y-5 p-5">
           {/* Dates */}
@@ -419,7 +462,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_this_week')}
-              subLabel={formatWeekLabel(thisWeek)}
+              subLabel={formatWeekLabel(futureOf(thisWeek))}
               targetDates={thisWeek}
               currentDates={dates}
               onApply={() => addDates(thisWeek)}
@@ -439,6 +482,53 @@ export function CreateBlockModal({
               targetDates={nextWeek}
               currentDates={dates}
               onApply={() => addDates(nextWeek)}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                </svg>
+              }
+              label={t('availability_modal_this_month')}
+              subLabel={formatWeekLabel(futureOf(thisMonth))}
+              targetDates={thisMonth}
+              currentDates={dates}
+              onApply={() => addDates(thisMonth)}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <polyline points="14 14 17 16 14 18" />
+                </svg>
+              }
+              label={t('availability_modal_next_month')}
+              subLabel={formatWeekLabel(futureOf(nextMonth))}
+              targetDates={nextMonth}
+              currentDates={dates}
+              onApply={() => addDates(nextMonth)}
+            />
+            <QuickDateShortcut
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <text x="12" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor" stroke="none">3M</text>
+                </svg>
+              }
+              label={t('availability_modal_three_months')}
+              subLabel={formatWeekLabel(futureOf(threeMonths))}
+              targetDates={threeMonths}
+              currentDates={dates}
+              onApply={() => addDates(threeMonths)}
             />
           </div>
 
