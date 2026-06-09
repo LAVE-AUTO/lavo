@@ -60,7 +60,7 @@ export async function joinQueue(
   if (!vehicleEntry.is_active) throw new ConflictError('Service entry is not active');
 
   const entryPrice = parseFloat(String(vehicleEntry.price));
-  const split = await computeReservationSplit({ amountTotal: entryPrice, isQrBooking: false });
+  const split = await computeReservationSplit({ stationId, amountTotal: entryPrice, isQrBooking: false });
 
   const amountCents = Math.round(entryPrice * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
