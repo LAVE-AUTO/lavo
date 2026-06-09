@@ -8,7 +8,7 @@
  *    whether a station pays via commission (default) or a subscription plan.
  */
 import { randomUUID } from 'crypto';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { settings } from '@/lib/db/schema';
 import { ValidationError } from '@/lib/errors';
@@ -116,6 +116,7 @@ export async function setStationBillingModel(
     .values({ type: 'station', key: BILLING_KEY, value: JSON.stringify(value), entity_id: stationId, updated_by: adminId, updated_at: new Date() })
     .onConflictDoUpdate({
       target: [settings.type, settings.entity_id, settings.key],
+      targetWhere: isNotNull(settings.entity_id),
       set: { value: sql`excluded.value`, updated_by: sql`excluded.updated_by`, updated_at: sql`NOW()` },
     });
 
