@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Modal } from '@/components/ui/Modal';
+import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
 import type { AgendaEntry } from './DashboardAgendaTimeline';
 
 interface Props {
@@ -34,11 +36,20 @@ export function AgendaSlotDetailModal({
   open, entry, onClose, onStart, onComplete, onCancel, onExtraTime,
 }: Props) {
   const t = useTranslations('station_dashboard');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
   if (!entry) return null;
 
   const visuals = statusVisuals(entry.status);
-  const isStartable = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
+  // Start / Cancel only surface within the start window before the slot.
+  const inStartWindow = isWithinStartWindow(entry.slotStart, now);
+  const canStartPhase = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
+  const isStartable = canStartPhase && inStartWindow;
   const isRunning = entry.status === 'in_progress';
+  const waitingForWindow = canStartPhase && !inStartWindow;
 
   return (
     <Modal open={open} onClose={onClose} size="md" title={t('slot_detail_title')}>
@@ -77,6 +88,11 @@ export function AgendaSlotDetailModal({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#FFF9EC] pt-3 dark:border-[#1A2A14]">
+        {waitingForWindow && (
+          <span className="mr-auto text-[12px] font-medium text-foreground/55 dark:text-[#B0BFB1]">
+            {t('start_window_hint', { min: START_WINDOW_MINUTES })}
+          </span>
+        )}
         <button
           type="button"
           onClick={onClose}

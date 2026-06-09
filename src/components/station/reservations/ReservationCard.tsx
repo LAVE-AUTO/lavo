@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
 import type { ReservationEntry, EntryStatus } from './types';
-
-/** "Démarrer" / "Annuler" only surface this many minutes before the slot start. */
-const START_WINDOW_MINUTES = 15;
 
 interface Props {
   entry: ReservationEntry;
@@ -43,7 +41,6 @@ function canDoCancel(s: EntryStatus) { return s === 'confirmed' || s === 'pendin
 export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraTime }: Props) {
   const t = useTranslations('station_reservations');
   const [expanded, setExpanded] = useState(false);
-  const [codeVisible, setCodeVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -77,16 +74,11 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
           : `#${entry.user_id.slice(0, 8)}`;
   const time = formatHourMinute(entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
-  const verificationCode = entry.id.slice(0, 8).toUpperCase();
 
   // "Démarrer" / "Annuler" only appear within START_WINDOW_MINUTES before the
   // scheduled slot start. Entries without a scheduled slot (queue / walk-in) are
   // not time-gated and behave as before.
-  const slotStartMs = entry.slot_start_time ? new Date(entry.slot_start_time).getTime() : null;
-  const withinStartWindow =
-    slotStartMs === null || Number.isNaN(slotStartMs)
-      ? true
-      : now >= slotStartMs - START_WINDOW_MINUTES * 60_000;
+  const withinStartWindow = isWithinStartWindow(entry.slot_start_time, now);
 
   const showValidate = canDoValidate(entry.status);
   const showStart = canDoStart(entry.status) && withinStartWindow;
@@ -168,15 +160,13 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                 />
               )}
               <DetailRow label={t('detail_entry_type')} value={isReservation ? t('type_reservation') : t('type_queue')} />
-              <DetailRow label={t('detail_entry_id')} value={`#${entry.id.slice(0, 8)}`} mono />
               <DetailRow label={t('detail_created_at')} value={formatTime(entry.created_at)} />
               <DetailRow label={t('detail_updated_at')} value={formatTime(entry.updated_at)} />
-              {entry.time_slot_id && (
-                <DetailRow label={t('detail_slot')} value={`#${entry.time_slot_id.slice(0, 8)}`} mono />
-              )}
-              {!entry.time_slot_id && entry.entry_type === 'queue' && (
+              {entry.slot_start_time ? (
+                <DetailRow label={t('detail_slot')} value={formatTime(entry.slot_start_time)} />
+              ) : entry.entry_type === 'queue' ? (
                 <DetailRow label={t('detail_slot')} value={t('detail_no_slot')} muted />
-              )}
+              ) : null}
               {entry.queue_position && (
                 <DetailRow label={t('detail_queue_position')} value={`#${entry.queue_position}`} />
               )}
@@ -188,31 +178,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
               )}
             </div>
 
-            {/* Verification code row */}
-            <div className="mb-3 flex items-center gap-2 rounded-lg bg-white/40 px-3 py-2 dark:bg-surface/60">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#000717]/50 dark:text-[#FFFFF0]/40">
-                {t('code_verification_label')}
-              </span>
-              <span className="ml-1 font-mono text-[12px] font-bold tracking-widest text-foreground">
-                {codeVisible ? verificationCode : '••••••••'}
-              </span>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setCodeVisible((v) => !v); }}
-                className="ml-auto text-[#000717]/40 transition-colors hover:text-[#C09A18] dark:text-[#FFFFF0]/30"
-                aria-label={codeVisible ? 'Masquer le code' : 'Afficher le code'}
-              >
-                {codeVisible ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
-
             {/* Actions */}
-            {waitingForWindow && (
-              <p className="rounded-lg bg-white/40 px-3 py-2 text-[12px] font-medium text-[#000717]/55 dark:bg-surface/60 dark:text-[#FFFFF0]/45">
-                {t('actions_start_window_hint', { min: START_WINDOW_MINUTES })}
-                {slotStartLabel ? ` (${slotStartLabel})` : ''}
-              </p>
-            )}
             {hasActions && (
               <div className="flex flex-wrap items-center gap-2">
                 {showValidate && (
@@ -380,17 +346,3 @@ const ClockIcon = () => (
   </svg>
 );
 
-const EyeIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-    <line x1="1" y1="1" x2="23" y2="23" />
-  </svg>
-);

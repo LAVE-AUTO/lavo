@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { isWithinStartWindow } from '@/helpers/start-window';
 
 export interface AgendaEntry {
   id: string;
@@ -336,6 +337,7 @@ export function DashboardAgendaTimeline({
                     openMinutes={openMinutes}
                     closeMinutes={closeMinutes}
                     onSelect={onSelectEntry}
+                    nowMs={now.getTime()}
                   />
                 ))}
               </div>
@@ -380,9 +382,10 @@ interface SlotBlockProps {
   openMinutes: number;
   closeMinutes: number;
   onSelect: (entry: AgendaEntry) => void;
+  nowMs: number;
 }
 
-function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProps) {
+function SlotBlock({ entry, openMinutes, closeMinutes, onSelect, nowMs }: SlotBlockProps) {
   const t = useTranslations('station_dashboard');
   if (!entry.slotStart) return null;
   const start = new Date(entry.slotStart);
@@ -400,7 +403,11 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
   const height = Math.max(64, (clampedEnd - clampedStart) * PX_PER_MINUTE);
   const styles = statusToBlockClass(entry.status);
   const statusLbl = t(statusLabelKey(entry.status));
-  const showPrimary = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment' || entry.status === 'in_progress';
+  // "Démarrer" only appears within the start window before the slot; "Terminer"
+  // (in_progress) is always available.
+  const isStartPhase = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
+  const showPrimary = entry.status === 'in_progress'
+    || (isStartPhase && isWithinStartWindow(entry.slotStart, nowMs));
   const primaryLabel = entry.status === 'in_progress' ? t('btn_complete') : t('btn_start');
   const primaryClass = entry.status === 'in_progress'
     ? 'bg-[#2ECC71] text-white'
