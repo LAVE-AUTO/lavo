@@ -643,9 +643,11 @@ export async function cancelEntry(
     }
     if (charged && penaltyAmount > 0) {
       try {
+        const stationTransferCents = Math.round(parseFloat(entry.station_payout ?? '0') * 100);
         await distributePenalty(
           entry.stripe_payment_id,
           Math.round(penaltyAmount * 100),
+          stationTransferCents,
           policy.stationPenaltyShare,
           `queue-cancel-penalty:${entryId}`,
           chargeId ?? undefined,
