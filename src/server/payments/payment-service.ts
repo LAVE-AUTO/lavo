@@ -468,6 +468,19 @@ export async function createStripeOnboardingLink(accountId: string, locale = 'fr
 }
 
 /**
+ * Generates a one-time Stripe Express Dashboard login link for a connected account.
+ * The station uses this URL to view their balance, payout history, and manage their bank account.
+ * The link is single-use and expires quickly — never cache it.
+ */
+export async function createStripeExpressDashboardLink(accountId: string): Promise<string> {
+  if (!accountId.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account id for dashboard link');
+  }
+  const loginLink = await stripe.accounts.createLoginLink(accountId);
+  return loginLink.url;
+}
+
+/**
  * Returns the Stripe receipt URL for a PaymentIntent when available.
  * Returns null when no charge/receipt exists yet.
  */

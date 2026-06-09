@@ -2346,6 +2346,7 @@
         "payments_stripe_charges": "Paiements activés",
         "payments_stripe_payouts": "Virements activés",
         "payments_stripe_dashboard_link": "Gérer mon compte sur Stripe",
+        "payments_stripe_dashboard_loading": "Ouverture…",
         "stripe_return_title": "Inscription Stripe complétée",
         "stripe_return_desc": "Votre compte Stripe a bien été configuré. Vous allez être redirigé vers vos paramètres.",
         "stripe_return_redirect": "Redirection automatique dans 3 secondes…",
