@@ -70,13 +70,13 @@ import {
 
 const SEED_TAG = "prod-seed";
 const SEED_USER_PREFIX = `${SEED_TAG}.`;
-const HISTORY_MONTHS = 10;
-const FUTURE_DAYS = 14;
-const TOTAL_CLIENTS = 100;
-const TOTAL_RESERVATIONS = 3000;
-const TOTAL_QUEUE = 800;
-const FUTURE_RESERVATIONS = 50;
-const FUTURE_QUEUE = 20;
+const HISTORY_MONTHS = 2;
+const FUTURE_DAYS = 7;
+const TOTAL_CLIENTS = 2;
+const TOTAL_RESERVATIONS = 20;
+const TOTAL_QUEUE = 5;
+const FUTURE_RESERVATIONS = 5;
+const FUTURE_QUEUE = 2;
 const COMMISSION_RATE = "0.1000";
 /* Bcrypt hashes pre-computed at cost=10 (fast enough for seed, safe for dev).
  * Override individual roles via SEED_HASH_ADMIN / SEED_HASH_STATION / SEED_HASH_CLIENT env vars.
@@ -167,6 +167,9 @@ const CITY_PROFILES: CityProfile[] = [
       "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=1200",
     ],
   },
+];
+
+const _CITY_PROFILES_UNUSED: CityProfile[] = [
   {
     name: "Hurryline Laval Centropolis",
     address: "1900 boulevard de l'Avenir",
@@ -769,13 +772,23 @@ async function createStations(
     const subset = FORMAT_BASE.slice(0, 4 + (i % 2));
     for (const f of subset) {
       const adjusted = Math.round(f.basePrice * (1 + (rand() - 0.5) * 0.3) * 100) / 100;
-      const [row] = await tx.insert(vehicleFormats).values({
-        label: f.label,
-        price: adjusted.toFixed(2),
-        is_active: true,
-      }).returning({ id: vehicleFormats.id });
-      formatIds.push(row.id);
-      formatPrices.set(row.id, adjusted);
+      const existing = await tx.select({ id: vehicleFormats.id })
+        .from(vehicleFormats)
+        .where(sql`lower(btrim(${vehicleFormats.label})) = ${f.label.toLowerCase().trim()}`)
+        .limit(1);
+      let formatId: string;
+      if (existing.length > 0) {
+        formatId = existing[0].id;
+      } else {
+        const [row] = await tx.insert(vehicleFormats).values({
+          label: f.label,
+          price: adjusted.toFixed(2),
+          is_active: true,
+        }).returning({ id: vehicleFormats.id });
+        formatId = row.id;
+      }
+      formatIds.push(formatId);
+      formatPrices.set(formatId, adjusted);
     }
 
     for (const code of c.washTypes) {

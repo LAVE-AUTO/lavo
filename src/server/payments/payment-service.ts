@@ -292,8 +292,10 @@ export async function updatePaymentIntentMetadata(
  *
  * Mechanics:
  *   - The client refund (reverse_transfer: false) already came from the platform balance.
- *   - This function reverses (penalty - station_share) from the station's transfer.
- *   - Result: platform nets its penalty share, station nets its penalty share.
+ *   - The refund funds came from the station's original transfer (service not rendered).
+ *   - Clawback = stationTransferCents − (penalty × stationPenaltyShare):
+ *       station keeps exactly its penalty compensation, everything else goes back to platform.
+ *   - Result: platform nets (penalty × platformShare − stripe_fee), station nets its penalty share.
  *
  * When preloadedChargeId and/or preloadedTransferId are provided (from capturePaymentIntent),
  * the Stripe retrieve calls are skipped - saving 2 API round-trips per late cancellation.
@@ -303,7 +305,8 @@ export async function updatePaymentIntentMetadata(
 export async function distributePenalty(
   paymentIntentId: string,
   penaltyCents: number,
-  stationPenaltyShare: number, // fraction [0, 1]
+  stationTransferCents: number, // the station's original transfer amount (amount_paid − commission)
+  stationPenaltyShare: number,  // fraction [0, 1]
   idempotencyKey?: string,
   preloadedChargeId?: string,
   preloadedTransferId?: string,
@@ -327,8 +330,9 @@ export async function distributePenalty(
   }
   if (!transferId) return null;
 
+  // Station keeps only its penalty compensation; everything else is reversed to platform.
   const stationKeepsCents = Math.round(penaltyCents * stationPenaltyShare);
-  const clawbackCents = penaltyCents - stationKeepsCents;
+  const clawbackCents = stationTransferCents - stationKeepsCents;
   if (clawbackCents <= 0) return null;
 
   const reversal = await stripe.transfers.createReversal(
@@ -355,6 +359,9 @@ export type CreateTipPaymentIntentParams = {
   stationId: string;
   stationStripeAccountId: string;
   reservationId: string;
+  /** Platform commission in cents. Applied as application_fee_amount so the platform
+   *  earns revenue on tips and is not left absorbing Stripe processing fees alone. */
+  commissionCents: number;
   metadata?: Record<string, string>;
   /**
    * Stripe idempotency key — prevents duplicate PIs when the client retries (or two
@@ -366,17 +373,21 @@ export type CreateTipPaymentIntentParams = {
 
 /**
  * Creates a Stripe PaymentIntent for a client tip.
- * Uses a destination charge (transfer_data.destination) with no application_fee_amount,
- * so 100% of the tip flows directly to the station's connected account.
+ * Uses a destination charge (transfer_data.destination) with application_fee_amount
+ * so the platform earns its commission on tips and is not left absorbing Stripe
+ * processing fees without revenue.
  * capture_method is 'automatic' - funds are captured immediately on confirmation.
  */
 export async function createTipPaymentIntent(
   params: CreateTipPaymentIntentParams
 ): Promise<CreatePaymentIntentResult> {
-  const { amountCents, currency, stationStripeAccountId, metadata = {}, idempotencyKey } = params;
+  const { amountCents, currency, stationStripeAccountId, commissionCents, metadata = {}, idempotencyKey } = params;
 
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new ValidationError('Invalid tip amount');
+  }
+  if (!Number.isInteger(commissionCents) || commissionCents < 0 || commissionCents > amountCents) {
+    throw new ValidationError('Invalid tip commission amount');
   }
   const destination = stationStripeAccountId.trim();
   if (!destination.startsWith('acct_')) {
@@ -396,6 +407,7 @@ export async function createTipPaymentIntent(
       amount: amountCents,
       currency,
       capture_method: 'automatic',
+      application_fee_amount: commissionCents,
       transfer_data: { destination },
       metadata: mergedMetadata,
       automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
@@ -453,6 +465,19 @@ export async function createStripeOnboardingLink(accountId: string, locale = 'fr
     type: 'account_onboarding',
   });
   return link.url;
+}
+
+/**
+ * Generates a one-time Stripe Express Dashboard login link for a connected account.
+ * The station uses this URL to view their balance, payout history, and manage their bank account.
+ * The link is single-use and expires quickly — never cache it.
+ */
+export async function createStripeExpressDashboardLink(accountId: string): Promise<string> {
+  if (!accountId.startsWith('acct_')) {
+    throw new ValidationError('Invalid connected account id for dashboard link');
+  }
+  const loginLink = await stripe.accounts.createLoginLink(accountId);
+  return loginLink.url;
 }
 
 /**

@@ -273,9 +273,11 @@ export async function cancelReservation(
 
       if (charged && penaltyAmount > 0) {
         try {
+          const stationTransferCents = Math.round(parseFloat(reservation.station_payout ?? '0') * 100);
           await distributePenalty(
             reservation.stripe_payment_id,
             Math.round(penaltyAmount * 100),
+            stationTransferCents,
             policy.stationPenaltyShare,
             `reservation-cancel-penalty:${reservationId}`,
             chargeId ?? undefined,

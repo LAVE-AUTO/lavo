@@ -229,23 +229,50 @@ export default function StationAvailabilityPage() {
   }
 
   async function handleDelete(slotId: string) {
-    const [ok] = await deleteWithApi(`/station/slots/${slotId}`);
+    const [ok, raw] = await deleteWithApi(`/station/slots/${slotId}`);
     if (!mountedRef.current) return;
-    if (!ok) { showError(t('availability_delete_error')); return; }
+
+    if (!ok) {
+      const code = (raw as { code?: string })?.code;
+      showError(code === 'CONFLICT' ? t('availability_delete_has_reservations') : t('availability_delete_error'));
+      return;
+    }
+
     success(t('availability_delete_success'));
+
     for (const [date, slots] of Object.entries(slotsByDate)) {
       if (slots.some((s) => s.id === slotId)) { await refreshDate(date); break; }
     }
   }
 
   async function handleDeleteGroup(ids: string[]) {
-    const [ok] = await deleteWithApi('/station/slots', { autoJoin: false, data: { ids } });
+    const [ok, raw] = await deleteWithApi('/station/slots', { autoJoin: false, data: { ids } });
     if (!mountedRef.current) return;
-    if (!ok) { showError(t('availability_delete_error')); return; }
-    success(t('availability_delete_success'));
+
+    if (!ok) {
+      showError(t('availability_delete_error'));
+      return;
+    }
+
+    type DeleteResult = { deleted?: string[]; failed?: Array<{ id: string; reason: string }> };
+    const res = (raw as { data?: DeleteResult })?.data ?? (raw as DeleteResult);
+    const deleted = res?.deleted ?? [];
+    const failed = res?.failed ?? [];
+
+    if (deleted.length === 0 && failed.length > 0) {
+      showError(t('availability_delete_has_reservations'));
+      return;
+    }
+
+    if (failed.length > 0) {
+      showError(t('availability_delete_partial_error'));
+    } else {
+      success(t('availability_delete_success'));
+    }
+
     const datesToRefresh = new Set<string>();
     for (const [date, slots] of Object.entries(slotsByDate)) {
-      if (slots.some((s) => ids.includes(s.id))) datesToRefresh.add(date);
+      if (slots.some((s) => deleted.includes(s.id))) datesToRefresh.add(date);
     }
     await Promise.all(Array.from(datesToRefresh).map(refreshDate));
   }

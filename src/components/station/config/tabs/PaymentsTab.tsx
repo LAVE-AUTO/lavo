@@ -89,6 +89,7 @@ export function PaymentsTab({ locked }: Props) {
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
 
   const loadStatus = useCallback(async () => {
     const [ok, data] = await getFromApi('/station/stripe/status');
@@ -109,6 +110,16 @@ export function PaymentsTab({ locked }: Props) {
     if (ok) {
       const url = (data as { data: { url: string } }).data.url;
       window.location.href = url;
+    }
+  }
+
+  async function handleDashboardLink() {
+    setDashboardLoading(true);
+    const [ok, data] = await getFromApi('/station/stripe/dashboard-link');
+    setDashboardLoading(false);
+    if (ok) {
+      const url = (data as { data: { url: string } }).data.url;
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -183,15 +194,15 @@ export function PaymentsTab({ locked }: Props) {
               enabled={(status as StripeStatusConnected).payouts_enabled}
             />
             <div className="pt-1">
-              <a
-                href="https://dashboard.stripe.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#635BFF] hover:underline"
+              <button
+                type="button"
+                disabled={dashboardLoading}
+                onClick={handleDashboardLink}
+                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#635BFF] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t('payments_stripe_dashboard_link')}
-                <ExternalLinkIcon />
-              </a>
+                {dashboardLoading ? t('payments_stripe_dashboard_loading') : t('payments_stripe_dashboard_link')}
+                {!dashboardLoading && <ExternalLinkIcon />}
+              </button>
             </div>
           </div>
         )}
