@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
-import { useToast } from '@/context';
+import { useAuth, useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
@@ -48,6 +48,20 @@ interface ApiStation {
 }
 
 interface Props { id: string }
+
+function getFileExtension(fileUrl: string): string {
+  try {
+    const match = new URL(fileUrl).pathname.match(/\.([a-z0-9]+)$/i);
+    return match?.[1]?.toLowerCase() ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/** Images deliver fine from Cloudinary; raw/PDF assets are delivery-restricted (401). */
+function isPreviewableImage(fileUrl: string): boolean {
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'svg'].includes(getFileExtension(fileUrl));
+}
 
 export function AdminStationDetail({ id }: Props) {
   const t      = useTranslations('admin_stations');
@@ -253,6 +267,7 @@ export function AdminStationDetail({ id }: Props) {
               {station.documents.map((doc) => (
                 <DocCard
                   key={doc.id}
+                  stationId={station.id}
                   doc={doc}
                   label={docLabel(doc.document_type)}
                   openLabel={t('doc_open')}
@@ -445,8 +460,9 @@ interface ExpiryLabels {
 }
 
 function DocCard({
-  doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
+  stationId, doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
 }: {
+  stationId: string;
   doc: ApiDocument;
   label: string;
   openLabel: string;
@@ -455,6 +471,8 @@ function DocCard({
   labels: ExpiryLabels;
   locale: string;
 }) {
+  const { token } = useAuth();
+  const { error: showError } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<string>(expiry ?? '');
   const inputId = `expiry-${doc.id}`;
@@ -503,11 +521,36 @@ function DocCard({
     }
   };
 
-  // Open the document directly via its public Cloudinary URL in a new tab so the
-  // admin can view it inline (images and PDFs alike). The previous server-side
-  // download round-trip relied on a signed Cloudinary URL that returned 500.
-  const handleOpen = () => {
-    window.open(doc.file_url, '_blank', 'noopener,noreferrer');
+  // Images deliver straight from Cloudinary. Raw/PDF assets are blocked by
+  // Cloudinary's media-delivery restriction (401 on the public URL), so they go
+  // through the authenticated admin download endpoint, which returns the bytes;
+  // we then open them inline in a new tab.
+  const handleOpen = async () => {
+    if (isPreviewableImage(doc.file_url)) {
+      window.open(doc.file_url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!token) {
+      showError('Session expirée, veuillez vous reconnecter.');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/v1/admin/stations/${encodeURIComponent(stationId)}/documents/${encodeURIComponent(doc.id)}/download`,
+        { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' },
+      );
+      if (!response.ok) {
+        showError('Impossible d\'ouvrir le document.');
+        return;
+      }
+      const contentType = response.headers.get('content-type') ?? 'application/octet-stream';
+      const blob = new Blob([await response.blob()], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      showError('Impossible d\'ouvrir le document.');
+    }
   };
 
   return (
