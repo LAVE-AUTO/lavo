@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
-import { useAuth, useToast } from '@/context';
+import { useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
 
 const MAX_REASON = 500;
@@ -48,20 +48,6 @@ interface ApiStation {
 }
 
 interface Props { id: string }
-
-function getFileExtension(fileUrl: string): string {
-  try {
-    const pathname = new URL(fileUrl).pathname;
-    const match = pathname.match(/\.([a-z0-9]+)$/i);
-    return match?.[1]?.toLowerCase() ?? '';
-  } catch {
-    return '';
-  }
-}
-
-function isPreviewableImage(fileUrl: string): boolean {
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'svg'].includes(getFileExtension(fileUrl));
-}
 
 export function AdminStationDetail({ id }: Props) {
   const t      = useTranslations('admin_stations');
@@ -267,7 +253,6 @@ export function AdminStationDetail({ id }: Props) {
               {station.documents.map((doc) => (
                 <DocCard
                   key={doc.id}
-                  stationId={station.id}
                   doc={doc}
                   label={docLabel(doc.document_type)}
                   openLabel={t('doc_open')}
@@ -460,9 +445,8 @@ interface ExpiryLabels {
 }
 
 function DocCard({
-  stationId, doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
+  doc, label, openLabel, expiry, onSaveExpiry, labels, locale,
 }: {
-  stationId: string;
   doc: ApiDocument;
   label: string;
   openLabel: string;
@@ -471,8 +455,6 @@ function DocCard({
   labels: ExpiryLabels;
   locale: string;
 }) {
-  const { token } = useAuth();
-  const { error: showError } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<string>(expiry ?? '');
   const inputId = `expiry-${doc.id}`;
@@ -521,6 +503,13 @@ function DocCard({
     }
   };
 
+  // Open the document directly via its public Cloudinary URL in a new tab so the
+  // admin can view it inline (images and PDFs alike). The previous server-side
+  // download round-trip relied on a signed Cloudinary URL that returned 500.
+  const handleOpen = () => {
+    window.open(doc.file_url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[#FFF9EC] bg-[#FAFAF6] p-4 transition-all hover:border-[#DDAF3B]/40 hover:bg-white hover:shadow-sm dark:border-[#001A05] dark:bg-[#151E12] dark:hover:border-[#DDAF3B]/30 dark:hover:bg-[#001A05]">
       <div className="flex items-start justify-between gap-2">
@@ -551,18 +540,32 @@ function DocCard({
       {/* Expiry section */}
       <div className="flex flex-col gap-1.5">
         {!editing ? (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 truncate text-[11px] text-foreground/55 dark:text-[#B0BFB1]">
               {formattedExpiry ?? labels.noExpiry}
             </span>
-            <button
-              type="button"
-              onClick={startEditing}
-              aria-label={expiry ? labels.edit : labels.set}
-              className="rounded-lg border border-[#DDAF3B]/40 bg-[#DDAF3B]/10 px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#DDAF3B]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#DDAF3B]/30 dark:text-[#DDAF3B]"
-            >
-              {expiry ? labels.edit : labels.set}
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={handleOpen}
+                className="inline-flex items-center gap-1 rounded-lg border border-[#DDAF3B]/40 bg-white px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#DDAF3B]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#DDAF3B]/30 dark:bg-transparent dark:text-[#DDAF3B]"
+              >
+                {openLabel}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={startEditing}
+                aria-label={expiry ? labels.edit : labels.set}
+                className="rounded-lg border border-[#DDAF3B]/40 bg-[#DDAF3B]/10 px-2.5 py-1 text-[11px] font-bold text-[#9A7A10] transition-colors hover:bg-[#DDAF3B]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B] dark:border-[#DDAF3B]/30 dark:text-[#DDAF3B]"
+              >
+                {expiry ? labels.edit : labels.set}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -595,66 +598,6 @@ function DocCard({
           </div>
         )}
       </div>
-
-      {/* Open link */}
-      <button
-        type="button"
-        onClick={async () => {
-          try {
-            const directPreview = isPreviewableImage(doc.file_url);
-
-            if (directPreview) {
-              window.open(doc.file_url, '_blank', 'noopener');
-              return;
-            }
-
-            if (!token) {
-              showError('Session expirée, veuillez vous reconnecter.');
-              return;
-            }
-
-            const response = await fetch(
-              `/api/v1/admin/stations/${encodeURIComponent(stationId)}/documents/${encodeURIComponent(doc.id)}/download`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-                credentials: 'include',
-              }
-            );
-
-            if (!response.ok) {
-              showError('Impossible de télécharger le document.');
-              return;
-            }
-
-            const contentType = response.headers.get('content-type') ?? 'application/octet-stream';
-            const blob = new Blob([await response.blob()], { type: contentType });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            const extension = getFileExtension(doc.file_url) || (
-              contentType.includes('pdf') ? 'pdf' :
-              contentType.includes('wordprocessingml') ? 'docx' :
-              contentType.includes('msword') ? 'doc' :
-              'bin'
-            );
-            anchor.download = `${stationId}-${doc.id}.${extension}`;
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 60_000);
-          } catch {
-            showError('Unable to download document');
-          }
-        }}
-        className="flex items-center gap-1 rounded text-[12px] font-semibold text-[#DDAF3B] transition-colors hover:text-[#B08A10] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DDAF3B]"
-      >
-        {openLabel}
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-          <polyline points="15 3 21 3 21 9" />
-          <line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-      </button>
     </div>
   );
 }
