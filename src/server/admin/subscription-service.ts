@@ -19,6 +19,10 @@ const BILLING_KEY = 'billing_model';
 export interface SubscriptionPlan {
   id: string;
   name: string;
+  /** Short marketing description shown on the plan card. */
+  description: string;
+  /** Bullet-point perks shown with checkmarks on the card. */
+  features: string[];
   /** Monthly price in the platform currency (CAD). */
   monthly_price: number;
   /** Optional annual price; null when not offered. */
@@ -61,6 +65,10 @@ export async function setSubscriptionPlans(
     return {
       id: p.id && /^[0-9a-f-]{16,}$/i.test(p.id) ? p.id : randomUUID(),
       name: name.slice(0, 80),
+      description: String(p.description ?? '').trim().slice(0, 500),
+      features: Array.isArray(p.features)
+        ? p.features.map((f) => String(f).trim()).filter((f) => f.length > 0).slice(0, 20)
+        : [],
       monthly_price: toMoney(p.monthly_price),
       annual_price: p.annual_price == null || p.annual_price === ('' as unknown) ? null : toMoney(p.annual_price),
       is_active: Boolean(p.is_active),

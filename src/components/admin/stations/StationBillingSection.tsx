@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useToast } from '@/context';
 import { getFromApi, updateWithApi } from '@/services';
 
-interface Plan { id: string; name: string; monthly_price: number; annual_price: number | null; is_active: boolean }
+interface Plan { id: string; name: string; description: string; features: string[]; monthly_price: number; annual_price: number | null; is_active: boolean }
 type BillingModel = 'commission' | 'subscription';
 
 /**
@@ -88,22 +88,43 @@ export function StationBillingSection({ stationId }: { stationId: string }) {
 
           {model === 'subscription' && (
             <div className="mt-4">
-              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">{t('billing_select_plan')}</label>
+              <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">{t('billing_select_plan')}</label>
               {activePlans.length === 0 ? (
                 <p className="rounded-lg border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-2 text-[12px] text-[#7A5A00] dark:text-[#E0C060]">{t('billing_no_plans')}</p>
               ) : (
-                <select
-                  value={planId}
-                  onChange={(e) => setPlanId(e.target.value)}
-                  className="w-full rounded-lg border border-[#D8D4C8] bg-white px-3 py-2 text-[14px] text-[#001201] outline-none focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC]"
-                >
-                  <option value="">{t('billing_select_plan')}</option>
-                  {activePlans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} — {p.monthly_price}$/mois{p.annual_price != null ? ` · ${p.annual_price}$/an` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {activePlans.map((p) => {
+                    const selected = planId === p.id;
+                    return (
+                      <button key={p.id} type="button" onClick={() => setPlanId(p.id)} aria-pressed={selected}
+                        className={`relative flex flex-col rounded-xl border-2 p-4 text-left transition-all ${selected ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 shadow-sm' : 'border-separator/30 bg-[#FAFAF6] hover:border-[#DDAF3B]/40 dark:border-[#001A05] dark:bg-[#151E12]'}`}>
+                        {selected && (
+                          <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#DDAF3B] text-[#001201]" aria-hidden="true">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          </span>
+                        )}
+                        <span className="text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{p.name}</span>
+                        <span className="mt-1 flex items-end gap-1">
+                          <span className="text-[22px] font-black leading-none text-[#001201] dark:text-[#FFF9EC]">${p.monthly_price}</span>
+                          <span className="mb-0.5 text-[11px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{t('billing_per_month')}</span>
+                        </span>
+                        {p.annual_price != null && (
+                          <span className="text-[11px] font-semibold text-[#9A7A13] dark:text-[#DDAF3B]">${p.annual_price} {t('billing_per_year')}</span>
+                        )}
+                        {p.features.length > 0 && (
+                          <ul className="mt-2 flex flex-col gap-1">
+                            {p.features.slice(0, 4).map((f, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-[11.5px] text-foreground/70 dark:text-[#B0BFB1]">
+                                <svg className="mt-0.5 shrink-0 text-[#16A964]" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

@@ -16,6 +16,8 @@ import type { NextResponse } from 'next/server';
 const planSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1).max(80),
+  description: z.string().max(500).optional(),
+  features: z.array(z.string().max(120)).max(20).optional(),
   monthly_price: z.number().min(0).max(1_000_000),
   annual_price: z.number().min(0).max(1_000_000).nullable().optional(),
   is_active: z.boolean(),
