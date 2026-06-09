@@ -35,6 +35,7 @@ import { reservationTips } from "./tips";
 import { timeSlots } from "./slots";
 import { favorites } from "./favorites";
 import { stationHours, stationHourExceptions } from "./station-hours";
+import { stationPostHours } from "./station-post-hours";
 import { userNotifications } from "./user-notifications";
 import { userNotificationPrefs } from "./user-notification-prefs";
 import {
@@ -70,6 +71,7 @@ export * from "./disputes";
 export * from "./device-tokens";
 export * from "./favorites";
 export * from "./station-hours";
+export * from "./station-post-hours";
 export * from "./user-notifications";
 export * from "./user-notification-prefs";
 export * from "./services";
