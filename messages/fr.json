@@ -2474,7 +2474,7 @@
         "type_hint_complete": "Service complet: les extras intérieurs, extérieurs et mixtes sont disponibles.",
         "extras_empty_modal": "Aucun extra compatible disponible pour ce type de service.",
         "extras_helper": "Sélectionnez les extras qui peuvent être ajoutés à ce service.",
-        "pricing_override_hint": "Ajustez le prix et la durée par format. Les champs vides utilisent les valeurs de base.",
+        "pricing_override_hint": "Chaque format est pré-rempli avec le prix et la durée de base. Ajustez-les si besoin.",
         "preview_title": "Aperçu du service",
         "preview_category": "Catégorie",
         "preview_price": "Prix",

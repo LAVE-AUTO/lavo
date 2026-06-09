@@ -29,6 +29,9 @@ interface AutomaticPackage {
 const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
 const TYPES: ServiceType[] = ['exterior', 'interior', 'complete'];
 
+const DEFAULT_BASE_PRICE = '45';
+const DEFAULT_BASE_DURATION = '60';
+
 const TagIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
@@ -50,6 +53,33 @@ function buildEntries(formats: VehicleFormat[], existing?: ServiceVehicleEntry[]
       }
     );
   });
+}
+
+/**
+ * Pre-fills each vehicle-format row with the service base price / duration so the
+ * merchant doesn't have to retype them, then computes which rows already carry a
+ * custom value (an explicit price that differs from the base). Those "overridden"
+ * rows stop following later base changes; rows without an explicit value mirror
+ * the base and stay editable.
+ */
+function initEntriesAndOverrides(
+  built: ServiceVehicleEntry[],
+  basePrice: string,
+  baseDuration: string,
+): { filled: ServiceVehicleEntry[]; priceOv: Set<string>; durOv: Set<string> } {
+  const baseDurNum = parseInt(baseDuration, 10) || 0;
+  const priceOv = new Set<string>();
+  const durOv = new Set<string>();
+  const filled = built.map((e) => {
+    const hasPrice = e.price !== '' && e.price != null;
+    if (hasPrice) {
+      if (e.price !== basePrice) priceOv.add(e.vehicle_format_id);
+      if (Number(e.duration_min) !== baseDurNum) durOv.add(e.vehicle_format_id);
+      return e;
+    }
+    return { ...e, price: basePrice, duration_min: baseDurNum };
+  });
+  return { filled, priceOv, durOv };
 }
 
 function buildAutomaticPackages(existing?: ServiceVehicleEntry[]): AutomaticPackage[] {
@@ -81,9 +111,13 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const [entries, setEntries] = useState<ServiceVehicleEntry[]>([]);
   const [selectedFormatIds, setSelectedFormatIds] = useState<string[]>([]);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
-  const [basePrice, setBasePrice] = useState('45');
-  const [baseDuration, setBaseDuration] = useState('60');
+  const [basePrice, setBasePrice] = useState(DEFAULT_BASE_PRICE);
+  const [baseDuration, setBaseDuration] = useState(DEFAULT_BASE_DURATION);
   const [automaticPackages, setAutomaticPackages] = useState<AutomaticPackage[]>(buildAutomaticPackages());
+  // Vehicle-format ids whose price / duration the merchant customised by hand.
+  // These rows stop mirroring the base price / duration on later base changes.
+  const [priceOverrides, setPriceOverrides] = useState<Set<string>>(new Set());
+  const [durationOverrides, setDurationOverrides] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,25 +142,37 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       setServiceType(service.service_type);
       setDescription(service.description);
       setIsActive(service.is_active);
-      setEntries(buildEntries(vehicleFormats, service.vehicle_entries));
+      const firstActive = service.vehicle_entries.find((e) => e.is_active);
+      const bp = firstActive?.price || DEFAULT_BASE_PRICE;
+      const bd = String(firstActive?.duration_min || Number(DEFAULT_BASE_DURATION));
+      setBasePrice(bp);
+      setBaseDuration(bd);
+      const { filled, priceOv, durOv } = initEntriesAndOverrides(
+        buildEntries(vehicleFormats, service.vehicle_entries), bp, bd,
+      );
+      setEntries(filled);
+      setPriceOverrides(priceOv);
+      setDurationOverrides(durOv);
       setAutomaticPackages(buildAutomaticPackages(service.category === 'automatic' ? service.vehicle_entries : undefined));
       setSelectedFormatIds(service.vehicle_entries.filter((e) => e.is_active).map((e) => e.vehicle_format_id));
       setSelectedExtraIds((service.compatible_extras || []).map((e) => e.id));
-      const firstActive = service.vehicle_entries.find((e) => e.is_active);
-      setBasePrice(firstActive?.price || '45');
-      setBaseDuration(String(firstActive?.duration_min || 60));
     } else {
       setName('');
       setCategory('hand_wash');
       setServiceType('exterior');
       setDescription('');
       setIsActive(true);
-      setEntries(buildEntries(vehicleFormats));
+      setBasePrice(DEFAULT_BASE_PRICE);
+      setBaseDuration(DEFAULT_BASE_DURATION);
+      const { filled, priceOv, durOv } = initEntriesAndOverrides(
+        buildEntries(vehicleFormats), DEFAULT_BASE_PRICE, DEFAULT_BASE_DURATION,
+      );
+      setEntries(filled);
+      setPriceOverrides(priceOv);
+      setDurationOverrides(durOv);
       setAutomaticPackages(buildAutomaticPackages());
       setSelectedFormatIds(vehicleFormats.map((f) => f.id));
       setSelectedExtraIds([]);
-      setBasePrice('45');
-      setBaseDuration('60');
     }
     setError(null);
   }, [service, vehicleFormats]);
@@ -337,6 +383,43 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     ? [...availableExtras.interior, ...availableExtras.both]
     : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
 
+  // Base price / duration drive every non-overridden vehicle row, so editing the
+  // base updates all rows the merchant hasn't customised. Customised rows keep
+  // their value.
+  function applyBasePrice(value: string) {
+    setBasePrice(value);
+    setEntries((prev) =>
+      prev.map((e) => (priceOverrides.has(e.vehicle_format_id) ? e : { ...e, price: value }))
+    );
+  }
+
+  function applyBaseDuration(value: string) {
+    setBaseDuration(value);
+    const n = parseInt(value, 10);
+    if (Number.isNaN(n)) return;
+    setEntries((prev) =>
+      prev.map((e) => (durationOverrides.has(e.vehicle_format_id) ? e : { ...e, duration_min: n }))
+    );
+  }
+
+  // Receives the rows after a manual edit: mark the rows whose price / duration
+  // changed as "overridden" so they no longer follow the base, then persist them.
+  function handleVehicleRowsChange(updated: ServiceVehicleEntry[]) {
+    const nextPriceOv = new Set(priceOverrides);
+    const nextDurOv = new Set(durationOverrides);
+    for (const u of updated) {
+      const current = entries.find((e) => e.vehicle_format_id === u.vehicle_format_id);
+      if (!current) continue;
+      if (u.price !== current.price) nextPriceOv.add(u.vehicle_format_id);
+      if (u.duration_min !== current.duration_min) nextDurOv.add(u.vehicle_format_id);
+    }
+    setPriceOverrides(nextPriceOv);
+    setDurationOverrides(nextDurOv);
+    setEntries((prev) =>
+      prev.map((entry) => updated.find((u) => u.vehicle_format_id === entry.vehicle_format_id) || entry)
+    );
+  }
+
   function toggleFormat(formatId: string) {
     setSelectedFormatIds((prev) =>
       prev.includes(formatId) ? prev.filter((id) => id !== formatId) : [...prev, formatId]
@@ -515,7 +598,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">{t('format_field_price')}</label>
                     <NumberStepper
                       value={basePrice}
-                      onChange={setBasePrice}
+                      onChange={applyBasePrice}
                       min={0}
                       step={0.5}
                       unit="$"
@@ -526,7 +609,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">{t('vehicle_col_duration')}</label>
                     <NumberStepper
                       value={baseDuration}
-                      onChange={setBaseDuration}
+                      onChange={applyBaseDuration}
                       min={1}
                       step={5}
                       unit="min"
@@ -660,12 +743,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <ServiceVehicleRows
                   formats={vehicleFormats}
                   entries={entries.filter((e) => selectedFormatIds.includes(e.vehicle_format_id))}
-                  onChange={(updatedEntries) => {
-                    setEntries((prev) => prev.map((entry) => {
-                      const updated = updatedEntries.find((u) => u.vehicle_format_id === entry.vehicle_format_id);
-                      return updated || entry;
-                    }));
-                  }}
+                  onChange={handleVehicleRowsChange}
                   unavailableMessage={t('format_not_in_list')}
                 />
               </div>
