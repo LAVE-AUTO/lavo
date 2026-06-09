@@ -415,7 +415,7 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect }: SlotBlockProp
       style={{ top, height }}
     >
       <div className="flex items-start gap-1.5">
-        <span className="text-[10px] font-bold tabular-nums text-[#001201] dark:text-[#FFF9EC]">
+        <span className="font-bebas text-[12px] tracking-wide tabular-nums text-[#001201] dark:text-[#FFF9EC]">
           {formatTime(start)}–{formatTime(end)}
         </span>
         {entry.delayStatus && <DelayBadge status={entry.delayStatus} />}

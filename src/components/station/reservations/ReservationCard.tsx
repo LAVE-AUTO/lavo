@@ -82,7 +82,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
         className="flex w-full items-center gap-4 p-4 pl-5 text-left"
       >
         <div className="flex h-10 w-20 shrink-0 items-center justify-center rounded-lg bg-white/60 dark:bg-surface">
-          <span className="whitespace-nowrap font-mono text-[13px] font-bold text-foreground">{time}</span>
+          <span className="whitespace-nowrap font-bebas text-[15px] tracking-wide text-foreground">{time}</span>
         </div>
 
         <div className="min-w-0 flex-1">

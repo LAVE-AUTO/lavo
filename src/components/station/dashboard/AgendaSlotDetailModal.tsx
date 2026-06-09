@@ -62,7 +62,7 @@ export function AgendaSlotDetailModal({
         {/* Grid info */}
         <div className="grid grid-cols-2 gap-3">
           <InfoCell label={t('slot_detail_time')}
-                    value={`${formatTime(entry.slotStart)}–${formatTime(entry.slotEnd)}`} />
+                    value={`${formatTime(entry.slotStart)}–${formatTime(entry.slotEnd)}`} bebas />
           <InfoCell label={t('slot_detail_amount')}
                     value={entry.amountPaid !== null ? `${entry.amountPaid}$` : '—'} />
           <InfoCell label={t('slot_detail_service')}
@@ -125,13 +125,13 @@ export function AgendaSlotDetailModal({
   );
 }
 
-function InfoCell({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
+function InfoCell({ label, value, span2, bebas }: { label: string; value: string; span2?: boolean; bebas?: boolean }) {
   return (
     <div className={`rounded-xl border border-separator/25 bg-card-surface px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
       <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
         {label}
       </div>
-      <div className="mt-0.5 truncate text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+      <div className={`mt-0.5 truncate text-[#001201] dark:text-[#FFF9EC] ${bebas ? 'font-bebas text-[16px] tracking-wide' : 'text-[14px] font-bold'}`}>
         {value}
       </div>
     </div>
