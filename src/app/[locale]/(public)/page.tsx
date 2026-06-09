@@ -3,7 +3,6 @@ import { safeJsonLd } from '@/lib/json-ld';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { HomeRedirectGuard } from '@/components/home/HomeRedirectGuard';
 import { HeroSection } from '@/components/home/HeroSection';
 import { MarqueeBanner } from '@/components/home/MarqueeBanner';
 import { FeaturesSection } from '@/components/home/FeaturesSection';
@@ -71,7 +70,6 @@ export default async function LandingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
       />
-      <HomeRedirectGuard />
       <PublicNavbar />
       <main className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
         <HeroSection />
