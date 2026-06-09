@@ -1964,6 +1964,8 @@
         "availability_save_error": "Could not save the availability. Please retry.",
         "availability_delete_success": "Availability removed",
         "availability_delete_error": "Could not remove the availability.",
+        "availability_delete_has_reservations": "This slot cannot be deleted because reservations are already attached to it.",
+        "availability_delete_partial_error": "Some slots could not be deleted because they have reservations.",
         "notif_coming_soon": "Notifications - coming soon",
         "availability_link_hours": "Configure hours",
         "availability_link_capacity": "Configure capacity",

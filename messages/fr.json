@@ -1964,6 +1964,8 @@
         "availability_save_error": "Impossible d’enregistrer la disponibilité. Réessaie.",
         "availability_delete_success": "Disponibilité supprimée",
         "availability_delete_error": "Impossible de supprimer la disponibilité.",
+        "availability_delete_has_reservations": "Ce créneau ne peut pas être supprimé car des réservations y sont déjà associées.",
+        "availability_delete_partial_error": "Certains créneaux n'ont pas pu être supprimés car ils ont des réservations.",
         "notif_coming_soon": "Notifications - bientôt disponibles",
         "availability_link_hours": "Configurer les horaires",
         "availability_link_capacity": "Configurer la capacité",

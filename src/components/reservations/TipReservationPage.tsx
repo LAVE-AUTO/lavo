@@ -33,7 +33,7 @@ interface RichEntryShape {
 /* Constants                                                            */
 /* ------------------------------------------------------------------ */
 
-const PRESET_AMOUNTS = [2, 5, 10, 15];
+const PRESET_AMOUNTS = [3, 5, 10, 15];
 
 /* ------------------------------------------------------------------ */
 /* Types                                                                */
@@ -197,7 +197,7 @@ export default function TipReservationPage() {
   }
   if (pageState === 'pay' && clientSecret) {
     return (
-      <Elements stripe={getStripePromise()} options={{ clientSecret }}>
+      <Elements stripe={getStripePromise()}>
         <TipPayStep
           amount={resolvedAmount()}
           clientSecret={clientSecret}
