@@ -101,8 +101,12 @@ export default async function RootLayout({
 
   return (
     <html lang="fr" className={fontVariables} suppressHydrationWarning>
+      {/* zoom: slight global ~104% size bump for this px-based UI. Set inline
+          because Tailwind v4 / Lightning CSS strips the non-standard `zoom`
+          property when it goes through the CSS pipeline. */}
       <body
         className="font-rajdhani antialiased"
+        style={{ zoom: '1.04' }}
         suppressHydrationWarning
       >
         <GoogleAnalytics nonce={nonce} />
