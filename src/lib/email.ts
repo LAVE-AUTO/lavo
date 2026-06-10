@@ -702,6 +702,74 @@ export async function sendAdminOperationalEmail(params: {
 }
 
 
+/**
+ * Daily activity report for a station (opt-in via notification_prefs.daily_report).
+ * No-op without Resend; send errors logged only.
+ */
+export async function sendStationDailyReportEmail(params: {
+  to: string;
+  locale?: Locale;
+  stationName: string;
+  date: Date;
+  completed: number;
+  revenue: number;
+  tips: number;
+  clients: number;
+}): Promise<void> {
+  const { to, locale = 'fr', stationName, date, completed, revenue, tips, clients } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationDailyReportEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const dateStr = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(date);
+  const money = (n: number) => `$${n.toFixed(2)}`;
+  const safeStation = escapeHtmlPlain(safePlainTextSnippet(stationName, 120));
+
+  const rows: Array<[string, string]> = locale === 'fr'
+    ? [
+        ['Services terminés', String(completed)],
+        ['Revenu', money(revenue)],
+        ['Pourboires', money(tips)],
+        ['Clients servis', String(clients)],
+      ]
+    : [
+        ['Completed services', String(completed)],
+        ['Revenue', money(revenue)],
+        ['Tips', money(tips)],
+        ['Clients served', String(clients)],
+      ];
+
+  const tableRows = rows
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:8px 0;font-size:14px;color:#444;border-bottom:1px solid #eee;">${label}</td><td style="padding:8px 0;font-size:15px;font-weight:700;color:#001201;text-align:right;border-bottom:1px solid #eee;">${value}</td></tr>`
+    )
+    .join('');
+
+  const intro = locale === 'fr'
+    ? `Voici le récapitulatif de l'activité de <strong>${safeStation}</strong> pour le ${dateStr}.`
+    : `Here is the activity summary for <strong>${safeStation}</strong> on ${dateStr}.`;
+  const subject = locale === 'fr' ? 'Votre rapport quotidien' : 'Your daily report';
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: `[Hurryline] ${subject}`,
+    html: brandedEmail(locale, {
+      greeting: locale === 'fr' ? 'Bonjour,' : 'Hello,',
+      bodyHtml: `${intro}<br/><br/><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${tableRows}</table>`,
+      ctaUrl: `${APP_URL}/${locale}/station/analytics`,
+      ctaLabel: locale === 'fr' ? 'Voir les statistiques' : 'View analytics',
+    }),
+  });
+}
+
+
 /** Payment captured / service complete (Stripe path). No-op without Resend; send errors logged only. */
 export async function sendPaymentSuccessEmail(params: {
   to: string;
