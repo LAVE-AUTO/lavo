@@ -6,7 +6,7 @@ import { successResponse, error404, error500, fromAppError } from '@/lib/respons
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { getStationSubscription } from '@/server/station/station-subscription-service';
-import { getStationBillingModel } from '@/server/admin/subscription-service';
+import { getStationBillingModel, getSubscriptionPlans } from '@/server/admin/subscription-service';
 import { AppError } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
@@ -18,14 +18,16 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
 
   try {
-    const [billing, sub] = await Promise.all([
+    const [billing, sub, plans] = await Promise.all([
       getStationBillingModel(station.id),
       getStationSubscription(station.id),
+      getSubscriptionPlans(),
     ]);
     return applyNoStoreHeaders(
       successResponse({
         billing_model: billing.model,
         plan_id: billing.model === 'subscription' ? billing.plan_id : null,
+        plans: plans.filter((p) => p.is_active),
         subscription: sub
           ? {
               status: sub.status,

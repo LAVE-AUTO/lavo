@@ -9,6 +9,7 @@ import { insertUserNotification } from './user-notifications-repository';
 export type AdminNotificationEventType =
   | 'station_application_submitted'
   | 'station_application_approved'
+  | 'station_billing_changed'
   | 'kyc_expiry_reminder'
   | 'support_ticket_created'
   | 'support_message_received';
@@ -49,6 +50,13 @@ const ADMIN_EVENT_SPECS: Record<AdminNotificationEventType, Omit<AdminEventSpec,
     body: 'A station application has been approved.',
     channelKey: 'station_lifecycle',
     action_url: '/admin/stations?status=active',
+  },
+  station_billing_changed: {
+    kind: 'admin_station_billing_changed',
+    title: 'Station billing model changed',
+    body: 'A station changed its billing model (commission vs subscription).',
+    channelKey: 'station_lifecycle',
+    action_url: '/admin/stations',
   },
   kyc_expiry_reminder: {
     kind: 'admin_kyc_expiry_reminder',
