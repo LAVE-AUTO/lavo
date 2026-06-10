@@ -386,18 +386,21 @@ export function PublicNavbar({
                         </div>
                       </div>
 
-                      {/* Profile link */}
-                      <Link
-                        href="/profile"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] hover:bg-[rgba(221,175,59,0.05)] transition-colors"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
-                        {t('profile')}
-                      </Link>
+                      {/* Profile link - clients only. Stations and admins have
+                          no client profile page, so they see logout alone. */}
+                      {isClient && (
+                        <Link
+                          href="/profile"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] hover:bg-[rgba(221,175,59,0.05)] transition-colors"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                          {t('profile')}
+                        </Link>
+                      )}
 
                       {/* Logout */}
                       <button
@@ -464,17 +467,19 @@ export function PublicNavbar({
                       <p className="text-[12px] text-[#B0BFB1] truncate">{user.email}</p>
                     </div>
                   </div>
-                  <Link
-                    href="/profile"
-                    className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] border border-[rgba(221,175,59,0.3)] rounded-md transition-colors"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    {t('profile')}
-                  </Link>
+                  {isClient && (
+                    <Link
+                      href="/profile"
+                      className="flex items-center justify-center gap-2.5 py-3 text-[14px] font-semibold text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] border border-[rgba(221,175,59,0.3)] rounded-md transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      {t('profile')}
+                    </Link>
+                  )}
                   {isClient && (
                     <Link
                       href="/client/notifications"
