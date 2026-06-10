@@ -10,6 +10,7 @@ import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { ApiCode } from '@/types/api-codes';
 import { AppError, ValidationError } from '@/lib/errors';
 import { getStationBillingModel, setStationBillingModel } from '@/server/admin/subscription-service';
+import { getSubscriptionDecisionState } from '@/server/station/station-subscription-service';
 import { z } from 'zod';
 import type { NextResponse } from 'next/server';
 
@@ -26,8 +27,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return applyNoStoreHeaders(error400('Invalid station id', ApiCode.VALIDATION_FAILED));
   }
   try {
-    const billing = await getStationBillingModel(id);
-    return applyNoStoreHeaders(successResponse(billing));
+    const [billing, decision_state] = await Promise.all([
+      getStationBillingModel(id),
+      getSubscriptionDecisionState(id),
+    ]);
+    return applyNoStoreHeaders(successResponse({ ...billing, decision_state }));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));

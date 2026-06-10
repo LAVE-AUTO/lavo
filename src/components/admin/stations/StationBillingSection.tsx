@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/context';
-import { getFromApi, updateWithApi } from '@/services';
+import { getFromApi, postWithApi, updateWithApi } from '@/services';
 
 interface Plan { id: string; name: string; description: string; features: string[]; monthly_price: number; annual_price: number | null; is_active: boolean }
 type BillingModel = 'commission' | 'subscription';
+type Decision = 'suspend' | 'commission';
+interface DecisionState { pending: boolean; pending_since: string | null; status: string | null }
 
 /**
  * Admin-side billing model picker for one station: pay via per-transaction
@@ -24,6 +26,8 @@ export function StationBillingSection({ stationId }: { stationId: string }) {
   const [planId, setPlanId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [decision, setDecision] = useState<DecisionState | null>(null);
+  const [deciding, setDeciding] = useState<Decision | null>(null);
 
   const load = useCallback(async () => {
     const [[bOk, bData], [pOk, pData]] = await Promise.all([
@@ -33,15 +37,30 @@ export function StationBillingSection({ stationId }: { stationId: string }) {
     if (!mountedRef.current) return;
     if (pOk) setPlans((pData as { data?: Plan[] })?.data ?? []);
     if (bOk) {
-      const b = (bData as { data?: { model?: BillingModel; plan_id?: string } })?.data;
+      const b = (bData as { data?: { model?: BillingModel; plan_id?: string; decision_state?: DecisionState } })?.data;
       setModel(b?.model === 'subscription' ? 'subscription' : 'commission');
       setPlanId(b?.plan_id ?? '');
+      setDecision(b?.decision_state ?? null);
     } else {
       showError(t('billing_load_error'));
     }
     setLoading(false);
   }, [stationId, showError, t]);
   useEffect(() => { load(); }, [load]);
+
+  async function decide(d: Decision) {
+    if (deciding) return;
+    setDeciding(d);
+    const [ok, data] = await postWithApi(`/admin/stations/${stationId}/subscription/decision`, { decision: d });
+    if (!mountedRef.current) return;
+    setDeciding(null);
+    if (ok) {
+      success(t('billing_decision_success'));
+      await load();
+    } else {
+      showError((data as { message?: string })?.message || t('billing_decision_error'));
+    }
+  }
 
   const activePlans = plans.filter((p) => p.is_active);
 
@@ -81,6 +100,23 @@ export function StationBillingSection({ stationId }: { stationId: string }) {
         </div>
       ) : (
         <>
+          {decision?.pending && (
+            <div className="mb-4 rounded-xl border border-[#E8472A]/30 bg-[#FEF2F2] p-4 dark:border-[#E8472A]/25 dark:bg-[#200D0D]">
+              <p className="text-[13px] font-bold text-[#B91C1C] dark:text-[#F87171]">{t('billing_decision_title')}</p>
+              <p className="mt-1 text-[12px] text-[#991B1B] dark:text-[#FCA5A5]">{t('billing_decision_notice')}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => decide('commission')} disabled={deciding !== null}
+                  className="rounded-lg bg-[#DDAF3B] px-4 py-2 text-[12px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50">
+                  {deciding === 'commission' ? t('billing_saving') : t('billing_decision_commission')}
+                </button>
+                <button type="button" onClick={() => decide('suspend')} disabled={deciding !== null}
+                  className="rounded-lg border border-[#E8472A] bg-transparent px-4 py-2 text-[12px] font-bold text-[#B91C1C] transition-colors hover:bg-[#E8472A]/10 disabled:opacity-50 dark:text-[#F87171]">
+                  {deciding === 'suspend' ? t('billing_saving') : t('billing_decision_suspend')}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {optionCard('commission', t('billing_model_commission'), t('billing_commission_hint'))}
             {optionCard('subscription', t('billing_model_subscription'), t('billing_subscription_hint'))}

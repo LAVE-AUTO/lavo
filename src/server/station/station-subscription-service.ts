@@ -13,6 +13,7 @@ import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import { settings, stationSubscriptions, stations, users } from '@/lib/db/schema';
 import { NotFoundError, ValidationError } from '@/lib/errors';
+import { updateStationStatus } from '@/server/station/station-repository';
 import {
   getStationBillingModel,
   getSubscriptionPlans,
@@ -383,3 +384,57 @@ export async function runSubscriptionAutoCommission(graceHours: number): Promise
 }
 
 // %%%%% END - Lifecycle (cron-driven) %%%%%
+
+
+// %%%%% Admin decision %%%%%
+
+export interface SubscriptionDecisionState {
+  status: string | null;
+  pending: boolean;
+  pending_since: string | null;
+  decision: string | null;
+}
+
+/** Surfaces, for the admin UI, whether a station subscription awaits a decision. */
+export async function getSubscriptionDecisionState(stationId: string): Promise<SubscriptionDecisionState> {
+  const sub = await getStationSubscription(stationId);
+  if (!sub) return { status: null, pending: false, pending_since: null, decision: null };
+  return {
+    status: sub.status,
+    pending: Boolean(sub.pending_decision_at) && !sub.admin_decision,
+    pending_since: sub.pending_decision_at?.toISOString() ?? null,
+    decision: sub.admin_decision ?? null,
+  };
+}
+
+export type AdminSubscriptionDecision = 'suspend' | 'commission';
+
+/**
+ * Applies the admin's mandatory decision when a station subscription has ended:
+ *   - 'commission': switch the station to commission billing.
+ *   - 'suspend':    suspend the station (it stays on subscription billing but
+ *                   is hidden/blocked until it re-subscribes).
+ * Idempotent-ish: records the decision on the subscription row so the
+ * auto-commission cron no longer touches this station.
+ */
+export async function applyAdminSubscriptionDecision(
+  stationId: string,
+  decision: AdminSubscriptionDecision,
+  adminId: string,
+): Promise<void> {
+  const sub = await getStationSubscription(stationId);
+  if (!sub) throw new NotFoundError('No subscription found for this station');
+
+  if (decision === 'commission') {
+    await setStationBillingModel(stationId, { model: 'commission' }, adminId);
+  } else {
+    await updateStationStatus(stationId, 'suspended');
+  }
+
+  await db
+    .update(stationSubscriptions)
+    .set({ admin_decision: decision, updated_at: new Date() })
+    .where(eq(stationSubscriptions.station_id, stationId));
+}
+
+// %%%%% END - Admin decision %%%%%
