@@ -7,16 +7,29 @@
  * subscription) to collect the card and start the subscription, and a sync from
  * Stripe webhook events into the `station_subscriptions` row.
  */
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, gte, isNull, isNotNull, lte, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import { settings, stationSubscriptions, stations, users } from '@/lib/db/schema';
 import { NotFoundError, ValidationError } from '@/lib/errors';
-import { getStationBillingModel, getSubscriptionPlans } from '@/server/admin/subscription-service';
+import {
+  getStationBillingModel,
+  getSubscriptionPlans,
+  setStationBillingModel,
+} from '@/server/admin/subscription-service';
+import {
+  sendSubscriptionDecisionRequiredEmail,
+  sendSubscriptionExpiryWarningEmail,
+} from '@/lib/email';
 
 const PRODUCT_SETTING_KEY = 'stripe_subscription_product_id';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hurryline.com';
+
+/** Days before expiry at which the J-7 warning email goes out. */
+export const SUBSCRIPTION_WARN_DAYS = 7;
+/** Hours the admin has to decide (suspend vs commission) before auto-commission kicks in. */
+export const SUBSCRIPTION_DECISION_GRACE_HOURS = 10;
 
 export type SubscriptionInterval = 'month' | 'year';
 
@@ -167,6 +180,9 @@ export async function syncSubscriptionFromStripe(sub: Stripe.Subscription): Prom
 
   const periodEnd = sub.items?.data?.[0]?.current_period_end ?? null;
   const isTerminal = TERMINAL_STATUSES.has(sub.status);
+  /* The decision window opens exactly once: when the subscription first ends
+   * and no decision has yet been taken. We send the admin email on that edge. */
+  const decisionJustOpened = isTerminal && !existing.admin_decision && !existing.pending_decision_at;
 
   await db
     .update(stationSubscriptions)
@@ -174,17 +190,57 @@ export async function syncSubscriptionFromStripe(sub: Stripe.Subscription): Prom
       stripe_subscription_id: sub.id,
       status: sub.status,
       current_period_end: periodEnd ? new Date(periodEnd * 1000) : existing.current_period_end,
-      // When the subscription ends, open the admin decision window (suspend vs
-      // commission) — but only once, and only while no decision has been taken.
-      pending_decision_at:
-        isTerminal && !existing.admin_decision && !existing.pending_decision_at
-          ? new Date()
-          : existing.pending_decision_at,
+      pending_decision_at: decisionJustOpened ? new Date() : existing.pending_decision_at,
       // A fresh active subscription clears any prior decision window.
       ...(sub.status === 'active' ? { pending_decision_at: null, admin_decision: null, warn_email_sent_at: null } : {}),
       updated_at: new Date(),
     })
     .where(eq(stationSubscriptions.station_id, stationId));
+
+  if (decisionJustOpened) {
+    /* Side-effect emails are swallowed so a transient send failure never makes
+     * the webhook return 500 (which would re-run sync and, the window now being
+     * open, skip the email entirely). */
+    await dispatchDecisionRequiredEmails(stationId).catch((err) => {
+      console.error('[subscription] decision-required email dispatch failed', {
+        stationId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
+}
+
+/** Active admin recipients for subscription lifecycle notifications. */
+async function getActiveAdminEmails(): Promise<string[]> {
+  const rows = await db.query.users.findMany({
+    where: and(eq(users.role, 'admin'), eq(users.status, 'active')),
+    columns: { email: true },
+  });
+  return rows.map((r) => r.email).filter((e): e is string => Boolean(e));
+}
+
+/** Looks up the station display name (best-effort). */
+async function getStationName(stationId: string): Promise<string> {
+  const row = await db.query.stations.findFirst({
+    where: eq(stations.id, stationId),
+    columns: { name: true },
+  });
+  return row?.name ?? 'Station';
+}
+
+/** Emails every active admin that a station subscription ended and needs a decision. */
+async function dispatchDecisionRequiredEmails(stationId: string): Promise<void> {
+  const [admins, stationName] = await Promise.all([getActiveAdminEmails(), getStationName(stationId)]);
+  await Promise.allSettled(
+    admins.map((to) =>
+      sendSubscriptionDecisionRequiredEmail({
+        to,
+        stationId,
+        stationName,
+        graceHours: SUBSCRIPTION_DECISION_GRACE_HOURS,
+      }),
+    ),
+  );
 }
 
 /** Looks up the Stripe subscription for a given invoice and syncs it locally. */
@@ -193,3 +249,137 @@ export async function syncSubscriptionFromInvoice(subscriptionId: string | null 
   const sub = await stripe.subscriptions.retrieve(subscriptionId);
   await syncSubscriptionFromStripe(sub);
 }
+
+
+// %%%%% Lifecycle (cron-driven) %%%%%
+
+export interface ExpiringSubscriptionRow {
+  id: string;
+  station_id: string;
+  station_name: string;
+  owner_email: string | null;
+  plan_name: string | null;
+  current_period_end: Date | null;
+}
+
+/**
+ * Active subscriptions whose period ends within `withinDays` and that have not
+ * yet received the expiry warning email. Joined with station + owner email.
+ */
+export async function findSubscriptionsForExpiryWarning(withinDays: number): Promise<ExpiringSubscriptionRow[]> {
+  const now = new Date();
+  const horizon = new Date(now.getTime() + withinDays * 24 * 60 * 60 * 1000);
+  return db
+    .select({
+      id: stationSubscriptions.id,
+      station_id: stationSubscriptions.station_id,
+      station_name: stations.name,
+      owner_email: users.email,
+      plan_name: stationSubscriptions.plan_name,
+      current_period_end: stationSubscriptions.current_period_end,
+    })
+    .from(stationSubscriptions)
+    .innerJoin(stations, eq(stations.id, stationSubscriptions.station_id))
+    .leftJoin(users, eq(users.id, stations.user_id))
+    .where(
+      and(
+        eq(stationSubscriptions.status, 'active'),
+        isNull(stationSubscriptions.warn_email_sent_at),
+        isNotNull(stationSubscriptions.current_period_end),
+        gte(stationSubscriptions.current_period_end, now),
+        lte(stationSubscriptions.current_period_end, horizon),
+      ),
+    );
+}
+
+/** Anti-duplicate flag: stamps that the expiry warning email has been sent. */
+export async function markWarnEmailSent(subscriptionId: string): Promise<void> {
+  await db
+    .update(stationSubscriptions)
+    .set({ warn_email_sent_at: new Date(), updated_at: new Date() })
+    .where(eq(stationSubscriptions.id, subscriptionId));
+}
+
+/**
+ * Sends the J-7 expiry warning to the station owner AND active admins for every
+ * subscription approaching expiry, then stamps the anti-duplicate flag.
+ */
+export async function runSubscriptionExpiryWarnings(withinDays: number): Promise<{ processed: number; emailed: number }> {
+  const rows = await findSubscriptionsForExpiryWarning(withinDays);
+  if (rows.length === 0) return { processed: 0, emailed: 0 };
+
+  const adminEmails = await getActiveAdminEmails();
+  let emailed = 0;
+
+  for (const row of rows) {
+    const expiry = row.current_period_end;
+    if (!expiry) continue;
+    const targets: Array<Promise<unknown>> = [];
+    if (row.owner_email) {
+      targets.push(
+        sendSubscriptionExpiryWarningEmail({
+          to: row.owner_email,
+          stationName: row.station_name,
+          planName: row.plan_name,
+          expiryDate: expiry,
+          isAdmin: false,
+        }),
+      );
+    }
+    for (const to of adminEmails) {
+      targets.push(
+        sendSubscriptionExpiryWarningEmail({
+          to,
+          stationName: row.station_name,
+          planName: row.plan_name,
+          expiryDate: expiry,
+          isAdmin: true,
+        }),
+      );
+    }
+    await Promise.allSettled(targets);
+    await markWarnEmailSent(row.id);
+    emailed += 1;
+  }
+
+  return { processed: rows.length, emailed };
+}
+
+/**
+ * Decision windows that have exceeded the grace period without an admin
+ * decision → the platform auto-switches the station to commission billing.
+ */
+export async function runSubscriptionAutoCommission(graceHours: number): Promise<{ processed: number; switched: number }> {
+  const cutoff = new Date(Date.now() - graceHours * 60 * 60 * 1000);
+  const rows = await db
+    .select({ station_id: stationSubscriptions.station_id })
+    .from(stationSubscriptions)
+    .where(
+      and(
+        isNotNull(stationSubscriptions.pending_decision_at),
+        isNull(stationSubscriptions.admin_decision),
+        lte(stationSubscriptions.pending_decision_at, cutoff),
+      ),
+    );
+
+  let switched = 0;
+  for (const row of rows) {
+    try {
+      await setStationBillingModel(row.station_id, { model: 'commission' }, null);
+      await db
+        .update(stationSubscriptions)
+        .set({ admin_decision: 'auto_commission', updated_at: new Date() })
+        .where(eq(stationSubscriptions.station_id, row.station_id));
+      switched += 1;
+    } catch (err) {
+      console.error('[subscription] auto-commission switch failed', {
+        stationId: row.station_id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return { processed: rows.length, switched };
+}
+
+// %%%%% END - Lifecycle (cron-driven) %%%%%

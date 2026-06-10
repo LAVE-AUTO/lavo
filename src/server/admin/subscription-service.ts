@@ -106,7 +106,7 @@ export async function getStationBillingModel(stationId: string): Promise<Station
 export async function setStationBillingModel(
   stationId: string,
   model: StationBillingModel,
-  adminId: string,
+  adminId: string | null,
 ): Promise<StationBillingModel> {
   let value: StationBillingModel;
   if (model.model === 'subscription') {

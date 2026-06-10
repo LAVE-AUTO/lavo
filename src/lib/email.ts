@@ -702,6 +702,97 @@ export async function sendAdminOperationalEmail(params: {
 }
 
 
+/**
+ * Station subscription expiring soon (J-7). Sent to the station owner and to
+ * admins. No-op without Resend; send errors logged only.
+ */
+export async function sendSubscriptionExpiryWarningEmail(params: {
+  to: string;
+  locale?: Locale;
+  stationName: string;
+  planName: string | null;
+  expiryDate: Date;
+  isAdmin?: boolean;
+}): Promise<void> {
+  const { to, locale = 'fr', stationName, planName, expiryDate, isAdmin = false } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendSubscriptionExpiryWarningEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const safeStation = escapeHtmlPlain(safePlainTextSnippet(stationName, 120));
+  const safePlan = planName ? escapeHtmlPlain(safePlainTextSnippet(planName, 80)) : null;
+  const dateStr = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  }).format(expiryDate);
+
+  const fr = isAdmin
+    ? `L'abonnement de la station <strong>${safeStation}</strong>${safePlan ? ` (${safePlan})` : ''} expire le <strong>${dateStr}</strong>. Aucune action n'est requise pour le moment.`
+    : `Votre abonnement${safePlan ? ` <strong>${safePlan}</strong>` : ''} expire le <strong>${dateStr}</strong>. Renouvelez-le depuis votre tableau de bord pour continuer sans interruption.`;
+  const en = isAdmin
+    ? `The subscription for station <strong>${safeStation}</strong>${safePlan ? ` (${safePlan})` : ''} expires on <strong>${dateStr}</strong>. No action is required yet.`
+    : `Your subscription${safePlan ? ` <strong>${safePlan}</strong>` : ''} expires on <strong>${dateStr}</strong>. Renew it from your dashboard to keep operating without interruption.`;
+
+  const subject = locale === 'fr' ? 'Votre abonnement expire bientôt' : 'Your subscription expires soon';
+  const ctaPath = isAdmin ? `/${locale}/admin/stations` : `/${locale}/station/dashboard`;
+  const ctaLabel = isAdmin
+    ? (locale === 'fr' ? 'Ouvrir le panneau admin' : 'Open admin panel')
+    : (locale === 'fr' ? "Gérer mon abonnement" : 'Manage my subscription');
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: `[Hurryline] ${subject}`,
+    html: brandedEmail(locale, {
+      greeting: locale === 'fr' ? 'Bonjour,' : 'Hello,',
+      bodyHtml: locale === 'fr' ? fr : en,
+      ctaUrl: `${APP_URL}${ctaPath}`,
+      ctaLabel,
+    }),
+  });
+}
+
+/**
+ * Station subscription has ended — admin must decide (suspend vs commission).
+ * Mandatory action: if no decision within the grace window, the platform
+ * auto-switches the station to commission. Sent to admins only.
+ */
+export async function sendSubscriptionDecisionRequiredEmail(params: {
+  to: string;
+  locale?: Locale;
+  stationId: string;
+  stationName: string;
+  graceHours: number;
+}): Promise<void> {
+  const { to, locale = 'fr', stationId, stationName, graceHours } = params;
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendSubscriptionDecisionRequiredEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const safeStation = escapeHtmlPlain(safePlainTextSnippet(stationName, 120));
+  const fr = `L'abonnement de la station <strong>${safeStation}</strong> a pris fin. Une décision est requise : <strong>suspendre la station</strong> ou la <strong>basculer en commission</strong>. Sans action de votre part sous <strong>${graceHours} heures</strong>, la station passera automatiquement en commission.`;
+  const en = `The subscription for station <strong>${safeStation}</strong> has ended. A decision is required: <strong>suspend the station</strong> or <strong>switch it to commission</strong>. Without action within <strong>${graceHours} hours</strong>, the station will automatically be switched to commission.`;
+  const subject = locale === 'fr' ? `Action requise : abonnement de ${safeStation}` : `Action required: subscription for ${safeStation}`;
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: `[Hurryline Admin] ${safePlainTextSnippet(subject, 160)}`,
+    html: brandedEmail(locale, {
+      greeting: locale === 'fr' ? 'Bonjour,' : 'Hello,',
+      bodyHtml: locale === 'fr' ? fr : en,
+      ctaUrl: `${APP_URL}/${locale}/admin/stations/${stationId}`,
+      ctaLabel: locale === 'fr' ? 'Décider maintenant' : 'Decide now',
+    }),
+  });
+}
+
+
 /** Payment captured / service complete (Stripe path). No-op without Resend; send errors logged only. */
 export async function sendPaymentSuccessEmail(params: {
   to: string;
