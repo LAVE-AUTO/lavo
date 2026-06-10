@@ -155,18 +155,41 @@ export async function createSubscriptionCheckout(
  * Reconciles a Stripe subscription object into the local row. Called by the
  * webhook on customer.subscription.* and invoice.* events.
  */
+/** Stripe statuses that mean the subscription is no longer active → admin must decide. */
+const TERMINAL_STATUSES = new Set(['canceled', 'unpaid', 'incomplete_expired']);
+
 export async function syncSubscriptionFromStripe(sub: Stripe.Subscription): Promise<void> {
   const stationId = sub.metadata?.station_id;
   if (!stationId) return;
 
+  const existing = await getStationSubscription(stationId);
+  if (!existing) return;
+
   const periodEnd = sub.items?.data?.[0]?.current_period_end ?? null;
+  const isTerminal = TERMINAL_STATUSES.has(sub.status);
+
   await db
     .update(stationSubscriptions)
     .set({
       stripe_subscription_id: sub.id,
       status: sub.status,
-      current_period_end: periodEnd ? new Date(periodEnd * 1000) : null,
+      current_period_end: periodEnd ? new Date(periodEnd * 1000) : existing.current_period_end,
+      // When the subscription ends, open the admin decision window (suspend vs
+      // commission) — but only once, and only while no decision has been taken.
+      pending_decision_at:
+        isTerminal && !existing.admin_decision && !existing.pending_decision_at
+          ? new Date()
+          : existing.pending_decision_at,
+      // A fresh active subscription clears any prior decision window.
+      ...(sub.status === 'active' ? { pending_decision_at: null, admin_decision: null, warn_email_sent_at: null } : {}),
       updated_at: new Date(),
     })
     .where(eq(stationSubscriptions.station_id, stationId));
+}
+
+/** Looks up the Stripe subscription for a given invoice and syncs it locally. */
+export async function syncSubscriptionFromInvoice(subscriptionId: string | null | undefined): Promise<void> {
+  if (!subscriptionId) return;
+  const sub = await stripe.subscriptions.retrieve(subscriptionId);
+  await syncSubscriptionFromStripe(sub);
 }

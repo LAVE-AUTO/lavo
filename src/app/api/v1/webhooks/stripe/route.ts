@@ -2,6 +2,7 @@
  * POST `/api/v1/webhooks/stripe` - signature verification, then idempotent handlers.
  * Manual capture: authorize → confirm entry → capture on completion → `succeeded` (push + success email).
  * Events: `amount_capturable_updated`, `payment_failed` / `canceled`, `succeeded`, `transfer.created`.
+ * Subscriptions (station billing): `checkout.session.completed`, `customer.subscription.*`, `invoice.paid` / `invoice.payment_failed`.
  */
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -25,6 +26,10 @@ import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
+import {
+  syncSubscriptionFromStripe,
+  syncSubscriptionFromInvoice,
+} from '@/server/station/station-subscription-service';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_]+$/;
@@ -110,6 +115,31 @@ export async function POST(request: Request): Promise<NextResponse> {
           pi,
           typeof event.data.object?.created === 'number' ? event.data.object.created : undefined
         );
+        break;
+      }
+
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.mode === 'subscription') {
+          await syncSubscriptionFromInvoice(
+            typeof session.subscription === 'string' ? session.subscription : session.subscription?.id
+          );
+        }
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        await syncSubscriptionFromStripe(event.data.object as Stripe.Subscription);
+        break;
+
+      case 'invoice.paid':
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice & { subscription?: string | { id: string } | null };
+        const subId =
+          typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id ?? null;
+        await syncSubscriptionFromInvoice(subId);
         break;
       }
 
