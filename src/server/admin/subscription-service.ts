@@ -10,7 +10,7 @@
 import { randomUUID } from 'crypto';
 import { and, eq, isNull, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { settings } from '@/lib/db/schema';
+import { settings, stationSubscriptions } from '@/lib/db/schema';
 import { ValidationError } from '@/lib/errors';
 
 const PLANS_KEY = 'subscription_plans';
@@ -129,4 +129,23 @@ export async function setStationBillingModel(
     });
 
   return value;
+}
+
+/** Subscription statuses that count as "currently paying". */
+const PAYING_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
+
+/**
+ * True only when the station should be exempt from per-transaction commission:
+ * its billing model is 'subscription' AND it has an actually active (paid)
+ * subscription. A station set to 'subscription' that never paid still owes
+ * commission, so the platform is never left earning nothing.
+ */
+export async function isStationCommissionExempt(stationId: string): Promise<boolean> {
+  const billing = await getStationBillingModel(stationId);
+  if (billing.model !== 'subscription') return false;
+  const sub = await db.query.stationSubscriptions.findFirst({
+    where: eq(stationSubscriptions.station_id, stationId),
+    columns: { status: true },
+  });
+  return sub ? PAYING_SUBSCRIPTION_STATUSES.has(sub.status) : false;
 }

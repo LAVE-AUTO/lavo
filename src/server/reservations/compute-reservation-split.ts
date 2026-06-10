@@ -1,5 +1,5 @@
 import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
-import { getStationBillingModel } from '@/server/admin/subscription-service';
+import { isStationCommissionExempt } from '@/server/admin/subscription-service';
 
 export type BookingSource = 'standard' | 'qr';
 
@@ -39,9 +39,10 @@ export async function computeReservationSplit(params: {
   }
 
   /* Subscription stations pay a flat plan instead of a per-transaction cut, so
-   * the platform takes no commission and the station receives the full amount. */
-  const billing = await getStationBillingModel(stationId);
-  if (billing.model === 'subscription') {
+   * the platform takes no commission and the station receives the full amount.
+   * Only exempt stations with an actually active subscription — a station set
+   * to 'subscription' that never paid still owes commission. */
+  if (await isStationCommissionExempt(stationId)) {
     return {
       bookingSource: 'standard',
       commissionRate: '0.0000',
