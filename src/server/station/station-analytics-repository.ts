@@ -237,3 +237,43 @@ export async function getAnalyticsTimeSeries(
 
   return rows.map((r) => ({ date: r.date, value: r.value }));
 }
+
+
+// %%%%% Daily summary %%%%%
+// Single-day rollup used by the daily report email job.
+
+export type StationDailySummary = {
+  revenue: string;
+  tips: string;
+  completed: number;
+  clients: number;
+};
+
+/**
+ * One-day rollup for a station over [from, to): completed services, revenue,
+ * tips, and distinct clients. Filtered on `completed_at` like the dashboard KPIs.
+ */
+export async function getStationDailySummary(
+  stationId: string,
+  from: Date,
+  to: Date
+): Promise<StationDailySummary> {
+  const [row] = await db
+    .select({
+      revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`,
+      tips: sql<string>`COALESCE(SUM(${reservations.tip_amount}), 0)::text`,
+      completed: sql<number>`COUNT(*)::int`,
+      clients: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.station_id, stationId),
+        sql`${reservations.completed_at} IS NOT NULL`,
+        sql`${reservations.completed_at} >= ${from}`,
+        sql`${reservations.completed_at} < ${to}`
+      )
+    );
+
+  return row ?? { revenue: '0', tips: '0', completed: 0, clients: 0 };
+}

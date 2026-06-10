@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots, users } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -542,4 +542,33 @@ export async function patchNotificationPrefs(
 
   await db.update(stations).set({ notification_prefs: merged, updated_at: new Date() }).where(eq(stations.id, stationId));
   return merged;
+}
+
+export type DailyReportRecipient = {
+  station_id: string;
+  station_name: string;
+  owner_email: string;
+};
+
+/**
+ * Active stations that opted into the daily report email
+ * (notification_prefs.daily_report === true), joined with the owner's email.
+ */
+export async function findStationsWantingDailyReport(): Promise<DailyReportRecipient[]> {
+  const rows = await db
+    .select({
+      station_id: stations.id,
+      station_name: stations.name,
+      owner_email: users.email,
+    })
+    .from(stations)
+    .innerJoin(users, eq(users.id, stations.user_id))
+    .where(
+      and(
+        eq(stations.status, 'active'),
+        sql`${stations.notification_prefs} ->> 'daily_report' = 'true'`,
+        isNotNull(users.email)
+      )
+    );
+  return rows.filter((r): r is DailyReportRecipient => Boolean(r.owner_email));
 }
