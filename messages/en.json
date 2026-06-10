@@ -393,7 +393,9 @@
         "share_facebook": "Facebook",
         "share_x": "X",
         "share_email": "Email",
-        "share_email_subject": "Discover Hurryline"
+        "share_email_subject": "Discover Hurryline",
+        "share_copy": "Copy link",
+        "share_copied": "Link copied"
     },
     "footer": {
         "tagline": "The booking and payment platform for car wash stations across Canada.",

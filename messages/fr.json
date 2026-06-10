@@ -393,7 +393,9 @@
         "share_facebook": "Facebook",
         "share_x": "X",
         "share_email": "E-mail",
-        "share_email_subject": "Découvrez Hurryline"
+        "share_email_subject": "Découvrez Hurryline",
+        "share_copy": "Copier le lien",
+        "share_copied": "Lien copié"
     },
     "footer": {
         "tagline": "La plateforme de réservation et de paiement pour vos stations de lavage automobile au Canada.",
