@@ -2620,6 +2620,22 @@
         "notice": "Our team is reviewing your application. You will be notified by email as soon as a decision is made.",
         "status_label": "Pending"
     },
+    "station_subscription": {
+        "subscribe_title": "Activate your subscription",
+        "subscribe_notice": "Your station is on subscription billing. Activate your subscription to keep operating with no commission on reservations.",
+        "interval_label": "Billing period",
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "subscribe_btn": "Subscribe",
+        "redirecting": "Redirecting...",
+        "active_title": "{plan} subscription active",
+        "per_month": "per month",
+        "per_year": "per year",
+        "renews_on": "renews on {date}",
+        "checkout_success": "Your subscription is active. Thank you!",
+        "checkout_cancelled": "Payment cancelled. Your subscription was not activated.",
+        "checkout_error": "Could not start the payment. Please try again."
+    },
     "station_rejected": {
         "title": "Your KYC application was rejected",
         "status_label": "Rejected",

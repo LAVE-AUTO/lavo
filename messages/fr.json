@@ -2620,6 +2620,22 @@
         "notice": "Notre équipe vérifie votre dossier. Vous serez notifié par e-mail dès qu'une décision sera prise.",
         "status_label": "En attente"
     },
+    "station_subscription": {
+        "subscribe_title": "Activez votre abonnement",
+        "subscribe_notice": "Votre station est en mode abonnement. Activez votre abonnement pour continuer sans commission sur les réservations.",
+        "interval_label": "Périodicité",
+        "monthly": "Mensuel",
+        "annual": "Annuel",
+        "subscribe_btn": "S'abonner",
+        "redirecting": "Redirection...",
+        "active_title": "Abonnement {plan} actif",
+        "per_month": "par mois",
+        "per_year": "par an",
+        "renews_on": "renouvellement le {date}",
+        "checkout_success": "Votre abonnement est actif. Merci !",
+        "checkout_cancelled": "Paiement annulé. Votre abonnement n'a pas été activé.",
+        "checkout_error": "Impossible de démarrer le paiement. Veuillez réessayer."
+    },
     "station_rejected": {
         "title": "Votre demande KYC a été rejetée",
         "status_label": "Rejeté",

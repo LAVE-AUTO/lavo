@@ -20,6 +20,7 @@ import { DashboardBayFilter, BayFilterMobilePills } from './DashboardBayFilter';
 import { AgendaSlotDetailModal } from './AgendaSlotDetailModal';
 import { StartServiceModal } from './StartServiceModal';
 import { ManualQueueAddModal } from '../queue/ManualQueueAddModal';
+import { StationSubscriptionBanner } from './StationSubscriptionBanner';
 import type { KpiData, ReservationItem } from './types';
 import type { QueueEntry } from './QueueCard';
 
@@ -514,6 +515,8 @@ export function StationDashboard() {
 
   return (
     <div className="flex flex-col animate-fade-in">
+      <StationSubscriptionBanner />
+
       <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
