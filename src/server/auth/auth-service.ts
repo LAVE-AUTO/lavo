@@ -28,6 +28,7 @@ import {
   updateForcePasswordChange,
   type SafeUser,
 } from './user-repository';
+import { db } from '@/lib/db';
 import {
   createToken,
   findValidToken,
@@ -40,6 +41,8 @@ import {
   findValidRefreshToken,
   revokeRefreshToken,
 } from './refresh-token-repository';
+import { createStationPromotionEnrollment } from '@/server/station/station-promotion-repository';
+import { resolvePromotionByRefCode } from '@/server/station/station-promotion-service';
 
 // Domain logic for registration, login, email verification, password management,
 // OAuth user provisioning, and session refresh.
@@ -57,6 +60,7 @@ export type RegisterDto = {
   phone?: string;
   password: string;
   remember_me: boolean;
+  promo_ref_code?: string;
 };
 
 export type LoginDto = {
@@ -133,15 +137,30 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
   if (existing) throw new ConflictError('Email already in use');
 
   const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+  const promotion = dto.promo_ref_code
+    ? await resolvePromotionByRefCode(dto.promo_ref_code)
+    : null;
 
-  const user = await createUser({
-    first_name: dto.first_name,
-    last_name: dto.last_name,
-    email: dto.email,
-    phone: dto.phone,
-    password_hash,
-    role: 'client',
-    status: 'pending_verification',
+  const user = await db.transaction(async (tx) => {
+    const createdUser = await createUser({
+      first_name: dto.first_name,
+      last_name: dto.last_name,
+      email: dto.email,
+      phone: dto.phone,
+      password_hash,
+      role: 'client',
+      status: 'pending_verification',
+    }, tx);
+
+    if (promotion) {
+      await createStationPromotionEnrollment({
+        user_id: createdUser.id,
+        station_id: promotion.station_id,
+        promotion_id: promotion.id,
+      }, tx);
+    }
+
+    return createdUser;
   });
 
   const token = await createToken({
@@ -432,4 +451,3 @@ export async function refreshSession(rawRefreshToken: string): Promise<AuthResul
   const tokens = await issueTokenPair(user, rememberMe);
   return { user, tokens, rememberMe };
 }
-

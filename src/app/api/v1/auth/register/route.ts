@@ -74,6 +74,9 @@ import { buildRefreshCookieOptions } from '@/lib/jwt';
  *               remember_me:
  *                 type: boolean
  *                 default: false
+ *               promo_ref_code:
+ *                 type: string
+ *                 description: Optional promo referral code resolved from a station QR.
  *     responses:
  *       201:
  *         description: Account created successfully
@@ -136,7 +139,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip confirm_password for service
     const { confirm_password: _, ...dto } = parsed.data;
     const locale = extractLocale(headersList.get('accept-language'));
     const { user, tokens } = await registerWithPassword(dto, locale);

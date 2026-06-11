@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { db } from '@/lib/db';
+import { db, type DbTransaction } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 
 export type User = typeof users.$inferSelect;
@@ -26,8 +26,9 @@ export async function findByIdWithPassword(id: string): Promise<User | undefined
   return db.query.users.findFirst({ where: eq(users.id, id) });
 }
 
-export async function createUser(data: NewUser): Promise<SafeUser> {
-  const [user] = await db.insert(users).values(data).returning();
+export async function createUser(data: NewUser, tx?: DbTransaction): Promise<SafeUser> {
+  const client = tx ?? db;
+  const [user] = await client.insert(users).values(data).returning();
   return stripPasswordHash(user);
 }
 
