@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
 export const QR_TOKEN_VERSION = '1';
+export const CANONICAL_QR_LOCALE: 'fr' | 'en' = 'fr';
 const QR_TOKEN_HEX_PATTERN = /^[a-f0-9]{64}$/;
 const MIN_QR_TOKEN_SECRET_LENGTH = 32;
 
@@ -50,11 +51,34 @@ export function buildStationQrPublicUrl(params: {
   origin: string;
   locale?: 'fr' | 'en';
   stationId: string;
+  qrToken?: string;
+  version?: string;
+  includeQrContext?: boolean;
 }): string {
-  const qrToken = generateQrToken(params.stationId);
+  const qrToken = params.qrToken ?? generateQrToken(params.stationId);
+  const version = params.version ?? QR_TOKEN_VERSION;
   const origin = params.origin.replace(/\/+$/, '');
   const localizedPrefix = params.locale ? `/${params.locale}` : '';
   const base = `${origin}${localizedPrefix}/stations/${params.stationId}`;
+  if (params.includeQrContext === false) {
+    return base;
+  }
+  const query = new URLSearchParams({
+    qr_token: qrToken,
+    v: version,
+  });
+  return `${base}?${query.toString()}`;
+}
+
+export function buildStationQrResolverUrl(params: {
+  origin: string;
+  locale?: 'fr' | 'en';
+  stationId: string;
+}): string {
+  const qrToken = generateQrToken(params.stationId);
+  const origin = params.origin.replace(/\/+$/, '');
+  const localizedPrefix = `/${params.locale ?? CANONICAL_QR_LOCALE}`;
+  const base = `${origin}${localizedPrefix}/qr/station/${params.stationId}`;
   const query = new URLSearchParams({
     qr_token: qrToken,
     v: QR_TOKEN_VERSION,

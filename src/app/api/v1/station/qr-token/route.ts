@@ -4,13 +4,13 @@ import { AppError, ForbiddenError, NotFoundError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import type { NextResponse } from 'next/server';
 import { getMyStation } from '@/server/station/station-service';
-import { generateQrToken, QR_TOKEN_VERSION } from '@/server/qr/qr-token-service';
+import { buildStationQrResolverUrl, generateQrToken, QR_TOKEN_VERSION } from '@/server/qr/qr-token-service';
 
 /**
  * GET /api/v1/station/qr-token
  * Returns a signed QR token for the authenticated station.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireRole(undefined, 'station');
   if (auth instanceof Response) return applyNoStoreHeaders(auth as NextResponse);
 
@@ -20,6 +20,10 @@ export async function GET() {
       station_id: station.id,
       qr_token: generateQrToken(station.id),
       v: QR_TOKEN_VERSION,
+      qr_url: buildStationQrResolverUrl({
+        origin: new URL(request.url).origin,
+        stationId: station.id,
+      }),
     }));
   } catch (e) {
     if (e instanceof NotFoundError) return applyNoStoreHeaders(error404(e.message));
