@@ -9,6 +9,14 @@ export type ReservationSplit = {
   stationPayout: number;
 };
 
+function parseRate(rate: string, label: string): number {
+  const parsed = parseFloat(rate);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
+    throw new Error(`Invalid ${label} configuration`);
+  }
+  return parsed;
+}
+
 function normalizeMoneyToCents(amount: number): number {
   // Enforce a deterministic 2-decimal monetary input contract before cents conversion.
   const normalized = Number(amount.toFixed(2));
@@ -23,8 +31,9 @@ function normalizeMoneyToCents(amount: number): number {
 export async function computeReservationSplit(params: {
   amountTotal: number;
   isQrBooking: boolean;
+  promotionReductionRate?: string | null;
 }): Promise<ReservationSplit> {
-  const { amountTotal, isQrBooking } = params;
+  const { amountTotal, isQrBooking, promotionReductionRate = null } = params;
   const totalCents = normalizeMoneyToCents(amountTotal);
 
   if (isQrBooking) {
@@ -37,10 +46,24 @@ export async function computeReservationSplit(params: {
   }
 
   const commissionRate = await getActiveCommissionRate();
-  const commissionRateNumber = parseFloat(commissionRate);
-  if (!Number.isFinite(commissionRateNumber) || commissionRateNumber < 0 || commissionRateNumber > 1) {
-    throw new Error('Invalid commission rate configuration');
+  const commissionRateNumber = parseRate(commissionRate, 'commission rate');
+
+  if (promotionReductionRate != null) {
+    const reductionRateNumber = parseRate(promotionReductionRate, 'promotion reduction rate');
+    const effectiveCommissionRate = commissionRateNumber * (1 - reductionRateNumber);
+    const effectiveCommissionRateString = effectiveCommissionRate.toFixed(4);
+    const commissionCents = Math.round(totalCents * effectiveCommissionRate);
+    const commissionAmount = commissionCents / 100;
+    const stationPayout = (totalCents - commissionCents) / 100;
+
+    return {
+      bookingSource: 'standard',
+      commissionRate: effectiveCommissionRateString,
+      commissionAmount,
+      stationPayout,
+    };
   }
+
   const commissionCents = Math.round(totalCents * commissionRateNumber);
   const commissionAmount = commissionCents / 100;
   const stationPayout = (totalCents - commissionCents) / 100;
