@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { QrDisplay } from './QrDisplay';
 import { QrActions } from './QrActions';
@@ -20,31 +20,22 @@ interface StationQrTokenResponse {
     station_id: string;
     qr_token: string;
     v: '1';
+    qr_url: string;
   };
 }
 
 export function StationQrPage() {
   const t = useTranslations('station_qr');
-  const locale = useLocale();
 
   const [stationId, setStationId] = useState<string | null>(null);
   const [stationName, setStationName] = useState('');
   const [stationCity, setStationCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [qrToken, setQrToken] = useState<string | null>(null);
-  const [qrVersion, setQrVersion] = useState<'1' | null>(null);
 
-  const [origin, setOrigin] = useState('');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setOrigin(window.location.origin); }, []);
-
-  const publicUrl = stationId && origin && qrToken && qrVersion
-    ? `${origin}/${locale}/stations/${stationId}?qr_token=${encodeURIComponent(qrToken)}&v=${encodeURIComponent(qrVersion)}`
-    : '';
+  const [publicUrl, setPublicUrl] = useState('');
 
   const loadStation = useCallback(async () => {
     setLoading(true);
@@ -61,13 +52,16 @@ export function StationQrPage() {
         const token = tokenRes?.data?.qr_token;
         const version = tokenRes?.data?.v;
         const tokenStationId = tokenRes?.data?.station_id;
+        const nextQrUrl = tokenRes?.data?.qr_url;
         const hasValidToken = typeof token === 'string' && /^[a-f0-9]{64}$/i.test(token);
         if (
           !res?.data?.id ||
           !res?.data?.name ||
           !hasValidToken ||
           version !== '1' ||
-          tokenStationId !== res.data.id
+          tokenStationId !== res.data.id ||
+          typeof nextQrUrl !== 'string' ||
+          nextQrUrl.length === 0
         ) {
           setError(true);
           setLoading(false);
@@ -76,8 +70,7 @@ export function StationQrPage() {
         setStationId(res.data.id);
         setStationName(res.data.name);
         setStationCity(res.data.city ?? null);
-        setQrToken(token);
-        setQrVersion(version);
+        setPublicUrl(nextQrUrl);
       } else {
         setError(true);
       }
