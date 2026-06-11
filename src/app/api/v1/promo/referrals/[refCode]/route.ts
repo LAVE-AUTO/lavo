@@ -1,6 +1,7 @@
 import { successResponse, error400, error404, error500 } from '@/lib/responses';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
-import { findStationByPromoRefCode } from '@/server/station/station-repository';
+import { findStationById } from '@/server/station/station-repository';
+import { resolvePromotionByRefCode } from '@/server/station/station-promotion-service';
 import { NextResponse } from 'next/server';
 
 const REF_CODE_PATTERN = /^[a-f0-9]{64}$/i;
@@ -24,7 +25,8 @@ export async function GET(_request: Request, { params }: Params): Promise<NextRe
   }
 
   try {
-    const station = await findStationByPromoRefCode(refCode);
+    const promotion = await resolvePromotionByRefCode(refCode);
+    const station = promotion ? await findStationById(promotion.station_id) : undefined;
     if (!station || station.status !== 'active') {
       return applyNoStoreHeaders(error404('Promo referral not found'));
     }
@@ -33,10 +35,10 @@ export async function GET(_request: Request, { params }: Params): Promise<NextRe
       station_id: station.id,
       station_name: station.name,
       city: station.city,
-      promo_ref_code: station.promo_ref_code,
-      promo_commission_rate: station.promo_commission_rate,
-      promo_commission_rate_percent: toPercent(station.promo_commission_rate),
-      promo_ref_generated_at: station.promo_ref_generated_at,
+      promo_ref_code: promotion!.ref_code,
+      promo_commission_rate: promotion!.commission_rate,
+      promo_commission_rate_percent: toPercent(promotion!.commission_rate),
+      promo_ref_generated_at: promotion!.created_at,
     }));
   } catch (e) {
     return applyNoStoreHeaders(error500(e));
