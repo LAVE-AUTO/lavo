@@ -209,6 +209,15 @@ export const updateStationPromoQrSchema = z.object({
     .refine((value) => Number.isInteger(value * 2), {
       message: 'commission_rate_percent must be a multiple of 0.5',
     }),
+  expires_at: z
+    .string()
+    .datetime({ message: 'expires_at must be a valid ISO 8601 datetime' })
+    .refine((value) => {
+      const parsed = new Date(value);
+      return !Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now();
+    }, {
+      message: 'expires_at must be in the future',
+    }),
 });
 
 

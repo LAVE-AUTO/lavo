@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, getTableColumns, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { reservations, stationHours, stationStats, stationWashTypes, stations, timeSlots } from '@/lib/db/schema';
+import { reservations, stationHours, stationStats, stationWashTypes, stations } from '@/lib/db/schema';
 import type { StationSortCriterion } from '@/helpers/sort-stations';
 
 export type Station = typeof stations.$inferSelect;
@@ -145,11 +145,6 @@ export async function createStation(data: NewStation): Promise<Station> {
 
 export async function findStationById(id: string): Promise<Station | undefined> {
   return db.query.stations.findFirst({ where: eq(stations.id, id) });
-}
-
-/** Finds a station by its promo referral code. */
-export async function findStationByPromoRefCode(refCode: string): Promise<Station | undefined> {
-  return db.query.stations.findFirst({ where: eq(stations.promo_ref_code, refCode) });
 }
 
 /**
