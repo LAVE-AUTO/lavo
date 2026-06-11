@@ -8,7 +8,12 @@ import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import { adminStationIdParamSchema, updateStationPromoQrSchema, mapZodErrors } from '@/validators/station';
 import { findStationForAdmin } from '@/server/admin/admin-user-repository';
 import { upsertStationPromoQr } from '@/server/admin/station-promo-qr-service';
-import { buildPromoReferralUrl } from '@/server/station/promo-qr-service';
+import {
+  buildCanonicalStationQrUrl,
+  buildPromotionReferralUrl,
+  getLatestPromotionSnapshot,
+  isPromotionCurrentlyValid,
+} from '@/server/station/station-promotion-service';
 
 const promoQrLimiter = createEndpointRateLimiter({ maxRequests: 20, windowMs: 60_000 });
 
@@ -20,19 +25,28 @@ function toPercent(rate: string | null | undefined): number | null {
   return Number.isFinite(parsed) ? Number((parsed * 100).toFixed(1)) : null;
 }
 
-function buildResponseData(station: Awaited<ReturnType<typeof findStationForAdmin>>, origin: string, locale: 'fr' | 'en') {
+async function buildResponseData(
+  station: Awaited<ReturnType<typeof findStationForAdmin>>,
+  origin: string,
+  locale: 'fr' | 'en',
+) {
   if (!station) return null;
-  const promoCommissionRatePercent = toPercent(station.promo_commission_rate);
-  const referralUrl = station.promo_ref_code
-    ? buildPromoReferralUrl({ origin, locale, refCode: station.promo_ref_code })
+  const promotion = await getLatestPromotionSnapshot(station.id);
+  const promoCommissionRatePercent = promotion ? toPercent(promotion.commission_rate) : null;
+  const referralUrl = promotion
+    ? buildPromotionReferralUrl({ origin, locale, refCode: promotion.ref_code })
     : null;
+  const qrUrl = buildCanonicalStationQrUrl({ origin, stationId: station.id });
 
   return {
     station_id: station.id,
-    promo_commission_rate: station.promo_commission_rate,
+    promo_commission_rate: promotion?.commission_rate ?? null,
     promo_commission_rate_percent: promoCommissionRatePercent,
-    promo_ref_code: station.promo_ref_code,
-    promo_ref_generated_at: station.promo_ref_generated_at,
+    promo_ref_code: promotion?.ref_code ?? null,
+    promo_ref_generated_at: promotion?.created_at ?? null,
+    promo_expires_at: promotion?.expires_at ?? null,
+    promo_is_active: promotion ? isPromotionCurrentlyValid(promotion) : false,
+    qr_url: qrUrl,
     referral_url: referralUrl,
   };
 }
@@ -56,7 +70,7 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
     if (!station) return applyNoStoreHeaders(error404('Station not found'));
 
     const locale = extractLocale(request.headers.get('accept-language'));
-    const data = buildResponseData(station, new URL(request.url).origin, locale);
+    const data = await buildResponseData(station, new URL(request.url).origin, locale);
     return applyNoStoreHeaders(successResponse(data));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
@@ -100,16 +114,20 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
       adminId: auth.sub,
       stationId: parsed.data.id,
       commissionRatePercent: bodyParsed.data.commission_rate_percent,
+      expiresAt: new Date(bodyParsed.data.expires_at),
       locale,
       origin: new URL(request.url).origin,
     });
 
     return applyNoStoreHeaders(successResponse({
       station_id: result.station.id,
-      promo_commission_rate: result.station.promo_commission_rate,
+      promo_commission_rate: result.promotion.commission_rate,
       promo_commission_rate_percent: Number((bodyParsed.data.commission_rate_percent).toFixed(1)),
-      promo_ref_code: result.station.promo_ref_code,
-      promo_ref_generated_at: result.station.promo_ref_generated_at,
+      promo_ref_code: result.promotion.ref_code,
+      promo_ref_generated_at: result.promotion.created_at,
+      promo_expires_at: result.promotion.expires_at,
+      promo_is_active: true,
+      qr_url: result.qrUrl,
       referral_url: result.referralUrl,
     }, 'Promo QR generated successfully'));
   } catch (e) {

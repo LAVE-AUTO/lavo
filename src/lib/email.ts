@@ -214,6 +214,36 @@ const TEXTS = {
       qrLinkLabel: 'Booking QR link:',
     },
   },
+  stationPromotion: {
+    fr: {
+      subject: (name: string) => `[Hurryline] Une promo QR est active pour ${name}`,
+      greeting: 'Bonjour,',
+      body: (name: string) =>
+        `Bonne nouvelle. Une promotion QR est maintenant active pour la station <strong>${name}</strong>.`,
+      detailsIntro: 'Partagez votre QR station unique avec vos nouveaux clients pour leur permettre de créer leur compte via cette offre.',
+      commissionLabel: 'Commission promo',
+      expiresLabel: 'Valable jusqu’au',
+      qrLabel: 'QR station',
+      qrAlt: 'QR station promo',
+      qrLinkLabel: 'Lien du QR station',
+      cta: 'Ouvrir mon espace station',
+      closing: 'Merci de profiter de Hurryline.',
+    },
+    en: {
+      subject: (name: string) => `[Hurryline] A QR promotion is now active for ${name}`,
+      greeting: 'Hello,',
+      body: (name: string) =>
+        `Good news. A QR promotion is now active for station <strong>${name}</strong>.`,
+      detailsIntro: 'Share your single station QR with new customers so they can create an account through this offer.',
+      commissionLabel: 'Promo commission',
+      expiresLabel: 'Valid until',
+      qrLabel: 'Station QR',
+      qrAlt: 'Promo station QR',
+      qrLinkLabel: 'Station QR link',
+      cta: 'Open my station space',
+      closing: 'Thank you for using Hurryline.',
+    },
+  },
   paymentSuccess: {
     fr: {
       subject: 'Paiement confirmé - Hurryline',
@@ -547,6 +577,75 @@ export async function sendStationApprovalEmail(
       greeting: t.greeting,
       bodyHtml: `${t.body(escapedName)}<br/><br/>${t.extra}${qrBlock}`,
       ctaUrl: loginUrl || undefined,
+      ctaLabel: t.cta,
+      footNote: t.closing,
+    }),
+  });
+}
+
+function formatPromotionExpiry(expiresAt: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(expiresAt);
+}
+
+export async function sendStationPromotionEmail(
+  to: string,
+  stationName: string,
+  locale: Locale = 'en',
+  opts: {
+    qrPublicUrl: string;
+    commissionRatePercent: number;
+    expiresAt: Date;
+  },
+): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    warnResendMissingOnce('sendStationPromotionEmail');
+    return;
+  }
+  if (!isReasonableRecipientEmail(to)) return;
+
+  const t = TEXTS.stationPromotion[locale];
+  const stationUrl = safeHttpUrlForEmailHref(`${APP_URL}/${locale}/station/dashboard`) ?? '';
+  const safeQrUrl = safeHttpUrlForEmailHref(opts.qrPublicUrl);
+  const subjectName = safePlainTextSnippet(stationName, 200);
+  const escapedName = escapeHtmlPlain(safePlainTextSnippet(stationName, 500));
+  const expiryLabel = escapeHtmlPlain(formatPromotionExpiry(opts.expiresAt, locale));
+  const commissionLabel = `${opts.commissionRatePercent.toFixed(1)}%`;
+  let qrImageDataUrl: string | null = null;
+
+  if (safeQrUrl) {
+    try {
+      qrImageDataUrl = await QRCode.toDataURL(safeQrUrl, { width: 220, margin: 1 });
+    } catch (error) {
+      console.warn('[STATION_PROMOTION_QR_IMAGE_FALLBACK_LINK_ONLY]', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const qrBlock = safeQrUrl
+    ? (
+      qrImageDataUrl
+        ? `<br/><br/><p><strong>${t.qrLabel}</strong></p>
+             <p style="margin: 10px 0;"><img src="${qrImageDataUrl}" alt="${t.qrAlt}" width="220" height="220" style="display:block;border:1px solid #e8e4da;border-radius:8px;padding:6px;background:#ffffff;" /></p>
+             <p><a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+        : `<br/><br/><p><strong>${t.qrLinkLabel}</strong> <a href="${safeQrUrl}" target="_blank" rel="noopener noreferrer">${safeQrUrl}</a></p>`
+    )
+    : '';
+
+  await client.emails.send({
+    from: FROM,
+    to,
+    subject: t.subject(subjectName),
+    html: brandedEmail(locale, {
+      greeting: t.greeting,
+      bodyHtml: `${t.body(escapedName)}<br/><br/>${t.detailsIntro}<br/><br/><strong>${t.commissionLabel}:</strong> ${commissionLabel}<br/><strong>${t.expiresLabel}:</strong> ${expiryLabel}${qrBlock}`,
+      ctaUrl: stationUrl || undefined,
       ctaLabel: t.cta,
       footNote: t.closing,
     }),
