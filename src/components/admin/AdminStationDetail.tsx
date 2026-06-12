@@ -6,6 +6,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
 import { useAuth, useToast } from '@/context';
 import { AdminPromoQr } from './stations/AdminPromoQr';
+import { StationBillingSection } from './stations/StationBillingSection';
 
 const MAX_REASON = 500;
 /** Expiry warning threshold (days) - show orange badge when expiry is within this window. */
@@ -306,6 +307,9 @@ export function AdminStationDetail({ id }: Props) {
             </div>
           </div>
         )}
+        {/* ── Tarification de la station (commission ou abonnement) ── */}
+        {station.status === 'active' && <StationBillingSection stationId={station.id} />}
+
         {/* ── QR Promotionnel (stations actives uniquement) ── */}
         {station.status === 'active' && (
           <AdminPromoQr

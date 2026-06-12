@@ -12,7 +12,7 @@ function formatDate(d: string) {
   catch { return d; }
 }
 
-export function AdminCommissionView() {
+export function AdminCommissionView({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations('admin_commission');
   const { success: toastSuccess, error: toastError } = useToast();
   const { user } = useAuth();
@@ -66,19 +66,21 @@ export function AdminCommissionView() {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-separator bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[22px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
-            <p className="mt-1 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#DDAF3B]/20 dark:text-[#DDAF3B]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
-            <span>{savedRate}%</span>
-            <span className="font-semibold uppercase tracking-[0.12em] opacity-80">{t('chip_current')}</span>
+      {!embedded && (
+        <div className="shrink-0 border-b border-separator bg-transparent px-6 py-5 dark:border-[#1A2A14] dark:bg-dark-bg">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-[22px] font-black text-[#001201] dark:text-[#FFF9EC]">{t('page_title')}</h1>
+              <p className="mt-1 text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{t('page_subtitle')}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[12px] font-black text-[#7A5E0A] dark:border-[#DDAF3B]/20 dark:text-[#DDAF3B]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
+              <span>{savedRate}%</span>
+              <span className="font-semibold uppercase tracking-[0.12em] opacity-80">{t('chip_current')}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 overflow-y-auto bg-[#FFF9EC] p-6 dark:bg-dark-bg">
         <div className="mb-5 grid gap-3 sm:grid-cols-3">

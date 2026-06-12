@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services';
+import { StationBillingControl } from './StationBillingControl';
 
 interface StripeStatus {
   connected: false;
@@ -131,6 +132,8 @@ export function PaymentsTab({ locked }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
+      <StationBillingControl locked={locked} />
+
       <section className="rounded-2xl border border-separator/25 bg-card-surface p-4 shadow- sm:p-6[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-[#182214]">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#DDAF3B]">
