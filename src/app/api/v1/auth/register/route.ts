@@ -114,6 +114,53 @@ import { buildRefreshCookieOptions } from '@/lib/jwt';
  *             schema:
  *               $ref: '#/components/schemas/ErrorEnvelope'
  */
+/**
+ * Registers a new client account from the public auth flow
+ *
+ * Validates the request body, enforces the route-level rate limiter, and then
+ * delegates account creation to the auth service. On success it returns the
+ * access token in the JSON payload while storing the refresh token in an
+ * httpOnly cookie so the browser session can continue securely.
+ *
+ * @param {Request} request - Incoming registration request containing the client credentials and optional promo referral code
+ * @returns {Promise<Response>} JSON response containing the authenticated user payload, access token, and refresh-cookie side effect
+ * @throws {None} Validation, domain, and infrastructure failures are converted into HTTP responses
+ *
+ * @example
+ * const response = await POST(new Request('https://app.example.com/api/v1/auth/register', {
+ *   method: 'POST',
+ *   body: JSON.stringify({
+ *     first_name: 'Jane',
+ *     last_name: 'Doe',
+ *     email: 'jane@example.com',
+ *     phone: '+22901020304',
+ *     password: 'SecurePass1!',
+ *     confirm_password: 'SecurePass1!',
+ *     remember_me: true,
+ *   }),
+ * }));
+ *
+ * @example
+ * const response = await POST(new Request('https://app.example.com/api/v1/auth/register', {
+ *   method: 'POST',
+ *   body: JSON.stringify({
+ *     first_name: 'Jane',
+ *     last_name: 'Doe',
+ *     email: 'jane@example.com',
+ *     phone: '+22901020304',
+ *     password: 'SecurePass1!',
+ *     confirm_password: 'SecurePass1!',
+ *     remember_me: false,
+ *     promo_ref_code: 'abc123',
+ *   }),
+ * }));
+ *
+ * @example
+ * const response = await POST(new Request('https://app.example.com/api/v1/auth/register', {
+ *   method: 'POST',
+ *   body: '{bad json}',
+ * }));
+ */
 export async function POST(request: Request) {
   const headersList = await headers();
   const ip = getClientRateLimitKey(headersList as Headers);

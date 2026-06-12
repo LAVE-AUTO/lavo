@@ -12,6 +12,46 @@ type Props = {
 
 type ResolutionState = 'loading' | 'error';
 
+/**
+ * Displays the transient station QR resolver screen
+ *
+ * This client component is the visible bridge between a scanned QR code and
+ * the backend resolver API that decides the final destination. It keeps the
+ * UI lightweight, redirects immediately on success, and exposes a clean public
+ * station fallback when resolution fails.
+ *
+ * @param {Props} props - Resolver page input derived from the route and query string
+ * @param {string} props.locale - Active locale used for API calls and fallback URLs
+ * @param {string} props.stationId - Station UUID being resolved
+ * @param {string | null} props.qrToken - QR token extracted from the resolver URL
+ * @param {string | null} props.qrVersion - QR version marker extracted from the resolver URL
+ * @returns {JSX.Element} Loading state while resolving, or an error state with a fallback CTA
+ * @throws {None} Network and parsing failures are handled by switching the component into its error state
+ *
+ * @example
+ * <QrResolverPage
+ *   locale="fr"
+ *   stationId="station-123"
+ *   qrToken="abc123"
+ *   qrVersion="1"
+ * />
+ *
+ * @example
+ * <QrResolverPage
+ *   locale="en"
+ *   stationId="station-123"
+ *   qrToken={null}
+ *   qrVersion={null}
+ * />
+ *
+ * @example
+ * <QrResolverPage
+ *   locale="fr"
+ *   stationId="station-123"
+ *   qrToken="abc123"
+ *   qrVersion={null}
+ * />
+ */
 export function QrResolverPage({ locale, stationId, qrToken, qrVersion }: Props) {
   const t = useTranslations('qr_resolver');
   const [state, setState] = useState<ResolutionState>('loading');

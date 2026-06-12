@@ -24,6 +24,28 @@ interface StationQrTokenResponse {
   };
 }
 
+/**
+ * Renders the station-facing QR download and print screen
+ *
+ * Loads both the authenticated station profile and the canonical QR payload,
+ * validates that both responses stay consistent, and then displays a branded
+ * card with preview, URL, and export actions. The component keeps its own
+ * loading and error states so station users can retry transient failures.
+ *
+ * @returns {JSX.Element} Station QR management screen with loading, error, and ready states
+ * @throws {None} Async failures are handled through local component state instead of thrown errors
+ *
+ * @example
+ * <StationQrPage />
+ *
+ * @example
+ * export default function Page() {
+ *   return <StationQrPage />;
+ * }
+ *
+ * @example
+ * const page = <StationQrPage />;
+ */
 export function StationQrPage() {
   const t = useTranslations('station_qr');
 
@@ -37,6 +59,25 @@ export function StationQrPage() {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const [publicUrl, setPublicUrl] = useState('');
 
+  /**
+   * Loads the station profile and canonical QR payload in parallel
+   *
+   * The screen needs both the display metadata from `/station/me` and the QR
+   * payload from `/station/qr-token`, so it fetches them together and verifies
+   * that the returned station ids and token data stay coherent before updating UI state.
+   *
+   * @returns {Promise<void>} Promise that resolves once the state has been updated for success or failure
+   * @throws {None} Network and payload-shape failures are converted into local error state
+   *
+   * @example
+   * await loadStation();
+   *
+   * @example
+   * void loadStation();
+   *
+   * @example
+   * <button type="button" onClick={loadStation}>Retry</button>
+   */
   const loadStation = useCallback(async () => {
     setLoading(true);
     setError(false);
@@ -190,6 +231,24 @@ export function StationQrPage() {
   );
 }
 
+/**
+ * Renders the gold scan indicator icon used on the station QR card
+ *
+ * Keeps the scan label visually distinct from the rest of the card while
+ * avoiding repeated inline SVG markup in the main component tree.
+ *
+ * @returns {JSX.Element} Decorative scan icon SVG
+ * @throws {None} This component does not throw under normal runtime conditions
+ *
+ * @example
+ * <ScanIcon />
+ *
+ * @example
+ * <div className="flex items-center gap-2"><ScanIcon /></div>
+ *
+ * @example
+ * const icon = <ScanIcon />;
+ */
 const ScanIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 7V5a2 2 0 0 1 2-2h2" />

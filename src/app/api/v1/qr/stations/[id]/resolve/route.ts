@@ -18,11 +18,56 @@ const AUTH_ROLE_COOKIE_NAME = 'Hurryline_auth_role';
 type ResolverLocale = 'fr' | 'en';
 type ResolverResult = 'invalid_qr_fallback' | 'promo_register' | 'station_public' | 'station_unavailable_fallback';
 
+/**
+ * Resolves the locale used by the QR resolver response
+ *
+ * Prefers an explicit locale query parameter when the caller already knows the
+ * intended language. When no explicit locale is present, it falls back to the
+ * standard Accept-Language parsing used elsewhere in the app so redirects stay
+ * consistent with the user's browser preferences.
+ *
+ * @param {Request} request - Incoming HTTP request containing the Accept-Language header
+ * @param {string | null} localeParam - Optional locale query parameter from the resolver URL
+ * @returns {ResolverLocale} Supported locale code restricted to `fr` or `en`
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const locale = getResolverLocale(request, 'fr');
+ * console.log(locale); // 'fr'
+ *
+ * @example
+ * const locale = getResolverLocale(request, null);
+ *
+ * @example
+ * const locale = getResolverLocale(request, 'en');
+ * console.log(locale === 'en');
+ */
 function getResolverLocale(request: Request, localeParam: string | null): ResolverLocale {
   if (localeParam === 'fr' || localeParam === 'en') return localeParam;
   return extractLocale(request.headers.get('accept-language'));
 }
 
+/**
+ * Builds the success payload returned to the resolver page
+ *
+ * Wraps the chosen destination URL together with a machine-readable resolution
+ * code so the client-side resolver page has a stable contract. The payload is
+ * always returned inside the standard API success envelope used across the app.
+ *
+ * @param {string} destinationUrl - Absolute or app-relative URL that the client should open next
+ * @param {ResolverResult} resolution - Resolution reason describing why this destination was chosen
+ * @returns {ReturnType<typeof successResponse>} Standard success response envelope with resolver metadata
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const payload = buildResolverPayload('/fr/stations/abc', 'station_public');
+ *
+ * @example
+ * const payload = buildResolverPayload('/fr/register?promo_ref_code=abc', 'promo_register');
+ *
+ * @example
+ * const payload = buildResolverPayload('/en/stations', 'station_unavailable_fallback');
+ */
 function buildResolverPayload(destinationUrl: string, resolution: ResolverResult) {
   return successResponse({
     destination_url: destinationUrl,
@@ -30,10 +75,60 @@ function buildResolverPayload(destinationUrl: string, resolution: ResolverResult
   });
 }
 
+/**
+ * Builds the generic stations directory fallback URL
+ *
+ * Uses the resolved locale to send users to the directory page when the target
+ * station no longer exists or cannot accept QR traffic. This keeps failure
+ * states user-friendly without leaking internal validation details.
+ *
+ * @param {string} origin - Absolute application origin such as `https://app.example.com`
+ * @param {ResolverLocale} locale - Locale prefix to embed in the fallback path
+ * @returns {string} Absolute localized stations directory URL
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const url = buildStationsDirectoryUrl('https://app.example.com', 'fr');
+ *
+ * @example
+ * const url = buildStationsDirectoryUrl('https://app.example.com', 'en');
+ *
+ * @example
+ * console.log(buildStationsDirectoryUrl('https://app.example.com', 'fr'));
+ */
 function buildStationsDirectoryUrl(origin: string, locale: ResolverLocale): string {
   return `${origin}/${locale}/stations`;
 }
 
+/**
+ * Resolves a scanned station QR into its final public destination
+ *
+ * Validates the station id, checks the QR signature, detects whether the user
+ * already has a session, and then chooses between promo registration and the
+ * station public page. Invalid or unavailable QR targets are downgraded to
+ * safe fallbacks rather than surfacing raw errors to the browser.
+ *
+ * @param {Request} request - Incoming resolver request containing QR query parameters and cookies
+ * @param {Params} context - Route context whose promised params include the station id
+ * @param {Promise<{ id: string }>} context.params - Async route params with the station UUID
+ * @returns {Promise<NextResponse>} No-store API response containing the destination URL and resolution reason
+ * @throws {None} All internal failures are converted into `error400` or `error500` responses
+ *
+ * @example
+ * const response = await GET(request, {
+ *   params: Promise.resolve({ id: 'station-123' }),
+ * });
+ *
+ * @example
+ * const response = await GET(requestWithPromoQr, {
+ *   params: Promise.resolve({ id: 'station-123' }),
+ * });
+ *
+ * @example
+ * const response = await GET(requestWithInvalidQr, {
+ *   params: Promise.resolve({ id: 'station-123' }),
+ * });
+ */
 export async function GET(request: Request, { params }: Params): Promise<NextResponse> {
   const { id } = await params;
   const parsed = stationIdParamSchema.safeParse({ id });

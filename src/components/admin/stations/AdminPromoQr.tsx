@@ -26,10 +26,54 @@ const QR_SIZE = 200;
 const POSTER_WIDTH_MM = 150;
 const POSTER_ASPECT_RATIO = 1500 / 1080;
 
+/**
+ * Sanitizes a station name for file download usage
+ *
+ * Poster exports reuse the station name in generated PNG and PDF filenames.
+ * This helper lowercases the name, strips unsafe characters, and caps the
+ * length so downloads remain readable across operating systems.
+ *
+ * @param {string} name - Raw station name entered or stored in the back office
+ * @returns {string} Safe kebab-case filename fragment, or `station` when nothing usable remains
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const filename = sanitizeFilename('Lavo Express');
+ * console.log(filename); // 'lavo-express'
+ *
+ * @example
+ * const filename = sanitizeFilename('Station #1 / Porto-Novo');
+ *
+ * @example
+ * const filename = sanitizeFilename('***');
+ * console.log(filename); // 'station'
+ */
 function sanitizeFilename(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').slice(0, 40) || 'station';
 }
 
+/**
+ * Converts an ISO timestamp into a native date-input value
+ *
+ * Admin promo expiry editing relies on an HTML `date` input, which expects the
+ * `YYYY-MM-DD` format instead of a full ISO timestamp. Invalid or missing
+ * timestamps are intentionally converted to an empty string for form safety.
+ *
+ * @param {string | null | undefined} value - ISO timestamp from the API response, if available
+ * @returns {string} Date-input-friendly `YYYY-MM-DD` value, or an empty string when parsing fails
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const dateValue = isoToDateInput('2026-06-30T23:59:59.999Z');
+ *
+ * @example
+ * const dateValue = isoToDateInput(null);
+ * console.log(dateValue); // ''
+ *
+ * @example
+ * const dateValue = isoToDateInput('invalid');
+ * console.log(dateValue); // ''
+ */
 function isoToDateInput(value: string | null | undefined): string {
   if (!value) return '';
   const date = new Date(value);
@@ -40,6 +84,28 @@ function isoToDateInput(value: string | null | undefined): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Converts a date-input value into an end-of-day ISO timestamp
+ *
+ * Promo expiry is edited as a day-level value in the admin UI but stored as a
+ * timestamp in the backend. This helper expands the selected date to its local
+ * end-of-day instant so the promotion remains valid throughout the chosen day.
+ *
+ * @param {string} value - Date input value in `YYYY-MM-DD` format
+ * @returns {string | null} ISO timestamp ending at `23:59:59.999`, or `null` when the input is invalid
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const expiresAt = dateInputToEndOfDayIso('2026-06-30');
+ *
+ * @example
+ * const expiresAt = dateInputToEndOfDayIso('');
+ * console.log(expiresAt); // null
+ *
+ * @example
+ * const expiresAt = dateInputToEndOfDayIso('2026-02-30');
+ * console.log(expiresAt);
+ */
 function dateInputToEndOfDayIso(value: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(`${value}T23:59:59.999`);
@@ -47,10 +113,52 @@ function dateInputToEndOfDayIso(value: string): string | null {
   return date.toISOString();
 }
 
+/**
+ * Builds today's date in native date-input format
+ *
+ * The promo expiry form uses this helper to prevent admins from selecting a
+ * date earlier than the current day. Reusing `isoToDateInput` keeps formatting
+ * identical to values reloaded from the API.
+ *
+ * @returns {string} Current date formatted as `YYYY-MM-DD`
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const minDate = todayInputValue();
+ *
+ * @example
+ * console.log(/^\d{4}-\d{2}-\d{2}$/.test(todayInputValue()));
+ *
+ * @example
+ * const today = todayInputValue();
+ * console.log(today.length);
+ */
 function todayInputValue(): string {
   return isoToDateInput(new Date().toISOString());
 }
 
+/**
+ * Builds the metadata used to render branded promo posters
+ *
+ * PNG and PDF exports share the same poster rendering pipeline, so this helper
+ * centralizes the station name, caption, and optional footer badge used by
+ * both export actions.
+ *
+ * @param {string} stationName - Station display name shown on the poster
+ * @param {string} caption - Main poster caption describing the QR usage
+ * @param {string} [footerTag] - Optional footer badge, typically the active commission reduction label
+ * @returns {{ stationName: string; caption: string; footerTag: string | undefined }} Poster rendering options object
+ * @throws {None} This function does not throw under normal runtime conditions
+ *
+ * @example
+ * const options = buildPromoPosterOptions('Lavo Express', 'Scan here');
+ *
+ * @example
+ * const options = buildPromoPosterOptions('Lavo Express', 'Scan here', '50%');
+ *
+ * @example
+ * console.log(buildPromoPosterOptions('Lavo Express', 'Scan here').stationName);
+ */
 function buildPromoPosterOptions(
   stationName: string,
   caption: string,
@@ -63,6 +171,29 @@ function buildPromoPosterOptions(
   };
 }
 
+/**
+ * Renders the admin promo QR management card
+ *
+ * Loads the latest promo state for the station, lets admins regenerate the
+ * promotion with a chosen percentage and expiry date, and exposes branded PNG
+ * and PDF export actions. The component keeps both the editable form state and
+ * the saved promo snapshot in sync with the back-office API.
+ *
+ * @param {Props} props - Station context used to load and label the promo QR
+ * @param {string} props.stationId - Station UUID whose promo QR should be managed
+ * @param {string} props.stationName - Station display name used in the UI and exports
+ * @returns {JSX.Element} Admin promo QR management interface with edit, preview, and export actions
+ * @throws {None} Async failures are surfaced through local component error state instead of thrown errors
+ *
+ * @example
+ * <AdminPromoQr stationId="station-123" stationName="Lavo Express" />
+ *
+ * @example
+ * <AdminPromoQr stationId="station-456" stationName="Station Porto-Novo" />
+ *
+ * @example
+ * <AdminPromoQr stationId={station.id} stationName={station.name} />
+ */
 export function AdminPromoQr({ stationId, stationName }: Props) {
   const t = useTranslations('admin_promo_qr');
   const { token } = useAuth();
@@ -89,6 +220,36 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     };
   }, []);
 
+  /**
+   * Applies an API promo snapshot to the local UI state
+   *
+   * Keeps the editable commission and expiry fields aligned with the latest
+   * saved promo while also updating derived display state such as QR URL,
+   * referral code, active badge, and export metadata.
+   *
+   * @param {PromoQrResponse | null | undefined} data - Promo QR payload returned by the admin API
+   * @returns {void} No return value; updates component state only
+   * @throws {None} This callback does not throw under normal runtime conditions
+   *
+   * @example
+   * applyResponse(body.data);
+   *
+   * @example
+   * applyResponse(null);
+   *
+   * @example
+   * applyResponse({
+   *   station_id: 'station-123',
+   *   promo_commission_rate: '0.5000',
+   *   promo_commission_rate_percent: 50,
+   *   promo_ref_code: 'abc123',
+   *   promo_ref_generated_at: '2026-06-12T12:00:00.000Z',
+   *   promo_expires_at: '2026-06-30T23:59:59.999Z',
+   *   promo_is_active: true,
+   *   qr_url: 'https://app.example.com/fr/qr/station/station-123?qr_token=abc&v=1',
+   *   referral_url: 'https://app.example.com/fr/register?promo_ref_code=abc123',
+   * });
+   */
   const applyResponse = useCallback((data: PromoQrResponse | null | undefined) => {
     if (!data) return;
     setPromoUrl(data.qr_url);
@@ -116,6 +277,27 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
       )
     : buildPromoPosterOptions(stationName, t('poster_caption_promo'));
 
+  /**
+   * Loads the current promo QR configuration for the station
+   *
+   * Fetches the admin promo QR endpoint, applies the returned snapshot to the
+   * component state, and manages the loading and error flags used by the card.
+   * The request is skipped entirely when the auth token is unavailable.
+   *
+   * @returns {Promise<void>} Promise that resolves once the fetch and local state updates complete
+   * @throws {None} Network and API failures are converted into local error state
+   *
+   * @example
+   * await loadConfig();
+   *
+   * @example
+   * void loadConfig();
+   *
+   * @example
+   * useEffect(() => {
+   *   void loadConfig();
+   * }, [loadConfig]);
+   */
   const loadConfig = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -160,6 +342,28 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
       .catch(() => setQrReady(true));
   }, [promoUrl]);
 
+  /**
+   * Validates the editable promo form before submission
+   *
+   * Mirrors the backend promo schema closely so administrators receive immediate
+   * feedback for missing, out-of-range, mis-stepped, or past-dated values
+   * before the save request is sent to the server.
+   *
+   * @returns {string | null} Translated validation error message, or `null` when the form is valid
+   * @throws {None} This callback does not throw under normal runtime conditions
+   *
+   * @example
+   * const error = validate();
+   *
+   * @example
+   * if (!validate()) {
+   *   console.log('Ready to submit');
+   * }
+   *
+   * @example
+   * const error = validate();
+   * console.log(error ?? 'ok');
+   */
   const validate = useCallback((): string | null => {
     if (!commission.trim()) return t('error_commission_required');
     const val = parseFloat(commission);
@@ -172,6 +376,25 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     return null;
   }, [commission, expiryDate, t]);
 
+  /**
+   * Creates or replaces the station promotion from the current form values
+   *
+   * Runs local validation, posts the promo payload to the admin API, and then
+   * refreshes the saved promo snapshot from the API response so the card preview
+   * and export actions stay synchronized with the backend.
+   *
+   * @returns {Promise<void>} Promise that resolves once submission and state updates complete
+   * @throws {None} Validation, auth, network, and API failures are converted into local error state
+   *
+   * @example
+   * await handleGenerate();
+   *
+   * @example
+   * void handleGenerate();
+   *
+   * @example
+   * <button type="button" onClick={handleGenerate}>Save</button>
+   */
   const handleGenerate = useCallback(async () => {
     const nextError = validate();
     if (nextError) {
@@ -225,6 +448,27 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     }
   }, [applyResponse, commission, expiryDate, stationId, t, token, validate]);
 
+  /**
+   * Downloads the current branded promo poster as a PNG
+   *
+   * Renders the poster artwork in-memory and triggers a browser download using
+   * a sanitized station-based filename. Export failures are intentionally
+   * swallowed so the admin remains on the page without losing form state.
+   *
+   * @returns {Promise<void>} Promise that resolves after the download is triggered or skipped
+   * @throws {None} Export errors are caught and ignored locally
+   *
+   * @example
+   * await downloadPng();
+   *
+   * @example
+   * <button type="button" onClick={() => void downloadPng()}>PNG</button>
+   *
+   * @example
+   * if (promoUrl) {
+   *   await downloadPng();
+   * }
+   */
   async function downloadPng() {
     if (!promoUrl) return;
     try {
@@ -238,6 +482,27 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
     }
   }
 
+  /**
+   * Exports the current branded promo poster as a print-ready PDF
+   *
+   * Renders the poster artwork once, embeds it into an A4 PDF using jsPDF,
+   * and triggers a browser download with a sanitized station-based filename.
+   * Export failures are intentionally swallowed so the admin workflow stays uninterrupted.
+   *
+   * @returns {Promise<void>} Promise that resolves after the PDF download is triggered or skipped
+   * @throws {None} Export errors are caught and ignored locally
+   *
+   * @example
+   * await printPdf();
+   *
+   * @example
+   * <button type="button" onClick={() => void printPdf()}>PDF</button>
+   *
+   * @example
+   * if (promoUrl) {
+   *   await printPdf();
+   * }
+   */
   async function printPdf() {
     if (!promoUrl) return;
     try {

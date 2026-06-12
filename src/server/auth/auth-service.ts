@@ -122,15 +122,54 @@ async function issueTokenPair(
 // --- Registration ---
 
 /**
- * Register a new client account with email + password credentials.
+ * Registers a new client account with password credentials
  *
- * Creates the user record, issues a 24-hour email verification token, and
- * sends the verification email fire-and-forget (failures are logged, not thrown).
- * A token pair is issued immediately so the caller can log the user in right away.
+ * Creates the client user record, optionally persists a station-promo enrollment
+ * when the signup originates from a promo QR flow, issues the email verification
+ * token, and sends the verification email asynchronously. The function also
+ * creates an access/refresh token pair immediately so the client session starts
+ * right after registration even before the email is verified.
  *
- * @param dto    Registration payload including credentials and remember-me preference.
- * @param locale Email locale for the verification message.
- * @throws {ConflictError} Email is already in use.
+ * @param {RegisterDto} dto - Registration payload containing identity fields, password, remember-me flag, and optional `promo_ref_code`
+ * @param {'fr' | 'en'} [locale='fr'] - Locale used when composing the verification email
+ * @returns {Promise<AuthResult>} Authentication result with the sanitized user, issued tokens, and remember-me flag
+ * @throws {ConflictError} If another account already uses the provided email address
+ * @throws {Error} Propagates hashing, token, email-token persistence, promo lookup, or database transaction errors
+ *
+ * @example
+ * const result = await registerWithPassword({
+ *   first_name: 'Jane',
+ *   last_name: 'Doe',
+ *   email: 'jane@example.com',
+ *   phone: '+22901020304',
+ *   password: 'SecurePass1!',
+ *   remember_me: true,
+ * });
+ *
+ * @example
+ * const result = await registerWithPassword({
+ *   first_name: 'Jane',
+ *   last_name: 'Doe',
+ *   email: 'jane@example.com',
+ *   phone: '+22901020304',
+ *   password: 'SecurePass1!',
+ *   remember_me: false,
+ *   promo_ref_code: 'abc123',
+ * }, 'en');
+ *
+ * @example
+ * try {
+ *   await registerWithPassword({
+ *     first_name: 'Jane',
+ *     last_name: 'Doe',
+ *     email: 'existing@example.com',
+ *     phone: '+22901020304',
+ *     password: 'SecurePass1!',
+ *     remember_me: false,
+ *   });
+ * } catch (error) {
+ *   console.error(error);
+ * }
  */
 export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en' = 'fr'): Promise<AuthResult> {
   const existing = await findByEmail(dto.email);
