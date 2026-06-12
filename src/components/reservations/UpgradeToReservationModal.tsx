@@ -504,8 +504,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
                   onClick={() => onSelect(slot.id)}
                   aria-pressed={isSelected}
                   className={[
-                    'py-2.5 rounded-[10px] text-[14px] font-bold border-2 transition-all',
-                    'font-[family-name:var(--font-roboto-mono)]',
+                    'py-2.5 rounded-[10px] text-[16px] font-bebas tracking-wider border-2 transition-all',
                     isDisabled
                       ? 'border-border text-[#CCC] dark:text-foreground/70 cursor-not-allowed line-through'
                       : isSelected

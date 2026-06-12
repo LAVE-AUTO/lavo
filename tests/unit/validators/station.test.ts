@@ -10,6 +10,7 @@ import {
   listStationsQuerySchema,
   stationIdParamSchema,
   stationInfoSchema,
+  updateStationPromoQrSchema,
   stationConfigBodySchema,
   createSlotBodySchema,
   createSlotsBulkBodySchema,
@@ -288,6 +289,29 @@ describe('station validators', () => {
       const r100 = listStationsQuerySchema.safeParse({ per_page: '100' });
       if (r1.success) expect(r1.data.per_page).toBe(1);
       if (r100.success) expect(r100.data.per_page).toBe(100);
+    });
+  });
+
+  describe('updateStationPromoQrSchema', () => {
+    const futureIso = new Date(Date.now() + 86_400_000).toISOString();
+
+    it('accepts commission rates up to 100%', () => {
+      expect(updateStationPromoQrSchema.safeParse({
+        commission_rate_percent: 100,
+        expires_at: futureIso,
+      }).success).toBe(true);
+
+      expect(updateStationPromoQrSchema.safeParse({
+        commission_rate_percent: 50.5,
+        expires_at: futureIso,
+      }).success).toBe(true);
+    });
+
+    it('rejects commission rates above 100%', () => {
+      expect(updateStationPromoQrSchema.safeParse({
+        commission_rate_percent: 100.5,
+        expires_at: futureIso,
+      }).success).toBe(false);
     });
   });
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { QrDisplay } from './QrDisplay';
 import { QrActions } from './QrActions';
@@ -20,32 +20,64 @@ interface StationQrTokenResponse {
     station_id: string;
     qr_token: string;
     v: '1';
+    qr_url: string;
   };
 }
 
+/**
+ * Renders the station-facing QR download and print screen
+ *
+ * Loads both the authenticated station profile and the canonical QR payload,
+ * validates that both responses stay consistent, and then displays a branded
+ * card with preview, URL, and export actions. The component keeps its own
+ * loading and error states so station users can retry transient failures.
+ *
+ * @returns {JSX.Element} Station QR management screen with loading, error, and ready states
+ * @throws {None} Async failures are handled through local component state instead of thrown errors
+ *
+ * @example
+ * <StationQrPage />
+ *
+ * @example
+ * export default function Page() {
+ *   return <StationQrPage />;
+ * }
+ *
+ * @example
+ * const page = <StationQrPage />;
+ */
 export function StationQrPage() {
   const t = useTranslations('station_qr');
-  const locale = useLocale();
 
   const [stationId, setStationId] = useState<string | null>(null);
   const [stationName, setStationName] = useState('');
   const [stationCity, setStationCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [qrToken, setQrToken] = useState<string | null>(null);
-  const [qrVersion, setQrVersion] = useState<'1' | null>(null);
 
-  const [origin, setOrigin] = useState('');
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  const [publicUrl, setPublicUrl] = useState('');
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setOrigin(window.location.origin); }, []);
-
-  const publicUrl = stationId && origin && qrToken && qrVersion
-    ? `${origin}/${locale}/stations/${stationId}?qr_token=${encodeURIComponent(qrToken)}&v=${encodeURIComponent(qrVersion)}`
-    : '';
-
+  /**
+   * Loads the station profile and canonical QR payload in parallel
+   *
+   * The screen needs both the display metadata from `/station/me` and the QR
+   * payload from `/station/qr-token`, so it fetches them together and verifies
+   * that the returned station ids and token data stay coherent before updating UI state.
+   *
+   * @returns {Promise<void>} Promise that resolves once the state has been updated for success or failure
+   * @throws {None} Network and payload-shape failures are converted into local error state
+   *
+   * @example
+   * await loadStation();
+   *
+   * @example
+   * void loadStation();
+   *
+   * @example
+   * <button type="button" onClick={loadStation}>Retry</button>
+   */
   const loadStation = useCallback(async () => {
     setLoading(true);
     setError(false);
@@ -61,13 +93,16 @@ export function StationQrPage() {
         const token = tokenRes?.data?.qr_token;
         const version = tokenRes?.data?.v;
         const tokenStationId = tokenRes?.data?.station_id;
+        const nextQrUrl = tokenRes?.data?.qr_url;
         const hasValidToken = typeof token === 'string' && /^[a-f0-9]{64}$/i.test(token);
         if (
           !res?.data?.id ||
           !res?.data?.name ||
           !hasValidToken ||
           version !== '1' ||
-          tokenStationId !== res.data.id
+          tokenStationId !== res.data.id ||
+          typeof nextQrUrl !== 'string' ||
+          nextQrUrl.length === 0
         ) {
           setError(true);
           setLoading(false);
@@ -76,8 +111,7 @@ export function StationQrPage() {
         setStationId(res.data.id);
         setStationName(res.data.name);
         setStationCity(res.data.city ?? null);
-        setQrToken(token);
-        setQrVersion(version);
+        setPublicUrl(nextQrUrl);
       } else {
         setError(true);
       }
@@ -197,6 +231,24 @@ export function StationQrPage() {
   );
 }
 
+/**
+ * Renders the gold scan indicator icon used on the station QR card
+ *
+ * Keeps the scan label visually distinct from the rest of the card while
+ * avoiding repeated inline SVG markup in the main component tree.
+ *
+ * @returns {JSX.Element} Decorative scan icon SVG
+ * @throws {None} This component does not throw under normal runtime conditions
+ *
+ * @example
+ * <ScanIcon />
+ *
+ * @example
+ * <div className="flex items-center gap-2"><ScanIcon /></div>
+ *
+ * @example
+ * const icon = <ScanIcon />;
+ */
 const ScanIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 7V5a2 2 0 0 1 2-2h2" />

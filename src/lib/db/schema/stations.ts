@@ -132,6 +132,87 @@ export const stations = pgTable(
 
 // %%%%% END - Stations %%%%%
 
+/**
+ * Station-scoped promotions created by admins and resolved from the canonical station QR.
+ * Only one active promotion may exist per station at a time (enforced by a partial unique index
+ * in SQL migrations). `ref_code` is the public referral handle consumed by the registration flow.
+ */
+export const stationPromotions = pgTable(
+  "station_promotions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    created_by_admin_id: uuid("created_by_admin_id").references(() => users.id, { onDelete: "set null" }),
+    commission_rate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull(),
+    ref_code: varchar("ref_code", { length: 128 }).notNull().unique(),
+    is_active: boolean("is_active").notNull().default(true),
+    expires_at: timestamp("expires_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    deactivated_at: timestamp("deactivated_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("station_promotions_station_id_idx").on(table.station_id),
+    index("station_promotions_station_id_active_idx").on(table.station_id, table.is_active),
+    index("station_promotions_expires_at_idx").on(table.expires_at),
+  ],
+);
+
+/**
+ * Persistent link between a client account and the promotion they enrolled through.
+ * It allows future reservations at the same station to re-check promo validity without rescanning.
+ */
+export const stationPromotionEnrollments = pgTable(
+  "station_promotion_enrollments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    station_id: uuid("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    promotion_id: uuid("promotion_id")
+      .notNull()
+      .references(() => stationPromotions.id, { onDelete: "cascade" }),
+    created_at: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("station_promo_enrollments_user_station_unique").on(table.user_id, table.station_id),
+    index("station_promo_enrollments_user_station_idx").on(table.user_id, table.station_id),
+    index("station_promo_enrollments_promotion_id_idx").on(table.promotion_id),
+  ],
+);
+
 // %%%%% Station config & posts %%%%%
 
 /**

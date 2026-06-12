@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Modal } from '@/components/ui/Modal';
+import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
 import type { AgendaEntry } from './DashboardAgendaTimeline';
 
 interface Props {
@@ -34,11 +36,20 @@ export function AgendaSlotDetailModal({
   open, entry, onClose, onStart, onComplete, onCancel, onExtraTime,
 }: Props) {
   const t = useTranslations('station_dashboard');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
   if (!entry) return null;
 
   const visuals = statusVisuals(entry.status);
-  const isStartable = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
+  // Start / Cancel only surface within the start window before the slot.
+  const inStartWindow = isWithinStartWindow(entry.slotStart, now);
+  const canStartPhase = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
+  const isStartable = canStartPhase && inStartWindow;
   const isRunning = entry.status === 'in_progress';
+  const waitingForWindow = canStartPhase && !inStartWindow;
 
   return (
     <Modal open={open} onClose={onClose} size="md" title={t('slot_detail_title')}>
@@ -62,7 +73,7 @@ export function AgendaSlotDetailModal({
         {/* Grid info */}
         <div className="grid grid-cols-2 gap-3">
           <InfoCell label={t('slot_detail_time')}
-                    value={`${formatTime(entry.slotStart)}–${formatTime(entry.slotEnd)}`} />
+                    value={`${formatTime(entry.slotStart)}–${formatTime(entry.slotEnd)}`} bebas />
           <InfoCell label={t('slot_detail_amount')}
                     value={entry.amountPaid !== null ? `${entry.amountPaid}$` : '—'} />
           <InfoCell label={t('slot_detail_service')}
@@ -77,6 +88,11 @@ export function AgendaSlotDetailModal({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#FFF9EC] pt-3 dark:border-[#1A2A14]">
+        {waitingForWindow && (
+          <span className="mr-auto text-[12px] font-medium text-foreground/55 dark:text-[#B0BFB1]">
+            {t('start_window_hint', { min: START_WINDOW_MINUTES })}
+          </span>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -125,13 +141,13 @@ export function AgendaSlotDetailModal({
   );
 }
 
-function InfoCell({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
+function InfoCell({ label, value, span2, bebas }: { label: string; value: string; span2?: boolean; bebas?: boolean }) {
   return (
     <div className={`rounded-xl border border-separator/25 bg-card-surface px-3 py-2 dark:border-[#1A2A14] dark:bg-[#182214] ${span2 ? 'col-span-2' : ''}`}>
       <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">
         {label}
       </div>
-      <div className="mt-0.5 truncate text-[14px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+      <div className={`mt-0.5 truncate text-[#001201] dark:text-[#FFF9EC] ${bebas ? 'font-bebas text-[16px] tracking-wide' : 'text-[14px] font-bold'}`}>
         {value}
       </div>
     </div>

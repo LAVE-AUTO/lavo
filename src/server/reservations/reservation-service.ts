@@ -51,7 +51,6 @@ import {
   findPendingPaymentReservationForSlot,
   clearStripePaymentSucceededNotifiedAt,
   markPiCancelFailed,
-  markRefundPersistFailed,
   setStripePaymentSucceededNotifiedAtIfMissing,
   setStripeTransferIdIfMissing,
   updateEntry,
@@ -72,6 +71,7 @@ import {
 import { computeReservationSplit } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
 import { refreshStationStats } from '@/server/station/station-stats-service';
+import { findApplicablePromotionForUserReservation } from '@/server/station/station-promotion-service';
 
 
 const STATUS_PENDING_PAYMENT = 'pending_payment';
@@ -189,7 +189,7 @@ export async function createReservation(
   const service = await findServiceByIdAndStation(serviceId, stationId);
   if (!service) throw new NotFoundError('Service not found');
 
-  const { amountTotal, vehicleEntry } = await resolveReservationAmount(serviceId, vehicleFormatId, stationId);
+  const { amountTotal } = await resolveReservationAmount(serviceId, vehicleFormatId, stationId);
 
   const hasQrPayload = Boolean(options?.qrToken || options?.qrVersion);
   const qrValidation = options?.qrToken
@@ -204,7 +204,14 @@ export async function createReservation(
     throw new ValidationError('Invalid QR booking token context');
   }
 
-  const split = await computeReservationSplit({ amountTotal, isQrBooking });
+  const applicablePromotion = !isQrBooking
+    ? await findApplicablePromotionForUserReservation(userId, stationId)
+    : null;
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking,
+    promotionReductionRate: applicablePromotion?.commission_rate ?? null,
+  });
 
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
@@ -394,7 +401,14 @@ export async function createReservationByStartTime(
     throw new ValidationError('Invalid QR booking token context');
   }
 
-  const split = await computeReservationSplit({ amountTotal, isQrBooking });
+  const applicablePromotion = !isQrBooking
+    ? await findApplicablePromotionForUserReservation(userId, stationId)
+    : null;
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking,
+    promotionReductionRate: applicablePromotion?.commission_rate ?? null,
+  });
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 
@@ -867,7 +881,12 @@ export async function upgradeQueueToReservation(
   const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
-  const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
+  const applicablePromotion = await findApplicablePromotionForUserReservation(userId, stationId);
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking: false,
+    promotionReductionRate: applicablePromotion?.commission_rate ?? null,
+  });
 
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
@@ -1006,7 +1025,12 @@ export async function upgradeQueueToReservationByStartTime(
     throw new ConflictError(`Reservations cannot be made more than ${maxDays} days in advance`);
   }
 
-  const split = await computeReservationSplit({ amountTotal, isQrBooking: false });
+  const applicablePromotion = await findApplicablePromotionForUserReservation(userId, stationId);
+  const split = await computeReservationSplit({
+    amountTotal,
+    isQrBooking: false,
+    promotionReductionRate: applicablePromotion?.commission_rate ?? null,
+  });
   const amountCents = Math.round(amountTotal * 100);
   const commissionCents = Math.round(split.commissionAmount * 100);
 

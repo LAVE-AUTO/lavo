@@ -10,7 +10,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { stations } from "./stations";
+import { stations, stationPosts } from "./stations";
 
 /** Time slots (creneaux) per station; capacity and booked_count for queue. */
 export const timeSlots = pgTable(
@@ -20,6 +20,8 @@ export const timeSlots = pgTable(
     station_id: uuid("station_id")
       .notNull()
       .references(() => stations.id, { onDelete: "cascade" }),
+    /** Optional wash bay this slot belongs to (per-post availability). Null = legacy/all-bays slot. */
+    post_id: uuid("post_id").references(() => stationPosts.id, { onDelete: "set null" }),
     start_time: timestamp("start_time", {
       mode: "date",
       withTimezone: true,

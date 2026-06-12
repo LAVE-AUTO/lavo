@@ -9,6 +9,7 @@
     { "path": "/api/cron/sync-pending-uploads",                   "schedule": "*/30 * * * *" },
     { "path": "/api/cron/mark-queue-no-shows",                    "schedule": "30 22 * * *"  },
     { "path": "/api/cron/send-kyc-expiry-reminders",              "schedule": "0 7 * * *"    },
+    { "path": "/api/cron/send-station-daily-report",              "schedule": "0 6 * * *"    },
     { "path": "/api/cron/purge-admin-logs",                       "schedule": "0 2 * * *"    },
     { "path": "/api/cron/send-escrow-weekly-transactions-report", "schedule": "0 7 * * 1"    }
   ]

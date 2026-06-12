@@ -463,7 +463,7 @@ export function ArrivalStep({
                         key={time}
                         type="button"
                         onClick={() => { setCustomTime(''); setCustomTimeError(null); onSetLaterTime(time); }}
-                        className={`px-4 py-2 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                        className={`px-4 py-2 rounded-lg text-[16px] font-bebas tracking-wider border-2 transition-colors cursor-pointer ${
                           laterTime === time
                             ? 'bg-gold border-gold text-dark-bg'
                             : 'border-border text-foreground hover:border-gold/40'
@@ -693,7 +693,7 @@ export function ArrivalStep({
                           key={slot.id}
                           type="button"
                           onClick={() => onSetSlot(slot)}
-                          className={`py-2.5 rounded-lg text-[14px] font-bold border-2 transition-colors cursor-pointer ${
+                          className={`py-2.5 rounded-lg text-[16px] font-bebas tracking-wider border-2 transition-colors cursor-pointer ${
                             selectedSlot && selectedSlot.id === slot.id
                               ? 'bg-gold border-gold text-dark-bg'
                               : 'border-border text-foreground hover:border-gold/40'

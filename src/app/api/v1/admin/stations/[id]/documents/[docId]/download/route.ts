@@ -84,13 +84,18 @@ async function serveDocumentFile(fileUrl: string, filename: string): Promise<Nex
         api_secret: process.env.CLOUDINARY_API_SECRET,
       });
 
-      const publicId = cloudinaryAsset.resourceType === 'raw'
+      // For raw assets the public_id already carries the extension, and the
+      // download API expects an EMPTY format in that case (passing 'pdf' yields
+      // a 404/401). Image assets keep the public_id + format split.
+      const isRaw = cloudinaryAsset.resourceType === 'raw';
+      const publicId = isRaw
         ? `${cloudinaryAsset.publicId}.${cloudinaryAsset.format}`
         : cloudinaryAsset.publicId;
+      const downloadFormat = isRaw ? '' : cloudinaryAsset.format;
 
       const candidateUrl = cloudinary.utils.private_download_url(
         publicId,
-        cloudinaryAsset.format,
+        downloadFormat,
         { resource_type: cloudinaryAsset.resourceType, type: 'upload', attachment: true }
       );
 
