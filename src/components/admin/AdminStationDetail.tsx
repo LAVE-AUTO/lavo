@@ -40,8 +40,6 @@ interface ApiStation {
   id: string; name: string; legal_name: string | null; registration_number: string | null;
   address: string; city: string; description: string | null;
   service_scope: string | null; wash_post_count: number | null;
-  promo_commission_rate?: string | null;
-  promo_ref_code?: string | null;
   status: string; created_at: string; updated_at: string;
   approved_at?: string | null; rejection_reason?: string | null;
   documents: ApiDocument[];
@@ -311,8 +309,6 @@ export function AdminStationDetail({ id }: Props) {
           <AdminPromoQr
             stationId={station.id}
             stationName={station.name}
-            initialPromoCommissionRate={station.promo_commission_rate ?? null}
-            initialPromoRefCode={station.promo_ref_code ?? null}
           />
         )}
 

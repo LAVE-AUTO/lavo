@@ -18,6 +18,11 @@ export const registerSchema = z
     password: passwordSchema,
     confirm_password: z.string().min(1, 'Password confirmation is required'),
     remember_me: z.boolean().optional().default(false),
+    promo_ref_code: z
+      .string()
+      .trim()
+      .regex(/^[a-f0-9]{64}$/i, 'promo_ref_code must be a 64-character hexadecimal signature')
+      .optional(),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: 'Passwords do not match',

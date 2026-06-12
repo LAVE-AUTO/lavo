@@ -23,6 +23,8 @@ import {
   pendingUploads,
   stationConfigs,
   stationDocuments,
+  stationPromotionEnrollments,
+  stationPromotions,
   stationPhotos,
   stationPosts,
   stations,
@@ -30,20 +32,14 @@ import {
   vehicleFormats,
   washTypes,
 } from "./stations";
-import { supportMessages, supportSettings, supportTickets } from "./support";
+import { supportMessages, supportTickets } from "./support";
 import { reservationTips } from "./tips";
 import { timeSlots } from "./slots";
 import { favorites } from "./favorites";
 import { stationHours, stationHourExceptions } from "./station-hours";
 import { stationPostHours } from "./station-post-hours";
 import { userNotifications } from "./user-notifications";
-import { userNotificationPrefs } from "./user-notification-prefs";
 import {
-  stationServices,
-  serviceVehicleEntries,
-  stationExtras,
-  extraVehicleEntries,
-  serviceExtraCompatibility,
 } from "./services";
 
 
@@ -96,6 +92,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   supportMessages: many(supportMessages, { relationName: "messageSender" }),
   notifications: many(notifications, { relationName: "userNotifications" }),
   deviceTokens: many(deviceTokens),
+  stationPromotionEnrollments: many(stationPromotionEnrollments),
 }));
 
 export const emailVerificationTokensRelations = relations(
@@ -151,10 +148,40 @@ export const stationsRelations = relations(stations, ({ one, many }) => ({
   stationWashTypes: many(stationWashTypes),
   documents: many(stationDocuments),
   photos: many(stationPhotos),
+  promotions: many(stationPromotions),
+  promotionEnrollments: many(stationPromotionEnrollments),
   timeSlots: many(timeSlots),
   reservations: many(reservations, { relationName: "stationReservations" }),
   ratings: many(ratings, { relationName: "stationRatings" }),
   notifications: many(notifications, { relationName: "stationNotifications" }),
+}));
+
+export const stationPromotionsRelations = relations(stationPromotions, ({ one, many }) => ({
+  station: one(stations, {
+    fields: [stationPromotions.station_id],
+    references: [stations.id],
+  }),
+  createdByAdmin: one(users, {
+    fields: [stationPromotions.created_by_admin_id],
+    references: [users.id],
+    relationName: "stationPromotionCreator",
+  }),
+  enrollments: many(stationPromotionEnrollments),
+}));
+
+export const stationPromotionEnrollmentsRelations = relations(stationPromotionEnrollments, ({ one }) => ({
+  user: one(users, {
+    fields: [stationPromotionEnrollments.user_id],
+    references: [users.id],
+  }),
+  station: one(stations, {
+    fields: [stationPromotionEnrollments.station_id],
+    references: [stations.id],
+  }),
+  promotion: one(stationPromotions, {
+    fields: [stationPromotionEnrollments.promotion_id],
+    references: [stationPromotions.id],
+  }),
 }));
 
 export const washTypesRelations = relations(washTypes, ({ many }) => ({

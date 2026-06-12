@@ -1,4 +1,11 @@
-import { generateQrToken, verifyQrToken, QR_TOKEN_VERSION } from '@/server/qr/qr-token-service';
+import {
+  CANONICAL_QR_LOCALE,
+  buildStationQrPublicUrl,
+  buildStationQrResolverUrl,
+  generateQrToken,
+  verifyQrToken,
+  QR_TOKEN_VERSION,
+} from '@/server/qr/qr-token-service';
 
 describe('qr-token-service', () => {
   const stationId = 'a3f1150f-8e52-4cbf-b037-f9755ec6162c';
@@ -58,5 +65,37 @@ describe('qr-token-service', () => {
   it('throws when QR_TOKEN_SECRET is too short', () => {
     process.env.QR_TOKEN_SECRET = 'short-secret';
     expect(() => generateQrToken(stationId)).toThrow('QR_TOKEN_SECRET must be at least 32 characters');
+  });
+
+  it('builds the canonical resolver URL for station QR codes', () => {
+    const url = buildStationQrResolverUrl({
+      origin: 'https://app.example.com/',
+      locale: 'en',
+      stationId,
+    });
+
+    expect(url).toMatch(new RegExp(`^https://app\\.example\\.com/en/qr/station/${stationId}\\?`));
+    expect(url).toContain(`v=${QR_TOKEN_VERSION}`);
+    expect(url).toContain(`qr_token=${generateQrToken(stationId)}`);
+  });
+
+  it('defaults resolver URLs to the canonical QR locale', () => {
+    const url = buildStationQrResolverUrl({
+      origin: 'https://app.example.com/',
+      stationId,
+    });
+
+    expect(url).toMatch(new RegExp(`^https://app\\.example\\.com/${CANONICAL_QR_LOCALE}/qr/station/${stationId}\\?`));
+  });
+
+  it('can build a station public URL without QR context', () => {
+    const url = buildStationQrPublicUrl({
+      origin: 'https://app.example.com/',
+      locale: 'fr',
+      stationId,
+      includeQrContext: false,
+    });
+
+    expect(url).toBe(`https://app.example.com/fr/stations/${stationId}`);
   });
 });
