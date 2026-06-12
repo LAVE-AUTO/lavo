@@ -4,7 +4,7 @@
 
 ```text
 Hurryline/
-├── docs/                            # Architecture, features, data, testing, pages, charts
+├── docs/                            #  Architecture, features, data, testing, pages, charts
 ├── messages/                        # i18n message catalogs (fr/en)
 ├── public/                          # Static assets, icons, logos, PWA files
 ├── scripts/                         # Migration and seed scripts
