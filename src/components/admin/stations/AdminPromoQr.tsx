@@ -163,7 +163,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
   const validate = useCallback((): string | null => {
     if (!commission.trim()) return t('error_commission_required');
     const val = parseFloat(commission);
-    if (Number.isNaN(val) || val < 0 || val > 50) return t('error_commission_invalid');
+    if (Number.isNaN(val) || val < 0 || val > 100) return t('error_commission_invalid');
     if (!Number.isInteger(val * 2)) return t('error_commission_step');
     if (!expiryDate) return t('error_expiry_required');
     const expiresAtIso = dateInputToEndOfDayIso(expiryDate);
@@ -293,7 +293,7 @@ export function AdminPromoQr({ stationId, stationName }: Props) {
                   id="promo-commission"
                   type="number"
                   min={0}
-                  max={50}
+                  max={100}
                   step={0.5}
                   value={commission}
                   required

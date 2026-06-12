@@ -204,8 +204,8 @@ export const changePasswordSchema = z
 export const updateStationPromoQrSchema = z.object({
   commission_rate_percent: z
     .number({ invalid_type_error: 'commission_rate_percent must be a number' })
-    .min(0, 'commission_rate_percent must be between 0 and 50')
-    .max(50, 'commission_rate_percent must be between 0 and 50')
+    .min(0, 'commission_rate_percent must be between 0 and 100')
+    .max(100, 'commission_rate_percent must be between 0 and 100')
     .refine((value) => Number.isInteger(value * 2), {
       message: 'commission_rate_percent must be a multiple of 0.5',
     }),
