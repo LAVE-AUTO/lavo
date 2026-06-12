@@ -63,11 +63,12 @@ export function middleware(request: NextRequest) {
   const locale =
     LOCALES.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)) ?? LOCALES[0];
 
-  /* --- 1. Redirect authenticated users away from public auth/landing pages --- */
+  /* --- 1. Redirect authenticated users away from public auth pages only ---
+   * The landing page (`/${locale}`) is intentionally NOT included: clicking the
+   * logo must always show the landing, whatever the user's role or location. */
   const authRole = request.cookies.get('Hurryline_auth_role')?.value;
   if (authRole) {
     const isPublicOnlyPath =
-      pathname === `/${locale}` ||
       pathname === `/${locale}/login` ||
       pathname.startsWith(`/${locale}/login/`) ||
       pathname === `/${locale}/register` ||

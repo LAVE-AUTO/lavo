@@ -12,8 +12,10 @@ const mockIncrementSlotBookedCount = jest.fn();
 const mockCreatePaymentIntent = jest.fn();
 const mockCancelPaymentIntent = jest.fn();
 const mockCapturePaymentIntent = jest.fn();
+const mockUpdatePaymentIntentMetadata = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockFindEntryByIdAndStation = jest.fn();
+const mockFindEntryById = jest.fn();
 const mockSetStripePaymentSucceededNotifiedAtIfMissing = jest.fn();
 const mockClearStripePaymentSucceededNotifiedAt = jest.fn();
 const mockSendEscrowReleasedNotificationsForEntry = jest.fn();
@@ -51,6 +53,10 @@ jest.mock('@/server/payments/payment-service', () => ({
   createPaymentIntent: (...args: unknown[]) => mockCreatePaymentIntent(...args),
   cancelPaymentIntent: (...args: unknown[]) => mockCancelPaymentIntent(...args),
   capturePaymentIntent: (...args: unknown[]) => mockCapturePaymentIntent(...args),
+  updatePaymentIntentMetadata: (...args: unknown[]) => mockUpdatePaymentIntentMetadata(...args),
+}));
+jest.mock('@/server/station/station-promotion-service', () => ({
+  findApplicablePromotionForUserReservation: jest.fn().mockResolvedValue(null),
 }));
 jest.mock('@/server/notifications/escrow-released-notifications', () => ({
   sendEscrowReleasedNotificationsForEntry: (...args: unknown[]) =>
@@ -70,6 +76,7 @@ jest.mock('@/server/auth/user-repository', () => ({
 }));
 jest.mock('@/server/reservations/entry-repository', () => ({
   createReservationEntry: (...args: unknown[]) => mockCreateReservationEntry(...args),
+  findEntryById: (...args: unknown[]) => mockFindEntryById(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
   findEntryByIdAndStation: (...args: unknown[]) => mockFindEntryByIdAndStation(...args),
   hasActiveEntryAtStation: (...args: unknown[]) => mockHasActiveEntryAtStation(...args),
@@ -103,7 +110,6 @@ import {
 } from '@/server/reservations/reservation-service';
 import {
   NotFoundError,
-  ConflictError,
   ActiveReservationExistsError,
   SlotFullError,
   ValidationError,
@@ -126,7 +132,9 @@ describe('reservation-service', () => {
     mockFindServiceByIdAndStation.mockResolvedValue({ id: formatId });
     mockFindServiceVehicleEntryForBooking.mockResolvedValue({ price: '10', is_active: true });
     mockCreatePaymentIntent.mockResolvedValue({ paymentIntentId: 'pi_default', clientSecret: 'secret_default' });
+    mockUpdatePaymentIntentMetadata.mockResolvedValue(undefined);
     mockNotifyEntry.mockResolvedValue(undefined);
+    mockFindEntryById.mockResolvedValue(null);
     process.env.QR_TOKEN_SECRET = 'unit-test-qr-secret-0123456789abcdef';
   });
 

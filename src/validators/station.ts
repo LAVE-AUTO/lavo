@@ -204,10 +204,19 @@ export const changePasswordSchema = z
 export const updateStationPromoQrSchema = z.object({
   commission_rate_percent: z
     .number({ invalid_type_error: 'commission_rate_percent must be a number' })
-    .min(0, 'commission_rate_percent must be between 0 and 50')
-    .max(50, 'commission_rate_percent must be between 0 and 50')
+    .min(0, 'commission_rate_percent must be between 0 and 100')
+    .max(100, 'commission_rate_percent must be between 0 and 100')
     .refine((value) => Number.isInteger(value * 2), {
       message: 'commission_rate_percent must be a multiple of 0.5',
+    }),
+  expires_at: z
+    .string()
+    .datetime({ message: 'expires_at must be a valid ISO 8601 datetime' })
+    .refine((value) => {
+      const parsed = new Date(value);
+      return !Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now();
+    }, {
+      message: 'expires_at must be in the future',
     }),
 });
 
@@ -431,6 +440,7 @@ export const createSlotBodySchema = z
     start_time: z.string().datetime({ message: 'start_time must be a valid ISO 8601 datetime' }),
     end_time: z.string().datetime({ message: 'end_time must be a valid ISO 8601 datetime' }),
     capacity: z.number().int().min(1, 'Capacity must be at least 1').max(10000, 'Capacity must be at most 10000'),
+    post_id: z.string().uuid().nullable().optional(),
   })
   .refine((data) => new Date(data.start_time) < new Date(data.end_time), {
     message: 'start_time must be before end_time',

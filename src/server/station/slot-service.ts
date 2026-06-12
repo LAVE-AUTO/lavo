@@ -19,8 +19,26 @@ import {
   updateSlotStatus,
   type TimeSlot,
 } from './slot-repository';
+import { refreshStationStats } from './station-stats-service';
 
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
+
+/**
+ * Fire-and-forget refresh of the station_stats materialized view after a slot
+ * mutation, so newly added / removed availability surfaces on the public
+ * listing (available_slots) without waiting for a rating or completed
+ * reservation. Mirrors the pattern used in rating-service / reservation-service:
+ * never blocks the caller, errors are logged, not thrown.
+ */
+function scheduleStatsRefresh(stationId: string, op: string): void {
+  refreshStationStats().catch((err) => {
+    console.error('[STATION_STATS_REFRESH] Failed after slot mutation', {
+      stationId,
+      op,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+}
 
 
 /**
@@ -89,7 +107,9 @@ export async function generateAndPersistSlots(
   const config = await getConfigByStationId(stationId);
   if (!config) throw new NotFoundError('Station has no config; create config first');
   const list = generateSlotsFromConfig(config, dateStr, endDateStr, intervalMinutes);
-  return repoCreateSlots(stationId, list);
+  const created = await repoCreateSlots(stationId, list);
+  scheduleStatsRefresh(stationId, 'generate');
+  return created;
 }
 
 /**
@@ -99,9 +119,12 @@ export async function createSlot(
   stationId: string,
   startTime: Date,
   endTime: Date,
-  capacity: number
+  capacity: number,
+  postId?: string | null
 ) {
-  return repoCreateSlot(stationId, startTime, endTime, capacity);
+  const slot = await repoCreateSlot(stationId, startTime, endTime, capacity, postId);
+  scheduleStatsRefresh(stationId, 'create');
+  return slot;
 }
 
 /**
@@ -109,9 +132,11 @@ export async function createSlot(
  */
 export async function createSlotsBulk(
   stationId: string,
-  slots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+  slots: Array<{ start_time: Date; end_time: Date; capacity: number; post_id?: string | null }>
 ) {
-  return repoCreateSlots(stationId, slots);
+  const created = await repoCreateSlots(stationId, slots);
+  scheduleStatsRefresh(stationId, 'bulk');
+  return created;
 }
 
 /**
@@ -124,6 +149,7 @@ export async function deleteSlot(stationId: string, slotId: string): Promise<voi
   const count = await countReservationsBySlotId(slotId);
   if (count > 0) throw new ConflictError('Cannot delete slot that has reservations');
   await deleteSlotById(slotId);
+  scheduleStatsRefresh(stationId, 'delete');
 }
 
 /**
@@ -136,9 +162,9 @@ export async function deleteSlot(stationId: string, slotId: string): Promise<voi
 export async function replaceSlots(
   stationId: string,
   idsToDelete: string[],
-  newSlots: Array<{ start_time: Date; end_time: Date; capacity: number }>
+  newSlots: Array<{ start_time: Date; end_time: Date; capacity: number; post_id?: string | null }>
 ): Promise<TimeSlot[]> {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     if (idsToDelete.length > 0) {
       const existing = await findSlotsByIds(idsToDelete, tx);
 
@@ -164,6 +190,8 @@ export async function replaceSlots(
     if (newSlots.length === 0) return [];
     return repoCreateSlots(stationId, newSlots, tx);
   });
+  scheduleStatsRefresh(stationId, 'replace');
+  return result;
 }
 
 /**
@@ -178,5 +206,7 @@ export async function blockSlot(
   if (!slot) throw new NotFoundError('Slot not found or does not belong to this station');
   const count = await countReservationsBySlotId(slotId);
   if (count > 0) throw new ConflictError('Cannot block slot that has active reservations');
-  return updateSlotStatus(slotId, 'blocked');
+  const updated = await updateSlotStatus(slotId, 'blocked');
+  scheduleStatsRefresh(stationId, 'block');
+  return updated;
 }

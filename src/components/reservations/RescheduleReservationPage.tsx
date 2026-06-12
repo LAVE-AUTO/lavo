@@ -379,7 +379,7 @@ export default function RescheduleReservationPage() {
                         disabled={slot.isFull}
                         onClick={() => setSelectedSlotId(slot.id)}
                         className={[
-                          'py-2.5 rounded-[10px] text-[14px] font-bold border transition-all font-[family-name:var(--font-roboto-mono)]',
+                          'py-2.5 rounded-[10px] text-[16px] font-bebas tracking-wider border transition-all',
                           slot.isFull
                             ? 'border-border text-[#CCC] dark:text-foreground/70 cursor-not-allowed opacity-50'
                             : isSelected

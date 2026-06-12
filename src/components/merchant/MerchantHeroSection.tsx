@@ -49,15 +49,16 @@ export function MerchantHeroSection() {
             </a>
           </div>
 
-          <div className="animate-fade-in-up animation-delay-500 flex gap-10 border-t border-[rgba(221,175,59,0.13)] pt-6">
+          {/* KPIs — compact on mobile so each value + label stays on a single line */}
+          <div className="animate-fade-in-up animation-delay-500 flex gap-4 sm:gap-10 border-t border-[rgba(221,175,59,0.13)] pt-6">
             {[
               { val: t('kpi_1_val'), label: t('kpi_1_label') },
               { val: t('kpi_2_val'), label: t('kpi_2_label') },
               { val: t('kpi_3_val'), label: t('kpi_3_label') },
             ].map(({ val, label }) => (
               <div key={label}>
-                <div className="font-rajdhani text-[40px] font-bold leading-none text-[#DDAF3B]">{val}</div>
-                <div className="font-dm-mono mt-1 text-[11px] uppercase tracking-[1px] text-[var(--foreground)] dark:text-[#B0BFB1]">{label}</div>
+                <div className="font-rajdhani text-[24px] sm:text-[40px] font-bold leading-none text-[#DDAF3B] whitespace-nowrap">{val}</div>
+                <div className="font-dm-mono mt-1 text-[9px] sm:text-[11px] uppercase tracking-normal sm:tracking-[1px] leading-tight text-[var(--foreground)] dark:text-[#B0BFB1] whitespace-nowrap">{label}</div>
               </div>
             ))}
           </div>

@@ -201,6 +201,9 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
       if (trimmedLocal) {
         payload.phone = joinPhoneNumber(formData.phone.country, trimmedLocal);
       }
+      if (promoInfo && promoCode) {
+        payload.promo_ref_code = promoCode;
+      }
       const [success, response] = await postWithApi('/auth/register', payload);
 
       if (success) {
