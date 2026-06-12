@@ -3008,7 +3008,7 @@
         "label_vehicle_unknown": "Non renseigné"
     },
     "admin_commission": {
-        "page_title": "Commission",
+        "page_title": "Tarification",
         "page_subtitle": "Définissez le taux de commission global et consultez l'historique des changements.",
         "section_current": "Taux actuel",
         "section_history": "Historique",
@@ -3127,7 +3127,7 @@
         "nav_kyc": "Validation KYC",
         "nav_clients": "Comptes",
         "nav_disputes": "Litiges",
-        "nav_commission": "Commission",
+        "nav_commission": "Tarification",
         "nav_settings": "Paramètres",
         "nav_transactions": "Transactions",
         "nav_logs": "Journaux",

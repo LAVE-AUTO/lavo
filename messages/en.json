@@ -3008,7 +3008,7 @@
         "label_vehicle_unknown": "Not specified"
     },
     "admin_commission": {
-        "page_title": "Commission",
+        "page_title": "Pricing",
         "page_subtitle": "Set the global commission rate and review the change history.",
         "section_current": "Current rate",
         "section_history": "History",
@@ -3127,7 +3127,7 @@
         "nav_kyc": "KYC Validation",
         "nav_clients": "Accounts",
         "nav_disputes": "Disputes",
-        "nav_commission": "Commission",
+        "nav_commission": "Pricing",
         "nav_settings": "Settings",
         "nav_transactions": "Transactions",
         "nav_logs": "Logs",
