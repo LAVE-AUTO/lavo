@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import type { AvailabilityBlock } from './types';
 
 interface Props {
@@ -39,7 +40,7 @@ function groupBlocks(blocks: AvailabilityBlock[]): AvailabilityBlock[] {
  *  e.g. ["2026-02-10","2026-02-11","2026-02-15","2026-03-01","2026-03-02"]
  *       → "10-11 févr. & 15 févr. & 1-2 mars 2026"
  */
-function formatDates(dates: string[]): string {
+function formatDates(dates: string[], locale: string): string {
   if (dates.length === 0) return '';
 
   const sorted = [...dates].sort();
@@ -70,8 +71,8 @@ function formatDates(dates: string[]): string {
     const e = new Date(end + 'T00:00:00');
     const sDay = s.getDate();
     const eDay = e.getDate();
-    const sMonth = s.toLocaleDateString('fr-FR', { month: 'short' });
-    const eMonth = e.toLocaleDateString('fr-FR', { month: 'short' });
+    const sMonth = s.toLocaleDateString(intlDateLocale(locale), { month: 'short' });
+    const eMonth = e.toLocaleDateString(intlDateLocale(locale), { month: 'short' });
     const rangeYear = e.getFullYear();
 
     // Attach the year to this segment if it differs from the next segment's year,
@@ -98,6 +99,7 @@ function formatDates(dates: string[]): string {
 
 export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
@@ -157,7 +159,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
 
                 {/* Condensed date ranges */}
                 <p className="mb-1 text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">
-                  {formatDates(group.dates)}
+                  {formatDates(group.dates, locale)}
                 </p>
 
                 {/* Time range — large and prominent */}
@@ -170,7 +172,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                     type="button"
                     onClick={() => onDelete(group.ids ?? [group.id])}
                     className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#FF2525] bg-transparent px-3 py-1.5 text-[11px] font-bold text-[#FF2525] transition-colors hover:bg-[#FF2525]/10"
-                    aria-label={`${t('availability_block_delete')} - ${formatDates(group.dates)}`}
+                    aria-label={`${t('availability_block_delete')} - ${formatDates(group.dates, locale)}`}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M18 6L6 18M6 6l12 12" />
@@ -181,7 +183,7 @@ export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) 
                     type="button"
                     onClick={() => onEdit(group)}
                     className="cursor-pointer inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDAF3B] px-3 py-1.5 text-[11px] font-bold text-[#001201] transition-colors hover:bg-[#A07818]"
-                    aria-label={`${t('availability_block_edit')} - ${formatDates(group.dates)}`}
+                    aria-label={`${t('availability_block_edit')} - ${formatDates(group.dates, locale)}`}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />

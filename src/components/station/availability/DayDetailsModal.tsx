@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Modal } from '@/components/ui/Modal';
 import type { AvailabilityBlock } from './types';
 
@@ -24,6 +25,7 @@ export function DayDetailsModal({
   onCreateForDay,
 }: Props) {
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_block_all_postes');
@@ -31,7 +33,7 @@ export function DayDetailsModal({
   }
 
   const displayDate = date
-    ? new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', {
+    ? new Date(date + 'T00:00:00').toLocaleDateString(intlDateLocale(locale), {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

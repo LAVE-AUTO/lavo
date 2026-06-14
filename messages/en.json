@@ -677,7 +677,7 @@
             "title": "Online in",
             "title_accent": "3 steps",
             "step_1_title": "Submit your application",
-            "step_1_desc": "Fill in the registration form with your information and legal documents. Our team validates your KYC file within 24 hours.",
+            "step_1_desc": "Fill in the registration form with your information and legal documents. Our team validates your files within 24 hours.",
             "step_2_title": "Configure your space",
             "step_2_desc": "Set your hours, wash bays, services, pricing by vehicle format and available slots from your dashboard.",
             "step_3_title": "Get paid automatically",
@@ -1767,6 +1767,8 @@
         "view_daily": "Daily",
         "view_weekly": "Weekly",
         "view_monthly": "Monthly",
+        "datenav_prev": "Previous",
+        "datenav_next": "Next",
         "notif_tooltip": "Notifications",
         "notif_title": "Notifications",
         "notif_mark_all_read": "Mark all read",
@@ -1921,6 +1923,7 @@
         "availability_btn_close": "Close",
         "availability_prev_month": "Previous month",
         "availability_next_month": "Next month",
+        "availability_remove_date": "Remove {date}",
         "availability_dates_count": "{count, plural, one {# date} other {# dates}}",
         "availability_blocks_count_aria": "{count, plural, =0 {No bay configured} one {# bay configured} other {# bays configured}}",
         "availability_poste_short": "B",
@@ -2613,14 +2616,14 @@
         "empty_all": "No stations registered"
     },
     "station_pending": {
-        "title": "Your KYC application is under review",
+        "title": "Your account application is under review",
         "notice": "Our team is reviewing your application. You will be notified by email as soon as a decision is made.",
         "status_label": "Pending"
     },
     "station_rejected": {
-        "title": "Your KYC application was rejected",
+        "title": "Your account application was rejected",
         "status_label": "Rejected",
-        "banner_notice": "Your station stays hidden from the public list while KYC is not approved. You can still fully configure your workspace.",
+        "banner_notice": "Your station stays hidden from the public list while account is not approved. You can still fully configure your workspace.",
         "subtitle": "The membership application for {name} was not approved by our team.",
         "reason_label": "Reason for rejection",
         "btn_logout": "Log out",

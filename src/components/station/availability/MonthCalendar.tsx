@@ -1,7 +1,9 @@
 // MonthCalendar - displays a monthly grid with availability block indicators
 // Each day that has blocks shows a "bloc-tag" chip; clicking a day opens details
 'use client';
-import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale, shortWeekdayUpper } from '@/helpers/date-helper';
 import type { AvailabilityBlock } from './types';
 
 interface Props {
@@ -11,8 +13,6 @@ interface Props {
   onDayClick: (dateISO: string) => void;
   selectedDateISO?: string | null;
 }
-
-const DAYS_FR = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
 
 function toISO(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -26,6 +26,16 @@ export function MonthCalendar({
   selectedDateISO,
 }: Props) {
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
+  // Monday-first localized weekday headers (Jan 1 2024 is a Monday).
+  const dayHeaders = useMemo(() => {
+    const ref = new Date(2024, 0, 1);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(ref);
+      d.setDate(ref.getDate() + i);
+      return shortWeekdayUpper(d, locale);
+    });
+  }, [locale]);
 
   function formatBlocTag(blocks: AvailabilityBlock[]): string | null {
     if (blocks.length === 0) return null;
@@ -87,7 +97,7 @@ export function MonthCalendar({
   }
 
   const monthLabel = firstDay
-    .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    .toLocaleDateString(intlDateLocale(locale), { month: 'long', year: 'numeric' })
     .toUpperCase();
 
   return (
@@ -128,7 +138,7 @@ export function MonthCalendar({
 
       {/* Day headers */}
       <div className="mb-1 grid grid-cols-7 gap-1.5">
-        {DAYS_FR.map((d) => (
+        {dayHeaders.map((d) => (
           <div key={d} className="py-1 text-center text-[10px] font-black uppercase tracking-wider text-foreground/65 dark:text-[#B0BFB1]">
             {d}
           </div>

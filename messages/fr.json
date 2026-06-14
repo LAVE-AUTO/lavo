@@ -1767,6 +1767,8 @@
         "view_daily": "Jour",
         "view_weekly": "Semaine",
         "view_monthly": "Mois",
+        "datenav_prev": "Précédent",
+        "datenav_next": "Suivant",
         "notif_tooltip": "Notifications",
         "notif_title": "Notifications",
         "notif_mark_all_read": "Tout marquer lu",
@@ -1921,6 +1923,7 @@
         "availability_btn_close": "Fermer",
         "availability_prev_month": "Mois précédent",
         "availability_next_month": "Mois suivant",
+        "availability_remove_date": "Retirer {date}",
         "availability_dates_count": "{count, plural, one {# date} other {# dates}}",
         "availability_blocks_count_aria": "{count, plural, =0 {Aucun poste configuré} one {# poste configuré} other {# postes configurés}}",
         "availability_poste_short": "P",
@@ -2613,12 +2616,12 @@
         "empty_all": "Aucune station enregistrée"
     },
     "station_pending": {
-        "title": "Votre demande KYC est en cours d'examen",
+        "title": "Votre compte est en cours d'examen",
         "notice": "Notre équipe vérifie votre dossier. Vous serez notifié par e-mail dès qu'une décision sera prise.",
         "status_label": "En attente"
     },
     "station_rejected": {
-        "title": "Votre demande KYC a été rejetée",
+        "title": "Votre compte a été rejeté",
         "status_label": "Rejeté",
         "banner_notice": "Votre station reste masquée dans la liste publique tant que le KYC n'est pas validé. Vous pouvez néanmoins configurer entièrement votre interface.",
         "subtitle": "La demande d'adhésion pour {name} n'a pas été approuvée par notre équipe.",
