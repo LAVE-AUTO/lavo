@@ -180,13 +180,22 @@ export function LoginForm({
         return;
       }
 
-      const data = response as { code?: string; message?: string };
+      const data = response as { code?: string; message?: string; role?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
       } else if (data?.code === 'BUSINESS_NOT_APPROVED') {
         showError(t('error_account_pending'));
       } else if (data?.code === 'BUSINESS_REJECTED') {
         showError(t('error_account_rejected'));
+      } else if (data?.code === 'WRONG_LOGIN_SPACE') {
+        /* Account is valid and active but belongs to a different login space.
+           The backend returns the user's actual role so we can point them to the
+           right login page via the wrong-space banner (see project_pending_backend_specs). */
+        const actualRole = data.role;
+        if (actualRole === 'client' || actualRole === 'station' || actualRole === 'admin') {
+          setWrongSpaceHref(loginHrefForRole(actualRole));
+        }
+        showError(t('error_wrong_space'));
       } else if (data?.code === 'FORBIDDEN') {
         // Generic fallback for any non-approved status the backend may return
         // without a more specific code (e.g. ACCOUNT_SUSPENDED).
