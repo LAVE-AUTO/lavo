@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTabs } from './StatusTabs';
@@ -59,6 +60,7 @@ function isToday(d: Date): boolean {
 
 export function StationReservationsPage() {
   const t = useTranslations('station_reservations');
+  const appLocale = useLocale();
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [entries, setEntries] = useState<ReservationEntry[]>([]);
@@ -186,9 +188,8 @@ export function StationReservationsPage() {
   }
 
   const today = isToday(selectedDate);
-  // Use browser locale for date label
-  const locale = typeof navigator !== 'undefined' ? navigator.language : 'fr-FR';
-  const dateLabel = formatDateLabel(selectedDate, locale);
+  // Use the app locale (not the browser language) for the date label.
+  const dateLabel = formatDateLabel(selectedDate, intlDateLocale(appLocale));
 
   const confirm = getConfirmProps();
 

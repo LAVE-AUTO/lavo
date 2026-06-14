@@ -7,7 +7,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { getFromApi, postWithApi } from '@/services';
 import { useToast } from '@/context/toast-context';
 import { RefuseReasonModal } from './RefuseReasonModal';
@@ -401,9 +402,10 @@ function PendingCard({
   impactFormatFallback,
   impactScheduledFallback,
 }: PendingCardProps) {
+  const locale = useLocale();
   const initials = getInitials(request.client_name);
   const scheduledText = request.scheduled_at
-    ? new Date(request.scheduled_at).toLocaleString('fr-CA', {
+    ? new Date(request.scheduled_at).toLocaleString(intlDateLocale(locale), {
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
