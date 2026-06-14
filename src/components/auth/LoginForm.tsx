@@ -6,6 +6,7 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth, type AuthUser, type UserRole } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
+import { routing } from '@/i18n/routing';
 import { validateEmail } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { Button } from '@/components/ui/Button';
@@ -149,19 +150,27 @@ export function LoginForm({
         }
 
         /* callbackUrl only honoured for client role.
-           Origin check via URL constructor prevents open-redirect via percent-encoded paths (e.g. /%2F%2Fevil.com). */
-        const isSafeCallback = (() => {
-          if (!callbackUrl || userRole !== 'client') return false;
+           Origin check via URL constructor prevents open-redirect via percent-encoded paths (e.g. /%2F%2Fevil.com).
+           The callbackUrl arrives locale-prefixed (e.g. /en/stations/x); the i18n router re-adds the active
+           locale, so we strip a leading /{locale} segment to avoid a doubled prefix (/en/en/...) -> 404. */
+        const safeCallbackPath = (() => {
+          if (!callbackUrl || userRole !== 'client') return null;
           try {
             const u = new URL(callbackUrl, window.location.origin);
-            return u.origin === window.location.origin;
+            if (u.origin !== window.location.origin) return null;
+            let path = u.pathname + u.search + u.hash;
+            const firstSegment = path.split('/')[1];
+            if ((routing.locales as readonly string[]).includes(firstSegment)) {
+              path = path.slice(firstSegment.length + 1) || '/';
+            }
+            return path;
           } catch {
-            return false;
+            return null;
           }
         })();
 
-        if (isSafeCallback) {
-          router.push(callbackUrl!);
+        if (safeCallbackPath) {
+          router.push(safeCallbackPath);
           return;
         }
 
