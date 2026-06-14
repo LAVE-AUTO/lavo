@@ -42,34 +42,6 @@ const DEFAULT_FILTERS: StationFiltersState = {
   date:              '',
 };
 
-/** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
-function parseOpeningHoursToMinutes(oh: string | undefined): { open: number; close: number } | null {
-  if (!oh) return null;
-  const parts = oh.split(/[–\-]/).map((s) => s.trim());
-  if (parts.length !== 2) return null;
-  const toMin = (s: string): number | null => {
-    const m = s.match(/(\d{1,2})[:h](\d{2})?/);
-    if (!m) return null;
-    const h = parseInt(m[1], 10);
-    const mm = m[2] ? parseInt(m[2], 10) : 0;
-    if (Number.isNaN(h) || Number.isNaN(mm)) return null;
-    return h * 60 + mm;
-  };
-  const open = toMin(parts[0]);
-  const close = toMin(parts[1]);
-  return open != null && close != null ? { open, close } : null;
-}
-
-function timeStringToMinutes(s: string): number | null {
-  if (!s) return null;
-  const m = s.match(/^(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  const h = parseInt(m[1], 10);
-  const mm = parseInt(m[2], 10);
-  if (Number.isNaN(h) || Number.isNaN(mm)) return null;
-  return h * 60 + mm;
-}
-
 /**
  * Public station list with mixed backend + client-side filtering.
  *
@@ -174,6 +146,11 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     if (filters.serviceScope)                  params.service_scope = filters.serviceScope;
     if (filters.formatId)                      params.format_id = filters.formatId;
     if (filters.date && /^\d{4}-\d{2}-\d{2}$/.test(filters.date)) params.date = filters.date;
+    /* Price and time-range filters are applied server-side (price_from / opening hours). */
+    if (filters.priceMin !== '')               params.price_min = filters.priceMin;
+    if (filters.priceMax !== '')               params.price_max = filters.priceMax;
+    if (/^\d{1,2}:\d{2}$/.test(filters.timeFrom)) params.time_from = filters.timeFrom;
+    if (/^\d{1,2}:\d{2}$/.test(filters.timeTo))   params.time_to = filters.timeTo;
     /* Geocoded address takes precedence over GPS for near_lat/near_lng. */
     const locationSource = geocodedCoords
       ? { latitude: geocodedCoords.lat, longitude: geocodedCoords.lng }
@@ -193,7 +170,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, userLocation, geocodedCoords]);
+  }, [debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, filters.priceMin, filters.priceMax, filters.timeFrom, filters.timeTo, userLocation, geocodedCoords]);
 
   /* Hydrate unified search from URL ?q= */
   useEffect(() => {
@@ -203,12 +180,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     return () => clearTimeout(id);
   }, [searchParams]);
 
-  /* Client-side pipeline */
-  const priceMinNum = filters.priceMin !== '' ? parseFloat(filters.priceMin) : null;
-  const priceMaxNum = filters.priceMax !== '' ? parseFloat(filters.priceMax) : null;
-  const timeFromMin = timeStringToMinutes(filters.timeFrom);
-  const timeToMin   = timeStringToMinutes(filters.timeTo);
-
+  /* Client-side pipeline. Price and time-range filters are handled server-side. */
   const applyClientFilters = (list: StationDetailData[]) => {
     let out = list;
     /* Text search — mirrors backend ILIKE on name/address/city/description. */
@@ -222,21 +194,6 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
       );
     }
     if (filters.onlyAvail) out = out.filter((s) => s.availableSlots > 0);
-    if (priceMinNum != null && Number.isFinite(priceMinNum)) {
-      out = out.filter((s) => s.priceFrom != null && s.priceFrom >= priceMinNum);
-    }
-    if (priceMaxNum != null && Number.isFinite(priceMaxNum)) {
-      out = out.filter((s) => s.priceFrom != null && s.priceFrom <= priceMaxNum);
-    }
-    if (timeFromMin != null || timeToMin != null) {
-      out = out.filter((s) => {
-        const range = parseOpeningHoursToMinutes(s.openingHours);
-        if (!range) return false;
-        if (timeFromMin != null && range.close <= timeFromMin) return false;
-        if (timeToMin   != null && range.open  >= timeToMin)   return false;
-        return true;
-      });
-    }
     const distMin = filters.distanceMinKm !== '' ? parseFloat(filters.distanceMinKm) : null;
     const distMax = filters.distanceMaxKm !== '' ? parseFloat(filters.distanceMaxKm) : null;
     if ((distMin != null || distMax != null) && userLocation) {
@@ -263,8 +220,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   const hasActiveSearch =
     debouncedSearch !== '' ||
     filters.selectedWashTypes.length > 0 || filters.serviceScope !== '' || filters.formatId !== '' ||
-    priceMinNum != null || priceMaxNum != null ||
-    timeFromMin != null || timeToMin != null ||
+    filters.priceMin !== '' || filters.priceMax !== '' ||
+    filters.timeFrom !== '' || filters.timeTo !== '' ||
     filters.date !== '' || geocodedCoords != null ||
     sort !== 'default';
 
@@ -281,8 +238,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     (filters.selectedWashTypes.length ? 1 : 0) +
     (filters.serviceScope ? 1 : 0) +
     (filters.formatId ? 1 : 0) +
-    (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
-    (timeFromMin != null || timeToMin != null ? 1 : 0) +
+    (filters.priceMin !== '' || filters.priceMax !== '' ? 1 : 0) +
+    (filters.timeFrom !== '' || filters.timeTo !== '' ? 1 : 0) +
     (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0) +
     (filters.date !== '' ? 1 : 0);
 
