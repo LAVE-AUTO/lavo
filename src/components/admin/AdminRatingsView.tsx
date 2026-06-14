@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { AdminPagination } from './ui/AdminPagination';
@@ -29,9 +30,9 @@ type ScoreFilter = 0 | 1 | 2 | 3 | 4 | 5;
 
 const PER_PAGE = 20;
 
-function formatDate(d: string) {
+function formatDate(d: string, locale: string) {
   try {
-    return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' });
   } catch { return d; }
 }
 
@@ -60,6 +61,7 @@ function StarRow({ score, ariaLabel }: { score: number; ariaLabel: string }) {
 
 export function AdminRatingsView() {
   const t = useTranslations('admin_ratings');
+  const locale = useLocale();
   const { success: toastSuccess, error: toastError } = useToast();
 
   const mountedRef = useRef(true);
@@ -286,7 +288,7 @@ export function AdminRatingsView() {
                       {/* Station */}
                       <div className="min-w-0">
                         <p className="truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{item.station.name}</p>
-                        <p className="mt-0.5 text-[11px] text-[#A8A293] dark:text-[#7E8A75] md:hidden">{formatDate(item.created_at)}</p>
+                        <p className="mt-0.5 text-[11px] text-[#A8A293] dark:text-[#7E8A75] md:hidden">{formatDate(item.created_at, locale)}</p>
                       </div>
 
                       {/* Client */}
@@ -310,7 +312,7 @@ export function AdminRatingsView() {
                       </div>
 
                       {/* Date (desktop) */}
-                      <p className="hidden whitespace-nowrap text-[12.5px] text-[#A8A293] dark:text-[#B0BFB1] md:block">{formatDate(item.created_at)}</p>
+                      <p className="hidden whitespace-nowrap text-[12.5px] text-[#A8A293] dark:text-[#B0BFB1] md:block">{formatDate(item.created_at, locale)}</p>
 
                       {/* Visibility */}
                       <div className="mt-2 md:mt-0">

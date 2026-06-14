@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
 import type { StationRow } from './AdminMerchantsClients';
 
@@ -13,8 +14,8 @@ const STATUS: Record<string, { badge: string; dot: string; label: string }> = {
 function initials(name: string) {
   return name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
 }
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
 }
 
@@ -27,6 +28,7 @@ interface Props {
 
 export function AdminStationsManagement({ stations, loading, error, query, onAction, onEdit, onDelete }: Props) {
   const t = useTranslations('admin_clients');
+  const locale = useLocale();
   const [confirmId, setConfirmId]         = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<'activate' | 'suspend' | null>(null);
   const [busy, setBusy]                   = useState<string | null>(null);
@@ -138,7 +140,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                       className="block truncate text-[14px] font-black text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                       {station.name}
                     </Link>
-                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(station.created_at)}</p>
+                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(station.created_at, locale)}</p>
                   </div>
                 </div>
                 {renderStatus(station)}
@@ -197,7 +199,7 @@ export function AdminStationsManagement({ stations, loading, error, query, onAct
                     className="block truncate text-[13px] font-bold text-[#001201] underline-offset-2 hover:text-[#DDAF3B] hover:underline dark:text-[#FFF9EC]">
                     {station.name}
                   </Link>
-                  <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(station.created_at)}</p>
+                  <p className="truncate text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(station.created_at, locale)}</p>
                 </div>
 
                 <p className="truncate text-[13px] text-[#777] dark:text-[#C8C2B3]">{station.city ?? '-'}</p>
