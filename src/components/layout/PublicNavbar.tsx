@@ -82,6 +82,16 @@ export function PublicNavbar({
     return () => clearTimeout(id);
   }, [pathname]);
 
+  /* Close drawer on Escape */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [menuOpen]);
+
   /* Close dropdown on outside click */
   useEffect(() => {
     if (!dropdownOpen) return;
