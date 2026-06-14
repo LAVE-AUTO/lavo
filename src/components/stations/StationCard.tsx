@@ -24,12 +24,17 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const [imgFailed, setImgFailed] = useState(false);
 
   const distanceLabel = (() => {
+    const hasStationCoords =
+      station.latitude != null && station.longitude != null &&
+      (station.latitude !== 0 || station.longitude !== 0);
     const km = station.distanceKm != null
       ? station.distanceKm
-      : (userLocation && station.latitude != null && station.longitude != null)
-        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude)
+      : (userLocation && hasStationCoords)
+        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude!, station.longitude!)
         : null;
-    if (km == null) return null;
+    /* Regional service: an implausibly large distance means missing/placeholder
+       coordinates, not a real position — show "--" rather than a misleading value. */
+    if (km == null || km > 1000) return null;
     if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
     return t('distance_km', { distance: km.toFixed(1) });
   })();
