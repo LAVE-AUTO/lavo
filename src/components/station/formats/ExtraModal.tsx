@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
@@ -30,6 +31,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function ExtraModal({ extra, onClose, onSaved }: Props) {
+  const tc = useTranslations('common');
   const isEdit = extra !== null;
 
   const [name, setName] = useState('');
@@ -128,7 +130,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               type="button"
               onClick={onClose}
               className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[#F0EDE4] hover:text-[#333] dark:text-[#5A5A4A] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
-              aria-label="Fermer"
+              aria-label={tc('close')}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

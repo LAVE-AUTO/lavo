@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 
@@ -44,6 +45,7 @@ export function Modal({
   footer,
   size = 'md',
 }: ModalProps) {
+  const tc = useTranslations('common');
   /* Lock body scroll while modal is open */
   useEffect(() => {
     if (!open) return;
@@ -98,7 +100,7 @@ export function Modal({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={tc('close')}
               className="text-Hurryline-muted hover:text-[#001201] dark:hover:text-white transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
