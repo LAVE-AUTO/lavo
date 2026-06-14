@@ -220,7 +220,7 @@ export function PublicNavbar({
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
-          <Link href={logoHref} className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href={logoHref} className="shrink-0" aria-label={t('logo_home_aria')} suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
@@ -358,7 +358,7 @@ export function PublicNavbar({
                     type="button"
                     onClick={() => setDropdownOpen((v) => !v)}
                     className="flex items-center gap-2 group cursor-pointer"
-                    aria-label="Menu utilisateur"
+                    aria-label={t('user_menu_aria')}
                     aria-expanded={dropdownOpen}
                     aria-haspopup="true"
                   >
@@ -450,7 +450,7 @@ export function PublicNavbar({
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               className="flex lg:hidden w-9 h-9 items-center justify-center text-[var(--foreground)] dark:text-[#B0BFB1] hover:text-[#DDAF3B] dark:hover:text-[#DDAF3B] transition-colors"
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? t('menu_close_aria') : t('menu_open_aria')}
               aria-expanded={menuOpen}
             >
               {menuOpen ? <CloseIcon /> : <MenuIcon />}

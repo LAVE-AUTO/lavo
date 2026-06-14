@@ -25,6 +25,7 @@ const EyeOffIcon = () => (
 );
 
 function StatusDot() {
+  const t = useTranslations('admin_dashboard');
   return (
     <span className="flex items-center gap-1.5 rounded-full border border-[#00C851]/30 bg-[#00C851]/10 px-3 py-1">
       <span className="relative flex h-2 w-2">
@@ -32,7 +33,7 @@ function StatusDot() {
         <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C851]" />
       </span>
       <span className="text-[11px] font-black uppercase tracking-wider text-[#00A041]">
-        Opérationnel
+        {t('status_operational')}
       </span>
     </span>
   );
