@@ -215,6 +215,10 @@ export function LegalEditor({ pageKey, html, onChange, disabled = false, placeho
       heading: { levels: [2, 3] },
       bulletList: { keepMarks: true, keepAttributes: false },
       orderedList: { keepMarks: true, keepAttributes: false },
+      // StarterKit bundles link + underline; disable them here so the explicitly
+      // configured Underline/Link extensions below don't register duplicate names.
+      link: false,
+      underline: false,
     }),
     Underline,
     Link.configure({
