@@ -11,7 +11,7 @@ import {
   fromAppError,
 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
-import { AppError, ForbiddenError, UnauthorizedError } from '@/lib/errors';
+import { AppError, ForbiddenError, UnauthorizedError, WrongLoginSpaceError } from '@/lib/errors';
 import { checkRateLimit, recordFailedAttempt, resetOnSuccess } from '@/lib/rate-limiter';
 import { getClientRateLimitKey } from '@/lib/request-ip';
 import { buildRefreshCookieOptions } from '@/lib/jwt';
@@ -154,6 +154,14 @@ export async function POST(request: Request): Promise<Response> {
     if (e instanceof UnauthorizedError) {
       await recordFailedAttempt(ip);
       return error401('Invalid credentials', ApiCode.INVALID_CREDENTIALS);
+    }
+
+    if (e instanceof WrongLoginSpaceError) {
+      // Valid, active account on the wrong login page. Return the actual role so the
+      // client can point the user to the correct login space (checked before the
+      // generic ForbiddenError branch since this subclasses it).
+      await recordFailedAttempt(ip);
+      return error403(e.message, ApiCode.WRONG_LOGIN_SPACE, { role: e.role });
     }
 
     if (e instanceof ForbiddenError) {
