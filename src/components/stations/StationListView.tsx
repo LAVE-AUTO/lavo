@@ -18,7 +18,7 @@ import {
 } from './StationFilters';
 import type { StationDetailData } from '@/types/station';
 
-type SortKey = 'default' | 'best_rated' | 'nearest';
+type SortKey = 'default' | 'best_rated' | 'price_asc' | 'nearest';
 
 interface StationListViewProps {
   washTypes: WashTypeOption[];
@@ -33,9 +33,42 @@ const DEFAULT_FILTERS: StationFiltersState = {
   selectedWashTypes: [],
   serviceScope:      '',
   formatId:          '',
+  priceMin:          '',
+  priceMax:          '',
+  timeFrom:          '',
+  timeTo:            '',
   distanceMinKm:     '',
   distanceMaxKm:     '',
+  date:              '',
 };
+
+/** Convert "HHhMM - HHhMM" or "HH:MM - HH:MM" into [openMinutes, closeMinutes]. */
+function parseOpeningHoursToMinutes(oh: string | undefined): { open: number; close: number } | null {
+  if (!oh) return null;
+  const parts = oh.split(/[–\-]/).map((s) => s.trim());
+  if (parts.length !== 2) return null;
+  const toMin = (s: string): number | null => {
+    const m = s.match(/(\d{1,2})[:h](\d{2})?/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10);
+    const mm = m[2] ? parseInt(m[2], 10) : 0;
+    if (Number.isNaN(h) || Number.isNaN(mm)) return null;
+    return h * 60 + mm;
+  };
+  const open = toMin(parts[0]);
+  const close = toMin(parts[1]);
+  return open != null && close != null ? { open, close } : null;
+}
+
+function timeStringToMinutes(s: string): number | null {
+  if (!s) return null;
+  const m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  if (Number.isNaN(h) || Number.isNaN(mm)) return null;
+  return h * 60 + mm;
+}
 
 /**
  * Public station list with mixed backend + client-side filtering.
@@ -140,6 +173,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     if (filters.selectedWashTypes.length > 0)  params.wash_type_ids = filters.selectedWashTypes.join(',');
     if (filters.serviceScope)                  params.service_scope = filters.serviceScope;
     if (filters.formatId)                      params.format_id = filters.formatId;
+    if (filters.date && /^\d{4}-\d{2}-\d{2}$/.test(filters.date)) params.date = filters.date;
     /* Geocoded address takes precedence over GPS for near_lat/near_lng. */
     const locationSource = geocodedCoords
       ? { latitude: geocodedCoords.lat, longitude: geocodedCoords.lng }
@@ -159,7 +193,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     }).catch(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, userLocation, geocodedCoords]);
+  }, [debouncedNameSearch, sort, filters.selectedWashTypes, filters.serviceScope, filters.formatId, filters.distanceMinKm, filters.distanceMaxKm, filters.date, userLocation, geocodedCoords]);
 
   /* Hydrate unified search from URL ?q= */
   useEffect(() => {
@@ -170,6 +204,11 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   }, [searchParams]);
 
   /* Client-side pipeline */
+  const priceMinNum = filters.priceMin !== '' ? parseFloat(filters.priceMin) : null;
+  const priceMaxNum = filters.priceMax !== '' ? parseFloat(filters.priceMax) : null;
+  const timeFromMin = timeStringToMinutes(filters.timeFrom);
+  const timeToMin   = timeStringToMinutes(filters.timeTo);
+
   const applyClientFilters = (list: StationDetailData[]) => {
     let out = list;
     /* Text search — mirrors backend ILIKE on name/address/city/description. */
@@ -183,6 +222,21 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
       );
     }
     if (filters.onlyAvail) out = out.filter((s) => s.availableSlots > 0);
+    if (priceMinNum != null && Number.isFinite(priceMinNum)) {
+      out = out.filter((s) => s.priceFrom != null && s.priceFrom >= priceMinNum);
+    }
+    if (priceMaxNum != null && Number.isFinite(priceMaxNum)) {
+      out = out.filter((s) => s.priceFrom != null && s.priceFrom <= priceMaxNum);
+    }
+    if (timeFromMin != null || timeToMin != null) {
+      out = out.filter((s) => {
+        const range = parseOpeningHoursToMinutes(s.openingHours);
+        if (!range) return false;
+        if (timeFromMin != null && range.close <= timeFromMin) return false;
+        if (timeToMin   != null && range.open  >= timeToMin)   return false;
+        return true;
+      });
+    }
     const distMin = filters.distanceMinKm !== '' ? parseFloat(filters.distanceMinKm) : null;
     const distMax = filters.distanceMaxKm !== '' ? parseFloat(filters.distanceMaxKm) : null;
     if ((distMin != null || distMax != null) && userLocation) {
@@ -196,13 +250,22 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     if (sort === 'best_rated') {
       out = [...out].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     }
+    if (sort === 'price_asc') {
+      out = [...out].sort((a, b) => {
+        const ap = a.priceFrom ?? Number.POSITIVE_INFINITY;
+        const bp = b.priceFrom ?? Number.POSITIVE_INFINITY;
+        return ap - bp;
+      });
+    }
     return out;
   };
 
   const hasActiveSearch =
     debouncedSearch !== '' ||
     filters.selectedWashTypes.length > 0 || filters.serviceScope !== '' || filters.formatId !== '' ||
-    filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' || geocodedCoords != null ||
+    priceMinNum != null || priceMaxNum != null ||
+    timeFromMin != null || timeToMin != null ||
+    filters.date !== '' || geocodedCoords != null ||
     sort !== 'default';
 
   const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort, userLocation, debouncedSearch]);
@@ -218,7 +281,10 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     (filters.selectedWashTypes.length ? 1 : 0) +
     (filters.serviceScope ? 1 : 0) +
     (filters.formatId ? 1 : 0) +
-    (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0);
+    (priceMinNum != null || priceMaxNum != null ? 1 : 0) +
+    (timeFromMin != null || timeToMin != null ? 1 : 0) +
+    (filters.distanceMinKm !== '' || filters.distanceMaxKm !== '' ? 1 : 0) +
+    (filters.date !== '' ? 1 : 0);
 
   const handleReset = () => {
     setFilters(DEFAULT_FILTERS);
@@ -233,6 +299,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     { key: 'default',    label: t('filter_all') },
     { key: 'nearest',    label: t('filter_nearby') },
     { key: 'best_rated', label: t('filter_best_rated') },
+    { key: 'price_asc',  label: t('filter_price_asc') },
   ];
 
   return (

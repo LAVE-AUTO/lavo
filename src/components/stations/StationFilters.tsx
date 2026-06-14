@@ -16,8 +16,13 @@ export interface StationFiltersState {
   selectedWashTypes: string[];
   serviceScope: ServiceScope;
   formatId: string;
+  priceMin: string;
+  priceMax: string;
+  timeFrom: string;
+  timeTo: string;
   distanceMinKm: string;
   distanceMaxKm: string;
+  date: string;
 }
 
 interface StationFiltersProps {
@@ -140,10 +145,20 @@ export function StationFilters({
           </div>
         </div>
 
-        {/* Row 3: Vehicle */}
-        <div className="mb-3">
-          <p className={labelBase}>{t('filter_vehicle_label')}</p>
-          <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
+        {/* Row 3: Vehicle + Price */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className={labelBase}>{t('filter_vehicle_label')}</p>
+            <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_price_label')}</p>
+            <div className="flex gap-2 items-center">
+              <PriceInput value={value.priceMin} onChange={(v) => patch({ priceMin: v })} placeholder={t('filter_price_min_placeholder')} unit={t('filter_currency_unit')} />
+              <span className="text-[#999] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
+              <PriceInput value={value.priceMax} onChange={(v) => patch({ priceMax: v })} placeholder={t('filter_price_max_placeholder')} unit={t('filter_currency_unit')} />
+            </div>
+          </div>
         </div>
 
         {/* Row 4: Distance */}
@@ -156,6 +171,28 @@ export function StationFilters({
           {!hasLocation && (
             <p className="mt-1.5 text-[11px] text-[#B0BFB1] dark:text-[#B0BFB1] italic">{t('filter_distance_no_location')}</p>
           )}
+        </div>
+
+        {/* Row 5: Date + Time range */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className={labelBase}>{t('filter_date_label')}</p>
+            <input
+              type="date"
+              value={value.date}
+              onChange={(e) => patch({ date: e.target.value })}
+              aria-label={t('filter_date_label')}
+              className={`${inputBase} px-2.5 py-2 font-mono`}
+            />
+          </div>
+          <div>
+            <p className={labelBase}>{t('filter_time_label')}</p>
+            <div className="flex items-center gap-1">
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className={`flex-1 ${inputBase} px-2 py-2 text-center font-mono`} />
+              <span className="text-[#AAA] dark:text-foreground/70 text-[12px] font-bold shrink-0">—</span>
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className={`flex-1 ${inputBase} px-2 py-2 text-center font-mono`} />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -225,12 +262,33 @@ export function StationFilters({
           <FilterRow label={t('filter_vehicle_label')}>
             <CustomSelect value={value.formatId} onChange={(v) => patch({ formatId: v })} placeholder={t('filter_vehicle_placeholder')} options={[{ value: '', label: t('filter_vehicle_placeholder') }, ...vehicleFormats.map((f) => ({ value: f.id, label: f.label }))]} />
           </FilterRow>
+          <FilterRow label={t('filter_price_label')}>
+            <div className="grid grid-cols-2 gap-2.5">
+              <PriceInput value={value.priceMin} onChange={(v) => patch({ priceMin: v })} placeholder={t('filter_price_min_placeholder')} unit={t('filter_currency_unit')} />
+              <PriceInput value={value.priceMax} onChange={(v) => patch({ priceMax: v })} placeholder={t('filter_price_max_placeholder')} unit={t('filter_currency_unit')} />
+            </div>
+          </FilterRow>
           <FilterRow label={t('filter_distance_label')}>
             <div className="grid grid-cols-2 gap-2.5">
               <DistanceInput value={value.distanceMinKm} onChange={(v) => patch({ distanceMinKm: v })} placeholder={t('filter_distance_min_placeholder')} />
               <DistanceInput value={value.distanceMaxKm} onChange={(v) => patch({ distanceMaxKm: v })} placeholder={t('filter_distance_max_placeholder')} />
             </div>
             {!hasLocation && <p className="mt-2 text-[12px] text-[#B0BFB1] dark:text-[#B0BFB1] italic">{t('filter_distance_no_location')}</p>}
+          </FilterRow>
+          <FilterRow label={t('filter_date_label')}>
+            <input
+              type="date"
+              value={value.date}
+              onChange={(e) => patch({ date: e.target.value })}
+              aria-label={t('filter_date_label')}
+              className="w-full rounded-xl border border-[#E0E0D0] bg-[#FFF9EC] px-3 py-2.5 font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
+            />
+          </FilterRow>
+          <FilterRow label={t('filter_time_label')}>
+            <div className="grid grid-cols-2 gap-2.5">
+              <input type="time" value={value.timeFrom} onChange={(e) => patch({ timeFrom: e.target.value })} aria-label={t('filter_time_from')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#FFF9EC] px-3 py-2.5 text-center font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
+              <input type="time" value={value.timeTo} onChange={(e) => patch({ timeTo: e.target.value })} aria-label={t('filter_time_to')} className="w-full rounded-xl border border-[#E0E0D0] bg-[#FFF9EC] px-3 py-2.5 text-center font-mono text-[14px] text-[#001201] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors" />
+            </div>
           </FilterRow>
         </div>
 
@@ -289,3 +347,26 @@ function DistanceInput({ value, onChange, placeholder }: {
   );
 }
 
+function PriceInput({ value, onChange, placeholder, unit }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  unit: string;
+}) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-foreground/55">
+        {unit}
+      </span>
+      <input
+        type="number"
+        min={0}
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-[#E0E0D0] bg-[#FFF9EC] py-2.5 pl-8 pr-3 text-[14px] text-[#001201] placeholder-[#B0BFB1] outline-none focus:border-gold dark:border-border dark:bg-tab-inactive dark:text-white transition-colors"
+      />
+    </div>
+  );
+}
