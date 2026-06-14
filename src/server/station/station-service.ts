@@ -23,10 +23,7 @@ import {
 import { APP_URL } from '@/helpers/constants';
 import { buildStationQrPublicUrl } from '@/server/qr/qr-token-service';
 import { notifyAdminEvent } from '@/server/notifications/admin-notification-service';
-import {
-  createStripeConnectAccount,
-  createStripeOnboardingLink,
-} from '@/server/payments/payment-service';
+import { createStripeConnectAccount } from '@/server/payments/payment-service';
 import {
   ConflictError,
   NotFoundError,
@@ -323,7 +320,6 @@ export async function approveStation(
 
   // M-1: Create Stripe account BEFORE activating so the station stays pending if Stripe fails.
   const accountId = await createStripeConnectAccount(stationUser.email, stationId);
-  const stripeOnboardingUrl = await createStripeOnboardingLink(accountId);
 
   // C-2 + H-1: Atomic conditional UPDATE + audit log in one transaction.
   // The WHERE on status ensures only one concurrent approve wins - the other gets 0 rows → 409.

@@ -1,7 +1,7 @@
 import type { NextResponse } from 'next/server';
 
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error404, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error403, error404, error500, fromAppError } from '@/lib/responses';
 import { AppError, NotFoundError } from '@/lib/errors';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
 import { findStationByUserId, updateStationInfo } from '@/server/station/station-repository';
@@ -14,6 +14,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     const station = await findStationByUserId(auth.sub);
     if (!station) return applyNoStoreHeaders(error404('No station associated with this account'));
+
+    if (station.status !== 'active') {
+      return applyNoStoreHeaders(error403('Station must be active to configure Stripe'));
+    }
 
     let accountId = station.stripe_account_id;
 
