@@ -388,6 +388,28 @@ export const listStationsQuerySchema = z.object({
     .refine((n) => n === undefined || (Number.isFinite(n) && n > 0), {
       message: 'distance_max_km must be a positive number',
     }),
+  price_min: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n >= 0), {
+      message: 'price_min must be a non-negative number',
+    }),
+  price_max: z
+    .string()
+    .optional()
+    .transform((s) => (s === '' || s === undefined ? undefined : Number(s)))
+    .refine((n) => n === undefined || (Number.isFinite(n) && n >= 0), {
+      message: 'price_max must be a non-negative number',
+    }),
+  time_from: optionalEmptyToUndefined(
+    (s) => /^([01]?\d|2[0-3]):[0-5]\d$/.test(s),
+    'time_from must be HH:MM'
+  ),
+  time_to: optionalEmptyToUndefined(
+    (s) => /^([01]?\d|2[0-3]):[0-5]\d$/.test(s),
+    'time_to must be HH:MM'
+  ),
 });
 
 

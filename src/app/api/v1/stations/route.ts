@@ -9,7 +9,7 @@ import { listStationsPublic } from '@/server/station/station-service';
  * GET /api/v1/stations
  * List active stations with optional search (q), city, sort (multi-criteria), pagination, and groups.
  * Response: { data: { all: Station[], available_now?, most_appreciated?, most_visited? }, meta: { total, page, per_page, total_pages } }.
- * Query params: groups, q, city, sort, page, per_page, limit_per_group, wash_type_ids, service_scope, format_id, date (date/slot no-op in repo).
+ * Query params: groups, q, city, sort, page, per_page, limit_per_group, wash_type_ids, service_scope, format_id, date, price_min, price_max, time_from, time_to, near_lat, near_lng, distance_min_km, distance_max_km.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -29,6 +29,10 @@ export async function GET(request: Request) {
     near_lng: searchParams.get('near_lng') ?? undefined,
     distance_min_km: searchParams.get('distance_min_km') ?? undefined,
     distance_max_km: searchParams.get('distance_max_km') ?? undefined,
+    price_min: searchParams.get('price_min') ?? undefined,
+    price_max: searchParams.get('price_max') ?? undefined,
+    time_from: searchParams.get('time_from') ?? undefined,
+    time_to: searchParams.get('time_to') ?? undefined,
   };
   const parsed = listStationsQuerySchema.safeParse(raw);
   if (!parsed.success) {
@@ -53,6 +57,11 @@ export async function GET(request: Request) {
       near_lng: parsed.data.near_lng,
       distance_min_km: parsed.data.distance_min_km,
       distance_max_km: parsed.data.distance_max_km,
+      date: parsed.data.date,
+      price_min: parsed.data.price_min,
+      price_max: parsed.data.price_max,
+      time_from: parsed.data.time_from,
+      time_to: parsed.data.time_to,
     });
     const response = NextResponse.json({ data: result.data, meta: result.meta }, { status: 200 });
     response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
