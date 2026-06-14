@@ -76,7 +76,7 @@ export function MerchantNavbar() {
   const initial = user ? (user.first_name?.[0] ?? user.email[0]).toUpperCase() : '';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
-  const darkLogoSrc  = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+  const darkLogoSrc  = locale === 'fr' ? '/logo/logo_anglais_2.png' : '/logo/logo_anglais_2.png';
 
   /* Class strings copied verbatim from PublicNavbar so the visual rhythm
    * (rounded-md placement, padding scale, hover shadow) is identical. */

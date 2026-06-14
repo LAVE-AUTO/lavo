@@ -43,7 +43,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
 
   const isDark = resolvedTheme === 'dark';
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
-  const darkLogoSrc  = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+  const darkLogoSrc  = locale === 'fr' ? '/logo/logo_anglais_2.png' : '/logo/logo_anglais_2.png';
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);

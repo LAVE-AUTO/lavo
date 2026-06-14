@@ -45,7 +45,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
    * the colour variant. Falls back to the FR pair to match the rest of the
    * platform's behaviour when locale is anything else. */
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
-  const darkLogoSrc  = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+  const darkLogoSrc  = locale === 'fr' ? '/logo/logo_anglais_2.png' : '/logo/logo_anglais_2.png';
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);

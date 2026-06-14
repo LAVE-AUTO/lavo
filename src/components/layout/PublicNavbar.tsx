@@ -170,7 +170,7 @@ export function PublicNavbar({
   } as const;
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
-  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo_anglais_2.png' : '/logo/logo_anglais_2.png';
 
   const displayName = user
     ? (user.first_name ? `${user.first_name} ${user.last_name ?? ''}`.trim() : user.email.split('@')[0])
