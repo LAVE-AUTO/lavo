@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
 import { AdminPagination } from './ui/AdminPagination';
@@ -61,10 +62,10 @@ const BADGE_CLASSES: Record<ActionBadgeVariant, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatDateTime(iso: string) {
+function formatDateTime(iso: string, locale: string) {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' })
+    return d.toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' })
       + ' · '
       + d.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
   } catch {
@@ -120,7 +121,7 @@ function fmtValue(t: LogsT, key: string, val: unknown): string {
     return Number.isFinite(n) ? `${Math.round(n * 100 * 10) / 10} %` : s;
   }
   if (key === 'promo_ref_generated_at') {
-    try { return new Date(s).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+    try { return new Date(s).toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }); }
     catch { return s; }
   }
   if (key === 'status') return statusLabel(t, s);
@@ -297,6 +298,7 @@ const PER_PAGE = 25;
 
 export function AdminActivityLog() {
   const t = useTranslations('admin_logs');
+  const locale = useLocale();
   const { error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -430,7 +432,7 @@ export function AdminActivityLog() {
             <div className="overflow-hidden rounded-[18px] border border-[#E8E3D7] bg-white shadow-[0_4px_12px_rgba(26,26,10,0.04)] dark:border-[#1E2E18] dark:bg-[#0E170C]">
               <div className="divide-y divide-[#EFEBE0] dark:divide-[#1A2A14]">
                 {items.map((entry) => (
-                  <LogRow key={entry.id} entry={entry} t={t} />
+                  <LogRow key={entry.id} entry={entry} t={t} locale={locale} />
                 ))}
               </div>
             </div>
@@ -454,7 +456,7 @@ export function AdminActivityLog() {
 
 // ─── Log row ─────────────────────────────────────────────────────────────────
 
-function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
+function LogRow({ entry, t, locale }: { entry: LogEntry; t: LogsT; locale: string }) {
   const actionKey  = `action_${entry.action}` as Parameters<typeof t>[0];
   const summaryKey = `summary_${entry.action}` as Parameters<typeof t>[0];
   const targetKey  = entry.target_type ? (`target_${entry.target_type}` as Parameters<typeof t>[0]) : null;
@@ -471,7 +473,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
         <div className="flex items-start justify-between gap-2">
           <ActionBadge action={entry.action} label={actionLabel} />
           <time className="shrink-0 text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">
-            {formatDateTime(entry.created_at)}
+            {formatDateTime(entry.created_at, locale)}
           </time>
         </div>
         {summaryLabel && (
@@ -539,7 +541,7 @@ function LogRow({ entry, t }: { entry: LogEntry; t: LogsT }) {
         {/* Date */}
         <div className="pt-0.5 text-right">
           <time className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">
-            {formatDateTime(entry.created_at)}
+            {formatDateTime(entry.created_at, locale)}
           </time>
         </div>
       </div>

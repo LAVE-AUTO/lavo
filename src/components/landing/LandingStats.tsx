@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 
 const STATS = [
   { key: 'stats_merchants', value: 120, suffix: '+' },
@@ -16,6 +17,7 @@ function AnimatedNumber({ target, suffix, format, decimal }: {
   format?: boolean;
   decimal?: boolean;
 }) {
+  const locale = useLocale();
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
@@ -51,7 +53,7 @@ function AnimatedNumber({ target, suffix, format, decimal }: {
   }, [target, decimal]);
 
   const display = format
-    ? count.toLocaleString('fr-FR')
+    ? count.toLocaleString(intlDateLocale(locale))
     : decimal
       ? count.toFixed(1)
       : count.toString();

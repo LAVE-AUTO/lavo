@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
 import type { ApiTicketListItem, DisplayStatus } from '@/types/support';
 import { STATUS_MAP, userDisplayName } from '@/types/support';
@@ -12,8 +13,8 @@ const STATUS_STYLE: Record<DisplayStatus, { bar: string; dot: string; text: stri
   closed:      { bar: 'bg-[#94A3B8]', dot: 'bg-[#94A3B8]', text: 'text-[#64748B] dark:text-[#CBD5E1]', label: 'status_closed' },
 };
 
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
 }
 
@@ -26,6 +27,7 @@ interface Props { tickets: ApiTicketListItem[]; query: string; loading: boolean;
 
 export function AdminSupportList({ tickets, query, loading, filter }: Props) {
   const t = useTranslations('admin_support');
+  const locale = useLocale();
 
   if (loading) {
     return (
@@ -104,7 +106,7 @@ export function AdminSupportList({ tickets, query, loading, filter }: Props) {
                   </p>
                 ) : null}
                 <p className="mt-1 text-[11.5px] font-semibold text-[#A8A293] dark:text-[#7E8A75]">
-                  {creatorName} · {formatDate(tk.created_at)}
+                  {creatorName} · {formatDate(tk.created_at, locale)}
                 </p>
               </div>
 

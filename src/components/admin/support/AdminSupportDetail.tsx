@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
@@ -22,9 +23,9 @@ const ROLE_COLOR: Record<string, string> = {
   station: 'bg-[#F0FDF4] text-[#15803D] dark:bg-[#15803D]/10 dark:text-[#4ADE80]',
 };
 
-function formatDateTime(d: string) {
+function formatDateTime(d: string, locale: string) {
   try {
-    return new Date(d).toLocaleString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(d).toLocaleString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   } catch { return d; }
 }
 
@@ -66,6 +67,7 @@ interface Props { id: string }
 
 export function AdminSupportDetail({ id }: Props) {
   const t = useTranslations('admin_support');
+  const locale = useLocale();
   const { success: toastSuccess, error: toastError } = useToast();
   const { user } = useAuth();
   const mountedRef = useRef(true);
@@ -328,7 +330,7 @@ export function AdminSupportDetail({ id }: Props) {
                           {authorName}
                         </p>
                         <p className="text-[13px] leading-relaxed text-[#001201] dark:text-[#FFF9EC]">{msg.content}</p>
-                        <p className="mt-1.5 text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDateTime(typeof msg.created_at === 'string' ? msg.created_at : new Date(msg.created_at).toISOString())}</p>
+                        <p className="mt-1.5 text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDateTime(typeof msg.created_at === 'string' ? msg.created_at : new Date(msg.created_at).toISOString(), locale)}</p>
                       </div>
                     </div>
                   );

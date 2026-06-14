@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
@@ -22,8 +23,8 @@ const STATUS_STYLE: Record<TxStatus, { badge: string; dot: string; bar: string }
 function fmt(n: number) {
   return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
 }
-function formatDateTime(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function formatDateTime(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
   catch { return d; }
 }
 
@@ -31,6 +32,7 @@ interface Props { tx: TxRow | null; onClose: () => void; }
 
 export function AdminTransactionDrawer({ tx, onClose }: Props) {
   const t = useTranslations('admin_transactions');
+  const locale = useLocale();
   const { error: toastError } = useToast();
   const closeBtnRef   = useRef<HTMLButtonElement>(null);
   const mountedRef    = useRef(true);
@@ -109,7 +111,7 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold ${s.badge}`}>
               <span className={`h-2 w-2 rounded-full ${s.dot}`} />{STATUS_LABELS[tx.status]}
             </span>
-            <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{formatDateTime(tx.date)}</p>
+            <p className="text-[13px] text-foreground/55 dark:text-[#B0BFB1]">{formatDateTime(tx.date, locale)}</p>
           </div>
 
           {/* Amounts */}

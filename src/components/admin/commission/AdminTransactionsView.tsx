@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
 import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
@@ -33,8 +34,8 @@ const STATUS_META: Record<TxStatus, { dot: string; text: string; bar: string; la
 };
 
 function fmt(n: number) { return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }); }
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short' }); }
   catch { return d; }
 }
 function formatTime(d: string) {
@@ -47,6 +48,7 @@ const PER_PAGE = 25;
 
 export function AdminTransactionsView() {
   const t = useTranslations('admin_transactions');
+  const locale = useLocale();
   const { error: toastError } = useToast();
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -288,7 +290,7 @@ export function AdminTransactionsView() {
 
                     {/* Date + arrow */}
                     <div className="flex shrink-0 flex-col items-end gap-0.5 py-3.5 pr-4 pl-2">
-                      <span className="text-[12.5px] font-bold text-[#5A554B] dark:text-[#B0BFB1]">{formatDate(tx.date)}</span>
+                      <span className="text-[12.5px] font-bold text-[#5A554B] dark:text-[#B0BFB1]">{formatDate(tx.date, locale)}</span>
                       <span className="text-[11px] text-[#A8A293] dark:text-[#7E8A75]">{formatTime(tx.date)}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-1 text-[#CCCCCC] transition-colors group-hover:text-[#DDAF3B] dark:text-[#B0BFB1]" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
                     </div>

@@ -1,19 +1,21 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { useCommission } from '@/context/commission-context';
 import { updateWithApi } from '@/services/axios-service';
 
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
 }
 
 export function AdminCommissionView() {
   const t = useTranslations('admin_commission');
+  const locale = useLocale();
   const { success: toastSuccess, error: toastError } = useToast();
   const { user } = useAuth();
   const { rate: savedRate, history, loading: historyLoading, updateRate, reload } = useCommission();
@@ -185,7 +187,7 @@ export function AdminCommissionView() {
                           <p className="mt-0.5 text-[11px] text-[#BBBBAA] dark:text-[#B0BFB1]">{t('set_by_admin')}</p>
                         )}
                       </div>
-                      <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(h.effective_at)}</p>
+                      <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">{formatDate(h.effective_at, locale)}</p>
                     </div>
                   );
                 })}
