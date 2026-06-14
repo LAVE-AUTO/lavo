@@ -25,9 +25,14 @@ export async function POST() {
   const host = headersList.get('host');
   const expectedAppUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  if (origin && expectedAppUrl) {
+  // PWA standalone mode (iOS/Android home screen) sends Origin: null — skip the check
+  // rather than rejecting the request, since the httpOnly refresh cookie is already
+  // the CSRF protection for this endpoint.
+  const effectiveOrigin = origin === 'null' ? null : origin;
+
+  if (effectiveOrigin && expectedAppUrl) {
     try {
-      const originUrl = new URL(origin);
+      const originUrl = new URL(effectiveOrigin);
       const appUrl = new URL(expectedAppUrl);
       if (originUrl.host !== appUrl.host) {
         return error401();
@@ -35,11 +40,11 @@ export async function POST() {
     } catch {
       return error401();
     }
-  } else if (origin && !expectedAppUrl && host) {
+  } else if (effectiveOrigin && !expectedAppUrl && host) {
     // Fallback: compare Origin host with the Host header when NEXT_PUBLIC_APP_URL
     // is not configured (e.g. local development).
     try {
-      const originUrl = new URL(origin);
+      const originUrl = new URL(effectiveOrigin);
       if (originUrl.host !== host) {
         return error401();
       }
