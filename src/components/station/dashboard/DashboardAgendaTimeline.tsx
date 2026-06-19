@@ -38,7 +38,7 @@ interface Props {
   onSelectEntry: (entry: AgendaEntry) => void;
 }
 
-const PX_PER_MINUTE = 1.5; // 60 min = 90 px (compact yet readable)
+const PX_PER_MINUTE = 3; // 60 min = 180 px — ensures proportional heights for typical 20–90 min slots
 const DEFAULT_OPEN = '08:00';
 const DEFAULT_CLOSE = '20:00';
 
