@@ -421,6 +421,35 @@ export async function findPendingPaymentReservationForSlot(
   return row[0];
 }
 
+/** TTL for unconfirmed pending_payment reservations — slots are freed after this window. */
+export const PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+/**
+ * Cancels all pending_payment reservation entries for a slot that are older than
+ * PENDING_PAYMENT_TTL_MS. Must run inside a transaction so the caller can
+ * decrement booked_count atomically for each cancelled row.
+ *
+ * Returns the cancelled rows so the caller can fire Stripe PI cancellations
+ * outside the transaction (external calls must not run inside DB transactions).
+ */
+export async function cancelExpiredPendingPaymentsForSlot(
+  slotId: string,
+  tx: DbTransaction
+): Promise<Array<{ id: string; stripe_payment_id: string | null }>> {
+  const cutoff = new Date(Date.now() - PENDING_PAYMENT_TTL_MS);
+  return tx
+    .update(reservations)
+    .set({ status: 'cancelled', cancellation_reason: 'Payment timeout', updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.time_slot_id, slotId),
+        eq(reservations.status, 'pending_payment'),
+        lt(reservations.created_at, cutoff)
+      )
+    )
+    .returning({ id: reservations.id, stripe_payment_id: reservations.stripe_payment_id });
+}
+
 /**
  * Finds an existing pending_payment queue entry for a specific user at a station.
  * Used in joinQueue to cancel stale payment attempts before issuing a new PI.
