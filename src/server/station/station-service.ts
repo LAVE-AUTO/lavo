@@ -476,11 +476,35 @@ export type StationListPublicItem = Omit<
 /** A station counts as "soon" to open/close within this many minutes. */
 const STATION_STATUS_SOON_MINUTES = 60;
 
+/**
+ * IANA timezone for all station operating hours.
+ * Merchant-configured times (opening_time, closing_time) are entered in local
+ * Eastern time; all status comparisons must use the same reference.
+ */
+const APP_TIMEZONE = 'America/Toronto';
+
 /** Parses an "HH:MM[:SS]" time string into minutes since midnight, or null when malformed. */
 function timeStringToMinutes(time: string): number | null {
   const match = /^(\d{1,2}):(\d{2})/.exec(time);
   if (!match) return null;
   return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+}
+
+/**
+ * Returns minutes since midnight in APP_TIMEZONE so that comparisons against
+ * merchant-configured opening/closing times (which are local Eastern times) are correct
+ * even when the server runs in UTC (e.g. Vercel).
+ */
+function getLocalMinutes(date: Date): number {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: APP_TIMEZONE,
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(date);
+  const h = parseInt(parts.find((p) => p.type === 'hour')!.value, 10);
+  const m = parseInt(parts.find((p) => p.type === 'minute')!.value, 10);
+  return h * 60 + m;
 }
 
 /**
@@ -498,7 +522,7 @@ function computeStationStatus(
   const open = timeStringToMinutes(opening_hours.open);
   const close = timeStringToMinutes(opening_hours.close);
   if (open == null || close == null || close <= open) return 'open';
-  const current = now.getHours() * 60 + now.getMinutes();
+  const current = getLocalMinutes(now);
   if (current < open) {
     return open - current <= STATION_STATUS_SOON_MINUTES ? 'opening_soon' : 'closed';
   }
@@ -754,11 +778,18 @@ export async function getStationDetailPublic(id: string) {
     afternoon_end: row.afternoon_end,
   }));
 
+  const opening_hours =
+    station.stationConfig?.opening_time && station.stationConfig?.closing_time
+      ? { open: station.stationConfig.opening_time, close: station.stationConfig.closing_time }
+      : null;
+  const station_status = computeStationStatus(available_slots, opening_hours);
+
   const { photos: _p, stationWashTypes: _w, ...rest } = station;
   return {
     ...rest,
     available_slots,
     available,
+    station_status,
     completed_count,
     verified,
     photos,
