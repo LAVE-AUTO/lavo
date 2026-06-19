@@ -46,12 +46,15 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   };
 
   const handleFacebook = async () => {
+    // Facebook login is temporarily disabled
+    /*
     setLoadingFacebook(true);
     try {
       await signIn('facebook');
     } catch {
       setLoadingFacebook(false);
     }
+    */
   };
 
   const btnClass = [
@@ -73,17 +76,19 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
         <div className="flex-1 h-px bg-[#E0E0E0] dark:bg-[#444]" />
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex">
         <button
           type="button"
           onClick={handleGoogle}
-          disabled={loadingGoogle || loadingFacebook}
+          disabled={loadingGoogle /* || loadingFacebook */}
           className={`flex-1 ${btnClass} cursor-pointer disabled:opacity-60`}
           aria-label="Continue with Google"
         >
           {loadingGoogle ? <Spinner size="sm" /> : <GoogleIcon />}
           Google
         </button>
+        {/* Facebook login temporarily disabled */}
+        {/*
         <button
           type="button"
           onClick={handleFacebook}
@@ -94,6 +99,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
           {loadingFacebook ? <Spinner size="sm" /> : <FacebookIcon />}
           Facebook
         </button>
+        */}
       </div>
     </div>
   );
