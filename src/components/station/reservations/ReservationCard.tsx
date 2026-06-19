@@ -81,13 +81,14 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const withinStartWindow = isWithinStartWindow(entry.slot_start_time, now);
 
   const showValidate = canDoValidate(entry.status);
-  const showStart = canDoStart(entry.status) && withinStartWindow;
-  const showCancel = canDoCancel(entry.status) && withinStartWindow;
+  const showStart = canDoStart(entry.status);
+  const showCancel = canDoCancel(entry.status);
   const hasActions = showStart || showValidate || showCancel;
-  // Actions exist but are held back until the window opens — explain why.
-  const waitingForWindow =
-    !showValidate && !withinStartWindow && (canDoStart(entry.status) || canDoCancel(entry.status));
   const slotStartLabel = entry.slot_start_time ? formatHourMinute(entry.slot_start_time) : '';
+  // Minutes remaining until the start window opens (0 when already open or no slot)
+  const minutesLeft = entry.slot_start_time && !withinStartWindow
+    ? Math.ceil((new Date(entry.slot_start_time).getTime() - START_WINDOW_MINUTES * 60_000 - now) / 60_000)
+    : 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-surface">
@@ -179,65 +180,79 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             </div>
 
             {/* Actions */}
-            {waitingForWindow && (
-              <p className="rounded-lg bg-white/40 px-3 py-2 text-[12px] font-medium text-[#000717]/55 dark:bg-surface/60 dark:text-[#FFFFF0]/45">
-                {t('actions_start_window_hint', { min: START_WINDOW_MINUTES })}
-                {slotStartLabel ? ` (${slotStartLabel})` : ''}
-              </p>
-            )}
             {hasActions && (
-              <div className="flex flex-wrap items-center gap-2">
-                {showValidate && (
-                  <>
-                    {showTimePicker ? (
-                      <div className="w-full" onClick={(e) => e.stopPropagation()}>
-                        <ExtraTimeInput
-                          onSubmit={(min) => { onExtraTime(entry.id, min); setShowTimePicker(false); }}
-                          onCancel={() => setShowTimePicker(false)}
-                          label={t('time_extension_minutes_label')}
-                        />
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setShowTimePicker(true); }}
-                        className="flex items-center gap-1.5 rounded-[10px] border border-[#C09A18]/60 px-4 py-2 text-[13px] font-bold text-[#C09A18] transition-all hover:bg-[#C09A18]/10 active:scale-[0.98]"
-                      >
-                        <ClockIcon />
-                        {t('btn_extra_time')}
-                      </button>
-                    )}
-                    {!showTimePicker && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
-                        className="flex items-center gap-1.5 rounded-[10px] bg-Hurryline-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-                      >
-                        <CheckIcon />
-                        {t('btn_validate')}
-                      </button>
-                    )}
-                  </>
-                )}
-                {showStart && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
-                    className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[13px] font-bold text-dark-bg transition-all hover:bg-gold-hover active:scale-[0.98]"
-                  >
-                    <PlayIcon />
-                    {t('btn_start_service')}
-                  </button>
-                )}
-                {showCancel && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
-                    className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[13px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
-                  >
-                    <CancelIcon />
-                    {t('btn_cancel_entry')}
-                  </button>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {showValidate && (
+                    <>
+                      {showTimePicker ? (
+                        <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                          <ExtraTimeInput
+                            onSubmit={(min) => { onExtraTime(entry.id, min); setShowTimePicker(false); }}
+                            onCancel={() => setShowTimePicker(false)}
+                            label={t('time_extension_minutes_label')}
+                          />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setShowTimePicker(true); }}
+                          className="flex items-center gap-1.5 rounded-[10px] border border-[#C09A18]/60 px-4 py-2 text-[13px] font-bold text-[#C09A18] transition-all hover:bg-[#C09A18]/10 active:scale-[0.98]"
+                        >
+                          <ClockIcon />
+                          {t('btn_extra_time')}
+                        </button>
+                      )}
+                      {!showTimePicker && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onValidate(entry.id); }}
+                          className="flex items-center gap-1.5 rounded-[10px] bg-Hurryline-success px-4 py-2 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                        >
+                          <CheckIcon />
+                          {t('btn_validate')}
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {showStart && (
+                    <button
+                      type="button"
+                      disabled={!withinStartWindow}
+                      onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
+                      className={`flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-[13px] font-bold transition-all ${
+                        withinStartWindow
+                          ? 'bg-[#C09A18] text-dark-bg hover:bg-gold-hover active:scale-[0.98]'
+                          : 'cursor-not-allowed bg-[#C09A18]/20 text-[#C09A18]/50 dark:bg-[#C09A18]/10 dark:text-[#C09A18]/40'
+                      }`}
+                    >
+                      <PlayIcon />
+                      {t('btn_start_service')}
+                    </button>
+                  )}
+                  {showCancel && (
+                    <button
+                      type="button"
+                      disabled={!withinStartWindow}
+                      onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
+                      className={`flex items-center gap-1.5 rounded-[10px] border-[1.5px] px-3 py-2 text-[13px] font-semibold transition-all ${
+                        withinStartWindow
+                          ? 'border-[#FF2525]/30 text-[#FF2525] hover:bg-[#FF2525]/10 active:scale-[0.98]'
+                          : 'cursor-not-allowed border-[#FF2525]/15 text-[#FF2525]/40 dark:border-[#FF2525]/10 dark:text-[#FF2525]/30'
+                      }`}
+                    >
+                      <CancelIcon />
+                      {t('btn_cancel_entry')}
+                    </button>
+                  )}
+                </div>
+                {/* Countdown hint while outside the start window */}
+                {!withinStartWindow && (showStart || showCancel) && minutesLeft > 0 && (
+                  <p className="flex items-center gap-1.5 text-[11px] text-[#000717]/45 dark:text-[#FFFFF0]/35">
+                    <ClockIcon />
+                    {t('actions_available_in', { min: minutesLeft })}
+                    {slotStartLabel ? ` · ${slotStartLabel}` : ''}
+                  </p>
                 )}
               </div>
             )}

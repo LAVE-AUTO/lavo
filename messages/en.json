@@ -2046,6 +2046,7 @@
         "btn_validate": "Validate service",
         "btn_start_service": "Start",
         "actions_start_window_hint": "Start and cancel become available ~{min} min before the slot",
+        "actions_available_in": "Available in {min} min",
         "btn_cancel_entry": "Cancel",
         "btn_cancel": "Cancel",
         "btn_extra_time": "Extra time",
