@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
+import { useFavorites } from './useFavorites';
 import { useUserLocation, haversineKm } from './useUserLocation';
 import type { StationDetailData } from '@/types/station';
 
@@ -21,15 +22,21 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
   const locale          = useLocale();
   const userLocation    = useUserLocation();
   const { isAuthenticated } = useAuth();
+  const { isFavorite, toggle } = useFavorites();
   const [imgFailed, setImgFailed] = useState(false);
 
   const distanceLabel = (() => {
+    const hasStationCoords =
+      station.latitude != null && station.longitude != null &&
+      (station.latitude !== 0 || station.longitude !== 0);
     const km = station.distanceKm != null
       ? station.distanceKm
-      : (userLocation && station.latitude != null && station.longitude != null)
-        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude, station.longitude)
+      : (userLocation && hasStationCoords)
+        ? haversineKm(userLocation.latitude, userLocation.longitude, station.latitude!, station.longitude!)
         : null;
-    if (km == null) return null;
+    /* Regional service: an implausibly large distance means missing/placeholder
+       coordinates, not a real position — show "--" rather than a misleading value. */
+    if (km == null || km > 1000) return null;
     if (km < 1) return t('distance_m', { distance: Math.round(km * 1000) });
     return t('distance_km', { distance: km.toFixed(1) });
   })();
@@ -104,6 +111,28 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
           <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} aria-hidden="true" />
           {t(statusBadge.labelKey)}
         </span>
+
+        <button
+          type="button"
+          onClick={() => toggle(station.id)}
+          aria-label={isFavorite(station.id) ? t('detail_remove_favorite') : t('detail_add_favorite')}
+          aria-pressed={isFavorite(station.id)}
+          className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/60 cursor-pointer"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill={isFavorite(station.id) ? '#DDAF3B' : 'none'}
+            stroke={isFavorite(station.id) ? '#DDAF3B' : '#fff'}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
 
       </div>
 

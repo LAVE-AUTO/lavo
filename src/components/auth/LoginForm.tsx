@@ -6,6 +6,7 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth, type AuthUser, type UserRole } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
+import { routing } from '@/i18n/routing';
 import { validateEmail } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
 import { Button } from '@/components/ui/Button';
@@ -149,19 +150,27 @@ export function LoginForm({
         }
 
         /* callbackUrl only honoured for client role.
-           Origin check via URL constructor prevents open-redirect via percent-encoded paths (e.g. /%2F%2Fevil.com). */
-        const isSafeCallback = (() => {
-          if (!callbackUrl || userRole !== 'client') return false;
+           Origin check via URL constructor prevents open-redirect via percent-encoded paths (e.g. /%2F%2Fevil.com).
+           The callbackUrl arrives locale-prefixed (e.g. /en/stations/x); the i18n router re-adds the active
+           locale, so we strip a leading /{locale} segment to avoid a doubled prefix (/en/en/...) -> 404. */
+        const safeCallbackPath = (() => {
+          if (!callbackUrl || userRole !== 'client') return null;
           try {
             const u = new URL(callbackUrl, window.location.origin);
-            return u.origin === window.location.origin;
+            if (u.origin !== window.location.origin) return null;
+            let path = u.pathname + u.search + u.hash;
+            const firstSegment = path.split('/')[1];
+            if ((routing.locales as readonly string[]).includes(firstSegment)) {
+              path = path.slice(firstSegment.length + 1) || '/';
+            }
+            return path;
           } catch {
-            return false;
+            return null;
           }
         })();
 
-        if (isSafeCallback) {
-          router.push(callbackUrl!);
+        if (safeCallbackPath) {
+          router.push(safeCallbackPath);
           return;
         }
 
@@ -171,13 +180,22 @@ export function LoginForm({
         return;
       }
 
-      const data = response as { code?: string; message?: string };
+      const data = response as { code?: string; message?: string; role?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));
       } else if (data?.code === 'BUSINESS_NOT_APPROVED') {
         showError(t('error_account_pending'));
       } else if (data?.code === 'BUSINESS_REJECTED') {
         showError(t('error_account_rejected'));
+      } else if (data?.code === 'WRONG_LOGIN_SPACE') {
+        /* Account is valid and active but belongs to a different login space.
+           The backend returns the user's actual role so we can point them to the
+           right login page via the wrong-space banner (see project_pending_backend_specs). */
+        const actualRole = data.role;
+        if (actualRole === 'client' || actualRole === 'station' || actualRole === 'admin') {
+          setWrongSpaceHref(loginHrefForRole(actualRole));
+        }
+        showError(t('error_wrong_space'));
       } else if (data?.code === 'FORBIDDEN') {
         // Generic fallback for any non-approved status the backend may return
         // without a more specific code (e.g. ACCOUNT_SUSPENDED).

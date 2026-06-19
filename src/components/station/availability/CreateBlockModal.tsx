@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useId } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Modal } from '@/components/ui/Modal';
 import type { AvailabilityBlock } from './types';
 
@@ -24,9 +25,9 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isoToDisplay(iso: string): string {
+function isoToDisplay(iso: string, locale: string): string {
   const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function toISODate(d: Date): string {
@@ -81,11 +82,12 @@ function tomorrowISO(): string {
   return toISODate(d);
 }
 
-function formatWeekLabel(dates: string[]): string {
+function formatWeekLabel(dates: string[], locale: string): string {
   if (dates.length === 0) return '';
   const first = new Date(dates[0] + 'T00:00:00');
   const last = new Date(dates[dates.length - 1] + 'T00:00:00');
-  return `${first.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${last.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+  const fmt = intlDateLocale(locale);
+  return `${first.toLocaleDateString(fmt, { day: 'numeric', month: 'short' })} – ${last.toLocaleDateString(fmt, { day: 'numeric', month: 'short' })}`;
 }
 
 export function CreateBlockModal({
@@ -100,6 +102,13 @@ export function CreateBlockModal({
   preselectedDate,
 }: Props) {
   const t = useTranslations('station_dashboard');
+  const locale = useLocale();
+  // Monday-first narrow weekday initials for the active locale (Jan 1 2024 is a Monday).
+  const miniWeekdays = Array.from({ length: 7 }, (_, i) => {
+    const ref = new Date(2024, 0, 1);
+    ref.setDate(ref.getDate() + i);
+    return ref.toLocaleDateString(intlDateLocale(locale), { weekday: 'narrow' }).toUpperCase();
+  });
   const dateInputId = useId();
 
   const [dates, setDates] = useState<string[]>([]);
@@ -207,7 +216,7 @@ export function CreateBlockModal({
   const miniYear = miniCalMonth.getFullYear();
   const miniMonthIdx = miniCalMonth.getMonth();
   const miniMonthLabel = miniCalMonth
-    .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    .toLocaleDateString(intlDateLocale(locale), { month: 'long', year: 'numeric' })
     .toUpperCase();
   const miniFirstDay = new Date(miniYear, miniMonthIdx, 1);
   const miniStartOffset = (miniFirstDay.getDay() + 6) % 7;
@@ -269,11 +278,11 @@ export function CreateBlockModal({
                     key={d}
                     className="flex items-center gap-1.5 rounded-full border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-semibold text-[#001201] dark:bg-[#DDAF3B]/15 dark:text-[#FFF9EC]"
                   >
-                    {isoToDisplay(d)}
+                    {isoToDisplay(d, locale)}
                     <button
                       type="button"
                       onClick={() => removeDate(d)}
-                      aria-label={`Retirer ${isoToDisplay(d)}`}
+                      aria-label={t('availability_remove_date', { date: isoToDisplay(d, locale) })}
                       className="cursor-pointer text-foreground/65 hover:text-[#FF2525]"
                     >
                       ✕
@@ -474,7 +483,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_this_week')}
-              subLabel={formatWeekLabel(futureOf(thisWeek))}
+              subLabel={formatWeekLabel(futureOf(thisWeek), locale)}
               targetDates={thisWeek}
               currentDates={dates}
               onApply={() => addDates(thisWeek)}
@@ -490,7 +499,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_next_week')}
-              subLabel={formatWeekLabel(nextWeek)}
+              subLabel={formatWeekLabel(nextWeek, locale)}
               targetDates={nextWeek}
               currentDates={dates}
               onApply={() => addDates(nextWeek)}
@@ -505,7 +514,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_this_month')}
-              subLabel={formatWeekLabel(futureOf(thisMonth))}
+              subLabel={formatWeekLabel(futureOf(thisMonth), locale)}
               targetDates={thisMonth}
               currentDates={dates}
               onApply={() => addDates(thisMonth)}
@@ -521,7 +530,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_next_month')}
-              subLabel={formatWeekLabel(futureOf(nextMonth))}
+              subLabel={formatWeekLabel(futureOf(nextMonth), locale)}
               targetDates={nextMonth}
               currentDates={dates}
               onApply={() => addDates(nextMonth)}
@@ -537,7 +546,7 @@ export function CreateBlockModal({
                 </svg>
               }
               label={t('availability_modal_three_months')}
-              subLabel={formatWeekLabel(futureOf(threeMonths))}
+              subLabel={formatWeekLabel(futureOf(threeMonths), locale)}
               targetDates={threeMonths}
               currentDates={dates}
               onApply={() => addDates(threeMonths)}
@@ -551,7 +560,7 @@ export function CreateBlockModal({
               <button
                 type="button"
                 onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx - 1, 1))}
-                aria-label="Mois précédent"
+                aria-label={t('availability_prev_month')}
                 className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#DDAF3B] hover:bg-[#DDAF3B]/20 transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -564,7 +573,7 @@ export function CreateBlockModal({
               <button
                 type="button"
                 onClick={() => setMiniCalMonth(new Date(miniYear, miniMonthIdx + 1, 1))}
-                aria-label="Mois suivant"
+                aria-label={t('availability_next_month')}
                 className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#DDAF3B] hover:bg-[#DDAF3B]/20 transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -575,7 +584,7 @@ export function CreateBlockModal({
 
             {/* Day headers */}
             <div className="grid grid-cols-7 mb-1">
-              {['L','M','M','J','V','S','D'].map((d, i) => (
+              {miniWeekdays.map((d, i) => (
                 <div key={i} className="text-center text-[10px] font-bold text-foreground/50 dark:text-[#B0BFB1] py-1">{d}</div>
               ))}
             </div>

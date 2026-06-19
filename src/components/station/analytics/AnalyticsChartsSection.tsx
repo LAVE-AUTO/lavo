@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { PeriodType } from './AnalyticsPeriodToggle';
 
@@ -20,12 +21,13 @@ interface AnalyticsChartsSectionProps {
 
 export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionProps) {
   const t = useTranslations('station_analytics');
+  const locale = useLocale();
 
   // Transform dates for display
   const transformChartData = (series: SeriesData[]) => {
     return series.map((item) => ({
       ...item,
-      dateShort: formatDateShort(item.date),
+      dateShort: formatDateShort(item.date, locale),
     }));
   };
 
@@ -127,13 +129,13 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
   );
 }
 
-function formatDateShort(date: string): string {
+function formatDateShort(date: string, locale: string): string {
   try {
     const d = new Date(date);
     if (isNaN(d.getTime())) {
       return date;
     }
-    return d.toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(intlDateLocale(locale), { month: 'short', day: 'numeric' });
   } catch {
     return date;
   }

@@ -52,6 +52,20 @@ export class ForbiddenError extends AppError {
   }
 }
 
+/**
+ * Login attempted from a space that does not match the account's role (403).
+ * Carries the account's actual role so the client can redirect to the correct login page.
+ */
+export class WrongLoginSpaceError extends ForbiddenError {
+  /** The account's actual role (e.g. 'station', 'admin'). */
+  role: string;
+
+  constructor(role: string, message = 'Access to this space is not allowed for your account type') {
+    super(message, 'WRONG_LOGIN_SPACE');
+    this.role = role;
+  }
+}
+
 /** Not found error (404). */
 export class NotFoundError extends AppError {
   constructor(message = 'Resource not found') {

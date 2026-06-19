@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useToast } from '@/context/toast-context';
 import type { PeriodType } from './AnalyticsPeriodToggle';
 
 interface AnalyticsData {
@@ -24,6 +25,7 @@ interface AnalyticsExportButtonProps {
 
 export function AnalyticsExportButton({ data, period }: AnalyticsExportButtonProps) {
   const t = useTranslations('station_analytics');
+  const { error: showError } = useToast();
 
   const handleExportCsv = () => {
     try {
@@ -85,7 +87,7 @@ export function AnalyticsExportButton({ data, period }: AnalyticsExportButtonPro
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
-      alert(t('export_error'));
+      showError(t('export_error'));
     }
   };
 

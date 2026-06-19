@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { getFromApi } from '@/services';
 import { AdminPagination } from './ui/AdminPagination';
 
@@ -27,8 +28,8 @@ interface PaginationMeta { total: number; page: number; per_page: number; total_
 function initials(first: string | null, last: string | null) {
   return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase() || '?';
 }
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
 }
 
@@ -45,6 +46,7 @@ interface Props {
 
 export function AdminClientsList({ query, onAction, onCountChange, onEditUser, onDeleteUser, refreshKey }: Props) {
   const t = useTranslations('admin_clients');
+  const locale = useLocale();
   const [clients, setClients]       = useState<ClientRow[]>([]);
   const [meta, setMeta]             = useState<PaginationMeta | null>(null);
   const [page, setPage]             = useState(1);
@@ -197,7 +199,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-[14px] font-black text-[#001201] dark:text-[#FFF9EC]">{client.first_name ?? ''} {client.last_name ?? ''}</p>
-                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
+                    <p className="mt-0.5 text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at, locale)}</p>
                   </div>
                 </div>
                 {renderStatus(client)}
@@ -256,7 +258,7 @@ export function AdminClientsList({ query, onAction, onCountChange, onEditUser, o
                     <p className="block truncate text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                       {client.first_name ?? ''} {client.last_name ?? ''}
                     </p>
-                    <p className="truncate text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at)}</p>
+                    <p className="truncate text-[12px] text-[#979083] dark:text-[#B0BFB1]">{formatDate(client.created_at, locale)}</p>
                   </div>
 
                   <div className="min-w-0">

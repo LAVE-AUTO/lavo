@@ -27,13 +27,14 @@ export function successResponse<T>(
 export function errorResponse(
   message: string,
   status: number = HTTP_STATUS.BAD_REQUEST,
-  options: { code?: ApiCode; errors?: ApiErrorBody['errors'] } = {},
+  options: { code?: ApiCode; errors?: ApiErrorBody['errors']; meta?: Record<string, unknown> } = {},
   devError: unknown = null
 ): NextResponse {
-  const body: ApiErrorBody = {
+  const body: ApiErrorBody & Record<string, unknown> = {
     message,
     ...(options.code && { code: options.code }),
     ...(options.errors && options.errors.length > 0 && { errors: options.errors }),
+    ...(options.meta ?? {}),
   };
   if (devError) {
     // Server-side log only. Never include internal error details in the response payload —
@@ -98,9 +99,10 @@ export const error401 = (message = 'Unauthorized', code?: ApiCode) =>
  * Standard 403 Forbidden response.
  * Defaults to `FORBIDDEN` code.
  */
-export const error403 = (message = 'Forbidden', code?: ApiCode) =>
+export const error403 = (message = 'Forbidden', code?: ApiCode, meta?: Record<string, unknown>) =>
   errorResponse(message, HTTP_STATUS.FORBIDDEN, {
     code: code ?? ApiCode.FORBIDDEN,
+    meta,
   });
 
 /**

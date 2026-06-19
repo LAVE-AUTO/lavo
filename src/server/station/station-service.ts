@@ -661,7 +661,11 @@ export async function listStationsPublic(
   const result = await getCachedOrFetch(cacheKey, STATIONS_LIST_TTL, async () => {
     const page = Math.max(1, filters.page ?? 1);
     const per_page = Math.min(100, Math.max(1, filters.per_page ?? 20));
-    const hasActiveFilter = !!(filters.search?.trim() || filters.city || filters.format_id || filters.wash_type_ids?.length || filters.service_scope);
+    const hasActiveFilter = !!(
+      filters.search?.trim() || filters.city || filters.format_id || filters.wash_type_ids?.length ||
+      filters.service_scope || filters.price_min != null || filters.price_max != null ||
+      filters.time_from || filters.time_to || filters.date
+    );
     const open_today = !hasActiveFilter;
     const { rows, total } = await listActiveStations({ ...filters, page, per_page, open_today });
     const total_pages = Math.max(1, Math.ceil(total / per_page));

@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
 import { useAuth } from '@/context/auth-context';
 import { useFavorites } from '@/components/stations/useFavorites';
+import { mapApiStatus } from '@/components/support/support-types';
 import { PageSpinner } from '@/components/ui/PageSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -48,9 +49,10 @@ export default function ClientDashboardPage() {
       const entries = entriesOk
         ? ((entriesData as { data?: { entries?: ApiEntry[] } })?.data?.entries ?? [])
         : [];
-      const tickets = supportOk
-        ? ((supportData as { data?: SupportTicketSummary[] })?.data ?? [])
+      const rawTickets = supportOk
+        ? ((supportData as { data?: { items?: SupportTicketSummary[] } })?.data?.items ?? [])
         : [];
+      const tickets = Array.isArray(rawTickets) ? rawTickets : [];
 
       let completedCount = 0;
       let totalSpent = 0;
@@ -64,7 +66,10 @@ export default function ClientDashboardPage() {
         }
       }
 
-      const openTickets = tickets.filter((ticket) => ticket.status === 'open' || ticket.status === 'in_progress').length;
+      const openTickets = tickets.filter((ticket) => {
+        const status = mapApiStatus(ticket.status);
+        return status === 'open' || status === 'in_progress';
+      }).length;
       setStats({
         completedCount,
         totalSpent,

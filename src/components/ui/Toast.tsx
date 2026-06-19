@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactElement } from 'react';
+import { useTranslations } from 'next-intl';
 import { useToast, type ToastType } from '@/context/toast-context';
 
 const DEFAULT_DURATION = 4000;
@@ -176,6 +177,7 @@ interface ToastCardProps {
 }
 
 function ToastCard({ Icon, accent, message, duration, onDismiss }: ToastCardProps) {
+  const tc = useTranslations('common');
   return (
     <div
       className="relative overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm border"
@@ -207,7 +209,7 @@ function ToastCard({ Icon, accent, message, duration, onDismiss }: ToastCardProp
           onClick={onDismiss}
           className="shrink-0 p-1 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
           style={{ color: 'var(--toast-close, #999)' }}
-          aria-label="Fermer"
+          aria-label={tc('close')}
         >
           <CloseIcon />
         </button>

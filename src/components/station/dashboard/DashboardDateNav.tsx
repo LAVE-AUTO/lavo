@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale, shortWeekdayUpper } from '@/helpers/date-helper';
 
 interface DayChip {
   name: string;
@@ -18,8 +19,7 @@ interface DashboardDateNavProps {
 }
 
 
-function buildWeekChips(selectedDate: Date): DayChip[] {
-  const dayNames = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+function buildWeekChips(selectedDate: Date, locale: string): DayChip[] {
   const startOfWeek = new Date(selectedDate);
   const dayOfWeek = startOfWeek.getDay();
   // Monday-first: Sunday (0) must go back 6 days, other days go back (dow-1)
@@ -31,7 +31,7 @@ function buildWeekChips(selectedDate: Date): DayChip[] {
     const d = new Date(startOfWeek);
     d.setDate(startOfWeek.getDate() + i);
     return {
-      name: dayNames[d.getDay()],
+      name: shortWeekdayUpper(d, locale),
       num: d.getDate(),
       date: d,
       isActive: d.toDateString() === selectedDate.toDateString(),
@@ -40,15 +40,11 @@ function buildWeekChips(selectedDate: Date): DayChip[] {
   });
 }
 
-const MONTH_NAMES_FR = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
-
 
 export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChange }: DashboardDateNavProps) {
   const t = useTranslations('station_dashboard');
-  const chips = buildWeekChips(selectedDate);
+  const locale = useLocale();
+  const chips = buildWeekChips(selectedDate, locale);
 
   function shiftDate(dir: -1 | 1) {
     const d = new Date(selectedDate);
@@ -63,7 +59,8 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
     onDateChange(d);
   }
 
-  const monthLabel = MONTH_NAMES_FR[selectedDate.getMonth()];
+  const monthName = selectedDate.toLocaleDateString(intlDateLocale(locale), { month: 'long' });
+  const monthLabel = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
   return (
     <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-separator bg-transparent px-4 py-3 dark:border-[#1A2A14] dark:bg-dark-bg sm:px-5">
@@ -77,7 +74,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
         type="button"
         onClick={() => shiftDate(-1)}
         className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#FFF9EC] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
-        aria-label={view === 'monthly' ? 'Mois précédent' : view === 'daily' ? 'Jour précédent' : 'Semaine précédente'}
+        aria-label={t('datenav_prev')}
       >
         &#8249;
       </button>
@@ -111,7 +108,7 @@ export function DashboardDateNav({ selectedDate, onDateChange, view, onViewChang
         type="button"
         onClick={() => shiftDate(1)}
         className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#FFF9EC] text-[14px] text-[#001201] transition-opacity hover:opacity-70 dark:bg-[#1A2A14] dark:text-[#FFF9EC]"
-        aria-label={view === 'monthly' ? 'Mois suivant' : view === 'daily' ? 'Jour suivant' : 'Semaine suivante'}
+        aria-label={t('datenav_next')}
       >
         &#8250;
       </button>

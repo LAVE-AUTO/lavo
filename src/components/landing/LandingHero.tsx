@@ -15,7 +15,7 @@ export function LandingHero() {
   const lightLogoSrc =
     locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
   const darkLogoSrc =
-    locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+    locale === 'fr' ? '/logo/logo_anglais_2.png' : '/logo/logo_anglais_2.png';
 
   return (
     <section className="relative overflow-hidden min-h-[80vh] lg:min-h-[92vh] flex items-center">

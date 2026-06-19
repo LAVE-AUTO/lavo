@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
 import type { DisputeListItem, DisputeStatus } from './dispute-types';
 import { parseAmount } from './dispute-types';
@@ -12,8 +13,8 @@ const STATUS_STYLE: Record<DisputeStatus, { bar: string; badge: string; dot: str
   rejected: { bar: 'bg-[#94A3B8]', badge: 'bg-[#F8FAFC] text-[#64748B] ring-1 ring-[#CBD5E1]/60', dot: 'bg-[#94A3B8]', label: 'status_rejected', amount: 'text-[#64748B]' },
 };
 
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return d; }
 }
 
@@ -34,6 +35,7 @@ interface Props {
 
 export function AdminDisputesList({ disputes, query, filter, onFilterChange }: Props) {
   const t = useTranslations('admin_disputes');
+  const locale = useLocale();
 
   const q = query.toLowerCase();
   const filtered = disputes.filter((d) =>
@@ -119,7 +121,7 @@ export function AdminDisputesList({ disputes, query, filter, onFilterChange }: P
                       </span>
                     </div>
                     <p className="mt-0.5 truncate text-[13px] text-[#AAAAAA] dark:text-[#B0BFB1]">
-                      {d.station?.city ?? '—'} · {formatDate(d.created_at)}
+                      {d.station?.city ?? '—'} · {formatDate(d.created_at, locale)}
                     </p>
                     <p className="mt-1.5 line-clamp-1 text-[13px] text-foreground/65 dark:text-[#7A7A6A]">{d.reason}</p>
                   </div>

@@ -8,6 +8,25 @@ export function isValidCalendarDate(s: string): boolean {
 }
 
 /**
+ * Maps the app locale ('fr' | 'en') to the Intl locale tag used for date formatting.
+ * Canada-region tags keep currency/number conventions consistent across the platform.
+ */
+export function intlDateLocale(locale: string): string {
+  return locale === 'en' ? 'en-CA' : 'fr-CA';
+}
+
+/**
+ * Compact uppercased short weekday for the given date and app locale
+ * (e.g. "MON" in English, "LUN" in French), without the trailing period some locales add.
+ */
+export function shortWeekdayUpper(date: Date, locale: string): string {
+  return date
+    .toLocaleDateString(intlDateLocale(locale), { weekday: 'short' })
+    .replace(/\.$/, '')
+    .toUpperCase();
+}
+
+/**
  * Combines a YYYY-MM-DD date string and an HH:mm / HH:mm:ss time string into a UTC Date.
  * Accepts +00 suffix as a synonym for Z to handle DB-stored time values.
  */

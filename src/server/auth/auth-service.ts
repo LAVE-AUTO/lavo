@@ -8,6 +8,7 @@ import {
   NotFoundError,
   TokenExpiredError,
   UnauthorizedError,
+  WrongLoginSpaceError,
 } from '@/lib/errors';
 import { ApiCode } from '@/types/api-codes';
 import {
@@ -351,8 +352,10 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
 
   // Enforce space separation server-side: the user's role must match the
   // login space they are connecting from. Prevents cross-space token issuance.
+  // The account is valid and active, just on the wrong login page — surface a
+  // distinct code + the actual role so the client can redirect to the right space.
   if (user.role !== dto.expected_role) {
-    throw new ForbiddenError('Access to this space is not allowed for your account type');
+    throw new WrongLoginSpaceError(user.role);
   }
 
   const { password_hash: _, ...safeUser } = user;

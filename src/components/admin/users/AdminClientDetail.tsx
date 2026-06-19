@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
 import { getFromApi } from '@/services';
 import { useToast } from '@/context/toast-context';
@@ -36,8 +37,8 @@ const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string }> = 
   pending_verification: { dot: 'bg-[#DDAF3B]', text: 'text-[#7A5E0A] dark:text-[#F0D98C]', bg: 'bg-[#FEFCE8] dark:bg-[#1A1500]' },
 };
 
-function formatDate(d: string) {
-  try { return new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' }); }
+function formatDate(d: string, locale: string) {
+  try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'long', year: 'numeric' }); }
   catch { return d; }
 }
 
@@ -51,6 +52,7 @@ interface Props {
  */
 export function AdminClientDetail({ id }: Props) {
   const t = useTranslations('admin_client_detail');
+  const locale = useLocale();
   const tCommon = useTranslations('admin_clients');
   const router = useRouter();
   const { success: toastSuccess } = useToast();
@@ -174,7 +176,7 @@ export function AdminClientDetail({ id }: Props) {
               { label: t('field_id'),         value: client.id },
               { label: t('field_role'),        value: client.role },
               { label: t('field_phone'),       value: client.phone ?? '—' },
-              { label: t('field_created_at'),  value: formatDate(client.created_at) },
+              { label: t('field_created_at'),  value: formatDate(client.created_at, locale) },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl bg-[#F8F6F1] px-4 py-3 dark:bg-[#0C150B]">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9B9588] dark:text-[#7E8A75]">{label}</p>
