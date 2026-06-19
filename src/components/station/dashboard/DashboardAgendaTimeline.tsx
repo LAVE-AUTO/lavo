@@ -199,6 +199,7 @@ export function DashboardAgendaTimeline({
     if (visiblePosts.length === 0) return map;
     for (const entry of entries) {
       if (!entry.slotStart) continue;
+      if (entry.status === 'cancelled') continue;
       const slotDate = new Date(entry.slotStart);
       if (!isSameDay(slotDate, selectedDate)) continue;
       let bucketId = entry.postId;
