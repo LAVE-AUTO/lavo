@@ -173,7 +173,8 @@ async function issueTokenPair(
  * }
  */
 export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en' = 'fr'): Promise<AuthResult> {
-  const existing = await findByEmail(dto.email);
+  const normalizedEmail = dto.email.toLowerCase().trim();
+  const existing = await findByEmail(normalizedEmail);
   if (existing) throw new ConflictError('Email already in use');
 
   const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
@@ -185,7 +186,7 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
     const createdUser = await createUser({
       first_name: dto.first_name,
       last_name: dto.last_name,
-      email: dto.email,
+      email: normalizedEmail,
       phone: dto.phone,
       password_hash,
       role: 'client',
@@ -286,7 +287,8 @@ export async function findOrCreateOAuthUser(data: {
 }): Promise<AuthResult> {
   let user: SafeUser;
 
-  const existing = await findByEmail(data.email);
+  const normalizedEmail = data.email.toLowerCase().trim();
+  const existing = await findByEmail(normalizedEmail);
   if (existing) {
     const { password_hash: _, ...safe } = existing;
     user = safe;
@@ -294,7 +296,7 @@ export async function findOrCreateOAuthUser(data: {
     user = await createUser({
       first_name: data.firstName,
       last_name: data.lastName,
-      email: data.email,
+      email: normalizedEmail,
       password_hash: null,
       role: 'client',
       status: 'active',

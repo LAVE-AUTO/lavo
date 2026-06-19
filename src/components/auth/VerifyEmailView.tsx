@@ -91,7 +91,7 @@ export function VerifyEmailView({ token }: VerifyEmailViewProps) {
     }
 
     setResending(true);
-    const [ok, response] = await postWithApi('/auth/resend-verification-email', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
+    const [ok, response] = await postWithApi('/auth/resend-verification-email', { email: email.trim().toLowerCase() }, { successStatus: HTTP_STATUS.OK });
     setResending(false);
 
     if (ok) {

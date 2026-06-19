@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { getCachedOrFetch, invalidateCache } from '@/lib/redis-cache';
@@ -70,7 +70,9 @@ function stripPasswordHash(user: User): SafeUser {
  * console.log(user?.role ?? null);
  */
 export async function findByEmail(email: string): Promise<User | undefined> {
-  return db.query.users.findFirst({ where: eq(users.email, email) });
+  return db.query.users.findFirst({
+    where: sql`lower(${users.email}) = ${email.toLowerCase().trim()}`,
+  });
 }
 
 /**
