@@ -690,7 +690,7 @@ export async function cancelQueueEntryForNoShowIfEligible(
 }
 
 /**
- * Only `pending_payment` entries may be cancelled by Stripe failure webhooks.
+ * Only `pending_payment` entries may be cancelled by payment_failed webhooks.
  *
  * `confirmed` is intentionally excluded: a `confirmed` entry means the card has
  * already been authorized via `amount_capturable_updated`. A late `payment_failed`
@@ -698,12 +698,22 @@ export async function cancelQueueEntryForNoShowIfEligible(
  * that already succeeded — doing so would cancel a reservation for a client whose
  * card is legitimately held, causing them to show up at the station with no slot.
  */
-const STRIPE_PAYMENT_CANCEL_STATUSES = ['pending_payment'] as const;
+const STRIPE_PAYMENT_FAILURE_STATUSES = ['pending_payment'] as const;
 
 /**
- * Cancels an entry for Stripe payment_failed / canceled webhooks only while status is still
- * pending_payment. Returns the updated row if a row matched; otherwise undefined.
- * Callers must run slot decrement in the same transaction so webhook replays cannot double-decrement.
+ * `payment_intent.canceled` is an explicit revocation of the intent — distinct
+ * from a transient `payment_failed` retry. A `confirmed` entry (authorization
+ * already obtained) must also be cancelled here because the hold on the card
+ * will be released by Stripe and no capture can happen anymore.
+ *
+ * `in_progress` / `completed` / `no_show` are excluded: at those stages the
+ * capture has already been attempted or the service is underway.
+ */
+const STRIPE_INTENT_CANCEL_STATUSES = ['pending_payment', 'confirmed'] as const;
+
+/**
+ * Cancels an entry on `payment_intent.payment_failed` — targets `pending_payment` only.
+ * Callers must run slot decrement in the same transaction to prevent double-decrement on replay.
  */
 export async function cancelEntryForStripePaymentFailureIfEligible(
   id: string,
@@ -712,14 +722,25 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({
-      status: 'cancelled',
-      cancellation_reason: reason,
-      updated_at: new Date(),
-    })
-    .where(
-      and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_CANCEL_STATUSES]))
-    )
+    .set({ status: 'cancelled', cancellation_reason: reason, updated_at: new Date() })
+    .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_FAILURE_STATUSES])))
+    .returning();
+  return row;
+}
+
+/**
+ * Cancels an entry on `payment_intent.canceled` — targets `pending_payment` and `confirmed`.
+ * Callers must run slot decrement in the same transaction to prevent double-decrement on replay.
+ */
+export async function cancelEntryForStripeIntentCancelIfEligible(
+  id: string,
+  reason: string,
+  tx: DbTransaction
+): Promise<Entry | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({ status: 'cancelled', cancellation_reason: reason, updated_at: new Date() })
+    .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_INTENT_CANCEL_STATUSES])))
     .returning();
   return row;
 }
