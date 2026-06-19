@@ -474,11 +474,12 @@ export async function refreshSession(rawRefreshToken: string): Promise<AuthResul
   const record = await findValidRefreshToken(rawRefreshToken);
   if (!record) throw new UnauthorizedError('Invalid or expired refresh token');
 
-  const user = await findById(record.user_id);
+  // Run user lookup and token revocation in parallel — they are independent.
+  const [user] = await Promise.all([
+    findById(record.user_id),
+    revokeRefreshToken(record.id),
+  ]);
   if (!user) throw new UnauthorizedError('User not found');
-
-  // Rotate: revoke the used token immediately
-  await revokeRefreshToken(record.id);
 
   // Prefer the persisted column; for legacy rows (column added in migration 0050) the
   // column defaults to false but the original lifetime is still a reliable signal —
