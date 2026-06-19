@@ -154,15 +154,20 @@ export function BottomNav() {
     { href: '/#how-it-works', label: t('bottom_how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
 
-  /* Authenticated items - client only.
-     Station and admin users see guestItems since /client/reservations and /favorites are client-specific routes. */
+  /* Authenticated items.
+     Client: Accueil, Réservations, Favoris (+ Plus).
+     Station / admin: Accueil, Stations, Comment ça marche (+ Plus) — no login link. */
   const authItems = isClient
     ? [
         { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
         { href: '/client/reservations', label: t('coupons'), icon: (a: boolean) => <CouponsIcon active={a} /> },
         { href: '/favorites', label: t('favorites'), icon: (a: boolean) => <FavoritesIcon active={a} /> },
       ]
-    : guestItems;
+    : [
+        { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
+        { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
+        { href: '/#how-it-works', label: t('bottom_how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
+      ];
 
   const items = isAuthenticated ? authItems : guestItems;
 
