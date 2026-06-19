@@ -93,8 +93,9 @@
  *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error400, error404, error409, error429, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
+import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import { stationIdParamSchema, mapZodErrors } from '@/validators/station';
 import { createReservationBodySchema, mapZodErrors as mapEntryZodErrors } from '@/validators/entry';
 import { createReservation, createReservationByStartTime } from '@/server/reservations/reservation-service';
@@ -110,11 +111,16 @@ import {
 } from '@/lib/errors';
 import type { NextResponse } from 'next/server';
 
+// 5 réservations par minute par utilisateur — bloque le slot flooding sans gêner l'usage normal.
+const reservationLimiter = createEndpointRateLimiter({ maxRequests: 5, windowMs: 60_000 });
+
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
   const auth = await requireRole(request, 'client');
   if (auth instanceof Response) return auth as NextResponse;
+
+  if (reservationLimiter.isRateLimited(auth.sub)) return error429();
 
   const { id: stationId } = await params;
   const paramParsed = stationIdParamSchema.safeParse({ id: stationId });
