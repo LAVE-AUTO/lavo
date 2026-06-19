@@ -12,6 +12,53 @@ import {
 import { useLocale } from 'next-intl';
 import { initAxiosService, refreshAxiosService, postWithApi, setAxiosLocale } from '@/services/axios-service';
 
+// ---------------------------------------------------------------------------
+// Session cache — sessionStorage (tab-isolated, cleared on tab close).
+// Stores the short-lived access token + user alongside its expiry so that
+// hard reloads within the same browser tab can restore auth state without a
+// blocking /auth/refresh round-trip. The refresh token stays in httpOnly
+// cookies; this cache only mirrors what is already accessible to client JS.
+// ---------------------------------------------------------------------------
+const SESSION_CACHE_KEY = 'HL_sess';
+const TOKEN_CACHE_TTL_MS = 14 * 60 * 1000; // 14 min (assuming 15-min tokens)
+
+interface SessionCache {
+  token: string;
+  user: AuthUser;
+  exp: number;
+}
+
+function readSessionCache(): SessionCache | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SessionCache;
+    // Require at least 60 s remaining to avoid using a nearly-expired token
+    if (parsed.exp > Date.now() + 60_000) return parsed;
+    sessionStorage.removeItem(SESSION_CACHE_KEY);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCache(token: string, user: AuthUser): void {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({
+      token,
+      user,
+      exp: Date.now() + TOKEN_CACHE_TTL_MS,
+    } satisfies SessionCache));
+  } catch {}
+}
+
+function clearSessionCache(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  try { sessionStorage.removeItem(SESSION_CACHE_KEY); } catch {}
+}
+
 export type UserRole = 'client' | 'station' | 'admin';
 
 export interface AuthUser {
@@ -118,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenRef.current = data.access_token;
           setToken(data.access_token);
           setUser(normalized);
+          writeSessionCache(data.access_token, normalized);
           // Hint cookie for middleware-level admin guard (non-httpOnly, non-sensitive)
           if (typeof document !== 'undefined') {
             if (normalized.role === 'admin') {
@@ -139,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAuth = useCallback(() => {
     if (isLoggedOutRef.current) return;
     isLoggedOutRef.current = true;
+    clearSessionCache();
     tokenRef.current = null;
     setToken(null);
     setUser(null);
@@ -177,39 +226,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!newToken) clearAuth();
   }, [tryRefreshToken, clearAuth]);
 
-  // On mount: restore session from the httpOnly refresh token cookie.
-  // hasMountedRef prevents the StrictMode double-invocation from calling refresh
-  // twice — the second call would use the already-rotated cookie and clear the session.
+  // On mount: restore session — either from tab-local cache (instant) or via
+  // a blocking /auth/refresh call (first load or expired session).
+  // hasMountedRef prevents the StrictMode double-invocation from rotating the
+  // httpOnly refresh cookie twice and clearing the session on the second call.
   useEffect(() => {
     if (hasMountedRef.current) return;
     hasMountedRef.current = true;
 
-    tryRefreshToken().then(async (newToken) => {
-      if (!newToken) {
-        // Refresh failed — clear hint cookies immediately so the middleware stops
-        // redirecting /login → /admin and creating an infinite loop.
-        if (typeof document !== 'undefined') {
-          const expired = '; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-          document.cookie = `Hurryline_admin_session=${expired}`;
-          document.cookie = `Hurryline_auth_role=${expired}`;
+    const axiosOpts = {
+      baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+      tokenGetter: () => tokenRef.current,
+      tokenRefresher: tryRefreshToken,
+      onUnauthorized: () => latestClearAuthRef.current(),
+    };
+
+    const cached = readSessionCache();
+
+    if (cached) {
+      // Fast path: restore token + user immediately → layouts unblock with no
+      // network call. A silent background refresh rotates the token so the
+      // session cache stays fresh and the interceptor stays healthy.
+      tokenRef.current = cached.token;
+      setToken(cached.token);
+      setUser(cached.user);
+      if (typeof document !== 'undefined') {
+        if (cached.user.role === 'admin') {
+          document.cookie = `Hurryline_admin_session=1; path=/; SameSite=Lax${secureFlag()}`;
+        } else {
+          document.cookie = `Hurryline_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag()}`;
         }
-        // Also clear the httpOnly refresh cookie server-side.
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/logout`, {
-          method: 'POST',
-          credentials: 'include',
-        }).catch(() => {});
+        setRoleCookie(cached.user.role);
       }
-      refreshAxiosService({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
-        tokenGetter: () => tokenRef.current,
-        tokenRefresher: tryRefreshToken,
-        onUnauthorized: () => latestClearAuthRef.current(),
+      refreshAxiosService(axiosOpts);
+      setIsLoading(false);
+      // Background rotation — failure is non-fatal; interceptor handles 401 later.
+      tryRefreshToken().catch(() => {});
+    } else {
+      // Slow path: no valid cache — blocking refresh (first visit or expired session).
+      tryRefreshToken().then(async (newToken) => {
+        if (!newToken) {
+          // Refresh failed — clear hint cookies so middleware stops redirecting
+          // /login → /admin and creating an infinite loop.
+          if (typeof document !== 'undefined') {
+            const expired = '; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+            document.cookie = `Hurryline_admin_session=${expired}`;
+            document.cookie = `Hurryline_auth_role=${expired}`;
+          }
+          // Clear the httpOnly refresh cookie server-side.
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+          }).catch(() => {});
+        }
+        refreshAxiosService(axiosOpts);
+        setIsLoading(false);
+      }).catch(() => {
+        // Safety net: ensure layouts are never permanently stuck.
+        setIsLoading(false);
       });
-      setIsLoading(false);
-    }).catch(() => {
-      // Safety net: ensure the loading spinner never gets stuck
-      setIsLoading(false);
-    });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -219,6 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenRef.current = newToken;
     setToken(newToken);
     setUser(normalized);
+    writeSessionCache(newToken, normalized);
     // Hint cookies for middleware-level guards (non-httpOnly, non-sensitive)
     if (typeof document !== 'undefined') {
       if (normalized.role === 'admin') {
@@ -242,6 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Logout API failure is non-blocking
     }
+    clearSessionCache();
     tokenRef.current = null;
     setToken(null);
     setUser(null);

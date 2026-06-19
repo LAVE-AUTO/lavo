@@ -157,7 +157,7 @@ export function StationSidebar({ mobileOpen = false, onMobileClose }: SidebarPro
 
   // Configuration: setup tasks done occasionally
   const configurationItems: NavItem[] = [
-    { href: '/station/formats', labelKey: 'nav_formats', icon: <FormatsIcon /> },
+    { href: '/station/services', labelKey: 'nav_formats', icon: <FormatsIcon /> },
     { href: '/station/availability', labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
     { href: '/station/qr', labelKey: 'nav_qr', icon: <QrIcon /> },
     { href: '/station/config', labelKey: 'nav_config', icon: <ConfigIcon /> },

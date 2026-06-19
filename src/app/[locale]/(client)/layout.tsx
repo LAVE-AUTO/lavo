@@ -8,6 +8,15 @@ import { useAuth } from '@/context';
 import { useFcmToken } from '@/hooks/useFcmToken';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+
+function AuthSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <PageSpinner />
+    </div>
+  );
+}
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, isClient } = useAuth();
@@ -25,7 +34,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     }
   }, [isLoading, isAuthenticated, isClient, router, locale]);
 
-  if (isLoading) return null;
+  if (isLoading) return <AuthSpinner />;
   if (!isAuthenticated || !isClient) return null;
 
   return (

@@ -1,5 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { safeJsonLd } from '@/lib/json-ld';
+
+export const revalidate = 3600;
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
