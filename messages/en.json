@@ -2015,7 +2015,7 @@
         "section_morning_empty": "No reservations this morning",
         "section_evening_empty": "No reservations this afternoon",
         "btn_complete": "Complete",
-        "btn_extra_time": "Extra time",
+        "btn_extra_time": "+15 min",
         "btn_close": "Close",
         "extra_time_error": "Could not add extra time. Please try again."
     },

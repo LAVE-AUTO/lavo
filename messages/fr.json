@@ -2015,7 +2015,7 @@
         "section_morning_empty": "Aucune réservation ce matin",
         "section_evening_empty": "Aucune réservation cet après-midi",
         "btn_complete": "Terminer",
-        "btn_extra_time": "Temps supp.",
+        "btn_extra_time": "+15 min",
         "btn_close": "Fermer",
         "extra_time_error": "Impossible d'ajouter le temps. Réessayez."
     },
