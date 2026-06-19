@@ -112,6 +112,27 @@ export default function ProfilePage() {
   /* Modals (only password is wired to a real endpoint today) */
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
+
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const api = getAxiosInstance();
+      const response = await api.get('/me/data-export', { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hurryline-data-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showError(t('export_error'));
+    } finally {
+      setExportingData(false);
+    }
+  };
 
   /* Personal info edit state */
   const [editingInfo, setEditingInfo] = useState(false);
@@ -701,6 +722,32 @@ export default function ProfilePage() {
             ))}
           </div>
         </Section>
+
+        {/* ── Mes données ── */}
+        <div className="rounded-2xl border border-separator/20 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-separator/10">
+            <h2 className="text-[14px] font-black uppercase tracking-wider text-foreground/55">{t('export_section')}</h2>
+          </div>
+          <div className="flex items-center justify-between px-5 py-4">
+            <div>
+              <p className="text-[14px] font-semibold text-[#001201] dark:text-white">{t('export_data')}</p>
+              <p className="text-[12px] text-foreground/55 dark:text-foreground/65 mt-0.5 max-w-[260px] leading-snug">{t('export_data_desc')}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportData}
+              disabled={exportingData}
+              className="shrink-0 px-4 py-2 bg-gold/10 border border-gold/30 rounded-xl text-[12px] font-bold text-gold hover:bg-gold/15 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              {exportingData && (
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 12a9 9 0 11-6.219-8.56" />
+                </svg>
+              )}
+              {exportingData ? t('export_downloading') : t('export_data_btn')}
+            </button>
+          </div>
+        </div>
 
         {/* ── Zone de danger ── */}
         <div className="bg-Hurryline-error/5 rounded-2xl border border-Hurryline-error/20 overflow-hidden">
