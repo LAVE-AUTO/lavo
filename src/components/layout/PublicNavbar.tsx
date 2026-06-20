@@ -139,6 +139,8 @@ export function PublicNavbar({
     if (ok && data && typeof data === 'object' && 'data' in data) {
       setNotifItems(data.data?.items ?? []);
       setNotifUnreadCount(data.data?.unread_count ?? 0);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllNotifRead();
     }
     setNotifLoading(false);
   }

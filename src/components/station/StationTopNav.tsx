@@ -86,6 +86,8 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
       setItems(data.data?.items ?? []);
       setUnreadCount(data.data?.unread_count ?? 0);
       setNextCursor(data.data?.next_cursor ?? null);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllRead();
     } else {
       setErrorLoading(true);
     }

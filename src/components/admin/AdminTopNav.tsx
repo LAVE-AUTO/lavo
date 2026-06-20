@@ -88,6 +88,8 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
       setItems(data.data?.items ?? []);
       setUnreadCount(data.data?.unread_count ?? 0);
       setNextCursor((data.data as { next_cursor?: string | null } | undefined)?.next_cursor ?? null);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllRead();
     } else {
       setErrorLoading(true);
     }
