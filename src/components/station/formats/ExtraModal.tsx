@@ -17,9 +17,9 @@ const SCOPES = ['exterior', 'interior', 'both'] as const;
 type Scope = typeof SCOPES[number];
 
 const SCOPE_LABELS: Record<Scope, string> = {
-  exterior: 'Extérieur',
-  interior: 'Intérieur',
-  both: 'Les deux',
+  exterior: 'Lavage extérieur',
+  interior: 'Lavage intérieur',
+  both: 'Lavage complet',
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -157,7 +157,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               {/* Scope */}
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Applicable sur</FieldLabel>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {SCOPES.map((s) => (
                     <button
                       key={s}

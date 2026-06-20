@@ -187,12 +187,16 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
               {t('extras_label')}
             </p>
             {extras.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {extras.map((extra) => (
                   <span
                     key={extra.id}
-                    className="inline-flex items-center rounded-full border border-[#22C47A]/30 bg-[#22C47A]/10 px-2.5 py-1 text-[11px] font-semibold text-[#16A964]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#22C47A]/40 bg-[#22C47A]/12 px-3 py-1.5 text-[13px] font-bold text-[#16A964] dark:text-[#3FD98A]"
                   >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
                     {extra.name}
                   </span>
                 ))}
