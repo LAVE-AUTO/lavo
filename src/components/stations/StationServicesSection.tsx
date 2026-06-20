@@ -141,7 +141,7 @@ export function StationServicesSection({
 
       {categories.length > 1 && (
         <div
-          role="tablist"
+          role="radiogroup"
           aria-label={t('detail_services')}
           className="flex flex-wrap gap-2"
         >
@@ -151,22 +151,32 @@ export function StationServicesSection({
               <button
                 key={cat.category}
                 type="button"
-                role="tab"
-                aria-selected={isActive}
+                role="radio"
+                aria-checked={isActive}
                 onClick={() => {
                   setActiveCategory(cat.category);
                   const next = cat.services.find((s) => s.isPopular) ?? cat.services[0];
                   if (next) onSelectService(next.id);
                 }}
                 className={[
-                  'px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
+                  'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors cursor-pointer border',
                   isActive
-                    ? 'bg-gold text-dark-bg border-gold shadow-sm'
+                    ? 'bg-gold/10 text-foreground border-gold'
                     : 'bg-surface/60 text-foreground/70 border-border hover:border-gold/40 hover:text-gold',
                 ].join(' ')}
               >
+                {/* Radio indicator: filled when this category is selected, empty otherwise */}
+                <span
+                  aria-hidden="true"
+                  className={[
+                    'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                    isActive ? 'border-gold' : 'border-[#BBB] dark:border-[#555]',
+                  ].join(' ')}
+                >
+                  {isActive && <span className="h-2 w-2 rounded-full bg-gold" />}
+                </span>
                 {categoryLabel(cat.category, locale)}
-                <span className="ml-1.5 opacity-70 font-semibold">({cat.services.length})</span>
+                <span className="opacity-70 font-semibold">({cat.services.length})</span>
               </button>
             );
           })}
