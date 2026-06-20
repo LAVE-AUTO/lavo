@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { KpiData } from './types';
 
-const STORAGE_KEY = 'lavo_dashboard_kpi_masked';
+const STORAGE_KEY = 'lavo_dashboard_kpi_collapsed';
 
 interface Props {
   data: KpiData;
 }
 
-const FILL_BASIS = { revenue: 250, clients: 15, lateFees: 25, occupancy: 100 } as const;
+const FILL_BASIS = { revenue: 250, clients: 15, occupancy: 100 } as const;
 
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
@@ -36,25 +36,23 @@ function formatPercent(n: number | null): string {
 interface CardConfig {
   Icon: React.ComponentType;
   value: string;
-  /** Length of the masking placeholder when KPI are hidden (keeps layout stable). */
-  maskWidth: number;
   label: string;
   fill: number;
-  fillColor: 'gold' | 'green' | 'red';
+  fillColor: 'gold' | 'green';
 }
 
 export function DashboardOverviewSection({ data }: Props) {
   const t = useTranslations('station_dashboard');
-  const [masked, setMasked] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored === '1') setMasked(true);
+    if (stored === '1') setCollapsed(true);
   }, []);
 
   function toggle() {
-    setMasked((prev) => {
+    setCollapsed((prev) => {
       const next = !prev;
       try { window.localStorage.setItem(STORAGE_KEY, next ? '1' : '0'); } catch { /* private mode */ }
       return next;
@@ -65,7 +63,6 @@ export function DashboardOverviewSection({ data }: Props) {
     {
       Icon: MoneyIcon,
       value: formatMoney(data.revenue),
-      maskWidth: 4,
       label: t('kpi_revenue'),
       fill: pct(data.revenue, FILL_BASIS.revenue),
       fillColor: 'gold',
@@ -73,23 +70,13 @@ export function DashboardOverviewSection({ data }: Props) {
     {
       Icon: UsersIcon,
       value: formatCount(data.clients),
-      maskWidth: 2,
       label: t('kpi_clients'),
       fill: pct(data.clients, FILL_BASIS.clients),
       fillColor: 'gold',
     },
     {
-      Icon: ClockIcon,
-      value: formatMoney(data.lateFees),
-      maskWidth: 3,
-      label: t('kpi_late_fees'),
-      fill: pct(data.lateFees, FILL_BASIS.lateFees),
-      fillColor: 'red',
-    },
-    {
       Icon: ChartIcon,
       value: formatPercent(data.occupancy),
-      maskWidth: 3,
       label: t('kpi_occupancy'),
       fill: pct(data.occupancy, FILL_BASIS.occupancy),
       fillColor: 'green',
@@ -105,43 +92,28 @@ export function DashboardOverviewSection({ data }: Props) {
         <button
           type="button"
           onClick={toggle}
-          aria-pressed={masked}
-          aria-label={masked ? t('overview_reveal') : t('overview_hide_aria')}
-          title={masked ? t('overview_reveal') : t('overview_hide_aria')}
+          aria-pressed={collapsed}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? t('overview_reveal') : t('overview_hide_aria')}
+          title={collapsed ? t('overview_reveal') : t('overview_hide_aria')}
           className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF9EC] text-foreground/65 transition-colors hover:bg-[#DDD8C4] hover:text-[#001201] dark:bg-[#1A2A14] dark:text-[#B0BFB1] dark:hover:bg-[#001A05] dark:hover:text-[#FFF9EC]"
         >
-          {masked ? <EyeOffIcon /> : <EyeIcon />}
+          {collapsed ? <EyeOffIcon /> : <EyeIcon />}
         </button>
-        {masked && (
-          <span className="text-[10px] font-bold text-[#999] dark:text-[#5A5A4A]">
-            {t('overview_masked')}
-          </span>
-        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 px-4 pb-4 sm:px-5 xl:grid-cols-4">
-        {cards.map((card, idx) => (
-          <FullKpiCard
-            key={card.label}
-            card={card}
-            delay={idx * 60}
-            masked={masked}
-          />
-        ))}
-      </div>
+      {!collapsed && (
+        <div className="grid grid-cols-1 gap-3 px-4 pb-4 sm:grid-cols-3 sm:px-5">
+          {cards.map((card, idx) => (
+            <FullKpiCard key={card.label} card={card} delay={idx * 60} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
-function FullKpiCard({
-  card,
-  delay,
-  masked,
-}: {
-  card: CardConfig;
-  delay: number;
-  masked: boolean;
-}) {
+function FullKpiCard({ card, delay }: { card: CardConfig; delay: number }) {
   const Icon = card.Icon;
   return (
     <div
@@ -151,32 +123,22 @@ function FullKpiCard({
       <div className="mb-2.5 leading-none">
         <Icon />
       </div>
-      <div
-        className={`mb-0.5 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC] tabular-nums ${
-          masked ? 'tracking-[0.08em]' : ''
-        }`}
-      >
-        {masked ? '•'.repeat(card.maskWidth) : card.value}
+      <div className="mb-0.5 text-[28px] font-black leading-none text-[#001201] dark:text-[#FFF9EC] tabular-nums">
+        {card.value}
       </div>
       <div className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">{card.label}</div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F0EDE0] dark:bg-dark-bg">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: masked ? '100%' : `${card.fill}%`,
-            background: masked
-              ? 'repeating-linear-gradient(45deg, rgba(0,0,0,0.06) 0 4px, transparent 4px 8px)'
-              : fillColorVar(card.fillColor),
-          }}
+          style={{ width: `${card.fill}%`, background: fillColorVar(card.fillColor) }}
         />
       </div>
     </div>
   );
 }
 
-function fillColorVar(c: 'gold' | 'green' | 'red'): string {
+function fillColorVar(c: 'gold' | 'green'): string {
   if (c === 'green') return '#2ECC71';
-  if (c === 'red') return '#EF4444';
   return '#DDAF3B';
 }
 
@@ -190,12 +152,6 @@ const UsersIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
