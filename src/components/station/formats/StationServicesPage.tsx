@@ -240,6 +240,8 @@ export function StationServicesPage() {
                       onEdit={setServiceModal}
                       onDeleted={handleServiceDeleted}
                       onToggled={handleServiceToggled}
+                      allExtras={allExtras}
+                      onExtraToggled={handleExtraToggled}
                     />
                   </div>
                 );
