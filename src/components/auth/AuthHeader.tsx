@@ -21,7 +21,7 @@ interface AuthHeaderProps {
  *   Dark + any  → frame2.png badge  + "Hurryline" text
  */
 export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
-  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_anglais_1.png' : '/logo/logo_anglais_1.png';
+  const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
 
   return (
     <div className="mb-6">
