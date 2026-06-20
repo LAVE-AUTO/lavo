@@ -1,6 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
-import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FaqPageContent } from '@/components/pages/FaqPageContent';
 import { getLegalContent } from '@/server/admin/legal-content-service';
@@ -35,7 +34,6 @@ export default async function FaqPage({ params }: Props) {
           ctaBtn={t('cta_btn')}
         />
       </main>
-      <div className="hidden sm:block"><PublicFooter /></div>
       <BottomNav />
     </>
   );
