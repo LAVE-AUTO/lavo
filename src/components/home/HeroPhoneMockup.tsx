@@ -172,7 +172,7 @@ function PhoneStationCard({ name, rating, reviews, price, distance, wait, tags, 
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-surface text-[#000000] border border-border"
+                className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-surface text-[#000000] dark:text-white border border-border"
               >
                 {tag}
               </span>
