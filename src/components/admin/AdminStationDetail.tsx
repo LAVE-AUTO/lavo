@@ -187,7 +187,7 @@ export function AdminStationDetail({ id }: Props) {
           <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
-          KYC
+          Vérification
         </span>
       </div>
 
@@ -232,7 +232,7 @@ export function AdminStationDetail({ id }: Props) {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#DDAF3B] opacity-70" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
                   </span>
-                  KYC
+                  Vérification
                 </span>
               </div>
             </div>

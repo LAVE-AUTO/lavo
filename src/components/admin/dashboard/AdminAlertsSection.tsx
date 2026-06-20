@@ -193,7 +193,7 @@ export function AdminAlertsSection() {
               <div className="text-[11px] text-[#AAA] dark:text-[#B0BFB1]">{formatDate(s.created_at)}</div>
             </div>
             <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#DDAF3B]">
-              KYC
+              Vérification
             </span>
           </Link>
         ))}

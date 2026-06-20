@@ -283,7 +283,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Vérification KYC</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Vérification du compte</span>
         </div>
         <div className="p-4 flex flex-col gap-0">
           {steps.map((s, i) => (
