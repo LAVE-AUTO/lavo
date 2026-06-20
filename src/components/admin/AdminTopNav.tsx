@@ -165,7 +165,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-12 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>
