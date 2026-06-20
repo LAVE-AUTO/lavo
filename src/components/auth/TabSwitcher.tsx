@@ -36,8 +36,10 @@ export function TabSwitcher({
   };
 
   const activeClass = 'bg-gold text-dark-bg font-bold';
+  /* Inactive tab keeps a subtle darker fill at rest so it clearly reads as a
+     clickable button (not blended into the container), darkening more on hover. */
   const inactiveClass =
-    'bg-transparent text-[#333] dark:text-white font-semibold hover:bg-black/5 dark:hover:bg-white/5';
+    'bg-black/[0.07] dark:bg-white/[0.08] text-[#333] dark:text-white font-semibold hover:bg-black/[0.12] dark:hover:bg-white/[0.14]';
 
   return (
     <div className="flex mb-4 bg-surface dark:bg-tab-inactive rounded-[10px] p-1 gap-1">
