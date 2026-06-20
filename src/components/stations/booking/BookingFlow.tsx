@@ -9,7 +9,7 @@ import { ExtrasStep } from './ExtrasStep';
 import { ArrivalStep } from './ArrivalStep';
 import { SummaryStep } from './SummaryStep';
 import { PaymentStep } from './PaymentStep';
-import { BookingReceipt, generateTicketCode } from './BookingReceipt';
+import { BookingReceipt, generateTicketCode, type BookingReceiptHandle } from './BookingReceipt';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
 import type {
@@ -39,6 +39,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   const t = useTranslations('booking');
   const userLocation = useUserLocation();
   const dialogRootRef = useRef<HTMLDivElement | null>(null);
+  const receiptRef = useRef<BookingReceiptHandle>(null);
 
   const initialService = initialServiceId
     ? station.stationServices.find((s) => s.id === initialServiceId) ?? null
@@ -399,7 +400,24 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
 
     if (isSuccess) {
       return (
-        <div className="flex flex-col items-center px-4 sm:px-6 py-6 gap-4">
+        <div className="relative flex flex-col items-center px-4 sm:px-6 py-6 gap-4">
+          {/* Download receipt - top-right corner, aligned with the check icon */}
+          {ticketCode && (
+            <button
+              type="button"
+              onClick={() => receiptRef.current?.download()}
+              aria-label={t('receipt_download')}
+              title={t('receipt_download')}
+              className="Hurryline-receipt-actions absolute right-4 top-6 inline-flex items-center gap-1.5 rounded-xl bg-[#DDAF3B] px-3 py-2 text-[13px] font-black text-[#001201] transition-colors hover:bg-[#d8b35d] cursor-pointer sm:right-6"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span className="hidden sm:inline">{t('receipt_download')}</span>
+            </button>
+          )}
           <div className="w-16 h-16 rounded-full bg-Hurryline-success/15 flex items-center justify-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
@@ -415,6 +433,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
 
           {ticketCode && (
             <BookingReceipt
+              ref={receiptRef}
               station={station}
               service={selectedService}
               entry={selectedEntry}
