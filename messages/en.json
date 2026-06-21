@@ -1948,6 +1948,8 @@
         "onboarding_posts": "Bays configuration",
         "onboarding_services": "Services",
         "onboarding_payment": "Payment setup",
+        "onboarding_reminder": "Next step to set up: {step}",
+        "onboarding_reminder_dismiss": "Dismiss this reminder",
         "overview_masked": "(figures hidden)",
         "overview_reveal": "Show figures",
         "overview_hide_aria": "Hide figures",

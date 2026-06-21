@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { StationTopNav } from './StationTopNav';
 import { StationSidebar } from './StationSidebar';
+import { StationSetupReminderBanner } from './onboarding/StationSetupReminderBanner';
 
 interface StationShellProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ export function StationShell({ children, stationName }: StationShellProps) {
           onMobileClose={() => setMobileSidebarOpen(false)}
         />
         <main className="flex flex-1 min-h-0 flex-col overflow-y-auto">
+          <StationSetupReminderBanner />
           {children}
         </main>
       </div>
