@@ -108,6 +108,7 @@ const STEP_HEADLINE_KEYS = [
 /* ------------------------------------------------------------------ */
 
 function StationMockup({ isDark }: { isDark: boolean }) {
+  const t = useTranslations('station_panel');
   const cardBg = isDark ? '#001A05' : '#FFF9EC';
   const borderC = isDark ? '#001A05' : '#DDAF3B';
   const textCol = isDark ? '#FFEECA' : '#001201';
@@ -115,9 +116,9 @@ function StationMockup({ isDark }: { isDark: boolean }) {
   const goldC   = '#DDAF3B';
 
   const slots = [
-    { time: '09:00', name: 'Jean D.', type: 'Ext.', active: true },
-    { time: '09:45', name: 'Marie L.', type: 'Int.', active: false },
-    { time: '10:30', name: 'Pierre M.', type: 'Full', active: false },
+    { time: '09:00', name: 'Jean D.', type: t('mock_slot_ext'), active: true },
+    { time: '09:45', name: 'Marie L.', type: t('mock_slot_int'), active: false },
+    { time: '10:30', name: 'Pierre M.', type: t('mock_slot_full'), active: false },
   ];
 
   return (
@@ -128,9 +129,9 @@ function StationMockup({ isDark }: { isDark: boolean }) {
       >
         <div style={{ background: goldC, padding: '10px 16px' }} className="flex items-center justify-between">
           <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">
-            Agenda · Aujourd'hui
+            {t('mock_agenda_title')}
           </span>
-          <span className="text-[11px] font-semibold text-[#001201] opacity-70">3 rendez-vous</span>
+          <span className="text-[11px] font-semibold text-[#001201] opacity-70">{t('mock_agenda_appointments', { count: slots.length })}</span>
         </div>
 
         <div className="p-4 flex flex-col gap-2.5">
@@ -162,7 +163,7 @@ function StationMockup({ isDark }: { isDark: boolean }) {
                   className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-full"
                   style={{ background: '#00C851', color: '#fff' }}
                 >
-                  En cours
+                  {t('mock_in_progress')}
                 </span>
               )}
             </div>
@@ -174,9 +175,9 @@ function StationMockup({ isDark }: { isDark: boolean }) {
           style={{ borderTop: `1px solid ${borderC}` }}
         >
           {[
-            { val: '124$', label: "Aujourd'hui" },
-            { val: '1 850$', label: 'Ce mois' },
-            { val: '5%', label: 'Commission' },
+            { val: '124$', label: t('mock_stat_today') },
+            { val: '1 850$', label: t('mock_stat_month') },
+            { val: '5%', label: t('mock_stat_commission') },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <p className="text-[15px] font-bold" style={{ color: goldC }}>{val}</p>
@@ -190,6 +191,7 @@ function StationMockup({ isDark }: { isDark: boolean }) {
 }
 
 function AccountSetupMockup({ isDark }: { isDark: boolean }) {
+  const t = useTranslations('station_panel');
   const cardBg  = isDark ? '#001A05' : '#FFF9EC';
   const borderC = isDark ? '#001A05' : '#DDAF3B';
   const textCol = isDark ? '#FFEECA' : '#001201';
@@ -197,9 +199,9 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
   const goldC   = '#DDAF3B';
 
   const fields = [
-    { label: 'Email professionnel', filled: true },
-    { label: 'Téléphone', filled: true },
-    { label: 'Mot de passe', filled: false },
+    { label: t('mock_field_email'), filled: true },
+    { label: t('mock_field_phone'), filled: true },
+    { label: t('mock_field_password'), filled: false },
   ];
 
   return (
@@ -212,7 +214,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Création de compte</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">{t('mock_account_title')}</span>
         </div>
         <div className="p-4 flex flex-col gap-3">
           {fields.map((f) => (
@@ -238,7 +240,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
             className="mt-1 h-9 rounded-lg flex items-center justify-center"
             style={{ background: goldC }}
           >
-            <span className="text-[12px] font-bold text-[#001201] tracking-wider">Continuer</span>
+            <span className="text-[12px] font-bold text-[#001201] tracking-wider">{t('mock_continue')}</span>
           </div>
         </div>
         <div
@@ -262,15 +264,16 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
 }
 
 function KycMockup({ isDark }: { isDark: boolean }) {
+  const t = useTranslations('station_panel');
   const cardBg  = isDark ? '#001A05' : '#FFF9EC';
   const borderC = isDark ? '#001A05' : '#DDAF3B';
   const mutedC  = isDark ? '#B0BFB1' : '#B0BFB1';
   const goldC   = '#DDAF3B';
 
   const steps = [
-    { label: 'Documents envoyés',    done: true,  active: false },
-    { label: 'Vérification en cours', done: false, active: true  },
-    { label: 'Compte activé',        done: false, active: false },
+    { label: t('mock_kyc_sent'),   done: true,  active: false },
+    { label: t('mock_kyc_review'), done: false, active: true  },
+    { label: t('mock_kyc_active'), done: false, active: false },
   ];
 
   return (
@@ -283,7 +286,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
           <div className="w-6 h-6 rounded-full bg-[rgba(0,0,0,0.15)] flex items-center justify-center">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           </div>
-          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">Vérification du compte</span>
+          <span className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#001201]">{t('mock_kyc_title')}</span>
         </div>
         <div className="p-4 flex flex-col gap-0">
           {steps.map((s, i) => (
@@ -319,7 +322,7 @@ function KycMockup({ isDark }: { isDark: boolean }) {
                   {s.label}
                 </p>
                 {s.active && (
-                  <p className="text-[10px] mt-0.5" style={{ color: mutedC }}>24-48 heures</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: mutedC }}>{t('mock_kyc_delay')}</p>
                 )}
               </div>
             </div>
@@ -330,9 +333,9 @@ function KycMockup({ isDark }: { isDark: boolean }) {
           style={{ borderTop: `1px solid ${borderC}` }}
         >
           {[
-            { val: '1/3', label: 'Documents' },
-            { val: '48h', label: 'Délai' },
-            { val: '100%', label: 'Sécurisé' },
+            { val: '1/3', label: t('mock_kyc_stat_docs') },
+            { val: '48h', label: t('mock_kyc_stat_delay') },
+            { val: '100%', label: t('mock_kyc_stat_secure') },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <p className="text-[15px] font-bold" style={{ color: goldC }}>{val}</p>
@@ -454,13 +457,13 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
                 </div>
                 <div>
                   <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
-                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">Marchands</p>
+                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">{t('badge_merchants')}</p>
                 </div>
               </div>
             ) : (
               <div>
                 <Image src={lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
-                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">Espace Marchands</p>
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">{t('space_merchants')}</p>
               </div>
             )}
           </div>
@@ -552,7 +555,7 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
                     key={i}
                     type="button"
                     onClick={() => handleDotClick(i)}
-                    aria-label={`Feature ${i + 1}`}
+                    aria-label={t('feature_dot_aria', { index: i + 1 })}
                     className={`rounded-full transition-all duration-300 ${
                       i === activeIdx ? 'w-6 h-2.5 bg-[#DDAF3B]' : `w-2.5 h-2.5 ${inactiveDot}`
                     }`}
