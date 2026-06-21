@@ -187,7 +187,7 @@ export function AdminStationDetail({ id }: Props) {
           <p className="text-[12px] text-[#999] dark:text-[#B0BFB1]">{station.city}</p>
         </div>
         <span className="shrink-0 rounded-full bg-[#DDAF3B]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#DDAF3B]">
-          Vérification
+          {t('badge_verification')}
         </span>
       </div>
 
@@ -232,7 +232,7 @@ export function AdminStationDetail({ id }: Props) {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#DDAF3B] opacity-70" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#DDAF3B]" />
                   </span>
-                  Vérification
+                  {t('badge_verification')}
                 </span>
               </div>
             </div>
@@ -467,6 +467,7 @@ function DocCard({
   labels: ExpiryLabels;
   locale: string;
 }) {
+  const t = useTranslations('admin_stations');
   const { token } = useAuth();
   const { error: showError } = useToast();
   const [editing, setEditing] = useState(false);
@@ -527,7 +528,7 @@ function DocCard({
       return;
     }
     if (!token) {
-      showError('Session expirée, veuillez vous reconnecter.');
+      showError(t('doc_session_expired'));
       return;
     }
     try {
@@ -536,7 +537,7 @@ function DocCard({
         { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' },
       );
       if (!response.ok) {
-        showError('Impossible d\'ouvrir le document.');
+        showError(t('doc_open_error'));
         return;
       }
       const contentType = response.headers.get('content-type') ?? 'application/octet-stream';
@@ -545,7 +546,7 @@ function DocCard({
       window.open(url, '_blank', 'noopener,noreferrer');
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
-      showError('Impossible d\'ouvrir le document.');
+      showError(t('doc_open_error'));
     }
   };
 
@@ -572,8 +573,8 @@ function DocCard({
       <p className="text-[13px] font-bold leading-snug text-[#001201] dark:text-[#FFF9EC]">{label}</p>
       <p className="text-[11px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
         {formattedExpiry
-          ? `Date d'expiration enregistrée : ${formattedExpiry}`
-          : 'Aucune date d\'expiration enregistrée'}
+          ? t('expiry_saved_on', { date: formattedExpiry })
+          : t('expiry_not_saved')}
       </p>
 
       {/* Expiry section */}
