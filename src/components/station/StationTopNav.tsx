@@ -157,7 +157,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
           {/* Logo - always links to the merchant landing page (NAV-1 rule):
               a logged-in station belongs to the merchant universe, not the
               client landing at "/". */}
-          <Link href="/merchant" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="/station/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}

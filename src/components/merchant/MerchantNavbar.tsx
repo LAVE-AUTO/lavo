@@ -100,7 +100,7 @@ export function MerchantNavbar() {
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
-          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="station/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
