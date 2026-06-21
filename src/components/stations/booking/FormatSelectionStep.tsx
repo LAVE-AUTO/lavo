@@ -35,7 +35,7 @@ export function FormatSelectionStep({
 
         {activeEntries.length === 0 ? (
           <div className="rounded-xl border border-border bg-surface/60 dark:bg-background/50 px-5 py-8 text-center text-[14px] text-foreground/70">
-            Aucun format de véhicule configuré pour ce service.
+            {t('format_none')}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">

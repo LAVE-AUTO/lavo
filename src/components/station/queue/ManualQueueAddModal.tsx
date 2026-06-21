@@ -44,10 +44,10 @@ interface ManualQueueAddModalProps {
 
 /* Service categories localised the same way as /stations/[id] and the
  * client cards so the merchant sees consistent wording. */
-const CATEGORY_LABELS: Record<string, string> = {
-  hand_wash:    'Lavage à la main',
-  automatic:    'Lavage automatique',
-  self_service: 'Self-service',
+const CATEGORY_KEYS: Record<string, string> = {
+  hand_wash:    'cat_hand_wash',
+  automatic:    'cat_automatic',
+  self_service: 'cat_self_service',
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -524,7 +524,7 @@ function ServicePickerBlock({
                     {svc.name}
                   </p>
                   <p className="text-[11px] font-semibold text-foreground/60 mt-0.5">
-                    {CATEGORY_LABELS[svc.category] ?? svc.category}
+                    {CATEGORY_KEYS[svc.category] ? t(CATEGORY_KEYS[svc.category]) : svc.category}
                   </p>
                 </div>
                 <span

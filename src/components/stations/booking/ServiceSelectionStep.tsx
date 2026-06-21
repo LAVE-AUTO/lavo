@@ -10,17 +10,13 @@ interface ServiceSelectionStepProps {
   onContinue: () => void;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  hand_wash: 'Lavage à la main',
-  automatic_wash: 'Lavage automatique',
-  self_service: 'Self-service',
-  exterior_wash: 'Lavage extérieur',
-  detailing: 'Détailing',
+const CATEGORY_KEYS: Record<string, string> = {
+  hand_wash: 'cat_hand_wash',
+  automatic_wash: 'cat_automatic_wash',
+  self_service: 'cat_self_service',
+  exterior_wash: 'cat_exterior_wash',
+  detailing: 'cat_detailing',
 };
-
-function categoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat] ?? cat;
-}
 
 export function ServiceSelectionStep({
   station,
@@ -29,6 +25,11 @@ export function ServiceSelectionStep({
   onContinue,
 }: ServiceSelectionStepProps) {
   const t = useTranslations('booking');
+
+  const categoryLabel = (cat: string): string => {
+    const key = CATEGORY_KEYS[cat];
+    return key ? t(key) : cat;
+  };
 
   const services = station.stationServices;
 
