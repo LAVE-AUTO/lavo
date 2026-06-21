@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { LegalContentRenderer } from '@/components/pages/LegalContentRenderer';
 
@@ -40,6 +41,7 @@ export default async function PrivacyPage({ params }: Props) {
           contactBtn={t('contact_btn')}
         />
       </main>
+      <div className="hidden sm:block"><PublicFooter /></div>
       <BottomNav />
     </>
   );
