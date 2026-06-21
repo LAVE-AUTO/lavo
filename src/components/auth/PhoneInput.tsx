@@ -15,6 +15,7 @@ import {
 } from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 import labels from 'react-phone-number-input/locale/en.json';
+import { useTranslations } from 'next-intl';
 
 /* ------------------------------------------------------------------ */
 /*  Country select dropdown                                            */
@@ -29,6 +30,7 @@ function CountrySelect({
   onChange: (country: Country) => void;
   hasError: boolean;
 }) {
+  const tc = useTranslations('common');
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,7 +121,7 @@ function CountrySelect({
         className={triggerClasses}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label="Select country"
+        aria-label={tc('select_country')}
       >
         <span className="w-5 h-4 inline-flex items-center">
           {FlagIcon && <FlagIcon title="" />}
@@ -164,7 +166,7 @@ function CountrySelect({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent text-[14px] text-[#001201] dark:text-white placeholder-[#AAAAAA] outline-none"
-              placeholder="Search country..."
+              placeholder={tc('search_country')}
               autoComplete="off"
             />
           </div>

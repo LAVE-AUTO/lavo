@@ -9,7 +9,12 @@
         "back": "Back",
         "close": "Close",
         "clear_search": "Clear search",
-        "clear": "Clear"
+        "clear": "Clear",
+        "continue_with_google": "Continue with Google",
+        "continue_with_facebook": "Continue with Facebook",
+        "language": "Language",
+        "select_country": "Select country",
+        "search_country": "Search country..."
     },
     "home": {
         "meta_title": "Hurryline - Book your car wash online",

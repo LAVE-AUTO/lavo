@@ -9,7 +9,12 @@
         "back": "Retour",
         "close": "Fermer",
         "clear_search": "Effacer la recherche",
-        "clear": "Effacer"
+        "clear": "Effacer",
+        "continue_with_google": "Continuer avec Google",
+        "continue_with_facebook": "Continuer avec Facebook",
+        "language": "Langue",
+        "select_country": "Sélectionner un pays",
+        "search_country": "Rechercher un pays..."
     },
     "home": {
         "meta_title": "Hurryline - Réservez votre lavage auto en ligne",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 
 type Locale = 'fr' | 'en';
@@ -11,6 +11,7 @@ type Locale = 'fr' | 'en';
  */
 export function LangToggle() {
   const locale = useLocale() as Locale;
+  const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
 
@@ -27,7 +28,7 @@ export function LangToggle() {
     <div
       className="flex border border-gold rounded-[6px] overflow-hidden"
       role="group"
-      aria-label="Language"
+      aria-label={tc('language')}
     >
       {(['fr', 'en'] as Locale[]).map((lang) => (
         <button

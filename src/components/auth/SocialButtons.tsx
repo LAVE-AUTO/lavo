@@ -33,6 +33,7 @@ interface SocialButtonsProps {
  */
 export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   const t = useTranslations(namespace);
+  const tc = useTranslations('common');
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingFacebook, setLoadingFacebook] = useState(false);
 
@@ -82,7 +83,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
           onClick={handleGoogle}
           disabled={loadingGoogle /* || loadingFacebook */}
           className={`flex-1 ${btnClass} cursor-pointer disabled:opacity-60`}
-          aria-label="Continue with Google"
+          aria-label={tc('continue_with_google')}
         >
           {loadingGoogle ? <Spinner size="sm" /> : <GoogleIcon />}
           Google
@@ -94,7 +95,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
           onClick={handleFacebook}
           disabled={loadingGoogle || loadingFacebook}
           className={`flex-1 ${btnClass} cursor-pointer disabled:opacity-60`}
-          aria-label="Continue with Facebook"
+          aria-label={tc('continue_with_facebook')}
         >
           {loadingFacebook ? <Spinner size="sm" /> : <FacebookIcon />}
           Facebook
