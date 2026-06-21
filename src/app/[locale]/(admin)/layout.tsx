@@ -7,6 +7,15 @@ import { useLocale } from 'next-intl';
 import { useAuth } from '@/context';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { CommissionProvider } from '@/context/commission-context';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+
+function AuthSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <PageSpinner />
+    </div>
+  );
+}
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, isSuperAdmin } = useAuth();
@@ -20,7 +29,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [isLoading, isAuthenticated, isSuperAdmin, router, locale]);
 
-  if (isLoading) return null;
+  if (isLoading) return <AuthSpinner />;
   if (!isAuthenticated || !isSuperAdmin) return null;
 
   return (

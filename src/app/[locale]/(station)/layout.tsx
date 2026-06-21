@@ -9,6 +9,15 @@ import { getFromApi } from '@/services/axios-service';
 import { StationShell } from '@/components/station/StationShell';
 import { StationRejectedBanner } from '@/components/station/StationRejectedBanner';
 import { StationPendingView } from '@/components/station/StationPendingView';
+import { PageSpinner } from '@/components/ui/PageSpinner';
+
+function AuthSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <PageSpinner />
+    </div>
+  );
+}
 
 type StationState =
   | { kind: 'loading' }
@@ -98,7 +107,7 @@ export default function StationLayout({ children }: { children: ReactNode }) {
     return () => { mounted = false; };
   }, [isLoading, isAuthenticated, isStation, router, locale]);
 
-  if (isLoading || state.kind === 'loading') return null;
+  if (isLoading || state.kind === 'loading') return <AuthSpinner />;
   if (!isAuthenticated || !isStation) return null;
 
   if (state.kind === 'pending') {

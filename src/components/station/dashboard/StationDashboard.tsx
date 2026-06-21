@@ -355,13 +355,20 @@ export function StationDashboard() {
   }
 
   async function handleExtraTime(entryId: string, minutes: number) {
+    // Optimistic: stretch the block immediately so the timeline reacts before the round-trip.
+    setAgendaEntries((prev) =>
+      prev.map((e) => {
+        if (e.id !== entryId || !e.slotEnd) return e;
+        const extended = new Date(new Date(e.slotEnd).getTime() + minutes * 60_000).toISOString();
+        return { ...e, slotEnd: extended };
+      })
+    );
+
     const [ok] = await postWithApi('/station/extra-time', { reservation_id: entryId, extra_minutes: minutes });
     if (!mountedRef.current) return;
-    if (ok) {
-      await loadData();
-    } else {
-      showError(t('extra_time_error'));
-    }
+    // Always reload: on success this confirms cascaded shifts; on failure it rolls back the optimistic update.
+    await loadData();
+    if (!ok) showError(t('extra_time_error'));
   }
 
   async function handleDelayAccept(message: string, maxMinutes: number | null) {

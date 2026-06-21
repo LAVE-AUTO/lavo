@@ -131,7 +131,11 @@ export function StationDetail({ id }: StationDetailProps) {
     );
   }
 
-  const isOpen = station.isOpen !== false;
+  // stationStatus (computed from opening hours) takes priority over the raw is_open DB column.
+  // The detail endpoint now returns station_status, so both card and detail page agree.
+  const isOpen = station.stationStatus
+    ? station.stationStatus !== 'closed' && station.stationStatus !== 'no_future_availability'
+    : station.isOpen !== false;
   const hasServices = station.stationServices.length > 0;
   const hasNoAvailability = (station.availableSlots ?? 0) <= 0;
 

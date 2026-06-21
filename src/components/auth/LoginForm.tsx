@@ -114,7 +114,7 @@ export function LoginForm({
     setIsLoading(true);
     try {
       const [success, response] = await postWithApi('/auth/login', {
-        email:         formData.email.trim(),
+        email:         formData.email.trim().toLowerCase(),
         password:      formData.password,
         remember_me:   rememberMe,
         expected_role: allowedRole,

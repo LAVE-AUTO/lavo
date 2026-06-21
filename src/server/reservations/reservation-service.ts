@@ -67,6 +67,7 @@ import {
   type RichStationEntry,
   listEntriesByUserPaginated,
   listEntriesByStationPaginated,
+  cancelExpiredPendingPaymentsForSlot,
 } from './entry-repository';
 import { computeReservationSplit } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
@@ -269,9 +270,19 @@ export async function createReservation(
     },
   });
 
-  // Atomic: duplicate check, slot lock (SELECT FOR UPDATE), capacity check, entry insert, slot increment.
-  // Entry is created with stripe_payment_id already set - no orphan window.
+  // Atomic: expire stale pending_payment entries, duplicate check, slot lock, capacity check,
+  // entry insert, slot increment. Entry is created with stripe_payment_id already set — no orphan window.
+  let expiredPiIds: string[] = [];
   const entry = await db.transaction(async (tx) => {
+    // Free slots held by pending_payment entries older than PENDING_PAYMENT_TTL_MS (30 min).
+    // Runs inside the transaction so booked_count decrements are atomic with the capacity check.
+    // Stripe PI cancellations happen outside, after commit, to avoid external calls in a transaction.
+    const expired = await cancelExpiredPendingPaymentsForSlot(timeSlotId, tx);
+    for (const row of expired) {
+      await decrementSlotBookedCount(timeSlotId, tx);
+      if (row.stripe_payment_id) expiredPiIds.push(row.stripe_payment_id);
+    }
+
     const hasActive = await hasActiveReservationForSlot(userId, timeSlotId, tx);
     if (hasActive) throw new ActiveReservationExistsError();
 
@@ -308,6 +319,11 @@ export async function createReservation(
     await incrementSlotBookedCount(timeSlotId, tx);
     return created;
   });
+
+  // Cancel Stripe PIs for expired entries outside the transaction (no external calls inside tx).
+  for (const piId of expiredPiIds) {
+    cancelPaymentIntent(piId).catch(() => {});
+  }
 
   // Update PI metadata with reservation_id now that the entry ID is known.
   // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.

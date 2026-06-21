@@ -67,7 +67,7 @@ export function ForgotPasswordForm({ backHref = '/login' }: ForgotPasswordFormPr
 
     setIsLoading(true);
     try {
-      const [, response] = await postWithApi('/auth/forgot-password', { email: email.trim() }, { successStatus: HTTP_STATUS.OK });
+      const [, response] = await postWithApi('/auth/forgot-password', { email: email.trim().toLowerCase() }, { successStatus: HTTP_STATUS.OK });
       const data = response as { code?: string };
       if (data?.code === 'TOO_MANY_REQUESTS') {
         showError(t('error_rate_limit'));

@@ -194,7 +194,7 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
       const payload: Record<string, string> = {
         first_name: formData.firstName.trim(),
         last_name:  formData.lastName.trim(),
-        email:      formData.email.trim(),
+        email:      formData.email.trim().toLowerCase(),
         password:   formData.password,
         confirm_password: formData.confirmPassword,
       };

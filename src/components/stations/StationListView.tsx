@@ -330,22 +330,6 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
           </div>
         ) : null}
 
-        {/* Desktop: inline filter panel inside sticky bar */}
-        {isDesktop && panelOpen && (
-          <StationFilters
-            inline
-            open={panelOpen}
-            onClose={() => setPanelOpen(false)}
-            value={filters}
-            onChange={setFilters}
-            onReset={handleReset}
-            washTypes={washTypes}
-            vehicleFormats={vehicleFormats}
-            activeCount={activeCount}
-            hasLocation={userLocation != null}
-          />
-        )}
-
         {/* Sort + available pills */}
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none -mx-1 px-1">
           {sortChips.map(({ key, label, icon }) => (
@@ -399,6 +383,32 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
             </button>
           )}
         </div>
+
+        {/* Desktop: filter panel as absolute overlay — does not affect sticky bar height */}
+        {isDesktop && panelOpen && (
+          <>
+            {/* Transparent backdrop — closes panel on outside click */}
+            <div
+              className="fixed inset-0 z-30"
+              aria-hidden="true"
+              onClick={() => setPanelOpen(false)}
+            />
+            <div className="absolute inset-x-0 top-full z-40 pt-1">
+              <StationFilters
+                inline
+                open={panelOpen}
+                onClose={() => setPanelOpen(false)}
+                value={filters}
+                onChange={setFilters}
+                onReset={handleReset}
+                washTypes={washTypes}
+                vehicleFormats={vehicleFormats}
+                activeCount={activeCount}
+                hasLocation={userLocation != null}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Mobile: modal sheet filter */}
