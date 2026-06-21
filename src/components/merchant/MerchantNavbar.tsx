@@ -111,7 +111,7 @@ export function MerchantNavbar() {
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation marchands">
+          <nav className="hidden lg:flex items-center gap-8" aria-label={t('nav_aria')}>
             <a href="#how-it-works" className={linkClass}>{t('how_it_works')}</a>
             <a href="#features" className={linkClass}>{t('features')}</a>
             <a href="#qr" className={linkClass}>{t('qr')}</a>

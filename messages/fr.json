@@ -7,7 +7,9 @@
         "confirm": "Confirmer",
         "save": "Enregistrer",
         "back": "Retour",
-        "close": "Fermer"
+        "close": "Fermer",
+        "clear_search": "Effacer la recherche",
+        "clear": "Effacer"
     },
     "home": {
         "meta_title": "Hurryline - Réservez votre lavage auto en ligne",
@@ -621,6 +623,7 @@
         "meta_title": "Hurryline - Espace marchand",
         "meta_desc": "Hurryline digitalise votre station. Réservations en ligne, paiements automatisés, virements quotidiens.",
         "nav": {
+            "nav_aria": "Navigation marchands",
             "how_it_works": "Comment ça marche",
             "features": "Fonctionnalités",
             "qr": "QR Code",
@@ -1945,6 +1948,8 @@
         "cat_hand_wash": "Lavage à la main",
         "cat_automatic": "Lavage automatique",
         "cat_self_service": "Self-service",
+        "block_calendar_today": "Aujourd'hui",
+        "block_calendar_selected": "Sélectionné",
         "onboarding_title": "Configurez votre station",
         "onboarding_desc": "Complétez ces étapes pour que votre station soit visible et prête à recevoir des réservations.",
         "onboarding_cta": "Continuer la configuration",
@@ -2477,6 +2482,7 @@
         "format_modal_edit": "Modifier le Format",
         "format_field_label": "Nom du format",
         "format_placeholder_label": "Ex : Berline, SUV, Camion...",
+        "format_custom_placeholder": "Nom de format personnalisé",
         "format_field_price": "Prix de base (CAD)",
         "format_save_error": "Erreur lors de l'enregistrement",
         "format_label_conflict": "Un format avec ce nom existe déjà",

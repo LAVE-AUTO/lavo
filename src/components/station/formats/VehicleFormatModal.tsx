@@ -172,7 +172,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
                     setLabel(e.target.value);
                     setApiError(null);
                   }}
-                  placeholder="Custom format name"
+                  placeholder={t('format_custom_placeholder')}
                   maxLength={100}
                   className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
                 />

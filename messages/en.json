@@ -7,7 +7,9 @@
         "confirm": "Confirm",
         "save": "Save",
         "back": "Back",
-        "close": "Close"
+        "close": "Close",
+        "clear_search": "Clear search",
+        "clear": "Clear"
     },
     "home": {
         "meta_title": "Hurryline - Book your car wash online",
@@ -621,6 +623,7 @@
         "meta_title": "Hurryline - Merchant portal",
         "meta_desc": "Hurryline digitizes your station. Online bookings, automated payments, daily transfers.",
         "nav": {
+            "nav_aria": "Merchant navigation",
             "how_it_works": "How it works",
             "features": "Features",
             "qr": "QR Code",
@@ -1945,6 +1948,8 @@
         "cat_hand_wash": "Hand wash",
         "cat_automatic": "Automatic wash",
         "cat_self_service": "Self-service",
+        "block_calendar_today": "Today",
+        "block_calendar_selected": "Selected",
         "onboarding_title": "Set up your station",
         "onboarding_desc": "Complete these steps so your station is visible and ready to take bookings.",
         "onboarding_cta": "Continue setup",
@@ -2477,6 +2482,7 @@
         "format_modal_edit": "Edit Vehicle Format",
         "format_field_label": "Format name",
         "format_placeholder_label": "e.g. Sedan, SUV, Truck...",
+        "format_custom_placeholder": "Custom format name",
         "format_field_price": "Base price (CAD)",
         "format_save_error": "Error saving format",
         "format_label_conflict": "A format with this name already exists",

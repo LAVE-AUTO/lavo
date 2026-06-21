@@ -631,11 +631,11 @@ export function CreateBlockModal({
             <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-foreground/55 dark:text-[#B0BFB1]">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-[3px] border-2 border-[#DDAF3B]" />
-                Aujourd'hui
+                {t('block_calendar_today')}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-[3px] bg-[#DDAF3B]" />
-                Sélectionné
+                {t('block_calendar_selected')}
               </span>
             </div>
           </div>
