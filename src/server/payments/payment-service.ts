@@ -149,6 +149,12 @@ export async function createPaymentIntent(
     ) {
       throw new ConflictError('Station payment account is not fully configured');
     }
+    // The station's connected account does not exist for the current platform key
+    // (e.g. test/live mismatch, foreign platform, or deleted account). Surface a clean
+    // 409 instead of a raw 500 so the client shows an actionable message rather than crashing.
+    if (err.message.includes('No such destination') || err.message.includes('No such account')) {
+      throw new ConflictError('Station payment account is not connected. Please reconnect Stripe.');
+    }
     throw e;
   }
 
