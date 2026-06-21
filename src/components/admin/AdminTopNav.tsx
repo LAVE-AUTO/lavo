@@ -159,7 +159,7 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
 
           {/* Logo - same treatment as PublicNavbar / MerchantNavbar, always
               links to the landing page (NAV-1 rule). */}
-          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="/admin/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
