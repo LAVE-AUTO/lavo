@@ -19,7 +19,7 @@ const REMINDER_INTERVAL_MS = 12 * 60 * 1000;
  */
 export function StationSetupReminderBanner() {
   const t = useTranslations('station_dashboard');
-  const { loading, status, allDone, refetch } = useStationSetupStatus();
+  const { loading, error, status, allDone, refetch } = useStationSetupStatus();
   const [visible, setVisible] = useState(false);
   const [rotation, setRotation] = useState(0);
 
@@ -34,7 +34,9 @@ export function StationSetupReminderBanner() {
     return () => clearInterval(id);
   }, [allDone, refetch]);
 
-  if (loading || allDone || !visible) return null;
+  /* When a source failed, the status is unreliable — skip the nudge rather than
+     point the merchant at a step they may have already completed. */
+  if (loading || error || allDone || !visible) return null;
 
   const incomplete = SETUP_STEPS.filter((s) => !status[s.key]);
   if (incomplete.length === 0) return null;

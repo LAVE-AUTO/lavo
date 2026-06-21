@@ -12,9 +12,26 @@ import { SETUP_STEPS } from './setup-steps';
  */
 export function StationOnboardingChecklist() {
   const t = useTranslations('station_dashboard');
-  const { loading, status, completed, total, allDone } = useStationSetupStatus();
+  const { loading, error, status, completed, total, allDone, refetch } = useStationSetupStatus();
 
   if (loading || allDone) return null;
+
+  /* Total failure: showing an all-empty checklist would wrongly suggest a
+   * fully-configured station has done nothing. Surface the error + retry. */
+  if (error && completed === 0) {
+    return (
+      <section className="mx-4 mt-4 mb-1 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#DDAF3B]/30 bg-[#FFF9EC] px-5 py-4 dark:border-[#DDAF3B]/25 dark:bg-[#1A2210] sm:mx-5">
+        <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">{t('onboarding_load_error')}</p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          className="shrink-0 rounded-lg border border-[#DDAF3B]/40 px-3 py-1.5 text-[12px] font-bold text-[#9A7A13] transition-colors hover:bg-[#DDAF3B]/10 dark:text-[#DDAF3B]"
+        >
+          {t('onboarding_retry')}
+        </button>
+      </section>
+    );
+  }
 
   const nextStep = SETUP_STEPS.find((s) => !status[s.key]);
   const pct = Math.round((completed / total) * 100);
@@ -53,6 +70,21 @@ export function StationOnboardingChecklist() {
           />
         </div>
       </div>
+
+      {/* Partial load failure: keep the steps that did load, but let the
+          merchant retry the ones that didn't instead of trusting them blindly. */}
+      {error && (
+        <div className="mx-5 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#DDAF3B]/25 bg-[#DDAF3B]/8 px-3.5 py-2">
+          <span className="text-[12px] font-semibold text-[#9A7A13] dark:text-[#DDAF3B]">{t('onboarding_load_error_partial')}</span>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="shrink-0 text-[12px] font-bold text-[#9A7A13] underline-offset-2 hover:underline dark:text-[#DDAF3B]"
+          >
+            {t('onboarding_retry')}
+          </button>
+        </div>
+      )}
 
       {/* Steps */}
       <ul className="grid grid-cols-1 gap-2 p-5 sm:grid-cols-2 lg:grid-cols-3">
