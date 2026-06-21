@@ -38,7 +38,7 @@ const PaymentIcon = () => (
 export const SETUP_STEPS: SetupStepMeta[] = [
   { key: 'photos', href: '/station/config?tab=commerce', icon: <PhotoIcon /> },
   { key: 'hours', href: '/station/config?tab=hours', icon: <ClockIcon /> },
-  { key: 'posts', href: '/station/config?tab=capacity', icon: <PostIcon /> },
+  { key: 'posts', href: '/station/availability', icon: <PostIcon /> },
   { key: 'services', href: '/station/services', icon: <ServiceIcon /> },
   { key: 'payment', href: '/station/config?tab=payments', icon: <PaymentIcon /> },
 ];
