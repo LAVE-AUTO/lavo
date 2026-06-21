@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SupportContent } from '@/components/pages/SupportContent';
 
@@ -20,6 +21,7 @@ export default async function SupportPage({ params }: Props) {
       <main className="min-h-screen bg-[#FFEECA] dark:bg-dark-bg transition-colors">
         <SupportContent />
       </main>
+      <div className="hidden sm:block"><PublicFooter /></div>
       <BottomNav />
     </>
   );
