@@ -8,6 +8,7 @@ import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { DashboardOverviewSection } from './DashboardOverviewSection';
+import { StationOnboardingChecklist } from '../onboarding/StationOnboardingChecklist';
 import { DashboardDateNav } from './DashboardDateNav';
 import { DashboardAgendaTimeline, type AgendaEntry, type AgendaPost } from './DashboardAgendaTimeline';
 import { DashboardLegendBar } from './DashboardLegendBar';
@@ -521,6 +522,7 @@ export function StationDashboard() {
 
   return (
     <div className="flex flex-col animate-fade-in">
+      <StationOnboardingChecklist />
       <DashboardOverviewSection data={kpi} />
 
       <DashboardDateNav
