@@ -58,7 +58,7 @@ export function SocialButtons({ namespace = 'register' }: SocialButtonsProps) {
   };
 
   const btnClass = [
-    'flex items-center gap-2.5 px-5 py-2.5 rounded-xl',
+    'flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl',
     'bg-[#FFF9EC] dark:bg-tab-inactive',
     'border border-[#CCCCCC] dark:border-border',
     'hover:bg-[#E8E8E0] dark:hover:bg-tab-inactive',
