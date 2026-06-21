@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface Props {
   dayLabel: string;
   enabled: boolean;
@@ -65,6 +67,7 @@ function TimeRange({
   onStartChange?: (v: string) => void;
   onEndChange?: (v: string) => void;
 }) {
+  const t = useTranslations('station_config');
   return (
     <div className="flex items-center gap-2">
       <input
@@ -74,7 +77,7 @@ function TimeRange({
         disabled={disabled}
         readOnly={!onStartChange}
         onChange={onStartChange ? (e) => onStartChange(e.target.value) : undefined}
-        aria-label="Start"
+        aria-label={t('hours_day_start_aria')}
       />
       <span className="text-[12px] font-bold text-[#DDAF3B] select-none" aria-hidden="true">
         →
@@ -86,7 +89,7 @@ function TimeRange({
         disabled={disabled}
         readOnly={!onEndChange}
         onChange={onEndChange ? (e) => onEndChange(e.target.value) : undefined}
-        aria-label="End"
+        aria-label={t('hours_day_end_aria')}
       />
     </div>
   );

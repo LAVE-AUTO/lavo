@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 export type ConfigTabId = 'commerce' | 'hours' | 'capacity' | 'notifications' | 'payments';
 
@@ -17,10 +18,11 @@ interface Props {
 }
 
 export function ConfigTabs({ tabs, active, onChange }: Props) {
+  const t = useTranslations('station_config');
   return (
     <div
       role="tablist"
-      aria-label="Settings sections"
+      aria-label={t('config_tabs_aria')}
       className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-separator bg-transparent px-2 dark:border-[#1A2A14] dark:bg-dark-bg/95 dark:backdrop-blur-md"
     >
       {tabs.map((tab) => {
