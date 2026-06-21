@@ -189,6 +189,7 @@ button,
 
 .animate-float {
     animation: float 3.5s ease-in-out infinite;
+    will-change: transform;
 }
 
 .animate-gold-shimmer {
@@ -238,10 +239,12 @@ button,
 
 .animate-float-orb {
     animation: float-orb 10s ease-in-out infinite;
+    will-change: transform;
 }
 
 .animate-float-card {
     animation: float-card 7s ease-in-out infinite;
+    will-change: transform;
 }
 
 .hero-title-gradient {
@@ -524,6 +527,19 @@ button,
     animation: marquee-scroll 22s linear infinite;
     display: inline-flex;
     white-space: nowrap;
+    will-change: transform;
+    contain: layout style paint;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-marquee,
+    .animate-float,
+    .animate-float-orb,
+    .animate-float-card,
+    .animate-gold-shimmer,
+    .animate-emblem-pulse {
+        animation: none;
+    }
 }
 
 .font-playfair {

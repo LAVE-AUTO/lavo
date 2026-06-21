@@ -86,6 +86,8 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
       setItems(data.data?.items ?? []);
       setUnreadCount(data.data?.unread_count ?? 0);
       setNextCursor(data.data?.next_cursor ?? null);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllRead();
     } else {
       setErrorLoading(true);
     }
@@ -142,7 +144,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
               type="button"
               onClick={onToggleSidebar}
               aria-label="Menu"
-              className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#FFF9EC] text-[var(--foreground)] transition-colors hover:border-[#DDAF3B] hover:text-[#DDAF3B] dark:text-[#B0BFB1] lg:hidden"
+              className="flex h-[34px] w-[34px] items-center justify-center text-foreground transition-colors hover:text-[#DDAF3B] dark:text-Hurryline-muted lg:hidden"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -155,13 +157,13 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
           {/* Logo - always links to the merchant landing page (NAV-1 rule):
               a logged-in station belongs to the merchant universe, not the
               client landing at "/". */}
-          <Link href="/merchant" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="/station/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-12 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>
@@ -178,7 +180,7 @@ export function StationTopNav({ onToggleSidebar, stationName }: StationTopNavPro
               />
               <Link
                 href="/station/config"
-                className="group flex items-center gap-2.5 min-w-0 -mx-1 px-1 py-1 rounded-md transition-colors hover:bg-[rgba(221,175,59,0.06)]"
+                className="group hidden sm:flex items-center gap-2.5 min-w-0 -mx-1 px-1 py-1 rounded-md transition-colors hover:bg-[rgba(221,175,59,0.06)]"
                 aria-label={t('station_identity_aria', { name: stationName })}
               >
                 {/* Storefront pastille — gold-tinted disc with the same 34x34

@@ -13,7 +13,7 @@ export function PageSense({ nonce }: { nonce?: string }) {
   return (
     <Script
       src={`https://cdn-ca.pagesense.io/js/${PAGESENSE_ID}.js`}
-      strategy="afterInteractive"
+      strategy="lazyOnload"
       nonce={nonce}
     />
   );

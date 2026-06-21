@@ -1,6 +1,9 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { safeJsonLd } from '@/lib/json-ld';
+
+export const revalidate = 3600;
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { LandingAuthRedirect } from '@/components/home/LandingAuthRedirect';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { HeroSection } from '@/components/home/HeroSection';
@@ -70,6 +73,7 @@ export default async function LandingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
       />
+      <LandingAuthRedirect />
       <PublicNavbar />
       <main className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
         <HeroSection />

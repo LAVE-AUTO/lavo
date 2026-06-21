@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslations } from 'next-intl';
 import type {
   StationDetailData,
@@ -39,7 +39,13 @@ interface BookingReceiptProps {
  * browser print/save-to-PDF there. This guarantees a single-page receipt and
  * avoids the parent page layout leaking into print output.
  */
-export function BookingReceipt({
+/** Imperative handle so the parent (success screen) can trigger the receipt download
+ *  from a button placed outside this component (top-right of the modal). */
+export interface BookingReceiptHandle {
+  download: () => void;
+}
+
+export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptProps>(function BookingReceipt({
   station,
   service,
   entry,
@@ -54,7 +60,7 @@ export function BookingReceipt({
   grandTotal,
   ticketCode,
   queuePosition,
-}: BookingReceiptProps) {
+}: BookingReceiptProps, ref) {
   const t = useTranslations('booking');
   const [copied, setCopied] = useState(false);
 
@@ -188,6 +194,8 @@ export function BookingReceipt({
     setTimeout(() => win.print(), 250);
   };
 
+  useImperativeHandle(ref, () => ({ download: handleDownload }));
+
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-4">
       {/* Receipt panel */}
@@ -276,13 +284,33 @@ export function BookingReceipt({
             <span className="text-[20px] font-black text-[#DDAF3B]">${grandTotal.toLocaleString()}</span>
           </div>
 
-          {/* Ticket code */}
+          {/* Ticket code - copy button lives inside the box, to the right of the code */}
           <div className="bg-[#0e130f] border border-[#384133] text-white rounded-2xl px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="text-[10px] font-black uppercase tracking-[2px] text-[#DDAF3B] mb-1.5">
               {t('receipt_ticket_label')}
             </div>
-            <div className="text-[34px] font-black font-mono tracking-[0.35em] text-white leading-none mb-2">
-              {ticketCode}
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="text-[34px] font-black font-mono tracking-[0.35em] text-white leading-none">
+                {ticketCode}
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                aria-label={copied ? t('receipt_code_copied') : t('receipt_copy_code')}
+                title={copied ? t('receipt_code_copied') : t('receipt_copy_code')}
+                className="Hurryline-receipt-actions inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#404a3d] text-[#DDAF3B] hover:bg-[#181f1a] transition-colors cursor-pointer"
+              >
+                {copied ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                )}
+              </button>
             </div>
             <p className="text-[12px] text-[#aeb59f] leading-relaxed">
               {t('receipt_ticket_hint')}
@@ -295,36 +323,9 @@ export function BookingReceipt({
           {t('receipt_footer')}
         </div>
       </div>
-
-      {/* Actions (hidden when printing) */}
-      <div className="Hurryline-receipt-actions flex flex-col sm:flex-row gap-2">
-        <button
-          type="button"
-          onClick={handleDownload}
-          className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-[#DDAF3B] hover:bg-[#d8b35d] rounded-2xl text-[14px] font-black text-[#001201] transition-colors cursor-pointer"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          {t('receipt_download')}
-        </button>
-        <button
-          type="button"
-          onClick={handleCopyCode}
-          className="flex-1 inline-flex items-center justify-center gap-2 py-3 border border-[#404a3d] rounded-2xl text-[14px] font-bold text-[#DDAF3B] hover:bg-[#181f1a] transition-colors cursor-pointer"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-          </svg>
-          {copied ? t('receipt_code_copied') : t('receipt_copy_code')}
-        </button>
-      </div>
     </div>
   );
-}
+});
 
 /**
  * Generate a 6-character ticket code with digits + uppercase letters.

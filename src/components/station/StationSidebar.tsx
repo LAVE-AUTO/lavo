@@ -47,11 +47,12 @@ const ConfigIcon = () => (
   </svg>
 );
 
-const HistoryIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-  </svg>
-);
+// History icon kept for when the History link is restored (see supportItems below).
+// const HistoryIcon = () => (
+//   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+//     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+//   </svg>
+// );
 
 const QrIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -157,7 +158,7 @@ export function StationSidebar({ mobileOpen = false, onMobileClose }: SidebarPro
 
   // Configuration: setup tasks done occasionally
   const configurationItems: NavItem[] = [
-    { href: '/station/formats', labelKey: 'nav_formats', icon: <FormatsIcon /> },
+    { href: '/station/services', labelKey: 'nav_formats', icon: <FormatsIcon /> },
     { href: '/station/availability', labelKey: 'nav_availability', icon: <AvailabilityIcon /> },
     { href: '/station/qr', labelKey: 'nav_qr', icon: <QrIcon /> },
     { href: '/station/config', labelKey: 'nav_config', icon: <ConfigIcon /> },
@@ -165,7 +166,8 @@ export function StationSidebar({ mobileOpen = false, onMobileClose }: SidebarPro
 
   // Support & history: reference / help
   const supportItems: NavItem[] = [
-    { href: '/station/history', labelKey: 'nav_history', icon: <HistoryIcon /> },
+    // History link temporarily hidden per product request.
+    // { href: '/station/history', labelKey: 'nav_history', icon: <HistoryIcon /> },
     { href: '/station/support', labelKey: 'nav_support', icon: <SupportIcon /> },
   ];
 

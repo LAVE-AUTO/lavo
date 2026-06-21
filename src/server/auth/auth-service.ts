@@ -173,7 +173,8 @@ async function issueTokenPair(
  * }
  */
 export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en' = 'fr'): Promise<AuthResult> {
-  const existing = await findByEmail(dto.email);
+  const normalizedEmail = dto.email.toLowerCase().trim();
+  const existing = await findByEmail(normalizedEmail);
   if (existing) throw new ConflictError('Email already in use');
 
   const password_hash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
@@ -185,7 +186,7 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
     const createdUser = await createUser({
       first_name: dto.first_name,
       last_name: dto.last_name,
-      email: dto.email,
+      email: normalizedEmail,
       phone: dto.phone,
       password_hash,
       role: 'client',
@@ -286,7 +287,8 @@ export async function findOrCreateOAuthUser(data: {
 }): Promise<AuthResult> {
   let user: SafeUser;
 
-  const existing = await findByEmail(data.email);
+  const normalizedEmail = data.email.toLowerCase().trim();
+  const existing = await findByEmail(normalizedEmail);
   if (existing) {
     const { password_hash: _, ...safe } = existing;
     user = safe;
@@ -294,7 +296,7 @@ export async function findOrCreateOAuthUser(data: {
     user = await createUser({
       first_name: data.firstName,
       last_name: data.lastName,
-      email: data.email,
+      email: normalizedEmail,
       password_hash: null,
       role: 'client',
       status: 'active',
@@ -474,11 +476,12 @@ export async function refreshSession(rawRefreshToken: string): Promise<AuthResul
   const record = await findValidRefreshToken(rawRefreshToken);
   if (!record) throw new UnauthorizedError('Invalid or expired refresh token');
 
-  const user = await findById(record.user_id);
+  // Run user lookup and token revocation in parallel — they are independent.
+  const [user] = await Promise.all([
+    findById(record.user_id),
+    revokeRefreshToken(record.id),
+  ]);
   if (!user) throw new UnauthorizedError('User not found');
-
-  // Rotate: revoke the used token immediately
-  await revokeRefreshToken(record.id);
 
   // Prefer the persisted column; for legacy rows (column added in migration 0050) the
   // column defaults to false but the original lifetime is still a reliable signal —

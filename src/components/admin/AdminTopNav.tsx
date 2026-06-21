@@ -88,6 +88,8 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
       setItems(data.data?.items ?? []);
       setUnreadCount(data.data?.unread_count ?? 0);
       setNextCursor((data.data as { next_cursor?: string | null } | undefined)?.next_cursor ?? null);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllRead();
     } else {
       setErrorLoading(true);
     }
@@ -157,13 +159,13 @@ export function AdminTopNav({ onToggleSidebar }: AdminTopNavProps) {
 
           {/* Logo - same treatment as PublicNavbar / MerchantNavbar, always
               links to the landing page (NAV-1 rule). */}
-          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="/admin/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-12 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>

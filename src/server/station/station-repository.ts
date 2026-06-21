@@ -222,7 +222,16 @@ function listActiveStationsWhere(filters: ListActiveStationsFilters) {
     }
   }
   if (openToday) {
-    const todayDow = new Date().getDay();
+    // Derive the local day-of-week in Eastern time so that stations open on a given
+    // weekday are not excluded by a UTC-based getDay() that may be one day ahead.
+    const localDateStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Toronto',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const [y, mo, d] = localDateStr.split('-').map(Number);
+    const todayDow = new Date(y, mo - 1, d).getDay();
     conditions.push(
       sql`EXISTS (SELECT 1 FROM ${stationHours} WHERE ${stationHours.station_id} = ${stations.id} AND ${stationHours.day_of_week} = ${todayDow} AND ${stationHours.is_open} = true)`
     );

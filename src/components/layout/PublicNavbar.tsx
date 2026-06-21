@@ -139,6 +139,8 @@ export function PublicNavbar({
     if (ok && data && typeof data === 'object' && 'data' in data) {
       setNotifItems(data.data?.items ?? []);
       setNotifUnreadCount(data.data?.unread_count ?? 0);
+      /* Opening the panel marks everything as read. */
+      if ((data.data?.unread_count ?? 0) > 0) void markAllNotifRead();
     }
     setNotifLoading(false);
   }
@@ -179,7 +181,7 @@ export function PublicNavbar({
   const initial = user ? (user.first_name?.[0] ?? user.email[0]).toUpperCase() : '';
 
   /* Logo always goes to the landing page regardless of auth state */
-  const logoHref = '/' as const;
+  const logoHref = '/stations' as const;
 
   /* Nav links shown to logged-in users (desktop). */
   const authNavLinks = isClient
@@ -226,7 +228,7 @@ export function PublicNavbar({
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-12 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>

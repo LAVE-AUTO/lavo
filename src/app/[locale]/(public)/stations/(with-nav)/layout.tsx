@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
-import { PublicFooter } from '@/components/layout/PublicFooter';
 import { BottomNav } from '@/components/layout/BottomNav';
 
 /**
@@ -18,7 +17,6 @@ export default function StationsLayout({ children }: { children: ReactNode }) {
         <div className="flex-1 pb-16 sm:pb-0">{children}</div>
         {/* Footer: desktop only */}
         <div className="hidden sm:block">
-          <PublicFooter />
         </div>
       </div>
       {/* Bottom nav: mobile only */}

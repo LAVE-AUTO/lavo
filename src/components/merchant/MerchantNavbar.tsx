@@ -100,18 +100,18 @@ export function MerchantNavbar() {
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
-          <Link href="/" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
+          <Link href="station/dashboard" className="shrink-0" aria-label="Hurryline - Accueil" suppressHydrationWarning>
             <Image
               src={isDark ? darkLogoSrc : lightLogoSrc}
               alt={t('logo_alt')}
               width={130}
               height={34}
-              className="h-12 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation marchands">
+          <nav className="hidden lg:flex items-center gap-8" aria-label={t('nav_aria')}>
             <a href="#how-it-works" className={linkClass}>{t('how_it_works')}</a>
             <a href="#features" className={linkClass}>{t('features')}</a>
             <a href="#qr" className={linkClass}>{t('qr')}</a>

@@ -153,6 +153,11 @@ export function StationQrPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">
+      {/* Print hint - bold, at the top of the page */}
+      <p className="mb-6 max-w-md text-center text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">
+        {t('print_hint')}
+      </p>
+
       {/* Branded card */}
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-[#F7F3E4] p-8 shadow-2xl dark:from-[#1A2218] dark:via-[#161E12] dark:to-[#001201]">
         {/* Top gold accent line */}
@@ -222,11 +227,6 @@ export function StationQrPage() {
           <QrActions url={publicUrl} stationName={stationName} />
         </div>
       </div>
-
-      {/* Print hint */}
-      <p className="mt-6 max-w-sm text-center text-[12px] text-foreground/55 dark:text-[#5A5A4A]">
-        {t('print_hint')}
-      </p>
     </div>
   );
 }

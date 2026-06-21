@@ -16,12 +16,6 @@ interface Props {
 const SCOPES = ['exterior', 'interior', 'both'] as const;
 type Scope = typeof SCOPES[number];
 
-const SCOPE_LABELS: Record<Scope, string> = {
-  exterior: 'Extérieur',
-  interior: 'Intérieur',
-  both: 'Les deux',
-};
-
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
@@ -31,8 +25,15 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function ExtraModal({ extra, onClose, onSaved }: Props) {
+  const t = useTranslations('station_services');
   const tc = useTranslations('common');
   const isEdit = extra !== null;
+  const scopeLabel: Record<Scope, string> = {
+    exterior: t('extra_scope_exterior'),
+    interior: t('extra_scope_interior'),
+    both: t('extra_scope_both'),
+  };
+  const title = isEdit ? t('extra_edit_title') : t('extra_create_title');
 
   const [name, setName] = useState('');
   const [scope, setScope] = useState<Scope>('both');
@@ -63,7 +64,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Le nom est requis');
+      setError(t('extra_error_name_required'));
       return;
     }
     setSaving(true);
@@ -84,7 +85,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
     setSaving(false);
 
     if (!ok) {
-      setError((data as { message?: string })?.message ?? 'Erreur lors de la sauvegarde');
+      setError((data as { message?: string })?.message ?? t('extra_error_save'));
       return;
     }
 
@@ -102,7 +103,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
     onSaved(saved);
   }
 
-  const previewName = name.trim() || "Nom de l'extra";
+  const previewName = name.trim() || t('extra_name_label');
   const previewPrice = price || '0';
   const previewDuration = duration || '0';
 
@@ -110,7 +111,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={isEdit ? 'Modifier extra' : 'Créer un extra'}
+      aria-label={title}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -123,7 +124,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
         {/* Header */}
         <div className="flex items-center border-b border-[#F0EDE4] px-5 py-4 dark:border-[#1A2A14]">
           <span className="w-full text-center text-[16px] font-black text-[#001201] dark:text-[#FFF9EC]">
-            {isEdit ? 'Modifier extra' : 'Créer un extra'}
+            {title}
           </span>
           {isEdit && (
             <button
@@ -144,11 +145,11 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
             <div className="space-y-4 p-5">
               {/* Name */}
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>Nom de l&apos;extra</FieldLabel>
+                <FieldLabel>{t('extra_name_label')}</FieldLabel>
                 <TextField
                   value={name}
                   onChange={setName}
-                  placeholder="Ex: Cirage premium"
+                  placeholder={t('extra_name_placeholder')}
                   maxLength={80}
                   required
                 />
@@ -156,8 +157,8 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
 
               {/* Scope */}
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>Applicable sur</FieldLabel>
-                <div className="flex gap-2">
+                <FieldLabel>{t('extra_scope_label')}</FieldLabel>
+                <div className="flex flex-wrap gap-2">
                   {SCOPES.map((s) => (
                     <button
                       key={s}
@@ -169,7 +170,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
                           : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
                       }`}
                     >
-                      {SCOPE_LABELS[s]}
+                      {scopeLabel[s]}
                     </button>
                   ))}
                 </div>
@@ -178,18 +179,18 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               {/* Price + Duration */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Prix supplémentaire (CAD)</FieldLabel>
+                  <FieldLabel>{t('extra_price_label')}</FieldLabel>
                   <NumberStepper value={price} onChange={setPrice} min={0} step={0.5} unit="$" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Durée supplémentaire</FieldLabel>
+                  <FieldLabel>{t('extra_duration_label')}</FieldLabel>
                   <NumberStepper value={duration} onChange={setDuration} min={0} step={5} unit="min" />
                 </div>
               </div>
 
               {/* Preview */}
               <div className="rounded-xl border border-[#DDAF3B]/20 bg-[#FFFDF5] p-4 dark:border-[#DDAF3B]/20 dark:bg-[#1A1808]">
-                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#DDAF3B]">Aperçu</div>
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#DDAF3B]">{t('extra_preview')}</div>
                 <div className="text-[13px] text-[#5A5A4A] dark:text-[#B0BFB1]">
                   <span className="font-bold text-[#001201] dark:text-[#FFF9EC]">{previewName}</span>
                   {' : '}+{previewPrice} $ · +{previewDuration} min
@@ -212,15 +213,15 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
               className="w-full rounded-xl bg-[#DDAF3B] py-2.5 text-[13px] font-bold text-[#001201] transition-opacity hover:opacity-85 disabled:opacity-50"
             >
               {saving
-                ? isEdit ? 'Enregistrement…' : 'Création…'
-                : isEdit ? 'Enregistrer' : "Créer l'extra"}
+                ? isEdit ? t('extra_saving') : t('extra_creating')
+                : isEdit ? t('extra_save') : t('extra_create')}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="w-full rounded-xl border border-[#FFF9EC] py-2.5 text-[13px] font-semibold text-foreground/65 transition-colors hover:bg-[#F0EDE0] dark:border-[#001A05] dark:text-[#B0BFB1]"
             >
-              Annuler
+              {tc('cancel')}
             </button>
           </div>
         </form>

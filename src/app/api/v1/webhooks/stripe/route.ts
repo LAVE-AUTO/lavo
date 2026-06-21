@@ -13,6 +13,7 @@ import { error400, errorResponse, error500 } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import {
   cancelEntryForStripePaymentFailureIfEligible,
+  cancelEntryForStripeIntentCancelIfEligible,
   clearStripePaymentSucceededNotifiedAt,
   confirmEntryIfPendingPayment,
   findEntryByStripePaymentId,
@@ -96,7 +97,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           console.warn('[WEBHOOK] Ignoring payment_intent.canceled: invalid or missing id');
           break;
         }
-        await handlePaymentCancelled(pi, 'Payment cancelled');
+        await handleIntentCancelled(pi, 'Payment cancelled');
         break;
       }
 
@@ -307,7 +308,12 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
 // %%%%% HANDLER - payment_intent failed / canceled %%%%%
 // Cancels entry, decrements slot, push + failure email.
 
-/** Cancels eligible entry and notifies client (push + email). */
+/**
+ * payment_intent.payment_failed — targets pending_payment only.
+ * confirmed entries are intentionally skipped: a late payment_failed retry
+ * (3DS timeout, network glitch) must not override an authorization that
+ * already succeeded.
+ */
 async function handlePaymentCancelled(paymentIntentId: string, reason: string): Promise<void> {
   const entry = await findEntryByStripePaymentId(paymentIntentId);
   if (!entry) {
@@ -362,5 +368,65 @@ async function handlePaymentCancelled(paymentIntentId: string, reason: string): 
   }
 }
 
+
+/**
+ * payment_intent.canceled — explicit revocation of the intent.
+ * Also targets confirmed entries: once an intent is canceled, the card hold
+ * is released by Stripe and no capture can ever happen, so the reservation
+ * must be cancelled regardless of whether the authorization had succeeded.
+ */
+async function handleIntentCancelled(paymentIntentId: string, reason: string): Promise<void> {
+  const entry = await findEntryByStripePaymentId(paymentIntentId);
+  if (!entry) {
+    console.warn(`Webhook: no entry found for PaymentIntent ${paymentIntentId}`);
+    return;
+  }
+
+  let cancelled: Awaited<ReturnType<typeof cancelEntryForStripeIntentCancelIfEligible>> | undefined;
+  await db.transaction(async (tx) => {
+    cancelled = await cancelEntryForStripeIntentCancelIfEligible(entry.id, reason, tx);
+    if (cancelled?.time_slot_id) {
+      await decrementSlotBookedCount(cancelled.time_slot_id, tx);
+    }
+  });
+
+  if (!cancelled) return;
+
+  try {
+    await notifyEntry({
+      entryId: cancelled.id,
+      userId: cancelled.user_id,
+      stationId: cancelled.station_id,
+      type: 'entry_cancelled',
+    });
+    await notifyClientFeed({
+      userId: cancelled.user_id,
+      entryId: cancelled.id,
+      stationId: cancelled.station_id,
+      kind: 'entry_cancelled',
+      body: 'Votre réservation a été annulée.',
+    });
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('Webhook: notification failed for payment_intent.canceled', { entryId: cancelled.id, error });
+  }
+
+  try {
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, cancelled.user_id),
+      columns: { email: true },
+    });
+    const emailTo = userRow?.email?.trim();
+    if (emailTo) {
+      await sendPaymentFailedEmail({ to: emailTo, reason });
+    }
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('[WEBHOOK payment_intent.canceled] Client failure email failed', {
+      entryId: cancelled.id,
+      error,
+    });
+  }
+}
 
 // %%%%% END - HANDLER - payment_intent failed / canceled %%%%%

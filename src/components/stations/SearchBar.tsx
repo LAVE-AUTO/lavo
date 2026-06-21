@@ -1,6 +1,7 @@
 'use client';
 
 import { type ChangeEvent } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface SearchBarProps {
   value: string;
@@ -33,6 +34,7 @@ function SearchIcon() {
  * Calls onChange on every keystroke - filtering is handled by the parent.
  */
 export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
+  const tc = useTranslations('common');
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
   };
@@ -53,7 +55,7 @@ export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
           type="button"
           onClick={() => onChange('')}
           className="text-[#B0BFB1] hover:text-white transition-colors"
-          aria-label="Effacer la recherche"
+          aria-label={tc('clear_search')}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />

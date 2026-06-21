@@ -101,6 +101,10 @@ export default async function RootLayout({
 
   return (
     <html lang="fr" className={fontVariables} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://cdn-ca.pagesense.io" />
+      </head>
       {/* zoom: slight global ~104% size bump for this px-based UI. Set inline
           because Tailwind v4 / Lightning CSS strips the non-standard `zoom`
           property when it goes through the CSS pipeline. */}

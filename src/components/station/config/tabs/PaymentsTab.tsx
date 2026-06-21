@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services';
 
 interface StripeStatus {
@@ -85,23 +85,45 @@ interface Props {
 
 export function PaymentsTab({ locked }: Props) {
   const t = useTranslations('station_config');
+  const locale = useLocale();
 
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const loadStatus = useCallback(async () => {
-    const [ok, data] = await getFromApi('/station/stripe/status');
+    /* Stripe status and the station id (for the public-page link) are independent - fetch together. */
+    const [[ok, data], [okMe, meData]] = await Promise.all([
+      getFromApi('/station/stripe/status'),
+      getFromApi('/station/me'),
+    ]);
     if (ok) {
       setStatus((data as { data: Status }).data);
     }
+    const stationId = okMe ? (meData as { data?: { id?: string } })?.data?.id : null;
+    if (stationId && typeof window !== 'undefined') {
+      setWebsiteUrl(`${window.location.origin}/${locale}/stations/${stationId}`);
+    }
     setLoading(false);
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  async function handleCopyWebsite() {
+    if (!websiteUrl) return;
+    try {
+      await navigator.clipboard.writeText(websiteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable - the URL is shown so it can be copied manually */
+    }
+  }
 
   async function handleConnect() {
     setActionLoading(true);
@@ -149,6 +171,27 @@ export function PaymentsTab({ locked }: Props) {
             </span>
           )}
         </div>
+
+        {!isActive && websiteUrl && (
+          <div className="mb-4 rounded-xl border border-[#635BFF]/30 bg-[#635BFF]/5 p-3.5 dark:border-[#635BFF]/40 dark:bg-[#635BFF]/10">
+            <p className="text-[12.5px] leading-relaxed text-foreground/75 dark:text-[#C0C0B0]">
+              {t('payments_website_hint')}
+            </p>
+            <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <code className="flex-1 truncate rounded-lg border border-separator/25 bg-card-surface px-3 py-2 font-mono text-[12px] text-foreground/80 dark:border-[#1A2A14] dark:bg-dark-bg dark:text-[#B0BFB1]">
+                {websiteUrl}
+              </code>
+              <button
+                type="button"
+                onClick={handleCopyWebsite}
+                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#635BFF] px-3.5 py-2 text-[12px] font-bold text-white transition-opacity hover:opacity-90"
+              >
+                {copied ? <CheckIcon /> : null}
+                {copied ? t('payments_website_copied') : t('payments_website_copy')}
+              </button>
+            </div>
+          </div>
+        )}
 
         {!isConnected && (
           <div className="flex flex-col gap-4">

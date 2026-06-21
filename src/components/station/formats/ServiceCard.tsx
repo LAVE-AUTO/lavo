@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { deleteWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { CompatibleExtrasModal } from './CompatibleExtrasModal';
+import type { StationExtra } from '@/components/station/config/station-extras-types';
 import type { Service } from './types';
 
 interface Props {
@@ -11,6 +13,10 @@ interface Props {
   onEdit: (service: Service) => void;
   onDeleted: (id: string) => void;
   onToggled: (service: Service) => void;
+  /** All station extras, used to resolve this service's compatible extras with their active state. */
+  allExtras: StationExtra[];
+  /** Reports an extra's active-state change back to the page. */
+  onExtraToggled: (extra: StationExtra) => void;
 }
 
 const CrossIcon = () => (
@@ -33,13 +39,14 @@ const FlameIcon = () => (
   </svg>
 );
 
-export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
+export function ServiceCard({ service, onEdit, onDeleted, onToggled, allExtras, onExtraToggled }: Props) {
   const t = useTranslations('station_services');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toggleOpen, setToggleOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
 
   async function confirmDelete() {
     setDeleting(true);
@@ -80,7 +87,10 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
         : `${minDur}-${maxDur} MIN`
       : null;
 
-  const extras = service.compatible_extras ?? [];
+  /* Resolve the service's compatible extras to full extra objects (with active state)
+     so the modal can toggle each one. Match the compatibility ids against all station extras. */
+  const compatibleIds = new Set((service.compatible_extras ?? []).map((e) => e.id));
+  const compatibleExtras = allExtras.filter((e) => compatibleIds.has(e.id));
   const isPackages = service.category === 'automatic';
 
   return (
@@ -186,17 +196,19 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-foreground/55 dark:text-[#B0BFB1]">
               {t('extras_label')}
             </p>
-            {extras.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {extras.map((extra) => (
-                  <span
-                    key={extra.id}
-                    className="inline-flex items-center rounded-full border border-[#22C47A]/30 bg-[#22C47A]/10 px-2.5 py-1 text-[11px] font-semibold text-[#16A964]"
-                  >
-                    {extra.name}
-                  </span>
-                ))}
-              </div>
+            {compatibleExtras.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setExtrasOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#22C47A]/40 bg-[#22C47A]/10 px-3 py-1.5 text-[12.5px] font-bold text-[#16A964] transition-colors hover:bg-[#22C47A]/20 dark:text-[#3FD98A]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                {t('extras_view_btn')}
+                <span className="rounded-full bg-[#22C47A]/20 px-1.5 text-[11px]">{compatibleExtras.length}</span>
+              </button>
             ) : (
               <span className="inline-flex items-center text-[12px] text-[#BBBBAA] dark:text-[#5A5A4A]">
                 {t('extras_none_short')}
@@ -205,6 +217,15 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled }: Props) {
           </div>
         )}
       </article>
+
+      {/* Compatible extras - view + toggle active/inactive */}
+      <CompatibleExtrasModal
+        open={extrasOpen}
+        onClose={() => setExtrasOpen(false)}
+        serviceName={service.name}
+        extras={compatibleExtras}
+        onToggled={onExtraToggled}
+      />
 
       {/* Delete confirmation */}
       <ConfirmDialog

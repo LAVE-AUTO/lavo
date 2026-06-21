@@ -1,6 +1,17 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { users } from '@/lib/db/schema';
+import { getCachedOrFetch, invalidateCache } from '@/lib/redis-cache';
+
+const USER_CACHE_TTL = 300; // 5 min
+
+function userCacheKey(id: string): string {
+  return `user:${id}`;
+}
+
+export async function invalidateUserCache(userId: string): Promise<void> {
+  await invalidateCache(userCacheKey(userId));
+}
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -59,7 +70,9 @@ function stripPasswordHash(user: User): SafeUser {
  * console.log(user?.role ?? null);
  */
 export async function findByEmail(email: string): Promise<User | undefined> {
-  return db.query.users.findFirst({ where: eq(users.email, email) });
+  return db.query.users.findFirst({
+    where: sql`lower(${users.email}) = ${email.toLowerCase().trim()}`,
+  });
 }
 
 /**
@@ -86,8 +99,10 @@ export async function findByEmail(email: string): Promise<User | undefined> {
  * }
  */
 export async function findById(id: string): Promise<SafeUser | undefined> {
-  const user = await db.query.users.findFirst({ where: eq(users.id, id) });
-  return user ? stripPasswordHash(user) : undefined;
+  return getCachedOrFetch(userCacheKey(id), USER_CACHE_TTL, async () => {
+    const user = await db.query.users.findFirst({ where: eq(users.id, id) });
+    return user ? stripPasswordHash(user) : undefined;
+  });
 }
 
 /**
@@ -174,6 +189,7 @@ export async function updatePassword(userId: string, passwordHash: string): Prom
     .update(users)
     .set({ password_hash: passwordHash, updated_at: new Date() })
     .where(eq(users.id, userId));
+  await invalidateUserCache(userId);
 }
 
 /**
@@ -205,6 +221,7 @@ export async function updateForcePasswordChange(
     .update(users)
     .set({ force_password_change: value, updated_at: new Date() })
     .where(eq(users.id, userId));
+  await invalidateUserCache(userId);
 }
 
 /**
@@ -232,6 +249,7 @@ export async function updateEmailVerified(userId: string): Promise<void> {
     .update(users)
     .set({ email_verified_at: new Date(), status: 'active', updated_at: new Date() })
     .where(eq(users.id, userId));
+  await invalidateUserCache(userId);
 }
 
 /**
@@ -268,6 +286,7 @@ export async function updateProfile(
     .where(eq(users.id, userId))
     .returning();
   if (!row) throw new Error('Update profile failed');
+  await invalidateUserCache(userId);
   return stripPasswordHash(row);
 }
 
@@ -304,4 +323,5 @@ export async function softDeleteUser(userId: string, emailHash: string): Promise
       updated_at: new Date(),
     })
     .where(eq(users.id, userId));
+  await invalidateUserCache(userId);
 }
