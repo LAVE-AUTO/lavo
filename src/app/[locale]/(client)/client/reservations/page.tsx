@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth-context';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
+type StatusFilter = 'all' | 'confirmed' | 'completed' | 'cancelled';
 type QueueStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled';
 
 /* Service category → localized display label. The three values mirror the
@@ -301,6 +302,7 @@ export default function ClientReservationsPage() {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const [tab, setTab]                     = useState<Tab>('reservations');
+  const [statusFilter, setStatusFilter]   = useState<StatusFilter>('all');
   const [reservations, setReservations]   = useState<ClientReservation[]>([]);
   const [queueEntries, setQueueEntries]   = useState<ClientQueueEntry[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -358,31 +360,39 @@ export default function ClientReservationsPage() {
     return () => window.clearTimeout(timer);
   }, [authLoading, loadEntries]);
 
+  const filteredReservations = useMemo(() => {
+    if (statusFilter === 'all') return reservations;
+    if (statusFilter === 'confirmed') return reservations.filter((r) => r.status === 'confirmed' || r.status === 'in_progress');
+    if (statusFilter === 'completed') return reservations.filter((r) => r.status === 'completed');
+    if (statusFilter === 'cancelled') return reservations.filter((r) => r.status === 'cancelled');
+    return reservations;
+  }, [reservations, statusFilter]);
+
   /* Sectioning by time, not by status:
    *  - upcoming: slot is in the future AND status is not terminal (cancelled / completed)
    *  - past:     status is cancelled / completed OR slot has passed
    * Sort upcoming by slot ASC (next first) and past by slot DESC (most recent first). */
   const upcoming = useMemo(
     () =>
-      [...reservations]
+      [...filteredReservations]
         .filter((r) => !isPastReservation(r))
         .sort((a, b) => {
           const ta = a.slotStart ? new Date(a.slotStart).getTime() : Infinity;
           const tb = b.slotStart ? new Date(b.slotStart).getTime() : Infinity;
           return ta - tb;
         }),
-    [reservations],
+    [filteredReservations],
   );
   const past = useMemo(
     () =>
-      [...reservations]
+      [...filteredReservations]
         .filter(isPastReservation)
         .sort((a, b) => {
           const ta = a.slotStart ? new Date(a.slotStart).getTime() : new Date(a.createdAt).getTime();
           const tb = b.slotStart ? new Date(b.slotStart).getTime() : new Date(b.createdAt).getTime();
           return tb - ta;
         }),
-    [reservations],
+    [filteredReservations],
   );
   /* Queue tab sectioning: active = waiting/in_progress, past = completed/cancelled. */
   const upcomingQueue = useMemo(
@@ -510,7 +520,27 @@ export default function ClientReservationsPage() {
       {/* Content */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         {tab === 'reservations' ? (
-          <div className="space-y-6">
+          <>
+            {/* Status filter chips */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {(['all', 'confirmed', 'completed', 'cancelled'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStatusFilter(key)}
+                  className={[
+                    'px-3.5 py-1.5 rounded-full text-[13px] font-bold transition-all cursor-pointer border',
+                    statusFilter === key
+                      ? 'bg-gold text-dark-bg border-gold'
+                      : 'bg-surface border-surface text-foreground/70 hover:text-foreground hover:border-gold/40',
+                  ].join(' ')}
+                >
+                  {t(`filter_${key}`)}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-6">
             {upcoming.length > 0 && (
               <section>
                 <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
@@ -565,7 +595,11 @@ export default function ClientReservationsPage() {
                 historyLabel={t('empty_reservations_history')}
               />
             )}
-          </div>
+            {reservations.length > 0 && filteredReservations.length === 0 && (
+              <p className="text-center text-[14px] text-foreground/50 py-10">{t('filter_empty')}</p>
+            )}
+            </div>
+          </>
         ) : (
           <div className="space-y-6">
             {upcomingQueue.length > 0 && (
