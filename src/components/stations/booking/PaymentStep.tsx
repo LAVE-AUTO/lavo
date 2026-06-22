@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useTheme } from '@/context/theme-context';
 
 interface PaymentStepProps {
   grandTotal: number;
@@ -37,6 +38,8 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
   const t = useTranslations('booking');
   const stripe = useStripe();
   const elements = useElements();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -79,8 +82,8 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
                 style: {
                   base: {
                     fontSize: '15px',
-                    color: '#000C1F',
-                    '::placeholder': { color: '#BBBBBB' },
+                    color: isDark ? '#F5F0E8' : '#000C1F',
+                    '::placeholder': { color: isDark ? '#6B7A6C' : '#BBBBBB' },
                     fontFamily: 'Rajdhani, sans-serif',
                   },
                   invalid: { color: '#FF383C' },
