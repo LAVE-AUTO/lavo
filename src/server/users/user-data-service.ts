@@ -25,7 +25,6 @@ export async function getFullUserData(userId: string) {
   ] = await Promise.all([
     db
       .select({
-        id: users.id,
         email: users.email,
         first_name: users.first_name,
         last_name: users.last_name,
@@ -41,10 +40,8 @@ export async function getFullUserData(userId: string) {
 
     db
       .select({
-        id: reservations.id,
         entry_type: reservations.entry_type,
         status: reservations.status,
-        station_id: reservations.station_id,
         station_name: stations.name,
         amount_paid: reservations.amount_paid,
         commission_amount: reservations.commission_amount,
@@ -58,8 +55,6 @@ export async function getFullUserData(userId: string) {
 
     db
       .select({
-        id: ratings.id,
-        station_id: ratings.station_id,
         station_name: stations.name,
         score: ratings.score,
         comment: ratings.comment,
@@ -72,7 +67,6 @@ export async function getFullUserData(userId: string) {
 
     db
       .select({
-        station_id: favorites.station_id,
         station_name: stations.name,
         added_at: favorites.created_at,
       })
@@ -82,8 +76,6 @@ export async function getFullUserData(userId: string) {
 
     db
       .select({
-        id: noShowFees.id,
-        station_id: noShowFees.station_id,
         station_name: stations.name,
         amount: noShowFees.amount,
         reason: noShowFees.reason,
@@ -97,7 +89,6 @@ export async function getFullUserData(userId: string) {
 
     db
       .select({
-        id: supportTickets.id,
         subject: supportTickets.subject,
         status: supportTickets.status,
         created_at: supportTickets.created_at,
