@@ -25,6 +25,7 @@ import { users } from '@/lib/db/schema';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
+import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
 import { sendEscrowReleasedNotificationsForEntry } from '@/server/notifications/escrow-released-notifications';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -294,6 +295,19 @@ async function handlePaymentAuthorized(paymentIntentId: string): Promise<void> {
       stationId: entry.station_id,
       kind: 'reservation_confirmed',
       body: 'Votre réservation est confirmée. À bientôt !',
+    });
+    // Notify the station only after payment is confirmed — not at creation time,
+    // since pending_payment entries may never complete (card declined, timeout).
+    const clientRow = await db.query.users.findFirst({
+      where: eq(users.id, entry.user_id),
+      columns: { first_name: true },
+    });
+    const clientName = clientRow?.first_name ?? 'Un client';
+    await notifyStationFeed({
+      stationId: entry.station_id,
+      entryId: entry.id,
+      kind: 'reservation_new',
+      body: `${clientName} a réservé un créneau (${parseFloat(entry.amount_paid).toFixed(2)} $)`,
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);

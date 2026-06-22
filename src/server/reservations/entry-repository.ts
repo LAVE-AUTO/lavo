@@ -2,7 +2,7 @@
  * Data access for station entries (reservations and queue) in the single reservations table.
  * Enforces entry_type constraints: reservation => time_slot_id set; queue => queue_position set.
  */
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, notInArray, sql } from 'drizzle-orm';
 import { db, type DbTransaction } from '@/lib/db';
 import { reservations, timeSlots, stationConfigs, stations, vehicleFormats, users, stationServices } from '@/lib/db/schema';
 
@@ -439,7 +439,7 @@ export async function cancelExpiredPendingPaymentsForSlot(
   const cutoff = new Date(Date.now() - PENDING_PAYMENT_TTL_MS);
   return tx
     .update(reservations)
-    .set({ status: 'cancelled', cancellation_reason: 'Payment timeout', updated_at: new Date() })
+    .set({ status: 'payment_failed', cancellation_reason: 'Payment timeout', updated_at: new Date() })
     .where(
       and(
         eq(reservations.time_slot_id, slotId),
@@ -751,7 +751,7 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'cancelled', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_FAILURE_STATUSES])))
     .returning();
   return row;
@@ -768,7 +768,7 @@ export async function cancelEntryForStripeIntentCancelIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'cancelled', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_INTENT_CANCEL_STATUSES])))
     .returning();
   return row;
@@ -1151,7 +1151,13 @@ export async function listRichEntriesByUser(
   const offset = (Math.max(1, page) - 1) * limit;
 
   const conditions = [eq(reservations.user_id, userId)];
-  if (status) conditions.push(eq(reservations.status, status));
+  if (status) {
+    conditions.push(eq(reservations.status, status));
+  } else {
+    // Hide incomplete payment attempts and auto-cancelled payment failures.
+    // Only manually cancelled entries (status='cancelled') remain visible.
+    conditions.push(notInArray(reservations.status, ['pending_payment', 'payment_failed']));
+  }
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));
   const where = and(...conditions);

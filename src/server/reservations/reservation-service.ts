@@ -228,7 +228,7 @@ export async function createReservation(
     await db.transaction(async (tx) => {
       const [row] = await tx
         .update(reservationsTableModule)
-        .set({ status: 'cancelled', updated_at: new Date() })
+        .set({ status: 'payment_failed', updated_at: new Date() })
         .where(
           and(
             eqInline(reservationsTableModule.id, stalePending.id),
@@ -337,31 +337,9 @@ export async function createReservation(
     });
   }
 
-  await notifyEntry({
-    entryId: entry.id,
-    userId,
-    stationId,
-    type: 'reservation_created',
-  });
-  await notifyClientFeed({
-    userId,
-    entryId: entry.id,
-    stationId,
-    kind: 'reservation_created',
-    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
-  });
-
-  // Note: ticket_code is intentionally omitted from the feed body. It is the
-  // client's secret used to authorise service start at the station kiosk; once
-  // surfaced in the station feed it loses its verification value.
-  const client = await findById(userId);
-  const clientName = client?.first_name ?? 'Un client';
-  await notifyStationFeed({
-    stationId,
-    entryId: entry.id,
-    kind: 'reservation_new',
-    body: `${clientName} a réservé un créneau (${toDecimal(amountTotal)} $)`,
-  });
+  // Notifications are intentionally deferred to the Stripe webhook handler
+  // (payment_intent.amount_capturable_updated). Sending them here would notify
+  // the client and station for reservations whose payment ultimately fails.
 
   return { entry, clientSecret };
 }
@@ -503,29 +481,7 @@ export async function createReservationByStartTime(
     });
   }
 
-  await notifyEntry({
-    entryId: entry.id,
-    userId,
-    stationId,
-    type: 'reservation_created',
-  });
-  await notifyClientFeed({
-    userId,
-    entryId: entry.id,
-    stationId,
-    kind: 'reservation_created',
-    body: 'Votre réservation a été enregistrée. Complétez le paiement pour confirmer.',
-  });
-
-  // ticket_code intentionally omitted from feed body (see createReservation).
-  const client = await findById(userId);
-  const clientName = client?.first_name ?? 'Un client';
-  await notifyStationFeed({
-    stationId,
-    entryId: entry.id,
-    kind: 'reservation_new',
-    body: `${clientName} a réservé un créneau (${toDecimal(amountTotal)} $)`,
-  });
+  // Notifications deferred to Stripe webhook — see createReservation comment above.
 
   return { entry, clientSecret };
 }
