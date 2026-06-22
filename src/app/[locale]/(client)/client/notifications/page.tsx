@@ -81,7 +81,7 @@ export default function ClientNotificationsPage() {
                 <div className="text-[15px] font-bold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>
                   {item.title ?? t('notif_default_title')}
                 </div>
-                <div className="mt-1 text-[14px]" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>
+                <div className="mt-1 text-[14px] whitespace-pre-line" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>
                   {item.body ?? '-'}
                 </div>
                 <div className="mt-2 flex items-center gap-4">

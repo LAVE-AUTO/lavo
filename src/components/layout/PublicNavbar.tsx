@@ -325,7 +325,7 @@ export function PublicNavbar({
                                 }}
                               >
                                 <div className="text-xs font-semibold" style={{ color: isDark ? '#FFF9EC' : '#001A05' }}>{item.title ?? tn('notif_default_title')}</div>
-                                <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{item.body ?? '-'}</div>
+                                <div className="mt-0.5 text-xs" style={{ color: isDark ? '#B0BFB1' : '#B0BFB1' }}>{(item.body ?? '-').split('\n')[0]}</div>
                                 <div className="mt-2 flex items-center gap-3">
                                   {!item.is_read && (
                                     <button
