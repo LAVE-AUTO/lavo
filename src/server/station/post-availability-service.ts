@@ -165,7 +165,7 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 
-  const [hourRow, exceptionRow, postsRows, configRow, timeSlotsForDay] = await Promise.all([
+  const [hourRow, exceptionRow, postsRows, configRow] = await Promise.all([
     db.query.stationHours.findFirst({
       where: and(eq(stationHours.station_id, args.stationId), eq(stationHours.day_of_week, dayOfWeek)),
     }),
@@ -180,17 +180,6 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
       orderBy: (p, { asc }) => [asc(p.position)],
     }),
     db.query.stationConfigs.findFirst({ where: eq(stationConfigs.id, args.stationId) }),
-    db
-      .select({ start_time: timeSlots.start_time, end_time: timeSlots.end_time })
-      .from(timeSlots)
-      .where(
-        and(
-          eq(timeSlots.station_id, args.stationId),
-          gte(timeSlots.start_time, startOfDay),
-          lt(timeSlots.start_time, endOfDay),
-        )
-      )
-      .orderBy(timeSlots.start_time),
   ]);
 
   if (exceptionRow) {
@@ -200,24 +189,12 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
     return { date: dateKey, slots: [], closed_reason: 'no_active_post' };
   }
 
-  /* Build the day's open windows.
-   *
-   * Priority order:
-   *  1. `time_slots` configured by the station manager for this specific date
-   *     (availability page). When present, these are the authoritative windows —
-   *     station_hours is ignored. Per-post occupancy still removes booked capacity.
-   *  2. Per-day `station_hours` row (morning + afternoon segments).
-   *  3. `station_configs` global opening/closing times as last resort.
-   */
+  /* Build the day's open windows from station_hours or station_configs.
+   * Priority: per-day station_hours row → global station_configs envelope.
+   * Per-post occupancy (from active reservations) is subtracted below. */
   const windows: OpenWindow[] = [];
 
-  if (timeSlotsForDay.length > 0) {
-    for (const slot of timeSlotsForDay) {
-      const startMin = slot.start_time.getHours() * 60 + slot.start_time.getMinutes();
-      const endMin = slot.end_time.getHours() * 60 + slot.end_time.getMinutes();
-      if (endMin > startMin) windows.push({ startMin, endMin });
-    }
-  } else if (hourRow) {
+  if (hourRow) {
     if (!hourRow.is_open) {
       return { date: dateKey, slots: [], closed_reason: 'day_closed' };
     }
@@ -287,10 +264,20 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
     occupiedByPost.set(row.post_id, list);
   }
 
-  /* Block past-time chunks today. */
+  /* Block past-time chunks today.
+   * Station hours are stored as naive local times (America/Toronto); use the
+   * same timezone for "now" so the cutoff aligns with the station's coordinate
+   * system (avoids a UTC-vs-local offset on Vercel's UTC servers). */
   const now = new Date();
-  const isToday = startOfDay.toDateString() === now.toDateString();
-  const nowMin = isToday ? now.getHours() * 60 + now.getMinutes() : -Infinity;
+  const torontoParts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Toronto',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => parseInt(torontoParts.find((p) => p.type === t)!.value, 10);
+  const todayTorontoStr = `${torontoParts.find((p) => p.type === 'year')!.value}-${torontoParts.find((p) => p.type === 'month')!.value}-${torontoParts.find((p) => p.type === 'day')!.value}`;
+  const isToday = dateKey === todayTorontoStr;
+  const nowMin = isToday ? get('hour') * 60 + get('minute') : -Infinity;
 
   /* Per-post hours overrides for this day of week. When a post has a row it can
    * only narrow availability within the station window (validated on save); no
