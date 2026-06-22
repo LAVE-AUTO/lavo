@@ -10,6 +10,7 @@
 
 import { getClientNotificationPrefs } from './user-notification-prefs-repository';
 import { insertUserNotification } from './user-notifications-repository';
+import { fetchNotificationContext, appendContextToBody } from './notification-context';
 
 export type ClientFeedKind =
   | 'reservation_created'
@@ -130,11 +131,14 @@ export async function notifyClientFeed(params: NotifyClientParams): Promise<void
     const prefKey = KIND_TO_PREF[params.kind];
     if (prefs[prefKey] === false) return;
 
+    const ctx = await fetchNotificationContext(params.entryId);
+    const enrichedBody = appendContextToBody(params.body, ctx);
+
     await insertUserNotification({
       user_id: params.userId,
       kind: params.kind,
       title: TITLES[params.kind],
-      body: params.body,
+      body: enrichedBody,
       action_url: resolveActionUrl(params.kind, params.entryId),
       payload: {
         entry_id: params.entryId,
