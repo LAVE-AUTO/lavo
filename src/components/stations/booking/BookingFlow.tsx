@@ -106,6 +106,12 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   const surchargeAmount = arrivalMode === 'book_slot' ? (reservationSurcharge ?? 0) : 0;
   const grandTotal = servicePrice + extrasTotal + surchargeAmount;
 
+  // Stable ref always pointing at the latest onClose — avoids re-running the
+  // focus effect every time the parent re-renders with a new onClose reference,
+  // which would steal focus from the Stripe CardElement iframe while typing.
+  const onCloseRef = useRef<() => void>(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     const dialogEl = dialogRootRef.current;
@@ -116,14 +122,14 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       focusable?.focus();
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); onClose(); }
+      if (event.key === 'Escape') { event.preventDefault(); onCloseRef.current(); }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, []); // mount-only: never steal focus on re-renders
 
   const goNext = useCallback(() => {
     const next = stepIndex + 1;
@@ -235,7 +241,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       else setSummaryError(t('error_reservation_failed'));
       return;
     }
-    const resData = data as { data: { stripe_client_secret: string; ticket_code?: string | null } };
+    const resData = data as { data: { reservation_id: string; stripe_client_secret: string; ticket_code?: string | null } };
     setClientSecret(resData.data?.stripe_client_secret ?? null);
     setTicketCode(resData.data?.ticket_code ?? null);
     goNext();
