@@ -33,7 +33,7 @@ export function StationShell({ children, stationName }: StationShellProps) {
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
         />
-        <main className="flex flex-1 min-h-0 flex-col overflow-y-auto">
+        <main id="main-content" tabIndex={-1} className="flex flex-1 min-h-0 flex-col overflow-y-auto">
           <StationSetupReminderBanner />
           {children}
         </main>

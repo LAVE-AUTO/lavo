@@ -41,7 +41,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     <>
       <PublicNavbar />
       <div className="flex flex-col min-h-screen">
-        <div className="flex-1">{children}</div>
+        <div id="main-content" tabIndex={-1} className="flex-1">{children}</div>
       </div>
       <BottomNav />
     </>

@@ -368,6 +368,7 @@
         "promo_banner_invalid": "This promo code is invalid or expired."
     },
     "nav": {
+        "skip_to_content": "Skip to main content",
         "home": "Home",
         "stations": "Stations",
         "how_it_works": "How it works",

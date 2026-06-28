@@ -25,7 +25,7 @@ export default async function MerchantPage({ params }: Props) {
   return (
     <>
       <MerchantNavbar />
-      <main className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
         <MerchantHeroSection />
         <MerchantMarqueeBanner />
         <MerchantProblemSection />
