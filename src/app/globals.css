@@ -22,7 +22,10 @@
     --text-secondary: #FFF9EC;
     --surface: #FFF9EC;
     --border: rgba(0, 18, 1, 0.08);
-    --grey-2: #B0BFB1;
+    /* Muted/secondary text. Light mode uses a darker green-grey for legible
+       contrast on the cream surfaces (WCAG AA); dark mode keeps the soft tint. */
+    --muted: #5E6B5C;
+    --grey-2: #5E6B5C;
     /* Panel chrome tokens (station + admin shells) */
     --separator: #D8CCA0;
     --separator-hover: #B8A870;
@@ -37,6 +40,7 @@
     --text-secondary: #001201;
     --surface: #001A05;
     --border: rgba(255, 238, 202, 0.10);
+    --muted: #B0BFB1;
     --grey-2: #C6C1B4;
 }
 
@@ -81,7 +85,7 @@
        error colour. */
     --color-Hurryline-error: #FF383C;
     --color-Hurryline-success: #00C853;
-    --color-Hurryline-muted: #B0BFB1;
+    --color-Hurryline-muted: var(--muted);
     /* Hurryline fonts — self-hosted via next/font (see src/app/layout.tsx).
        The --ff-* variables are injected on <html> by the font loaders; each
        already carries the proper system fallback, so no need to repeat it. */
