@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { useToast } from '@/context/toast-context';
@@ -30,13 +30,16 @@ export function StationPromoBanner() {
     return () => { mountedRef.current = false; };
   }, []);
 
-  useEffect(() => {
-    void (async () => {
-      const [ok, data] = await getFromApi<PromotionInfo>('/station/promotion');
-      if (!mountedRef.current) return;
-      if (ok) setPromo((data as { data?: PromotionInfo })?.data ?? null);
-    })();
+  const loadPromotion = useCallback(async () => {
+    const [ok, data] = await getFromApi<PromotionInfo>('/station/promotion');
+    if (!mountedRef.current) return;
+    if (ok) setPromo((data as { data?: PromotionInfo })?.data ?? null);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadPromotion();
+  }, [loadPromotion]);
 
   if (!promo?.active || !promo.referral_url) return null;
 
