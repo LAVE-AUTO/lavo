@@ -226,7 +226,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     sort !== 'default';
 
   const flatResults   = useMemo(() => applyClientFilters(allStations),                                                 [allStations, filters, sort, userLocation, debouncedSearch]);
-  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0)), [apiGroups, filters, sort, userLocation, debouncedSearch]);
+  const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0 && s.stationStatus !== 'closed' && s.stationStatus !== 'no_future_availability')), [apiGroups, filters, sort, userLocation, debouncedSearch]);
   const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort, userLocation, debouncedSearch]);
   const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort, userLocation, debouncedSearch]);
 
