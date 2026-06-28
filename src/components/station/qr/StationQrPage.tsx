@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services';
 import { QrDisplay } from './QrDisplay';
 import { QrActions } from './QrActions';
+import { StationPromoBanner } from '../promo/StationPromoBanner';
 
 interface StationMe {
   data: {
@@ -153,6 +154,10 @@ export function StationQrPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md">
+        <StationPromoBanner />
+      </div>
+
       {/* Print hint - bold, at the top of the page */}
       <p className="mb-6 max-w-md text-center text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">
         {t('print_hint')}

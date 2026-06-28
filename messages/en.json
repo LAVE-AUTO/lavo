@@ -2618,6 +2618,16 @@
         "automatic_empty_packages": "No package configured",
         "automatic_package_name": "Package name"
     },
+    "station_promo_banner": {
+        "title": "Promotion in progress",
+        "message": "A promotion is active for your station. Share your promo QR to attract new clients.",
+        "message_with_rate": "A {rate}% commission promotion is active for your station. Share your promo QR to attract new clients.",
+        "share_cta": "Share promo QR",
+        "share_title": "Join Hurryline",
+        "share_text": "Scan and book your wash now.",
+        "copied": "Promo link copied",
+        "copy_error": "Could not copy the link"
+    },
     "station_qr": {
         "page_title": "Your station QR Code",
         "page_subtitle": "Display this code at your station so clients can scan and reach the right Hurryline flow.",

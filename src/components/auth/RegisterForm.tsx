@@ -79,43 +79,32 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  /* The promo referral is resolved silently: the client never sees promo/commission
+   * details on their registration page. We only keep `promoInfo` to gate sending
+   * `promo_ref_code` with a valid code; the concerned merchant is notified server-side
+   * once the account is created. */
   const [promoInfo, setPromoInfo] = useState<PromoReferralInfo | null>(null);
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoError, setPromoError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     if (!promoCode) {
       setPromoInfo(null);
-      setPromoError(null);
-      setPromoLoading(false);
       return () => {
         cancelled = true;
       };
     }
 
-    setPromoLoading(true);
-    setPromoError(null);
-
     void (async () => {
       const [ok, data] = await getFromApi<PromoReferralInfo>(`/promo/referrals/${encodeURIComponent(promoCode)}`);
       if (cancelled) return;
-
-      if (!ok) {
-        setPromoInfo(null);
-        setPromoError((data as { message?: string })?.message ?? t('promo_banner_invalid'));
-      } else {
-        setPromoInfo((data as { data?: PromoReferralInfo })?.data ?? null);
-        setPromoError(null);
-      }
-      setPromoLoading(false);
+      setPromoInfo(ok ? ((data as { data?: PromoReferralInfo })?.data ?? null) : null);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [promoCode, t]);
+  }, [promoCode]);
 
   const handleChange =
     (field: keyof RegisterFormData) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -269,26 +258,6 @@ export function RegisterForm({ promoCode }: RegisterFormProps) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="px-8 pb-8">
-      {(promoLoading || promoInfo || promoError) && (
-        <div className="mb-5 rounded-2xl border border-[#DDAF3B]/20 bg-[#DDAF3B]/8 p-4">
-          {promoLoading ? (
-            <p className="text-[13px] font-semibold text-[#DDAF3B]">{t('promo_banner_loading')}</p>
-          ) : promoError ? (
-            <p className="text-[13px] font-semibold text-[#FF383C]">{promoError}</p>
-          ) : promoInfo ? (
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#DDAF3B]">{t('promo_banner_title')}</p>
-              <p className="text-[13px] font-semibold text-[#001201] dark:text-[#FFF9EC]">
-                {t('promo_banner_station', { station: promoInfo.station_name })}
-              </p>
-              <p className="text-[12px] text-foreground/65 dark:text-[#B0BFB1]">
-                {promoInfo.city} · {t('promo_banner_rate', { rate: promoInfo.promo_commission_rate_percent ?? 0 })}
-              </p>
-            </div>
-          ) : null}
-        </div>
-      )}
-
       {/* Name row - side by side on larger screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <FormField
