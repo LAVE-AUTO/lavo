@@ -1017,6 +1017,7 @@
         "tab_reservations": "Reservations",
         "tab_queue": "Queue",
         "upcoming": "Upcoming",
+        "upcoming_empty": "No upcoming reservations yet.",
         "past": "Past",
         "empty_reservations": "No reservations yet.",
         "empty_reservations_title": "No active reservation",

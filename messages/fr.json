@@ -1017,6 +1017,7 @@
         "tab_reservations": "Réservations",
         "tab_queue": "File d'attente",
         "upcoming": "À venir",
+        "upcoming_empty": "Aucune réservation à venir pour le moment.",
         "past": "Passées",
         "empty_reservations": "Aucune réservation pour le moment.",
         "empty_reservations_title": "Aucune réservation en cours",
