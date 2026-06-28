@@ -168,6 +168,9 @@ export interface BrandedQrPosterOptions {
   showUrl?: boolean;
   /** Optional footer tag printed under the QR (e.g. "Promo -10 %"). */
   footerTag?: string;
+  /** Wordmark image used in the poster header. Defaults to the FR light-bg
+   *  wordmark; callers pass the locale-appropriate asset. */
+  wordmarkSrc?: string;
 }
 
 /**
@@ -210,7 +213,7 @@ export async function renderBrandedQrPosterToDataUrl(
 
   // ── Wordmark (top, centered) ──────────────────────────────────────────────
   let wordmark: HTMLImageElement | null = null;
-  try { wordmark = await loadImage(WORDMARK_SRC); } catch { /* fallback to text */ }
+  try { wordmark = await loadImage(opts.wordmarkSrc ?? WORDMARK_SRC); } catch { /* fallback to text */ }
 
   const wmTopY = accentH + 72;
   if (wordmark) {

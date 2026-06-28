@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   renderBrandedQrPosterToDataUrl,
   QR_COLOR_DARK,
@@ -26,6 +26,10 @@ function sanitizeFilename(name: string): string {
 
 export function QrActions({ url, stationName }: Props) {
   const t = useTranslations('station_qr');
+  const locale = useLocale();
+  /* Poster is printed on a white background, so use the dark-text wordmark for
+   * the active locale (FR carries the tagline lockup). */
+  const posterWordmark = locale === 'fr' ? '/logo/logo_2.png' : '/logo/logo_anglais_1.png';
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [canShare, setCanShare] = useState(false);
@@ -39,12 +43,13 @@ export function QrActions({ url, stationName }: Props) {
     const dataUrl = await renderBrandedQrPosterToDataUrl(url, {
       stationName,
       caption: t('poster_caption'),
+      wordmarkSrc: posterWordmark,
     });
     const a = document.createElement('a');
     a.href = dataUrl;
     a.download = `qr-${sanitizeFilename(stationName)}.png`;
     a.click();
-  }, [url, stationName, t]);
+  }, [url, stationName, t, posterWordmark]);
 
   /* Download as SVG (logo embedded as a base64 <image>) */
   const downloadSvg = useCallback(async () => {
