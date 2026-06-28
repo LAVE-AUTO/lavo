@@ -106,6 +106,7 @@ export function AdminBrandPanel() {
   const isDark = resolvedTheme === 'dark';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   const textPrimary   = isDark ? 'text-white'       : 'text-[#001201]';
   const textSecondary = isDark ? 'text-[#B0BFB1]'   : 'text-[var(--foreground)]';
@@ -139,22 +140,10 @@ export function AdminBrandPanel() {
 
         {/* Logo + Admin badge */}
         <div className="animate-fade-in">
-          {isDark ? (
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
-                <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
-              </div>
-              <div>
-                <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
-                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">Administration</p>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <Image src={lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
-              <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">Administration</p>
-            </div>
-          )}
+          <div>
+            <Image src={isDark ? darkLogoSrc : lightLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
+            <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">Administration</p>
+          </div>
         </div>
 
         {/* Mockup + headline */}
