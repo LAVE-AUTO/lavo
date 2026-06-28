@@ -13,8 +13,7 @@ interface Props {
   onSaved: (extra: StationExtra) => void;
 }
 
-const SCOPES = ['exterior', 'interior', 'both'] as const;
-type Scope = typeof SCOPES[number];
+type Scope = 'exterior' | 'interior' | 'both';
 
 /* "Applicable sur" is a multi-select of the two base scopes. Selecting both is
  * equivalent to the legacy "both" value, so the backend contract (a single
