@@ -1,9 +1,16 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { QrResolverPage } from '@/components/station/qr/QrResolverPage';
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
   searchParams: Promise<{ qr_token?: string; v?: string }>;
+};
+
+// Transient redirect target for scanned QR codes — must never be indexed.
+export const metadata: Metadata = {
+  title: 'Hurryline',
+  robots: { index: false, follow: false },
 };
 
 /**
