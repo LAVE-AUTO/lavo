@@ -108,7 +108,7 @@ export function MerchantQrSection() {
             <div className="flex items-center justify-center">
               <div className="animate-float max-w-[260px] w-full rounded-2xl bg-[#f5edd6] p-7 text-center shadow-[0_30px_80px_rgba(0,0,0,0.3)]">
                 <div className="font-playfair mb-1 text-[26px] font-black text-[#DDAF3B] tracking-[3px]">Hurryline</div>
-                <div className="mb-5 text-[13px] font-semibold text-[#3d2a10]">AutoSpa Premium</div>
+                <div className="mb-5 text-[13px] font-semibold text-[#3d2a10]">Spa spa auto spa</div>
                 <div className="mb-5 flex items-center justify-center">
                   <QrCodePlaceholder />
                 </div>
