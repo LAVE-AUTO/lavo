@@ -77,7 +77,9 @@ export async function getLegalContent(
       ),
     });
   } catch (e) {
-    console.error('[getLegalContent] settings read failed, using bundled default', {
+    // Handled, expected degradation (e.g. DB unreachable / over quota): warn, do
+    // not error - the page renders fine with bundled defaults.
+    console.warn('[getLegalContent] settings read failed, using bundled default', {
       key,
       error: e instanceof Error ? e.message : String(e),
     });
