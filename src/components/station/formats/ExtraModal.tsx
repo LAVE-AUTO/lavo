@@ -16,6 +16,26 @@ interface Props {
 const SCOPES = ['exterior', 'interior', 'both'] as const;
 type Scope = typeof SCOPES[number];
 
+/* "Applicable sur" is a multi-select of the two base scopes. Selecting both is
+ * equivalent to the legacy "both" value, so the backend contract (a single
+ * `applicable_on` enum) stays unchanged: we derive it from the selected set. */
+const SELECTABLE_SCOPES = ['exterior', 'interior'] as const;
+type SelectableScope = typeof SELECTABLE_SCOPES[number];
+
+function scopeToSet(scope: Scope): Set<SelectableScope> {
+  if (scope === 'both') return new Set(SELECTABLE_SCOPES);
+  return new Set([scope as SelectableScope]);
+}
+
+function setToScope(set: Set<SelectableScope>): Scope | null {
+  const hasExterior = set.has('exterior');
+  const hasInterior = set.has('interior');
+  if (hasExterior && hasInterior) return 'both';
+  if (hasExterior) return 'exterior';
+  if (hasInterior) return 'interior';
+  return null;
+}
+
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <label className="block text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
@@ -36,7 +56,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
   const title = isEdit ? t('extra_edit_title') : t('extra_create_title');
 
   const [name, setName] = useState('');
-  const [scope, setScope] = useState<Scope>('both');
+  const [scopes, setScopes] = useState<Set<SelectableScope>>(new Set(SELECTABLE_SCOPES));
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -46,13 +66,13 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
   useEffect(() => {
     if (extra) {
       setName(extra.label);
-      setScope((extra.scope as Scope) ?? 'both');
+      setScopes(scopeToSet((extra.scope as Scope) ?? 'both'));
       setPrice(extra.price);
       setDuration(String(extra.duration_min ?? 0));
       setIsActive(extra.is_active);
     } else {
       setName('');
-      setScope('both');
+      setScopes(new Set(SELECTABLE_SCOPES));
       setPrice('');
       setDuration('');
       setIsActive(true);
@@ -65,6 +85,11 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError(t('extra_error_name_required'));
+      return;
+    }
+    const scope = setToScope(scopes);
+    if (!scope) {
+      setError(t('extra_error_scope_required'));
       return;
     }
     setSaving(true);
@@ -155,25 +180,37 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
                 />
               </div>
 
-              {/* Scope */}
+              {/* Scope — multi-select: an extra can apply to exterior, interior, or both. */}
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>{t('extra_scope_label')}</FieldLabel>
-                <div className="flex flex-wrap gap-2">
-                  {SCOPES.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setScope(s)}
-                      className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
-                        scope === s
-                          ? 'bg-[#DDAF3B] text-[#001201]'
-                          : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
-                      }`}
-                    >
-                      {scopeLabel[s]}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t('extra_scope_label')}>
+                  {SELECTABLE_SCOPES.map((s) => {
+                    const selected = scopes.has(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() =>
+                          setScopes((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(s)) next.delete(s);
+                            else next.add(s);
+                            return next;
+                          })
+                        }
+                        className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
+                          selected
+                            ? 'bg-[#DDAF3B] text-[#001201]'
+                            : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
+                        }`}
+                      >
+                        {scopeLabel[s]}
+                      </button>
+                    );
+                  })}
                 </div>
+                <p className="text-[11px] text-foreground/50 dark:text-[#7A8A7B]">{t('extra_scope_hint')}</p>
               </div>
 
               {/* Price + Duration */}
