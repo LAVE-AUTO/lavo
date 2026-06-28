@@ -43,6 +43,7 @@ const EMPTY_METRICS: StationsHeroMetrics = {
 export default async function PublicStationsPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'stations' });
 
   const [activeWashTypes, formats] = await Promise.all([
     db
@@ -66,6 +67,7 @@ export default async function PublicStationsPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-[#FFF9EC] dark:bg-background transition-colors">
+      <h1 className="sr-only">{t('page_title')}</h1>
       <AuthAwareHero>
         <StationsHero metrics={heroMetrics} />
         <StationsStats metrics={heroMetrics} />
