@@ -368,6 +368,8 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
   const isDark = resolvedTheme === 'dark';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+
 
   /* Carousel state (only active when no step prop) */
   const [activeIdx, setActiveIdx]     = useState(0);
@@ -451,14 +453,9 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
         <div className="flex items-start justify-between animate-fade-in">
           <div>
             {isDark ? (
-              <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
-                  <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
-                </div>
-                <div>
-                  <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
-                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">{t('badge_merchants')}</p>
-                </div>
+              <div>
+                <Image src={darkLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">{t('space_merchants')}</p>
               </div>
             ) : (
               <div>

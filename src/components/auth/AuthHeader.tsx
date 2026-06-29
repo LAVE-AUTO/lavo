@@ -18,7 +18,7 @@ interface AuthHeaderProps {
  * Logo strategy (CSS dark-mode classes - no client JS needed):
  *   Light + FR  → logo2_2.png       (gold S + "Hurryline / ANTICIPONS MIEUX")
  *   Light + EN  → logo_anglais_1.png (gold S + "Hurryline / LET'S ANTICIPATE BETTER")
- *   Dark + any  → frame2.png badge  + "Hurryline" text
+ * 
  */
 export function AuthHeader({ title, subtitle, locale }: AuthHeaderProps) {
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
