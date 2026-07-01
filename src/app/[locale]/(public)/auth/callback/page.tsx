@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import type { AuthUser } from '@/context/auth-context';
@@ -14,7 +13,6 @@ import { Spinner } from '@/components/ui/Spinner';
  * store them in AuthContext and redirect by role.
  */
 export default function OAuthCallbackPage() {
-  const locale = useLocale();
   const router = useRouter();
   const { login } = useAuth();
   const processed = useRef(false);
@@ -45,7 +43,7 @@ export default function OAuthCallbackPage() {
         const role = (user.role || '').toLowerCase();
 
         if (user.force_password_change) {
-          router.push(`/${locale}/change-password`);
+          router.push('/change-password');
         } else if (role === 'station') {
           router.push('/station/dashboard');
         } else if (role === 'admin') {
@@ -57,7 +55,7 @@ export default function OAuthCallbackPage() {
       .catch(() => {
         router.push('/login?error=oauth_failed');
       });
-  }, [router, login, locale]);
+  }, [router, login]);
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
