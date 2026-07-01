@@ -4,7 +4,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
-import { useAuth } from '@/context/auth-context';
+import { useAuth, type AuthUser } from '@/context/auth-context';
 import { postWithApi } from '@/services/axios-service';
 import { isPasswordValid } from '@/helpers/validators';
 import { HTTP_STATUS } from '@/helpers/constants';
@@ -136,7 +136,28 @@ export function ChangePasswordForm() {
       }, { successStatus: HTTP_STATUS.OK });
 
       if (ok) {
-        await auth.refetchUser();
+        // The existing access token still carries force_password_change=true.
+        // Rotate the session via the refresh cookie so the new token reflects
+        // the updated flag and the user can actually navigate to admin pages.
+        const [refreshOk, refreshResponse] = await postWithApi<{
+          data?: { access_token?: string; user?: Record<string, unknown> };
+        }>('/auth/refresh', null, { successStatus: HTTP_STATUS.OK });
+
+        if (
+          refreshOk &&
+          refreshResponse &&
+          typeof refreshResponse === 'object' &&
+          'data' in refreshResponse &&
+          refreshResponse.data?.access_token &&
+          refreshResponse.data?.user
+        ) {
+          auth.login(refreshResponse.data.access_token, refreshResponse.data.user as unknown as AuthUser);
+        } else {
+          // Fallback: at least refresh the in-memory user; downstream protected
+          // calls may still hit the stale token until the next natural refresh.
+          await auth.refetchUser();
+        }
+
         showSuccess(t('toast_success'));
         setSuccess(true);
         return;

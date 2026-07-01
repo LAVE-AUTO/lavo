@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { useAuth, type AuthUser, type UserRole } from '@/context/auth-context';
@@ -71,6 +71,7 @@ export function LoginForm({
   allowedRole,
 }: LoginFormProps) {
   const t = useTranslations('login');
+  const locale = useLocale();
   const router = useRouter();
   const { error: showError, success: showSuccess } = useToast();
   const auth = useAuth();
@@ -145,7 +146,7 @@ export function LoginForm({
         showSuccess(t('toast_success'));
 
         if (authUser.force_password_change) {
-          router.push('/change-password');
+          router.push(`/${locale}/change-password`);
           return;
         }
 
