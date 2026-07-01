@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Providers } from '@/context/providers';
 import { SetHtmlLang } from '@/components/layout/SetHtmlLang';
+import { SkipNav } from '@/components/layout/SkipNav';
 
 type Props = {
   children: React.ReactNode;
@@ -28,7 +29,10 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider messages={messages}>
       <SetHtmlLang />
-      <Providers>{children}</Providers>
+      <Providers>
+        <SkipNav />
+        {children}
+      </Providers>
     </NextIntlClientProvider>
   );
 }

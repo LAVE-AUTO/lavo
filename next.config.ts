@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
   transpilePackages: ["jose"],
   /** CJS packages that Next.js must not bundle — imported lazily via dynamic import in route handlers. */
   serverExternalPackages: ["cloudinary", "bcrypt"],
+  async redirects() {
+    return [
+      {
+        source: "/:locale(fr|en)/reservations",
+        destination: "/:locale/client/reservations",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

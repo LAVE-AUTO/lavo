@@ -541,28 +541,32 @@ export default function ClientReservationsPage() {
             </div>
 
             <div className="space-y-6">
-            {upcoming.length > 0 && (
+            {filteredReservations.length > 0 && (statusFilter === 'all' || statusFilter === 'confirmed') && (
               <section>
                 <h2 className="text-[15px] font-black text-foreground/70 uppercase tracking-widest mb-3">
                   {t('upcoming')}
                   <span className="ml-2 text-[12px] font-semibold opacity-70">({upcoming.length})</span>
                 </h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  {upcoming.map((res) => (
-                    <ReservationCard
-                      key={res.id}
-                      reservation={res}
-                      t={t}
-                      locale={locale}
-                      variant="upcoming"
-                      onCancel={
-                        res.status === 'confirmed' || res.status === 'pending' || res.status === 'pending_payment'
-                          ? () => setCancelTarget(res)
-                          : undefined
-                      }
-                    />
-                  ))}
-                </div>
+                {upcoming.length > 0 ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {upcoming.map((res) => (
+                      <ReservationCard
+                        key={res.id}
+                        reservation={res}
+                        t={t}
+                        locale={locale}
+                        variant="upcoming"
+                        onCancel={
+                          res.status === 'confirmed' || res.status === 'pending' || res.status === 'pending_payment'
+                            ? () => setCancelTarget(res)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[14px] text-foreground/55 py-2">{t('upcoming_empty')}</p>
+                )}
               </section>
             )}
 

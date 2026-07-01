@@ -65,18 +65,12 @@ export function MerchantFeaturesSection() {
                 <div className="font-dm-mono mb-5 text-[10px] uppercase tracking-[2px] text-[#DDAF3B]">
                   {t('rev_label')}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {/* Commission box - highlighted */}
                   <div className="rounded-lg border border-[#DDAF3B] bg-[rgba(221,175,59,0.1)] p-4">
                     <div className="font-dm-mono mb-1 text-[10px] uppercase tracking-[1px] text-[#DDAF3B]">{t('rev_commission_name')}</div>
                     <div className="font-rajdhani text-[30px] font-bold leading-none text-[#DDAF3B]">{t('rev_commission_price')}</div>
                     <div className="mt-2 text-[11px] leading-[1.6] text-[var(--foreground)] dark:text-[#B0BFB1]">{t('rev_commission_desc')}</div>
-                  </div>
-                  {/* Subscription box */}
-                  <div className="rounded-lg border border-[rgba(221,175,59,0.2)] bg-[rgba(254,249,231,0.04)] p-4">
-                    <div className="font-dm-mono mb-1 text-[10px] uppercase tracking-[1px] text-[#B0BFB1]">{t('rev_sub_name')}</div>
-                    <div className="font-rajdhani text-[24px] font-bold leading-none text-[#001201] dark:text-[#FFEECA]">{t('rev_sub_price')}</div>
-                    <div className="mt-2 text-[11px] leading-[1.6] text-[var(--foreground)] dark:text-[#B0BFB1]">{t('rev_sub_desc')}</div>
                   </div>
                 </div>
               </div>

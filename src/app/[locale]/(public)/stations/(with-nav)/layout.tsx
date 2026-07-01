@@ -14,7 +14,7 @@ export default function StationsLayout({ children }: { children: ReactNode }) {
       <PublicNavbar withTopSpacer={false} withMobileScrollSpacer={false} />
       <div className="flex flex-col min-h-screen pt-[60px]">
         {/* Bottom padding on mobile so content doesn't sit under the fixed BottomNav */}
-        <div className="flex-1 pb-16 sm:pb-0">{children}</div>
+        <div id="main-content" tabIndex={-1} className="flex-1 pb-16 sm:pb-0">{children}</div>
         {/* Footer: desktop only */}
         <div className="hidden sm:block">
         </div>

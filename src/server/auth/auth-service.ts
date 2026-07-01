@@ -44,6 +44,7 @@ import {
 } from './refresh-token-repository';
 import { createStationPromotionEnrollment } from '@/server/station/station-promotion-repository';
 import { resolvePromotionByRefCode } from '@/server/station/station-promotion-service';
+import { notifyStationPromoEnrollment } from '@/server/notifications/station-feed-notifications';
 
 // Domain logic for registration, login, email verification, password management,
 // OAuth user provisioning, and session refresh.
@@ -203,6 +204,17 @@ export async function registerWithPassword(dto: RegisterDto, locale: 'fr' | 'en'
 
     return createdUser;
   });
+
+  /* Notify the merchant in-app when a client joined via their promo QR.
+   * Best-effort: never blocks registration. */
+  if (promotion) {
+    notifyStationPromoEnrollment(
+      promotion.station_id,
+      `${dto.first_name} ${dto.last_name}`.trim(),
+    ).catch((err) => {
+      console.error('[notifyStationPromoEnrollment failed]', err);
+    });
+  }
 
   const token = await createToken({
     user_id: user.id,

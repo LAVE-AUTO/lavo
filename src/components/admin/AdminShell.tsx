@@ -14,7 +14,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <AdminTopNav onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
         <AdminSidebar open={sidebarOpen} onClose={closeSidebar} />
-        <main className="flex flex-1 flex-col overflow-hidden">
+        <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col overflow-hidden">
           {children}
         </main>
       </div>

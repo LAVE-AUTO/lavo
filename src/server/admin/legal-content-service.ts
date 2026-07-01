@@ -62,16 +62,31 @@ export async function getLegalContent(
   key: string,
   options: { withDefault?: boolean; locale?: 'fr' | 'en' } = {},
 ): Promise<string | null> {
-  const row = await db.query.settings.findFirst({
-    where: and(
-      eq(settings.type, 'legal'),
-      isNull(settings.entity_id),
-      eq(settings.key, key)
-    ),
-  });
+  const withDefault = options.withDefault !== false;
+
+  /* The public legal/landing pages read through this helper at render time. A DB
+   * outage (e.g. provider compute quota exceeded) must not crash a public page:
+   * fall back to the bundled default content instead of throwing. */
+  let row: { value: string | null } | undefined;
+  try {
+    row = await db.query.settings.findFirst({
+      where: and(
+        eq(settings.type, 'legal'),
+        isNull(settings.entity_id),
+        eq(settings.key, key)
+      ),
+    });
+  } catch (e) {
+    // Handled, expected degradation (e.g. DB unreachable / over quota): warn, do
+    // not error - the page renders fine with bundled defaults.
+    console.warn('[getLegalContent] settings read failed, using bundled default', {
+      key,
+      error: e instanceof Error ? e.message : String(e),
+    });
+    return withDefault ? getDefaultLegalContent(key as LegalContentKey, options.locale ?? 'fr') : null;
+  }
   if (row?.value) return row.value;
 
-  const withDefault = options.withDefault !== false;
   if (!withDefault) return null;
   return getDefaultLegalContent(key as LegalContentKey, options.locale ?? 'fr');
 }

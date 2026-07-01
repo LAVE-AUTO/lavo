@@ -77,24 +77,38 @@ export function StationAnalytics() {
           series.map((item) => ({ date: item.date, value: parseFloat(item.value) || 0 }));
 
         type SeriesResponse = { data?: { series?: Array<{ date: string; value: string }> } };
-        type DashResponse = { data?: { total_revenue?: string; average_revenue?: string; revenue_growth?: number; total_clients?: number; total_completed?: number; avg_fill_rate?: number } };
+        type DashResponse = { data?: { total_revenue?: string; total_clients?: number; total_completed?: number; fill_rate_pct?: number; revenue_previous_period?: string } };
 
         const rev = (revData as SeriesResponse)?.data?.series ?? [];
         const clients = (clientsData as SeriesResponse)?.data?.series ?? [];
         const completed = (completedData as SeriesResponse)?.data?.series ?? [];
         const dash = (dashData as DashResponse)?.data;
 
+        /* The dashboard endpoint returns raw totals; derive the displayed KPIs here.
+         * average_revenue = total_revenue / unique_clients (guarded against div-by-zero),
+         * revenue_growth  = period-over-period change vs the previous calendar month. */
+        const totalRevenue = parseFloat(dash?.total_revenue ?? '0') || 0;
+        const uniqueClients = dash?.total_clients ?? 0;
+        const previousRevenue = parseFloat(dash?.revenue_previous_period ?? '0') || 0;
+        const avgRevenue = uniqueClients > 0 ? totalRevenue / uniqueClients : 0;
+        const revenueGrowth =
+          previousRevenue > 0
+            ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
+            : totalRevenue > 0
+              ? 100
+              : 0;
+
         const analyticsData: AnalyticsData = {
           revenue: transformSeries(rev),
           clients: transformSeries(clients),
           completed: transformSeries(completed),
           kpi: {
-            totalRevenue: parseFloat(dash?.total_revenue ?? '0') || 0,
-            avgRevenue: parseFloat(dash?.average_revenue ?? '0') || 0,
-            revenueGrowth: dash?.revenue_growth ?? 0,
-            uniqueClients: dash?.total_clients ?? 0,
+            totalRevenue,
+            avgRevenue,
+            revenueGrowth,
+            uniqueClients,
             completedServices: dash?.total_completed ?? 0,
-            avgFillRate: dash?.avg_fill_rate ?? 0,
+            avgFillRate: dash?.fill_rate_pct ?? 0,
           },
         };
 

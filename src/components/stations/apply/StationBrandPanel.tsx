@@ -229,7 +229,7 @@ function AccountSetupMockup({ isDark }: { isDark: boolean }) {
               >
                 {f.filled && (
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full" style={{ background: '#00C851' }} />
+                    <div className="w-3 h-3 rounded-full" style={{ background: goldC }} />
                     <span className="text-[11px]" style={{ color: textCol }}>••••••••••</span>
                   </div>
                 )}
@@ -295,12 +295,12 @@ function KycMockup({ isDark }: { isDark: boolean }) {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                   style={{
-                    background: s.done ? '#00C851' : s.active ? goldC : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
-                    border: `2px solid ${s.done ? '#00C851' : s.active ? goldC : borderC}`,
+                    background: s.done ? goldC : s.active ? goldC : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                    border: `2px solid ${s.done ? goldC : s.active ? goldC : borderC}`,
                   }}
                 >
                   {s.done ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#001201" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                   ) : s.active ? (
                     <div className="w-2.5 h-2.5 rounded-full bg-dark-bg animate-pulse" />
                   ) : (
@@ -310,14 +310,14 @@ function KycMockup({ isDark }: { isDark: boolean }) {
                 {i < steps.length - 1 && (
                   <div
                     className="w-0.5 h-7 mt-0.5"
-                    style={{ background: s.done ? '#00C851' : borderC }}
+                    style={{ background: s.done ? goldC : borderC }}
                   />
                 )}
               </div>
               <div className="pt-1 pb-3">
                 <p
                   className="text-[12px] font-semibold"
-                  style={{ color: s.done ? '#00C851' : s.active ? goldC : mutedC }}
+                  style={{ color: s.done ? goldC : s.active ? goldC : mutedC }}
                 >
                   {s.label}
                 </p>
@@ -368,6 +368,8 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
   const isDark = resolvedTheme === 'dark';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
+
 
   /* Carousel state (only active when no step prop) */
   const [activeIdx, setActiveIdx]     = useState(0);
@@ -451,14 +453,9 @@ export function StationBrandPanel({ step }: StationBrandPanelProps) {
         <div className="flex items-start justify-between animate-fade-in">
           <div>
             {isDark ? (
-              <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-white/95 p-1 border border-[#FFF9EC] shadow-sm shrink-0">
-                  <Image src="/logo/frame2.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" aria-hidden="true" />
-                </div>
-                <div>
-                  <span className="text-xl font-bold text-white tracking-wide">Hurryline</span>
-                  <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] leading-none">{t('badge_merchants')}</p>
-                </div>
+              <div>
+                <Image src={darkLogoSrc} alt="Hurryline" width={160} height={44} className="object-contain h-9 w-auto" />
+                <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#DDAF3B] mt-1">{t('space_merchants')}</p>
               </div>
             ) : (
               <div>

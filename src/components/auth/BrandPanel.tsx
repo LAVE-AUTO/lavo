@@ -82,6 +82,7 @@ export function BrandPanel() {
   const isDark = resolvedTheme === 'dark';
 
   const lightLogoSrc = locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png';
+  const darkLogoSrc = locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png';
 
   const [activeIdx, setActiveIdx]     = useState(0);
   const [progressKey, setProgressKey] = useState(0);
@@ -140,31 +141,13 @@ export function BrandPanel() {
 
         {/* ── Logo ── */}
         <div className="animate-fade-in flex justify-center">
-          {isDark ? (
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/95 p-1 border border-gold/25 shadow-sm shrink-0">
-                <Image
-                  src="/logo/frame2.png"
-                  alt=""
-                  width={36}
-                  height={36}
-                  className="w-9 h-9 object-contain"
-                  aria-hidden="true"
-                />
-              </div>
-              <span className="text-xl font-bold text-white tracking-wide">
-                Hurryline
-              </span>
-            </div>
-          ) : (
-            <Image
-              src={lightLogoSrc}
-              alt="Hurryline"
-              width={260}
-              height={70}
-              className="object-contain h-16 w-auto"
-            />
-          )}
+          <Image
+            src={isDark ? darkLogoSrc : lightLogoSrc}
+            alt="Hurryline"
+            width={260}
+            height={70}
+            className="object-contain h-16 w-auto"
+          />
         </div>
 
         {/* ── Brand headline ── */}

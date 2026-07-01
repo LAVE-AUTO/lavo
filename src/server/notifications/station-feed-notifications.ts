@@ -85,3 +85,33 @@ export async function notifyStationFeed(params: NotifyStationParams): Promise<vo
     });
   }
 }
+
+
+/**
+ * Notifies the station owner that a new client joined the platform through their
+ * promo QR. Not tied to an entry (the client just registered), so it bypasses the
+ * entry-centric feed and writes directly to the owner's notification feed.
+ * Best-effort: failures are logged and swallowed so registration never aborts.
+ */
+export async function notifyStationPromoEnrollment(
+  stationId: string,
+  clientName: string,
+): Promise<void> {
+  try {
+    const station = await findStationById(stationId);
+    if (!station?.user_id) return;
+    await insertUserNotification({
+      user_id: station.user_id,
+      kind: 'promo_new_client',
+      title: 'Nouveau client via votre QR promo',
+      body: `${clientName} vient de rejoindre Hurryline grâce à votre QR promotionnel.`,
+      action_url: '/station/qr',
+      payload: { station_id: stationId },
+    });
+  } catch (e) {
+    console.error('[STATION_FEED] Failed to insert promo enrollment notification', {
+      stationId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+}

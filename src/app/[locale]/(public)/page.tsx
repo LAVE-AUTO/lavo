@@ -75,7 +75,7 @@ export default async function LandingPage({ params }: Props) {
       />
       <LandingAuthRedirect />
       <PublicNavbar />
-      <main className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-[#FFF9EC] dark:bg-dark-bg transition-colors">
         <HeroSection />
         <MarqueeBanner />
         <FeaturesSection />
