@@ -99,14 +99,28 @@ export async function listExceptionsByStation(stationId: string): Promise<Statio
 /**
  * Inserts a new exception date. Throws on duplicate (station_id, exception_date).
  */
+export type InsertExceptionData = {
+  is_open?: boolean;
+  open_time?: string | null;
+  close_time?: string | null;
+};
+
 export async function insertException(
   stationId: string,
   exceptionDate: string,
-  reason: string
+  reason: string,
+  opening?: InsertExceptionData
 ): Promise<StationHourException> {
   const [row] = await db
     .insert(stationHourExceptions)
-    .values({ station_id: stationId, exception_date: exceptionDate, reason })
+    .values({
+      station_id: stationId,
+      exception_date: exceptionDate,
+      reason,
+      is_open: opening?.is_open ?? false,
+      open_time: opening?.open_time ?? null,
+      close_time: opening?.close_time ?? null,
+    })
     .returning();
   if (!row) throw new Error('Insert station hour exception failed');
   return row;

@@ -8,7 +8,7 @@ import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error500, fromAppError } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { applyNoStoreHeaders } from '@/lib/response-headers';
-import { getStationHourExceptions, addStationHourException } from '@/server/station/station-hours-service';
+import { getStationHourExceptions, addStationHourException, serializeHourException } from '@/server/station/station-hours-service';
 import { findStationByUserId } from '@/server/station/station-repository';
 import { AppError } from '@/lib/errors';
 import { z } from 'zod';
@@ -26,13 +26,24 @@ function isValidIsoDate(value: string): boolean {
   );
 }
 
-const postBodySchema = z.object({
-  exception_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'exception_date must be YYYY-MM-DD')
-    .refine(isValidIsoDate, { message: 'exception_date is not a valid calendar date' }),
-  reason: z.string().min(1).max(200),
-});
+/** HH:MM 24-hour clock. */
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+const postBodySchema = z
+  .object({
+    exception_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'exception_date must be YYYY-MM-DD')
+      .refine(isValidIsoDate, { message: 'exception_date is not a valid calendar date' }),
+    reason: z.string().min(1).max(200),
+    status: z.enum(['closed', 'open_all_day', 'open_custom']).optional().default('closed'),
+    open_time: z.string().regex(TIME_RE, 'open_time must be HH:MM').optional(),
+    close_time: z.string().regex(TIME_RE, 'close_time must be HH:MM').optional(),
+  })
+  .refine(
+    (v) => v.status !== 'open_custom' || (!!v.open_time && !!v.close_time),
+    { message: 'open_time and close_time are required for open_custom', path: ['open_time'] },
+  );
 const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   per_page: z.coerce.number().int().min(1).max(100).optional().default(20),
@@ -54,7 +65,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const page = query.data.page;
     const per_page = query.data.per_page;
     const offset = (page - 1) * per_page;
-    const items = exceptions.slice(offset, offset + per_page);
+    const items = exceptions.slice(offset, offset + per_page).map(serializeHourException);
     return applyNoStoreHeaders(successResponse({
       items,
       meta: {
@@ -84,8 +95,17 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!parsed.success) return applyNoStoreHeaders(error400('Validation failed', ApiCode.VALIDATION_FAILED));
 
   try {
-    const exception = await addStationHourException(station.id, parsed.data.exception_date, parsed.data.reason);
-    return applyNoStoreHeaders(successResponse(exception));
+    const exception = await addStationHourException(
+      station.id,
+      parsed.data.exception_date,
+      parsed.data.reason,
+      {
+        status: parsed.data.status,
+        open_time: parsed.data.open_time ?? null,
+        close_time: parsed.data.close_time ?? null,
+      },
+    );
+    return applyNoStoreHeaders(successResponse(serializeHourException(exception)));
   } catch (e) {
     if (e instanceof AppError) return applyNoStoreHeaders(fromAppError(e));
     return applyNoStoreHeaders(error500(e));

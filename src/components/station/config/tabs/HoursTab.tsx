@@ -202,11 +202,6 @@ export function HoursTab({ config, locked }: Props) {
 
   async function handleAddException(input: HourExceptionInput) {
     // The station may be closed, open all day, or open with special hours.
-    // TODO: connect status/open_time/close_time to the API once
-    // station_hour_exceptions exposes is_open/open_time/close_time columns
-    // (see project_pending_backend_specs.md). Today the backend only
-    // persists exception_date + reason and silently drops the extra fields,
-    // so we keep the merchant's choice in local state for the session.
     const [ok, data] = await postWithApi('/station/hour-exceptions', {
       exception_date: input.exception_date,
       reason: input.reason,
@@ -216,10 +211,7 @@ export function HoursTab({ config, locked }: Props) {
     });
     if (ok) {
       const created = (data as { data: HourException }).data;
-      setExceptions((prev) => [
-        ...prev,
-        { ...created, status: input.status, open_time: input.open_time, close_time: input.close_time },
-      ]);
+      setExceptions((prev) => [...prev, created]);
       success(t('hours_exceptions_save_success'));
     } else {
       showError(t('hours_exceptions_save_error'));

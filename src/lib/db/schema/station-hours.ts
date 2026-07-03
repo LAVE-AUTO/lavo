@@ -48,6 +48,12 @@ export const stationHourExceptions = pgTable(
       .references(() => stations.id, { onDelete: "cascade" }),
     exception_date: date("exception_date", { mode: "string" }).notNull(),
     reason: varchar("reason", { length: 200 }).notNull(),
+    // Whether the station is OPEN that day. false = fully closed (holiday /
+    // one-off closure). true = open, either all day (open_time/close_time NULL)
+    // or with special hours (open_time -> close_time set).
+    is_open: boolean("is_open").notNull().default(false),
+    open_time: time("open_time"),
+    close_time: time("close_time"),
     created_at: timestamp("created_at", { mode: "date", withTimezone: true })
       .notNull()
       .defaultNow(),
