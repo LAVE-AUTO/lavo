@@ -73,6 +73,7 @@ export function AdminVehicleFormatsView() {
           <VehicleFormatsTab
             formats={formats}
             apiBasePath="/admin/formats"
+            showPrice={false}
             onAdd={handleAdd}
             onUpdate={handleUpdate}
             onDelete={handleDelete}

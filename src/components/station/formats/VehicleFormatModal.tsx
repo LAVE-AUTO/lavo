@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { postWithApi, updateWithApi } from '@/services';
+import { postWithApi, updateWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { FormatCombobox } from './FormatCombobox';
 import type { VehicleFormat } from './types';
 
 // Predefined vehicle format suggestions
@@ -28,9 +29,12 @@ interface Props {
   /** API collection path for create/update. Formats are admin-managed, so the
    * admin catalog passes '/admin/formats'; defaults to the station path. */
   apiBasePath?: string;
+  /** When false, only the label is managed (no base price). The admin defines
+   * the shared catalog; each station sets its own base price per service. */
+  showPrice?: boolean;
 }
 
-export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, apiBasePath = '/station/formats' }: Props) {
+export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, apiBasePath = '/station/formats', showPrice = true }: Props) {
   const t = useTranslations('station_services');
   const locale = useLocale();
   const isEdit = format !== null;
@@ -49,10 +53,6 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
     setApiError(null);
     setPriceError(null);
   }, [format]);
-
-  function focusPrice() {
-    if (label.trim()) priceRef.current?.focus();
-  }
 
   function validatePrice(v: string): boolean {
     const n = parseFloat(v);
@@ -81,14 +81,14 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
     ? existingFormats.filter((f) => f.id !== format.id).map((f) => f.label)
     : existingFormats.map((f) => f.label);
 
-  const canSubmit = label.trim().length > 0 && parseFloat(price) > 0 && !isDuplicate && !saving;
+  const canSubmit = label.trim().length > 0 && (!showPrice || parseFloat(price) > 0) && !isDuplicate && !saving;
 
-  /* For CREATE: submit directly. For EDIT: open confirmation first. */
+  /* For CREATE: submit directly. For EDIT with a price: confirm first. */
   function handleSaveClick(e: React.FormEvent) {
     e.preventDefault();
-    if (!validatePrice(price)) return;
+    if (showPrice && !validatePrice(price)) return;
     if (!canSubmit) return;
-    if (isEdit) {
+    if (isEdit && showPrice) {
       setConfirmOpen(true);
     } else {
       doSave();
@@ -100,10 +100,19 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
     setSaving(true);
     setApiError(null);
 
-    const payload = { label: label.trim(), price: parseFloat(price) };
-    const [ok, data] = (isEdit && format)
-      ? await updateWithApi(`${apiBasePath}/${format.id}`, { ...payload, is_active: format.is_active })
-      : await postWithApi(apiBasePath, payload);
+    let ok: boolean;
+    let data: unknown;
+    if (!showPrice) {
+      // Label-only catalog (admin): create posts the label; edit patches it.
+      [ok, data] = (isEdit && format)
+        ? await patchWithApi(`${apiBasePath}/${format.id}`, { label: label.trim() })
+        : await postWithApi(apiBasePath, { label: label.trim() });
+    } else {
+      const payload = { label: label.trim(), price: parseFloat(price) };
+      [ok, data] = (isEdit && format)
+        ? await updateWithApi(`${apiBasePath}/${format.id}`, { ...payload, is_active: format.is_active })
+        : await postWithApi(apiBasePath, payload);
+    }
 
     setSaving(false);
     if (ok) {
@@ -154,40 +163,18 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
                 {t('format_field_label')} <span className="text-[#EF4444]">*</span>
               </label>
               
-              {/* Dropdown with predefined suggestions */}
-              <select
+              {/* Editable combobox: pick a premium suggestion or type a custom name */}
+              <FormatCombobox
                 value={label}
-                onChange={(e) => {
-                  setLabel(e.target.value);
-                  setApiError(null);
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && focusPrice()}
-                className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
-              >
-                <option value="">{t('format_placeholder_label')}</option>
-                <optgroup label="Suggestions">
-                  {(locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).map((fmt) => (
-                    <option key={fmt} value={fmt} disabled={existingLabels.includes(fmt)}>
-                      {fmt}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-
-              {/* Custom input fallback (hidden if using preset) */}
-              {label && !((locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR).includes(label)) && (
-                <input
-                  type="text"
-                  value={label}
-                  onChange={(e) => {
-                    setLabel(e.target.value);
-                    setApiError(null);
-                  }}
-                  placeholder={t('format_custom_placeholder')}
-                  maxLength={100}
-                  className="rounded-[8px] border border-[#D8D4C8] bg-[#FFF9EC] px-3 py-2.5 text-[13px] text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] focus:bg-white focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:focus:border-[#DDAF3B] dark:focus:bg-[#182214]"
-                />
-              )}
+                onChange={(v) => { setLabel(v); setApiError(null); }}
+                suggestions={locale === 'en' ? SUGGESTIONS_EN : SUGGESTIONS_FR}
+                takenLabels={existingLabels}
+                placeholder={t('format_placeholder_label')}
+                takenHint={t('format_already_added')}
+                invalid={isDuplicate}
+                autoFocus={!isEdit}
+                maxLength={100}
+              />
 
               {isDuplicate && (
                 <p className="flex items-center gap-1 text-[12px] font-semibold text-[#FF8800]">
@@ -199,7 +186,9 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
               )}
             </div>
 
-            {/* Price field */}
+            {/* Price field — only for the station flow. The admin catalog is
+                label-only; each station sets its own base price per service. */}
+            {showPrice && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#5A5A4A] dark:text-[#B0BFB1]">
                 {t('format_field_price')} <span className="text-[#EF4444]">*</span>
@@ -234,6 +223,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
                 </p>
               )}
             </div>
+            )}
 
             {/* API error - i18n-mapped message only, never raw server output */}
             {apiError && (

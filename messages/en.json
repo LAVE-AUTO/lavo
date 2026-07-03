@@ -2559,6 +2559,7 @@
         "confirm_save_message": "Update \"{name}\" to ${price} CAD?",
         "format_choose_vehicle": "Choose a vehicle type and set its base price",
         "format_already_exists": "This format already exists",
+        "format_already_added": "Already added",
         "price_error_positive": "Price must be greater than 0",
         "label_added": "added",
         "label_common_types": "Common types",

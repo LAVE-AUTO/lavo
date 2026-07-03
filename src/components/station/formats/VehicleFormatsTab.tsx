@@ -15,6 +15,8 @@ interface Props {
   /** API collection path. Formats are admin-managed ('/admin/formats'); the
    * station path is kept as the default for backward compatibility. */
   apiBasePath?: string;
+  /** When false, the base price is hidden (admin catalog is label-only). */
+  showPrice?: boolean;
 }
 
 const PencilIcon = () => (
@@ -32,7 +34,7 @@ const TrashIcon = () => (
 interface DeleteState { format: VehicleFormat; loading: boolean }
 interface ToggleState { format: VehicleFormat }
 
-export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBasePath = '/station/formats' }: Props) {
+export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBasePath = '/station/formats', showPrice = true }: Props) {
   const t = useTranslations('station_services');
   const [modal, setModal] = useState<VehicleFormat | null | 'new'>(null);
   const [toggling, setToggling] = useState<string | null>(null);
@@ -131,9 +133,11 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBaseP
                   {format.label}
                 </span>
 
-                <span className="shrink-0 font-mono text-[14px] font-bold text-[#DDAF3B]">
-                  {(isNaN(parseFloat(format.price)) ? 0 : parseFloat(format.price)).toFixed(2)} $
-                </span>
+                {showPrice && (
+                  <span className="shrink-0 font-mono text-[14px] font-bold text-[#DDAF3B]">
+                    {(isNaN(parseFloat(format.price)) ? 0 : parseFloat(format.price)).toFixed(2)} $
+                  </span>
+                )}
 
                 {/* Toggle active/inactive */}
                 <button
@@ -192,6 +196,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBaseP
           onClose={() => setModal(null)}
           onSaved={handleSaved}
           apiBasePath={apiBasePath}
+          showPrice={showPrice}
         />
       )}
 

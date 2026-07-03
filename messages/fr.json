@@ -2559,6 +2559,7 @@
         "confirm_save_message": "Mettre à jour \"{name}\" à ${price} CAD ?",
         "format_choose_vehicle": "Choisissez un type de véhicule et définissez son prix de base",
         "format_already_exists": "Ce format existe déjà",
+        "format_already_added": "Déjà ajouté",
         "price_error_positive": "Le prix doit être supérieur à 0",
         "label_added": "ajouté",
         "label_common_types": "Types courants",
