@@ -234,10 +234,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       .map((pkg) => ({
         vehicle_format_id: null,
         vehicle_label: pkg.name.trim(),
-        // TODO: connect to API once service_vehicle_entries exposes a
-        // description column (see project_pending_backend_specs.md). The
-        // backend silently drops this field for now, so per-forfait
-        // descriptions only persist within the current session.
+        // Per-forfait description, persisted on service_vehicle_entries.
         description: pkg.description.trim(),
         price: pkg.price,
         duration_min: parseInt(pkg.duration, 10) || 0,

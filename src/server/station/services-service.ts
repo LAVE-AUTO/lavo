@@ -84,6 +84,7 @@ export async function createServiceWithEntries(
     vehicle_entries?: Array<{
       vehicle_format_id?: string | null;
       vehicle_label: string;
+      description?: string | null;
       price: number | string;
       duration_min?: number;
       staff_required?: number;
@@ -110,6 +111,7 @@ export async function createServiceWithEntries(
         service_id: service.id,
         vehicle_format_id: entry.vehicle_format_id ?? null,
         vehicle_label: entry.vehicle_label,
+        description: entry.description ?? null,
         price: entry.price,
         duration_min: entry.duration_min,
         staff_required: entry.staff_required,
@@ -146,6 +148,7 @@ export async function updateServiceWithEntries(
     vehicle_entries?: Array<{
       vehicle_format_id?: string | null;
       vehicle_label: string;
+      description?: string | null;
       price: number | string;
       duration_min?: number;
       staff_required?: number;
@@ -179,6 +182,7 @@ export async function updateServiceWithEntries(
         service_id: serviceId,
         vehicle_format_id: entry.vehicle_format_id ?? null,
         vehicle_label: entry.vehicle_label,
+        description: entry.description ?? null,
         price: entry.price,
         duration_min: entry.duration_min,
         staff_required: entry.staff_required,

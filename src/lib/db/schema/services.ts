@@ -59,6 +59,8 @@ export const serviceVehicleEntries = pgTable(
     // Human-readable label: vehicle format name (hand_wash) or package name
     // (automatic) or fixed label (self_service).
     vehicle_label: varchar("vehicle_label", { length: 255 }).notNull().default(""),
+    // Optional per-entry description (used for automatic-service forfaits).
+    description: text("description"),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
     duration_min: integer("duration_min").notNull().default(45),
     staff_required: integer("staff_required").notNull().default(1),

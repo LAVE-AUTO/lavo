@@ -20,9 +20,8 @@ export interface ServiceVehicleEntry {
   vehicle_format_id: string;
   vehicle_label: string;
   /**
-   * Per-package description (automatic services). Optional and not yet
-   * persisted by the backend — service_vehicle_entries has no description
-   * column (see project_pending_backend_specs.md).
+   * Per-package description (automatic services), persisted on
+   * service_vehicle_entries.
    */
   description?: string;
   price: string;
