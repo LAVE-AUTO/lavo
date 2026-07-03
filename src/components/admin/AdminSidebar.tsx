@@ -23,6 +23,7 @@ const SupportIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill=
 const RatingsIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
 const LegalIcon    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>;
 const ProfileIcon  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+const VehicleFormatsIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17h14M6 17l-1.5-4.5A2 2 0 016.4 10h11.2a2 2 0 011.9 2.5L18 17" /><path d="M5 10l1.5-4A2 2 0 018.4 5h7.2a2 2 0 011.9 1.4L19 10" /><circle cx="7.5" cy="17.5" r="1.5" /><circle cx="16.5" cy="17.5" r="1.5" /></svg>;
 const LogoutIcon   = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 const CollapseIcon = ({ collapsed }: { collapsed: boolean }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} aria-hidden="true">
@@ -69,6 +70,7 @@ export function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
 
   const configurationItems: NavItem[] = [
     { href: '/admin/clients', labelKey: 'nav_clients', icon: <ClientsIcon /> },
+    { href: '/admin/vehicle-formats', labelKey: 'nav_vehicle_formats', icon: <VehicleFormatsIcon /> },
     { href: '/admin/commission', labelKey: 'nav_commission', icon: <CommissionIcon /> },
     { href: '/admin/platform-settings', labelKey: 'nav_settings', icon: <SettingsIcon /> },
   ];

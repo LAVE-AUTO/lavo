@@ -25,9 +25,12 @@ interface Props {
   existingFormats: VehicleFormat[];
   onClose: () => void;
   onSaved: (format: VehicleFormat) => void;
+  /** API collection path for create/update. Formats are admin-managed, so the
+   * admin catalog passes '/admin/formats'; defaults to the station path. */
+  apiBasePath?: string;
 }
 
-export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }: Props) {
+export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, apiBasePath = '/station/formats' }: Props) {
   const t = useTranslations('station_services');
   const locale = useLocale();
   const isEdit = format !== null;
@@ -99,8 +102,8 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
 
     const payload = { label: label.trim(), price: parseFloat(price) };
     const [ok, data] = (isEdit && format)
-      ? await updateWithApi(`/station/formats/${format.id}`, { ...payload, is_active: format.is_active })
-      : await postWithApi('/station/formats', payload);
+      ? await updateWithApi(`${apiBasePath}/${format.id}`, { ...payload, is_active: format.is_active })
+      : await postWithApi(apiBasePath, payload);
 
     setSaving(false);
     if (ok) {

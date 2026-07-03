@@ -12,6 +12,9 @@ interface Props {
   onAdd: (format: VehicleFormat) => void;
   onUpdate: (format: VehicleFormat) => void;
   onDelete: (id: string) => void;
+  /** API collection path. Formats are admin-managed ('/admin/formats'); the
+   * station path is kept as the default for backward compatibility. */
+  apiBasePath?: string;
 }
 
 const PencilIcon = () => (
@@ -29,7 +32,7 @@ const TrashIcon = () => (
 interface DeleteState { format: VehicleFormat; loading: boolean }
 interface ToggleState { format: VehicleFormat }
 
-export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props) {
+export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBasePath = '/station/formats' }: Props) {
   const t = useTranslations('station_services');
   const [modal, setModal] = useState<VehicleFormat | null | 'new'>(null);
   const [toggling, setToggling] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     setDeleteState({ format, loading: true });
     setDeleteError(null);
 
-    const [ok, data] = await deleteWithApi(`/station/formats/${format.id}`);
+    const [ok, data] = await deleteWithApi(`${apiBasePath}/${format.id}`);
     if (!mountedRef.current) return;
     setDeleteState(null);
 
@@ -73,11 +76,11 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
     const { format } = toggleState;
     setToggleState(null);
     setToggling(format.id);
-    const [ok, data] = await patchWithApi(`/station/formats/${format.id}`, { is_active: !format.is_active });
+    const [ok, data] = await patchWithApi(`${apiBasePath}/${format.id}`, { is_active: !format.is_active });
     if (!mountedRef.current) return;
     setToggling(null);
     if (ok) onUpdate((data as { data: VehicleFormat }).data);
-  }, [toggleState, onUpdate]);
+  }, [toggleState, onUpdate, apiBasePath]);
 
   function handleSaved(saved: VehicleFormat) {
     const isNew = !formats.find((f) => f.id === saved.id);
@@ -188,6 +191,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete }: Props)
           existingFormats={formats}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
+          apiBasePath={apiBasePath}
         />
       )}
 
