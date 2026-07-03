@@ -6,7 +6,7 @@ import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi, postWithApi, deleteWithApi } from '@/services';
 import type { StationConfig } from '../types';
 import { HoursDayRow } from './HoursDayRow';
-import { HoursExceptions, type HourException } from './HoursExceptions';
+import { HoursExceptions, type HourException, type HourExceptionInput } from './HoursExceptions';
 import { PageLoader } from '@/components/ui/PageLoader';
 
 interface HourDay {
@@ -200,11 +200,26 @@ export function HoursTab({ config, locked }: Props) {
     setSaving(false);
   }
 
-  async function handleAddException(exception_date: string, reason: string) {
-    const [ok, data] = await postWithApi('/station/hour-exceptions', { exception_date, reason });
+  async function handleAddException(input: HourExceptionInput) {
+    // The station may be closed, open all day, or open with special hours.
+    // TODO: connect status/open_time/close_time to the API once
+    // station_hour_exceptions exposes is_open/open_time/close_time columns
+    // (see project_pending_backend_specs.md). Today the backend only
+    // persists exception_date + reason and silently drops the extra fields,
+    // so we keep the merchant's choice in local state for the session.
+    const [ok, data] = await postWithApi('/station/hour-exceptions', {
+      exception_date: input.exception_date,
+      reason: input.reason,
+      status: input.status,
+      open_time: input.open_time,
+      close_time: input.close_time,
+    });
     if (ok) {
       const created = (data as { data: HourException }).data;
-      setExceptions((prev) => [...prev, created]);
+      setExceptions((prev) => [
+        ...prev,
+        { ...created, status: input.status, open_time: input.open_time, close_time: input.close_time },
+      ]);
       success(t('hours_exceptions_save_success'));
     } else {
       showError(t('hours_exceptions_save_error'));
