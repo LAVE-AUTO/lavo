@@ -14,6 +14,7 @@ export interface Step3Data {
 export interface Step3Errors {
   certificate?: string;
   addressProof?: string;
+  license?: string;
   terms?: string;
 }
 
@@ -38,6 +39,7 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
 
     if (!data.certificate) next.certificate = t('error_doc_required');
     if (!data.addressProof) next.addressProof = t('error_doc_required');
+    if (!data.license) next.license = t('error_doc_required');
     if (!data.termsAccepted) next.terms = t('error_terms');
 
     onErrors(next);
@@ -77,8 +79,13 @@ export function StepDocuments({ data, errors, isLoading, onChange, onErrors, onS
       <FileUploadZone
         label={t('doc_license')}
         hint={t('doc_license_hint')}
+        required
         value={data.license}
-        onChange={(file) => onChange({ ...data, license: file })}
+        onChange={(file) => {
+          onChange({ ...data, license: file });
+          if (errors.license) onErrors({ ...errors, license: undefined });
+        }}
+        error={errors.license}
       />
 
       <div className="mb-5">
