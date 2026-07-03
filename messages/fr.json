@@ -2402,6 +2402,7 @@
         "capacity_late_tolerance_hint": "Délai accordé au client à partir de son heure de réservation",
         "capacity_cancellation_hint": "Délai en minutes avant le rendez-vous au-delà duquel l'annulation gratuite est refusée.",
         "capacity_card_wash_settings": "Paramètres de service",
+        "capacity_wash_settings_hint": "Ces marges définissent l'intervalle de temps de sécurité (avant et après chaque lavage) durant lequel vous êtes assuré de terminer le service, même en cas d'imprévu.",
         "capacity_card_bay_status": "État des postes",
         "capacity_bay_status_hint": "Activez ou désactivez chaque poste individuellement.",
         "capacity_bays_active": "{active} actif sur {total}",

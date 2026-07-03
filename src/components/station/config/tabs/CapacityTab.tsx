@@ -206,6 +206,9 @@ export function CapacityTab({ config, posts, locked, onSaved }: Props) {
       </div>
 
       <Card title={t('capacity_card_wash_settings')}>
+        <p className="mb-4 text-[12px] leading-relaxed text-foreground/55 dark:text-[#B0BFB1]">
+          {t('capacity_wash_settings_hint')}
+        </p>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label={t('field_margin_before')}>
             <NumberStepper

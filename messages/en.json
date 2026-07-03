@@ -2402,6 +2402,7 @@
         "capacity_late_tolerance_hint": "Grace period given to the client from their booking time",
         "capacity_cancellation_hint": "Minutes before the appointment past which free cancellation is no longer allowed.",
         "capacity_card_wash_settings": "Service settings",
+        "capacity_wash_settings_hint": "These margins define the safety time buffer (before and after each wash) within which you are guaranteed to complete the service, even if something unexpected happens.",
         "capacity_card_bay_status": "Bay status",
         "capacity_bay_status_hint": "Enable or disable each bay individually.",
         "capacity_bays_active": "{active} active out of {total}",
