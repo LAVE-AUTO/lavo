@@ -3037,7 +3037,7 @@
         "hint_reminder_second": "Délai (en minutes) avant le service auquel le second rappel est envoyé au client.",
         "section_limits": "Pourboires & Vérification",
         "field_max_tip": "Pourboire maximum",
-        "hint_max_tip": "Montant maximum en XAF qu'un client peut ajouter en pourboire à une réservation.",
+        "hint_max_tip": "Montant maximum en dollars canadiens (CAD) qu'un client peut ajouter en pourboire à une réservation.",
         "field_kyc_first": "Rappel de vérification initial",
         "hint_kyc_first": "Nombre de jours avant l'expiration d'un document de vérification à partir duquel le premier rappel est envoyé à la station et aux admins.",
         "field_kyc_second": "Rappel de vérification final",

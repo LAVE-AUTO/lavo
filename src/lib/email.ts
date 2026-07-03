@@ -1299,10 +1299,10 @@ export type WeeklyEscrowTransactionRow = {
 };
 
 
-function formatMoneyEUR(amount: string | number | null | undefined): string {
+function formatMoneyCAD(amount: string | number | null | undefined): string {
   const n = amount == null ? 0 : typeof amount === 'string' ? parseFloat(amount) : amount;
   const safe = Number.isFinite(n) ? n : 0;
-  return `${safe.toFixed(2)} EUR`;
+  return `${safe.toFixed(2)} CAD`;
 }
 
 
@@ -1353,9 +1353,9 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${cEmail}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resId}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resStat}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.amountPaid)}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.commissionAmount)}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyEUR(r.stationPayout)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.amountPaid)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.commissionAmount)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.stationPayout)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${xfer}</td>
             </tr>`;
         })
@@ -1365,9 +1365,9 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     <p style="margin: 0 0 12px;">${locale === 'en' ? 'Here is the weekly summary of escrow transactions captured through Stripe.' : 'Voici le récapitulatif hebdomadaire des transactions escrow capturées via Stripe.'}</p>
     <div style="margin: 0 0 12px; color: #444;">
       <div><strong>${locale === 'en' ? 'Transactions:' : 'Transactions :'} </strong>${rows.length}</div>
-      <div><strong>${locale === 'en' ? 'Total paid:' : 'Total payé :'} </strong>${formatMoneyEUR(totalAmount)}</div>
-      <div><strong>${locale === 'en' ? 'Total commission:' : 'Total commission :'} </strong>${formatMoneyEUR(totalCommission)}</div>
-      <div><strong>${locale === 'en' ? 'Total station payout:' : 'Total payout station :'} </strong>${formatMoneyEUR(totalPayout)}</div>
+      <div><strong>${locale === 'en' ? 'Total paid:' : 'Total payé :'} </strong>${formatMoneyCAD(totalAmount)}</div>
+      <div><strong>${locale === 'en' ? 'Total commission:' : 'Total commission :'} </strong>${formatMoneyCAD(totalCommission)}</div>
+      <div><strong>${locale === 'en' ? 'Total station payout:' : 'Total payout station :'} </strong>${formatMoneyCAD(totalPayout)}</div>
     </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">
       <thead>

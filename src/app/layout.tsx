@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     template: '%s | Hurryline',
   },
   description:
-    'Hurryline est la plateforme de réservation et de paiement pour stations de lavage auto au Cameroun. Trouvez une station, réservez un créneau et lavez votre véhicule en toute simplicité.',
+    'Hurryline est la plateforme de réservation et de paiement pour stations de lavage auto au Canada. Trouvez une station, réservez un créneau et lavez votre véhicule en toute simplicité.',
   metadataBase: new URL(APP_URL),
   openGraph: {
     type: 'website',

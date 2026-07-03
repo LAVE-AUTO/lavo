@@ -3037,7 +3037,7 @@
         "hint_reminder_second": "Lead time (in minutes) before the service at which the second client reminder is sent.",
         "section_limits": "Tips & Verification",
         "field_max_tip": "Maximum tip",
-        "hint_max_tip": "Maximum amount in XAF a client can add as a tip to a booking.",
+        "hint_max_tip": "Maximum amount in Canadian dollars (CAD) a client can add as a tip to a booking.",
         "field_kyc_first": "Initial verification reminder",
         "hint_kyc_first": "Number of days before a verification document expires at which the first reminder is sent to the station and admins.",
         "field_kyc_second": "Final verification reminder",
