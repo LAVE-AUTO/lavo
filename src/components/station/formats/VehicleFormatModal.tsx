@@ -61,10 +61,18 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved }
     return true;
   }
 
+  /* Mirror the backend `normalizeLabel` (migration 0049 unique index): collapse
+   * runs of whitespace, trim, then compare case-insensitively so "SUV", " suv ",
+   * "S U V" and "S  U  V" are all treated as the same format and cannot be added
+   * twice. Also runs on rename (edit), excluding the row being edited. */
+  const normalizeForCompare = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
   const isDuplicate =
-    !isEdit &&
     label.trim().length > 0 &&
-    existingFormats.some((f) => f.label.toLowerCase() === label.trim().toLowerCase());
+    existingFormats.some(
+      (f) =>
+        (!isEdit || f.id !== format.id) &&
+        normalizeForCompare(f.label) === normalizeForCompare(label),
+    );
 
   const existingLabels = isEdit
     ? existingFormats.filter((f) => f.id !== format.id).map((f) => f.label)
