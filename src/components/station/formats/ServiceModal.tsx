@@ -21,6 +21,7 @@ interface Props {
 interface AutomaticPackage {
   id: string;
   name: string;
+  description: string;
   price: string;
   duration: string;
   is_active: boolean;
@@ -87,15 +88,16 @@ function buildAutomaticPackages(existing?: ServiceVehicleEntry[]): AutomaticPack
     return existing.map((entry, index) => ({
       id: `pkg-${index + 1}-${entry.vehicle_format_id}`,
       name: entry.vehicle_label || `Forfait ${index + 1}`,
+      description: entry.description ?? '',
       price: entry.price || '',
       duration: String(entry.duration_min || 0),
       is_active: entry.is_active,
     }));
   }
   return [
-    { id: crypto.randomUUID(), name: 'Forfait 1', price: '15', duration: '20', is_active: true },
-    { id: crypto.randomUUID(), name: 'Forfait 2', price: '25', duration: '35', is_active: true },
-    { id: crypto.randomUUID(), name: 'Forfait 3', price: '35', duration: '45', is_active: true },
+    { id: crypto.randomUUID(), name: 'Forfait 1', description: '', price: '15', duration: '20', is_active: true },
+    { id: crypto.randomUUID(), name: 'Forfait 2', description: '', price: '25', duration: '35', is_active: true },
+    { id: crypto.randomUUID(), name: 'Forfait 3', description: '', price: '35', duration: '45', is_active: true },
   ];
 }
 
@@ -232,6 +234,11 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       .map((pkg) => ({
         vehicle_format_id: null,
         vehicle_label: pkg.name.trim(),
+        // TODO: connect to API once service_vehicle_entries exposes a
+        // description column (see project_pending_backend_specs.md). The
+        // backend silently drops this field for now, so per-forfait
+        // descriptions only persist within the current session.
+        description: pkg.description.trim(),
         price: pkg.price,
         duration_min: parseInt(pkg.duration, 10) || 0,
         staff_required: 0,
@@ -438,6 +445,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
       {
         id: crypto.randomUUID(),
         name: `Forfait ${prev.length + 1}`,
+        description: '',
         price: '',
         duration: '30',
         is_active: true,
@@ -449,7 +457,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     setAutomaticPackages((prev) => prev.filter((pkg) => pkg.id !== id));
   }
 
-  function updateAutomaticPackage(id: string, field: 'name' | 'price' | 'duration' | 'is_active', value: string | boolean) {
+  function updateAutomaticPackage(id: string, field: 'name' | 'description' | 'price' | 'duration' | 'is_active', value: string | boolean) {
     setAutomaticPackages((prev) => prev.map((pkg) => (pkg.id === id ? { ...pkg, [field]: value } : pkg)));
   }
 
@@ -580,6 +588,9 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               </div>
               )}
 
+              {/* Automatic services describe each forfait individually below,
+                  so the global description is only shown for the other categories. */}
+              {!isAutomatic && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">{t('field_description')}</label>
                 <Textarea
@@ -591,6 +602,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                   showCounter
                 />
               </div>
+              )}
 
               {(category === 'hand_wash' || category === 'self_service') && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -662,6 +674,15 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                               step={5}
                               placeholder={t('vehicle_col_duration')}
                               suffix={<span className="text-[11px] font-bold text-[#BBBBAA] dark:text-[#5A5A4A]">min</span>}
+                            />
+                          </div>
+                          <div className="mb-3">
+                            <Textarea
+                              value={pkg.description}
+                              onChange={(v) => updateAutomaticPackage(pkg.id, 'description', v)}
+                              placeholder={t('automatic_package_description_placeholder')}
+                              rows={2}
+                              maxLength={300}
                             />
                           </div>
                           <div className="flex items-center justify-between">

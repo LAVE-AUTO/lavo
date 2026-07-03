@@ -2624,7 +2624,8 @@
         "automatic_packages_label": "PACKAGES",
         "automatic_add_package": "Add package",
         "automatic_empty_packages": "No package configured",
-        "automatic_package_name": "Package name"
+        "automatic_package_name": "Package name",
+        "automatic_package_description_placeholder": "Describe what this package includes (products, steps, options...)."
     },
     "station_promo_banner": {
         "title": "Promotion in progress",
