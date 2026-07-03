@@ -383,7 +383,7 @@ function brandedEmail(
           <!-- Logo header -->
           <tr>
             <td align="center" style="padding: 0 0 24px;">
-              <img src="${logoUrl}" alt="Hurryline" width="48" height="48" style="display: block; border: 0; width: 48px; height: 48px;" />
+              <img src="${logoUrl}" alt="Hurryline" width="33" height="52" style="display: block; border: 0; width: 33px; height: 52px;" />
             </td>
           </tr>
 
