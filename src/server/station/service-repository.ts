@@ -37,6 +37,7 @@ export type CreateServiceVehicleEntryData = {
   service_id: string;
   vehicle_format_id?: string | null;
   vehicle_label: string;
+  description?: string | null;
   price: string | number;
   duration_min?: number;
   staff_required?: number;
@@ -144,6 +145,7 @@ export async function createServiceVehicleEntry(
       service_id: data.service_id,
       vehicle_format_id: data.vehicle_format_id ?? null,
       vehicle_label: data.vehicle_label,
+      description: data.description ?? null,
       price: String(data.price),
       duration_min: data.duration_min ?? 45,
       staff_required: data.staff_required ?? 1,
@@ -251,6 +253,7 @@ export type PublicServiceEntry = {
   vehicle_label: string;
   price: string;
   duration_min: number;
+  description: string | null;
 };
 
 export type PublicServiceExtra = {
@@ -360,6 +363,7 @@ export async function findPublicServicesForStation(stationId: string): Promise<P
         vehicle_label: e.vehicle_label,
         price: e.price,
         duration_min: e.duration_min,
+        description: e.description,
       })),
       extras,
     });

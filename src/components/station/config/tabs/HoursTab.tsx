@@ -6,7 +6,7 @@ import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi, postWithApi, deleteWithApi } from '@/services';
 import type { StationConfig } from '../types';
 import { HoursDayRow } from './HoursDayRow';
-import { HoursExceptions, type HourException } from './HoursExceptions';
+import { HoursExceptions, type HourException, type HourExceptionInput } from './HoursExceptions';
 import { PageLoader } from '@/components/ui/PageLoader';
 
 interface HourDay {
@@ -200,8 +200,15 @@ export function HoursTab({ config, locked }: Props) {
     setSaving(false);
   }
 
-  async function handleAddException(exception_date: string, reason: string) {
-    const [ok, data] = await postWithApi('/station/hour-exceptions', { exception_date, reason });
+  async function handleAddException(input: HourExceptionInput) {
+    // The station may be closed, open all day, or open with special hours.
+    const [ok, data] = await postWithApi('/station/hour-exceptions', {
+      exception_date: input.exception_date,
+      reason: input.reason,
+      status: input.status,
+      open_time: input.open_time,
+      close_time: input.close_time,
+    });
     if (ok) {
       const created = (data as { data: HourException }).data;
       setExceptions((prev) => [...prev, created]);

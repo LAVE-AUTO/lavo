@@ -19,6 +19,11 @@ export interface ServiceVehicleEntry {
   id?: string;
   vehicle_format_id: string;
   vehicle_label: string;
+  /**
+   * Per-package description (automatic services), persisted on
+   * service_vehicle_entries.
+   */
+  description?: string;
   price: string;
   duration_min: number;
   staff_required: number;

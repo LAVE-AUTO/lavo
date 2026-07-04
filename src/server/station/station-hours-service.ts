@@ -81,10 +81,12 @@ export async function updateStationHours(
   return upsertHours(stationId, days.map((d) => ({
     day_of_week: d.day_of_week,
     is_open: d.is_open,
-    morning_start: d.morning_start ?? null,
-    morning_end: d.morning_end ?? null,
-    afternoon_start: d.afternoon_start ?? null,
-    afternoon_end: d.afternoon_end ?? null,
+    // A closed day's times aren't meaningful — clear them so a later
+    // open-all-day exception can't pick up stale hours for this day.
+    morning_start: d.is_open ? d.morning_start ?? null : null,
+    morning_end: d.is_open ? d.morning_end ?? null : null,
+    afternoon_start: d.is_open ? d.afternoon_start ?? null : null,
+    afternoon_end: d.is_open ? d.afternoon_end ?? null : null,
   })));
 }
 
@@ -95,17 +97,71 @@ export async function getStationHourExceptions(stationId: string): Promise<Stati
   return listExceptionsByStation(stationId);
 }
 
+/** Status of the station on an exception day, as exposed to the frontend. */
+export type ExceptionStatus = 'closed' | 'open_all_day' | 'open_custom';
+
+export type ExceptionOpening = {
+  status: ExceptionStatus;
+  open_time?: string | null;
+  close_time?: string | null;
+};
+
+/** The exception row shaped for the API/frontend (derives `status`, trims time seconds). */
+export type SerializedHourException = {
+  id: string;
+  exception_date: string;
+  reason: string;
+  status: ExceptionStatus;
+  open_time: string | null;
+  close_time: string | null;
+};
+
+/** Postgres `time` returns "HH:MM:SS"; the UI works with "HH:MM". */
+function trimTime(value: string | null): string | null {
+  return value ? value.slice(0, 5) : null;
+}
+
+export function serializeHourException(row: StationHourException): SerializedHourException {
+  const status: ExceptionStatus = !row.is_open
+    ? 'closed'
+    : row.open_time
+      ? 'open_custom'
+      : 'open_all_day';
+  return {
+    id: row.id,
+    exception_date: row.exception_date,
+    reason: row.reason,
+    status,
+    open_time: trimTime(row.open_time),
+    close_time: trimTime(row.close_time),
+  };
+}
+
 /**
- * Adds an exception date for the station.
+ * Adds an exception date for the station. When `opening` marks the day as open,
+ * the station is either open all day or open with special hours.
  * Throws ConflictError if an exception already exists for that date (DB unique constraint).
  */
 export async function addStationHourException(
   stationId: string,
   exceptionDate: string,
-  reason: string
+  reason: string,
+  opening?: ExceptionOpening
 ): Promise<StationHourException> {
+  const isOpen = opening ? opening.status !== 'closed' : false;
+  const customHours = opening?.status === 'open_custom';
+  if (customHours) {
+    const { open_time, close_time } = opening ?? {};
+    if (!open_time || !close_time || close_time <= open_time) {
+      throw new ValidationError('close_time must be after open_time for open_custom exceptions');
+    }
+  }
   try {
-    return await insertException(stationId, exceptionDate, reason);
+    return await insertException(stationId, exceptionDate, reason, {
+      is_open: isOpen,
+      open_time: customHours ? opening?.open_time ?? null : null,
+      close_time: customHours ? opening?.close_time ?? null : null,
+    });
   } catch (err) {
     // PostgreSQL unique_violation code is '23505'.
     if (err instanceof Error && (err as Error & { code?: string }).code === '23505') {

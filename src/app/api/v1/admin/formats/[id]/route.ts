@@ -1,10 +1,9 @@
 /**
- * PUT  /api/v1/station/formats/:id — full update. Auth: admin.
- * PATCH /api/v1/station/formats/:id — partial update. Auth: admin.
- * DELETE /api/v1/station/formats/:id — delete if no reservations. Auth: admin.
+ * PATCH  /api/v1/admin/formats/:id — partial update (label / price / is_active). Auth: admin.
+ * DELETE /api/v1/admin/formats/:id — delete if no reservations reference it. Auth: admin.
  *
- * The vehicle format catalog is global and admin-owned (see /api/v1/admin/formats);
- * stations only select from it, they never mutate it.
+ * Label changes are re-validated for case-insensitive uniqueness, so a format
+ * can be renamed but never collide with another.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';

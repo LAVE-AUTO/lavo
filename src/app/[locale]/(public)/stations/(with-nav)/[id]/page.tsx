@@ -64,7 +64,7 @@ async function buildLocalBusinessJsonLd(
           '@type': 'PostalAddress',
           streetAddress: station.address ?? undefined,
           addressLocality: station.city ?? undefined,
-          addressCountry: 'CM',
+          addressCountry: 'CA',
         },
       }),
       ...(station.latitude != null &&

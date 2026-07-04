@@ -182,47 +182,78 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
     db.query.stationConfigs.findFirst({ where: eq(stationConfigs.id, args.stationId) }),
   ]);
 
+  /* An exception can close the day OR open it (all day, or with special hours).
+   * - closed          → is_open false: the station is shut, ignore normal hours.
+   * - open with hours  → open_time/close_time set: a single window overriding
+   *                      the regular weekday hours.
+   * - open all day     → is_open true, no times: force the day open using the
+   *                      regular weekday / config windows even if normally closed. */
+  let exceptionWindow: OpenWindow | null = null;
   if (exceptionRow) {
-    return { date: dateKey, slots: [], closed_reason: 'exception' };
+    if (!exceptionRow.is_open) {
+      return { date: dateKey, slots: [], closed_reason: 'exception' };
+    }
+    if (exceptionRow.open_time && exceptionRow.close_time) {
+      const es = timeStringToMinutes(exceptionRow.open_time);
+      const ee = timeStringToMinutes(exceptionRow.close_time);
+      if (es != null && ee != null && ee > es) exceptionWindow = { startMin: es, endMin: ee };
+    }
   }
+  // Non-custom open exception → force the day open using the regular windows.
+  const forcedOpenAllDay = exceptionRow != null && exceptionRow.is_open && exceptionWindow == null;
+
   if (postsRows.length === 0) {
     return { date: dateKey, slots: [], closed_reason: 'no_active_post' };
   }
 
-  /* Build the day's open windows from station_hours or station_configs.
-   * Priority: per-day station_hours row → global station_configs envelope.
-   * Per-post occupancy (from active reservations) is subtracted below. */
+  /* Build the day's open windows. Priority: exception custom window → per-day
+   * station_hours row → global station_configs envelope. Per-post occupancy
+   * (from active reservations) is subtracted below. */
   const windows: OpenWindow[] = [];
 
-  if (hourRow) {
-    if (!hourRow.is_open) {
-      return { date: dateKey, slots: [], closed_reason: 'day_closed' };
-    }
-    const ms = timeStringToMinutes(hourRow.morning_start);
-    const me = timeStringToMinutes(hourRow.morning_end);
-    const as_ = timeStringToMinutes(hourRow.afternoon_start);
-    const ae = timeStringToMinutes(hourRow.afternoon_end);
+  if (exceptionWindow) {
+    windows.push(exceptionWindow);
+  } else {
+    if (hourRow) {
+      if (!hourRow.is_open && !forcedOpenAllDay) {
+        return { date: dateKey, slots: [], closed_reason: 'day_closed' };
+      }
+      /* A day normally marked closed has no guarantee its morning/afternoon
+       * columns are null (nothing clears them on close), so an open-all-day
+       * exception must not trust them — fall through to the config envelope. */
+      if (hourRow.is_open) {
+        const ms = timeStringToMinutes(hourRow.morning_start);
+        const me = timeStringToMinutes(hourRow.morning_end);
+        const as_ = timeStringToMinutes(hourRow.afternoon_start);
+        const ae = timeStringToMinutes(hourRow.afternoon_end);
 
-    if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
-    if (as_ != null && ae != null && ae > as_) windows.push({ startMin: as_, endMin: ae });
+        if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
+        if (as_ != null && ae != null && ae > as_) windows.push({ startMin: as_, endMin: ae });
 
-    /* No regular morning/afternoon pair matched, but we still have a global
-     * open/close envelope (morning_start + afternoon_end). Treat the day as
-     * a single continuous window. */
-    if (windows.length === 0 && ms != null && ae != null && ae > ms) {
-      windows.push({ startMin: ms, endMin: ae });
+        /* No regular morning/afternoon pair matched, but we still have a global
+         * open/close envelope (morning_start + afternoon_end). Treat the day as
+         * a single continuous window. */
+        if (windows.length === 0 && ms != null && ae != null && ae > ms) {
+          windows.push({ startMin: ms, endMin: ae });
+        }
+      }
     }
-  } else if (configRow) {
-    const open = timeStringToMinutes(String(configRow.opening_time));
-    const close = timeStringToMinutes(String(configRow.closing_time));
-    if (open != null && close != null && close > open) {
-      const breakStart = timeStringToMinutes(configRow.break_start ? String(configRow.break_start) : null);
-      const breakEnd = timeStringToMinutes(configRow.break_end ? String(configRow.break_end) : null);
-      if (breakStart != null && breakEnd != null && breakEnd > breakStart && breakStart > open && breakEnd < close) {
-        windows.push({ startMin: open, endMin: breakStart });
-        windows.push({ startMin: breakEnd, endMin: close });
-      } else {
-        windows.push({ startMin: open, endMin: close });
+
+    /* Fall back to the station_configs envelope when there is no usable
+     * station_hours window (no per-day row, or an open-all-day exception on a
+     * day whose hours row yielded nothing). */
+    if (windows.length === 0 && configRow && (!hourRow || forcedOpenAllDay)) {
+      const open = timeStringToMinutes(String(configRow.opening_time));
+      const close = timeStringToMinutes(String(configRow.closing_time));
+      if (open != null && close != null && close > open) {
+        const breakStart = timeStringToMinutes(configRow.break_start ? String(configRow.break_start) : null);
+        const breakEnd = timeStringToMinutes(configRow.break_end ? String(configRow.break_end) : null);
+        if (breakStart != null && breakEnd != null && breakEnd > breakStart && breakStart > open && breakEnd < close) {
+          windows.push({ startMin: open, endMin: breakStart });
+          windows.push({ startMin: breakEnd, endMin: close });
+        } else {
+          windows.push({ startMin: open, endMin: close });
+        }
       }
     }
   }

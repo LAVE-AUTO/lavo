@@ -25,7 +25,7 @@ const organizationJsonLd = {
   url: APP_URL,
   logo: `${APP_URL}/icons/icon-192x192.png`,
   description:
-    'Hurryline is the booking and payment platform for car wash stations in Cameroon. Find a station, book a slot, and get your car washed effortlessly.',
+    'Hurryline is the booking and payment platform for car wash stations in Canada. Find a station, book a slot, and get your car washed effortlessly.',
   sameAs: [],
 };
 

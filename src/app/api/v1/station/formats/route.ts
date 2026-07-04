@@ -1,6 +1,8 @@
 /**
- * POST /api/v1/station/formats
- * Creates a global vehicle format. Auth STATION (admin-managed in production).
+ * POST /api/v1/station/formats — create a global vehicle format. Auth: admin.
+ *
+ * The vehicle format catalog is global and admin-owned (see /api/v1/admin/formats);
+ * stations only select from it, they never create formats.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error500, fromAppError } from '@/lib/responses';
@@ -12,7 +14,7 @@ import { serializeFormat } from '@/server/station/serializers';
 import type { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const auth = await requireRole(request, 'station');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   let body: unknown;

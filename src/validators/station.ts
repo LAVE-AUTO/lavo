@@ -648,6 +648,9 @@ const serviceVehicleEntrySchema = z.object({
   vehicle_format_id: z.string().uuid('Invalid vehicle format ID').nullable().optional(),
   // Human-readable label stored with the entry (package name or format label).
   vehicle_label: z.string().min(1).max(255),
+  // Optional per-entry description. Used for automatic-service forfaits so each
+  // package can describe what it includes.
+  description: z.string().max(2000).optional(),
   price: z.union([
     z.number().positive('Price must be greater than 0'),
     z.string().regex(/^\d+(\.\d{1,2})?$/).refine((v) => parseFloat(v) > 0, 'Price must be greater than 0'),

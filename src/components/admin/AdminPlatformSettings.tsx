@@ -477,7 +477,7 @@ export function AdminPlatformSettings() {
             label={t('field_max_tip')}
             hint={t('hint_max_tip')}
             value={maxTip}
-            unit="XAF"
+            unit="CAD"
             min={0}
             onChange={setMaxTip}
           />

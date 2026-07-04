@@ -26,6 +26,7 @@ export interface Step2Data {
 
 export interface Step2Errors {
   stationName?: string;
+  registrationNumber?: string;
   address?: string;
   city?: string;
   washPostCount?: string;
@@ -177,6 +178,9 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
     if (!data.stationName.trim() || data.stationName.trim().length < 2) {
       next.stationName = data.stationName.trim() ? t('error_station_name') : t('error_required');
     }
+    if (!data.registrationNumber.trim()) {
+      next.registrationNumber = t('error_required');
+    }
     if (!data.address.trim() || data.address.trim().length < 5) {
       next.address = data.address.trim() ? t('error_address') : t('error_required');
     }
@@ -250,10 +254,15 @@ export function StepCommerce({ data, errors, isLoading, washTypes, onChange, onE
         />
         <FormField
           label={t('registration_number')}
+          required
           type="text"
           placeholder={t('registration_number_placeholder')}
           value={data.registrationNumber}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => onChange({ ...data, registrationNumber: e.target.value })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            onChange({ ...data, registrationNumber: e.target.value });
+            if (errors.registrationNumber) onErrors({ ...errors, registrationNumber: undefined });
+          }}
+          error={errors.registrationNumber}
         />
       </div>
 

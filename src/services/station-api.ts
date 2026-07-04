@@ -65,6 +65,7 @@ interface ApiPublicServiceEntry {
     vehicle_label: string;
     price: string;
     duration_min: number;
+    description: string | null;
 }
 
 interface ApiPublicServiceExtra {
@@ -312,6 +313,7 @@ function mapApiDetailToStationDetail(
                 formatLabel: e.vehicle_label,
                 price: parseFloat(e.price),
                 duration: e.duration_min,
+                description: e.description,
             })),
             extras: svc.extras.map((ex: ApiPublicServiceExtra): StationServiceExtra => ({
                 id: ex.id,

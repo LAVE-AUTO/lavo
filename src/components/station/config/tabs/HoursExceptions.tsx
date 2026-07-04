@@ -4,16 +4,35 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { TextField } from '../TextField';
 
+/**
+ * Status of the station on an exception day.
+ * - `closed`        : station is fully closed (holidays, one-off closures)
+ * - `open_all_day`  : station is open the whole day, no fixed hours
+ * - `open_custom`   : station is open but with special hours (open_time -> close_time)
+ */
+export type ExceptionStatus = 'closed' | 'open_all_day' | 'open_custom';
+
 export interface HourException {
   id: string;
   exception_date: string;
   reason: string;
+  status?: ExceptionStatus;
+  open_time?: string | null;
+  close_time?: string | null;
+}
+
+export interface HourExceptionInput {
+  exception_date: string;
+  reason: string;
+  status: ExceptionStatus;
+  open_time: string | null;
+  close_time: string | null;
 }
 
 interface Props {
   exceptions: HourException[];
   saving?: boolean;
-  onAdd: (exception_date: string, reason: string) => Promise<void>;
+  onAdd: (input: HourExceptionInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   disabled?: boolean;
 }
@@ -139,16 +158,24 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState('');
   const [reason, setReason] = useState('');
+  const [status, setStatus] = useState<ExceptionStatus>('closed');
+  const [openTime, setOpenTime] = useState('');
+  const [closeTime, setCloseTime] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [dateError, setDateError] = useState(false);
   const [reasonError, setReasonError] = useState(false);
+  const [hoursError, setHoursError] = useState(false);
 
   function handleCancel() {
     setDate('');
     setReason('');
+    setStatus('closed');
+    setOpenTime('');
+    setCloseTime('');
     setDateError(false);
     setReasonError(false);
+    setHoursError(false);
     setShowForm(false);
   }
 
@@ -156,12 +183,21 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
     e.preventDefault();
     const dateValid = date.length === 10;
     const reasonValid = reason.trim().length > 0;
+    // Custom hours require both an opening and a closing time.
+    const hoursValid = status !== 'open_custom' || (openTime.length === 5 && closeTime.length === 5);
     setDateError(!dateValid);
     setReasonError(!reasonValid);
-    if (!dateValid || !reasonValid) return;
+    setHoursError(!hoursValid);
+    if (!dateValid || !reasonValid || !hoursValid) return;
 
     setSubmitting(true);
-    await onAdd(date, reason.trim());
+    await onAdd({
+      exception_date: date,
+      reason: reason.trim(),
+      status,
+      open_time: status === 'open_custom' ? openTime : null,
+      close_time: status === 'open_custom' ? closeTime : null,
+    });
     setSubmitting(false);
     handleCancel();
   }
@@ -259,6 +295,63 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
                 />
               </div>
 
+              {/* Status on that day: closed, open all day, or open with special hours */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-[0.5px] text-foreground/55 dark:text-[#B0BFB1]">
+                  {t('hours_exceptions_status_label')}
+                </label>
+                <div className="flex flex-col gap-1.5">
+                  {(['closed', 'open_all_day', 'open_custom'] as const).map((opt) => (
+                    <label
+                      key={opt}
+                      className={[
+                        'flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[12px] font-semibold transition-colors',
+                        status === opt
+                          ? 'border-[#DDAF3B] bg-[#DDAF3B]/8 text-[#001201] dark:text-[#FFF9EC]'
+                          : 'border-separator/30 text-foreground/65 hover:border-[#DDAF3B]/50 dark:border-dark-surface dark:text-[#B0BFB1]',
+                      ].join(' ')}
+                    >
+                      <input
+                        type="radio"
+                        name="exception_status"
+                        value={opt}
+                        checked={status === opt}
+                        onChange={() => { setStatus(opt); if (hoursError) setHoursError(false); }}
+                        className="accent-[#DDAF3B]"
+                      />
+                      {t(`hours_exceptions_status_${opt}`)}
+                    </label>
+                  ))}
+                </div>
+
+                {status === 'open_custom' && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={openTime}
+                      onChange={(e) => { setOpenTime(e.target.value); if (hoursError) setHoursError(false); }}
+                      aria-label={t('hours_exceptions_open_time')}
+                      aria-invalid={hoursError}
+                      className="w-full rounded-lg border border-separator bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC]"
+                    />
+                    <span className="shrink-0 text-[12px] font-bold text-[#DDAF3B]" aria-hidden="true">→</span>
+                    <input
+                      type="time"
+                      value={closeTime}
+                      onChange={(e) => { setCloseTime(e.target.value); if (hoursError) setHoursError(false); }}
+                      aria-label={t('hours_exceptions_close_time')}
+                      aria-invalid={hoursError}
+                      className="w-full rounded-lg border border-separator bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-colors focus:border-[#DDAF3B] dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC]"
+                    />
+                  </div>
+                )}
+                {hoursError && (
+                  <p role="alert" className="text-[11px] font-semibold text-red-500">
+                    {t('hours_exceptions_hours_required')}
+                  </p>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
@@ -298,9 +391,31 @@ export function HoursExceptions({ exceptions, saving = false, onAdd, onDelete, d
           {exceptions.map((ex) => (
             <div key={ex.id} className="flex items-center justify-between gap-3 py-3">
               <div className="flex flex-col gap-0.5">
-                <span className="font-mono text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
-                  {ex.exception_date}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                    {ex.exception_date}
+                  </span>
+                  {(() => {
+                    const st = ex.status ?? 'closed';
+                    const isClosed = st === 'closed';
+                    const label =
+                      st === 'open_custom' && ex.open_time && ex.close_time
+                        ? `${t('hours_exceptions_status_open_custom')} · ${ex.open_time}–${ex.close_time}`
+                        : t(`hours_exceptions_status_${st}`);
+                    return (
+                      <span
+                        className={[
+                          'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.5px]',
+                          isClosed
+                            ? 'bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-400'
+                            : 'bg-[#DDAF3B]/15 text-[#8A6D0A] dark:text-[#DDAF3B]',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <span className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{ex.reason}</span>
               </div>
               <button

@@ -97,6 +97,7 @@ export interface StationServiceEntry {
   formatLabel: string;            // display label (format name or package name)
   price: number;
   duration: number;               // minutes
+  description: string | null;     // optional per-forfait description
 }
 
 /** An extra available for a specific service */
