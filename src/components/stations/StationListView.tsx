@@ -229,6 +229,8 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   const availableNow  = useMemo(() => applyClientFilters(apiGroups.available_now.filter((s) => s.availableSlots > 0 && s.stationStatus !== 'closed' && s.stationStatus !== 'no_future_availability')), [apiGroups, filters, sort, userLocation, debouncedSearch]);
   const topRated      = useMemo(() => applyClientFilters(apiGroups.most_appreciated.filter((s) => s.reviewCount > 0)), [apiGroups, filters, sort, userLocation, debouncedSearch]);
   const mostRevisited = useMemo(() => applyClientFilters(apiGroups.most_visited.filter((s) => s.completedCount > 0)),  [apiGroups, filters, sort, userLocation, debouncedSearch]);
+  const hasCuratedResults = availableNow.length > 0 || topRated.length > 0 || mostRevisited.length > 0;
+  const shouldShowFlatResultsFallback = !hasActiveSearch && !hasCuratedResults && flatResults.length > 0;
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
@@ -448,7 +450,17 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
               accent
             />
           )
-        ) : availableNow.length === 0 && topRated.length === 0 && mostRevisited.length === 0 ? (
+        ) : shouldShowFlatResultsFallback ? (
+          <StationSection
+            id="results"
+            label={t('section_results')}
+            stations={flatResults}
+            expanded={!!expandedSections['results']}
+            onToggle={() => setExpandedSections((s) => ({ ...s, results: !s['results'] }))}
+            seeMoreLabel={t('see_more')}
+            accent
+          />
+        ) : !hasCuratedResults ? (
           <EmptyState title={t('empty_title')} description={t('empty_desc')} icon={<EmptyIcon />} />
         ) : (
           <div className="space-y-10">
