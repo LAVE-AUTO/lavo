@@ -113,7 +113,8 @@ async function resolveAdminPasswordHash(): Promise<string> {
     return hash;
   }
 
-  const bcryptRounds = Math.max(12, parseInt(process.env.BCRYPT_ROUNDS ?? "12", 10));
+  const parsedRounds = parseInt(getEnv("BCRYPT_ROUNDS", "12"), 10);
+  const bcryptRounds = Number.isFinite(parsedRounds) ? Math.max(12, parsedRounds) : 12;
   return bcrypt.hash(plaintext, bcryptRounds);
 }
 

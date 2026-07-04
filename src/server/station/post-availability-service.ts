@@ -218,19 +218,24 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
       if (!hourRow.is_open && !forcedOpenAllDay) {
         return { date: dateKey, slots: [], closed_reason: 'day_closed' };
       }
-      const ms = timeStringToMinutes(hourRow.morning_start);
-      const me = timeStringToMinutes(hourRow.morning_end);
-      const as_ = timeStringToMinutes(hourRow.afternoon_start);
-      const ae = timeStringToMinutes(hourRow.afternoon_end);
+      /* A day normally marked closed has no guarantee its morning/afternoon
+       * columns are null (nothing clears them on close), so an open-all-day
+       * exception must not trust them — fall through to the config envelope. */
+      if (hourRow.is_open) {
+        const ms = timeStringToMinutes(hourRow.morning_start);
+        const me = timeStringToMinutes(hourRow.morning_end);
+        const as_ = timeStringToMinutes(hourRow.afternoon_start);
+        const ae = timeStringToMinutes(hourRow.afternoon_end);
 
-      if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
-      if (as_ != null && ae != null && ae > as_) windows.push({ startMin: as_, endMin: ae });
+        if (ms != null && me != null && me > ms) windows.push({ startMin: ms, endMin: me });
+        if (as_ != null && ae != null && ae > as_) windows.push({ startMin: as_, endMin: ae });
 
-      /* No regular morning/afternoon pair matched, but we still have a global
-       * open/close envelope (morning_start + afternoon_end). Treat the day as
-       * a single continuous window. */
-      if (windows.length === 0 && ms != null && ae != null && ae > ms) {
-        windows.push({ startMin: ms, endMin: ae });
+        /* No regular morning/afternoon pair matched, but we still have a global
+         * open/close envelope (morning_start + afternoon_end). Treat the day as
+         * a single continuous window. */
+        if (windows.length === 0 && ms != null && ae != null && ae > ms) {
+          windows.push({ startMin: ms, endMin: ae });
+        }
       }
     }
 

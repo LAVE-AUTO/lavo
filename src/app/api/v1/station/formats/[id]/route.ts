@@ -1,7 +1,10 @@
 /**
- * PUT  /api/v1/station/formats/:id — full update (admin-managed in production).
- * PATCH /api/v1/station/formats/:id — partial update.
- * DELETE /api/v1/station/formats/:id — delete if no reservations.
+ * PUT  /api/v1/station/formats/:id — full update. Auth: admin.
+ * PATCH /api/v1/station/formats/:id — partial update. Auth: admin.
+ * DELETE /api/v1/station/formats/:id — delete if no reservations. Auth: admin.
+ *
+ * The vehicle format catalog is global and admin-owned (see /api/v1/admin/formats);
+ * stations only select from it, they never mutate it.
  */
 import { requireRole } from '@/lib/require-role';
 import { successResponse, error400, error404, error409, error500, fromAppError } from '@/lib/responses';
@@ -15,7 +18,7 @@ import type { NextResponse } from 'next/server';
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole(request, 'station');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
@@ -45,7 +48,7 @@ export async function PUT(request: Request, { params }: Params): Promise<NextRes
 }
 
 export async function PATCH(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole(request, 'station');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;
@@ -75,7 +78,7 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
 }
 
 export async function DELETE(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireRole(request, 'station');
+  const auth = await requireRole(request, 'admin');
   if (auth instanceof Response) return auth as NextResponse;
 
   const { id } = await params;

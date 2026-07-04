@@ -253,6 +253,7 @@ export type PublicServiceEntry = {
   vehicle_label: string;
   price: string;
   duration_min: number;
+  description: string | null;
 };
 
 export type PublicServiceExtra = {
@@ -362,6 +363,7 @@ export async function findPublicServicesForStation(stationId: string): Promise<P
         vehicle_label: e.vehicle_label,
         price: e.price,
         duration_min: e.duration_min,
+        description: e.description,
       })),
       extras,
     });

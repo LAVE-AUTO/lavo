@@ -37,8 +37,8 @@ const postBodySchema = z
       .refine(isValidIsoDate, { message: 'exception_date is not a valid calendar date' }),
     reason: z.string().min(1).max(200),
     status: z.enum(['closed', 'open_all_day', 'open_custom']).optional().default('closed'),
-    open_time: z.string().regex(TIME_RE, 'open_time must be HH:MM').optional(),
-    close_time: z.string().regex(TIME_RE, 'close_time must be HH:MM').optional(),
+    open_time: z.string().regex(TIME_RE, 'open_time must be HH:MM').nullable().optional(),
+    close_time: z.string().regex(TIME_RE, 'close_time must be HH:MM').nullable().optional(),
   })
   .refine(
     (v) => v.status !== 'open_custom' || (!!v.open_time && !!v.close_time),

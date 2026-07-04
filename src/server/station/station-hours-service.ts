@@ -81,10 +81,12 @@ export async function updateStationHours(
   return upsertHours(stationId, days.map((d) => ({
     day_of_week: d.day_of_week,
     is_open: d.is_open,
-    morning_start: d.morning_start ?? null,
-    morning_end: d.morning_end ?? null,
-    afternoon_start: d.afternoon_start ?? null,
-    afternoon_end: d.afternoon_end ?? null,
+    // A closed day's times aren't meaningful — clear them so a later
+    // open-all-day exception can't pick up stale hours for this day.
+    morning_start: d.is_open ? d.morning_start ?? null : null,
+    morning_end: d.is_open ? d.morning_end ?? null : null,
+    afternoon_start: d.is_open ? d.afternoon_start ?? null : null,
+    afternoon_end: d.is_open ? d.afternoon_end ?? null : null,
   })));
 }
 
@@ -148,6 +150,12 @@ export async function addStationHourException(
 ): Promise<StationHourException> {
   const isOpen = opening ? opening.status !== 'closed' : false;
   const customHours = opening?.status === 'open_custom';
+  if (customHours) {
+    const { open_time, close_time } = opening ?? {};
+    if (!open_time || !close_time || close_time <= open_time) {
+      throw new ValidationError('close_time must be after open_time for open_custom exceptions');
+    }
+  }
   try {
     return await insertException(stationId, exceptionDate, reason, {
       is_open: isOpen,
