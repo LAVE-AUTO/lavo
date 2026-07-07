@@ -98,6 +98,9 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
       amountPaid: reservations.amount_paid,
       commissionAmount: reservations.commission_amount,
       stationPayout: reservations.station_payout,
+      clientTotal: reservations.client_total,
+      platformTotalRetained: reservations.platform_total_retained,
+      stationTotalTransferred: reservations.station_total_transferred,
       stripePaymentId: reservations.stripe_payment_id,
       stripeTransferId: reservations.stripe_transfer_id,
     })
@@ -129,9 +132,9 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
       succeededAt,
       clientEmail: r.clientEmail,
       stationName: r.stationName,
-      amountPaid: r.amountPaid,
-      commissionAmount: r.commissionAmount,
-      stationPayout: r.stationPayout,
+      amountPaid: r.clientTotal ?? r.amountPaid,
+      commissionAmount: r.platformTotalRetained ?? r.commissionAmount,
+      stationPayout: r.stationTotalTransferred ?? r.stationPayout,
       stripePaymentId: r.stripePaymentId,
       stripeTransferId: r.stripeTransferId,
     });
@@ -151,4 +154,3 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
     weekEndISO: weekEnd.toISOString(),
   };
 }
-
