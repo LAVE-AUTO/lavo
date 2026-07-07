@@ -29,14 +29,6 @@ export type SeriesPoint = {
 };
 
 /**
- * Internal row returned by DATE_TRUNC queries.
- */
-type RawSeriesRow = {
-  date: Date | string;
-  value: string | number | null;
-};
-
-/**
  * Returns completed-reservation counts grouped by the requested granularity.
  *
  * @param from    - Start of the period (inclusive).
@@ -102,7 +94,7 @@ export async function getRevenueSeries(
 }
 
 /**
- * Returns total commissions for completed reservations grouped by granularity.
+ * Returns total platform retained amounts for completed reservations grouped by granularity.
  * Values are decimal strings.
  *
  * @param from    - Start of the period (inclusive).
@@ -118,7 +110,7 @@ export async function getCommissionsSeries(
   const rows = await db
     .select({
       date: sql<Date>`DATE_TRUNC(${sql.raw(GROUP_BY_SQL[groupBy])}, ${reservations.created_at})`,
-      value: sql<string>`COALESCE(SUM(${reservations.commission_amount}), 0.00)::numeric::text`,
+      value: sql<string>`COALESCE(SUM(${reservations.platform_total_retained}), 0.00)::numeric::text`,
     })
     .from(reservations)
     .where(

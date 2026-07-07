@@ -61,6 +61,18 @@ const row = {
   entry_type: 'reservation' as const,
   amount_paid: '25.00',
   commission_amount: '2.50',
+  station_service_total: '20.00',
+  platform_service_fee: '1.50',
+  taxable_subtotal: '21.50',
+  tps_amount: '1.08',
+  tvq_amount: '2.15',
+  client_total: '24.73',
+  platform_subtotal: '4.00',
+  platform_tax_amount: '0.60',
+  platform_total_retained: '4.60',
+  station_subtotal: '17.50',
+  station_tax_amount: '2.63',
+  station_total_transferred: '20.13',
   tip_amount: '1.50',
   stripe_payment_id: 'pi_123',
   station_name: 'Station Centrale',
@@ -161,6 +173,8 @@ describe('client-history-service', () => {
     expect(mockGetStripeReceiptUrl).toHaveBeenCalledWith('pi_123');
     expect(result.stripe_receipt_url).toBe('https://pay.stripe.com/receipts/pi_123');
     expect(result.app_receipt?.amount.total).toBe('25.00');
+    expect(result.app_receipt?.amount.currency).toBe('CAD');
+    expect(result.app_receipt?.amount.platform_service_fee).toBe('1.50');
     expect(result.app_receipt?.service.title).toBe('SUV - Station Centrale');
   });
 
@@ -213,6 +227,9 @@ describe('client-history-service', () => {
     expect(result.stripe_receipt_url).toBe('https://pay.stripe.com/receipts/pi_123');
     // First line uses the locale-aware receipt_title key.
     expect(result.text_lines[0]).toBe('Hurryline - Recu de reservation');
+    expect(result.text_lines).toContain('- Platform service fee: 1.50 CAD');
+    expect(result.text_lines).toContain('- TPS: 1.08 CAD');
+    expect(result.text_lines).toContain('- TVQ: 2.15 CAD');
   });
 
   it('returns english pdf labels when locale is en', async () => {
@@ -223,7 +240,8 @@ describe('client-history-service', () => {
 
     expect(result.text_lines[0]).toBe('Hurryline - Reservation Receipt');
     expect(result.text_lines[1]).toBe(`Reference: ${row.id}`);
-    expect(result.text_lines[7]).toBe('Entry type: reservation');
+    expect(result.text_lines).toContain('Items:');
+    expect(result.text_lines).toContain('- Platform service fee: 1.50 CAD');
   });
 
   it('returns fallback pdf text when app receipt is unavailable', async () => {

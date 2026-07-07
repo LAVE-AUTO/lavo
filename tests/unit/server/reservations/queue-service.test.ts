@@ -105,7 +105,19 @@ describe('queue-service', () => {
       mockComputeReservationSplit.mockResolvedValue({
         commissionRate: '0.10',
         commissionAmount: 1.5,
-        stationPayout: 13.5,
+        stationPayout: 15.53,
+        station_service_total: 15,
+        platform_service_fee: 1.5,
+        taxable_subtotal: 16.5,
+        tps_amount: 0.83,
+        tvq_amount: 1.65,
+        client_total: 18.98,
+        platform_subtotal: 3,
+        platform_tax_amount: 0.45,
+        platform_total_retained: 3.45,
+        station_subtotal: 13.5,
+        station_tax_amount: 2.03,
+        station_total_transferred: 15.53,
       });
       mockCreatePaymentIntent.mockResolvedValue({ paymentIntentId: 'pi_1', clientSecret: 'secret_1' });
       mockUpdatePaymentIntentMetadata.mockResolvedValue(undefined);
@@ -114,6 +126,22 @@ describe('queue-service', () => {
       const result = await joinQueue(userId, stationId, serviceId, null, stationStripeAccountId);
       expect(result.entry).toEqual(created);
       expect(result.clientSecret).toBe('secret_1');
+      expect(mockCreateQueueEntry).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amount_paid: '18.98',
+          station_service_total: '15.00',
+          platform_service_fee: '1.50',
+          client_total: '18.98',
+          station_total_transferred: '15.53',
+        }),
+        expect.anything(),
+      );
+      expect(mockCreatePaymentIntent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amountCents: 1898,
+          applicationFeeAmountCents: 345,
+        })
+      );
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ entryId, type: 'queue_joined' })
       );

@@ -261,6 +261,18 @@ export async function rescheduleReservation(
         commission_rate: reservation.commission_rate,
         commission_amount: reservation.commission_amount ?? undefined,
         station_payout: reservation.station_payout ?? undefined,
+        station_service_total: reservation.station_service_total ?? undefined,
+        platform_service_fee: reservation.platform_service_fee ?? undefined,
+        taxable_subtotal: reservation.taxable_subtotal ?? undefined,
+        tps_amount: reservation.tps_amount ?? undefined,
+        tvq_amount: reservation.tvq_amount ?? undefined,
+        client_total: reservation.client_total ?? undefined,
+        platform_subtotal: reservation.platform_subtotal ?? undefined,
+        platform_tax_amount: reservation.platform_tax_amount ?? undefined,
+        platform_total_retained: reservation.platform_total_retained ?? undefined,
+        station_subtotal: reservation.station_subtotal ?? undefined,
+        station_tax_amount: reservation.station_tax_amount ?? undefined,
+        station_total_transferred: reservation.station_total_transferred ?? undefined,
         stripe_payment_id: newStripePaymentId,
       },
       tx
@@ -403,9 +415,14 @@ export async function rescheduleReservation(
     }
 
     // Create a new PaymentIntent for the rescheduled reservation.
-    const amountCents = Math.round(amountPaid * 100);
-    const commissionRate = parseFloat(reservation.commission_rate);
-    const commissionCents = Math.round(amountPaid * commissionRate * 100);
+    const clientTotal = parseFloat(
+      reservation.client_total ?? reservation.amount_paid
+    );
+    const platformTotalRetained = parseFloat(
+      reservation.platform_total_retained ?? reservation.commission_amount ?? '0'
+    );
+    const amountCents = Math.round(clientTotal * 100);
+    const applicationFeeAmountCents = Math.round(platformTotalRetained * 100);
 
     try {
       const { paymentIntentId, clientSecret: cs } = await createPaymentIntent({
@@ -413,7 +430,7 @@ export async function rescheduleReservation(
         userId,
         stationId: reservation.station_id,
         stationStripeAccountId,
-        commissionCents,
+        applicationFeeAmountCents,
         metadata: {
           reservation_id: newEntry.id,
           time_slot_id: newTimeSlotId,

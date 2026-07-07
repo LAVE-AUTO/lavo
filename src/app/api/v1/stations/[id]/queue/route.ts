@@ -62,6 +62,21 @@ function serializeEntry(entry: {
   status: string;
   queue_position: number | null;
   amount_paid: string;
+  station_service_total: string;
+  platform_service_fee: string;
+  taxable_subtotal: string;
+  tps_amount: string;
+  tvq_amount: string;
+  client_total: string;
+  commission_rate: string;
+  commission_amount: string;
+  platform_subtotal: string;
+  platform_tax_amount: string;
+  platform_total_retained: string;
+  station_payout: string;
+  station_subtotal: string;
+  station_tax_amount: string;
+  station_total_transferred: string;
   created_at: Date;
 }) {
   return {
@@ -72,6 +87,21 @@ function serializeEntry(entry: {
     status: entry.status,
     queue_position: entry.queue_position,
     amount_paid: entry.amount_paid,
+    station_service_total: entry.station_service_total,
+    platform_service_fee: entry.platform_service_fee,
+    taxable_subtotal: entry.taxable_subtotal,
+    tps_amount: entry.tps_amount,
+    tvq_amount: entry.tvq_amount,
+    client_total: entry.client_total,
+    commission_rate: entry.commission_rate,
+    commission_amount: entry.commission_amount,
+    platform_subtotal: entry.platform_subtotal,
+    platform_tax_amount: entry.platform_tax_amount,
+    platform_total_retained: entry.platform_total_retained,
+    station_payout: entry.station_payout,
+    station_subtotal: entry.station_subtotal,
+    station_tax_amount: entry.station_tax_amount,
+    station_total_transferred: entry.station_total_transferred,
     created_at: entry.created_at,
   };
 }

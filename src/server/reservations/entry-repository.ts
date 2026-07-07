@@ -30,6 +30,18 @@ const RESERVATION_COLUMNS = {
   commission_rate: reservations.commission_rate,
   commission_amount: reservations.commission_amount,
   station_payout: reservations.station_payout,
+  station_service_total: reservations.station_service_total,
+  platform_service_fee: reservations.platform_service_fee,
+  taxable_subtotal: reservations.taxable_subtotal,
+  tps_amount: reservations.tps_amount,
+  tvq_amount: reservations.tvq_amount,
+  client_total: reservations.client_total,
+  platform_subtotal: reservations.platform_subtotal,
+  platform_tax_amount: reservations.platform_tax_amount,
+  platform_total_retained: reservations.platform_total_retained,
+  station_subtotal: reservations.station_subtotal,
+  station_tax_amount: reservations.station_tax_amount,
+  station_total_transferred: reservations.station_total_transferred,
   tip_amount: reservations.tip_amount,
   stripe_payment_id: reservations.stripe_payment_id,
   stripe_charge_id: reservations.stripe_charge_id,
@@ -65,6 +77,18 @@ export type CreateReservationEntryData = {
   commission_rate: string;
   commission_amount?: string;
   station_payout?: string;
+  station_service_total?: string;
+  platform_service_fee?: string;
+  taxable_subtotal?: string;
+  tps_amount?: string;
+  tvq_amount?: string;
+  client_total?: string;
+  platform_subtotal?: string;
+  platform_tax_amount?: string;
+  platform_total_retained?: string;
+  station_subtotal?: string;
+  station_tax_amount?: string;
+  station_total_transferred?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
   walk_in_client_email?: string | null;
@@ -83,6 +107,18 @@ export type CreateQueueEntryData = {
   commission_rate: string;
   commission_amount?: string;
   station_payout?: string;
+  station_service_total?: string;
+  platform_service_fee?: string;
+  taxable_subtotal?: string;
+  tps_amount?: string;
+  tvq_amount?: string;
+  client_total?: string;
+  platform_subtotal?: string;
+  platform_tax_amount?: string;
+  platform_total_retained?: string;
+  station_subtotal?: string;
+  station_tax_amount?: string;
+  station_total_transferred?: string;
   stripe_payment_id?: string | null;
   ticket_code?: string | null;
   walk_in_client_email?: string | null;
@@ -114,6 +150,18 @@ export async function createReservationEntry(
       commission_rate: data.commission_rate,
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
+      station_service_total: data.station_service_total ?? '0.00',
+      platform_service_fee: data.platform_service_fee ?? '0.00',
+      taxable_subtotal: data.taxable_subtotal ?? '0.00',
+      tps_amount: data.tps_amount ?? '0.00',
+      tvq_amount: data.tvq_amount ?? '0.00',
+      client_total: data.client_total ?? data.amount_paid,
+      platform_subtotal: data.platform_subtotal ?? '0.00',
+      platform_tax_amount: data.platform_tax_amount ?? '0.00',
+      platform_total_retained: data.platform_total_retained ?? '0.00',
+      station_subtotal: data.station_subtotal ?? '0.00',
+      station_tax_amount: data.station_tax_amount ?? '0.00',
+      station_total_transferred: data.station_total_transferred ?? data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
       walk_in_client_email: data.walk_in_client_email ?? null,
@@ -145,6 +193,18 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       commission_rate: data.commission_rate,
       commission_amount: data.commission_amount ?? '0.00',
       station_payout: data.station_payout ?? '0.00',
+      station_service_total: data.station_service_total ?? '0.00',
+      platform_service_fee: data.platform_service_fee ?? '0.00',
+      taxable_subtotal: data.taxable_subtotal ?? '0.00',
+      tps_amount: data.tps_amount ?? '0.00',
+      tvq_amount: data.tvq_amount ?? '0.00',
+      client_total: data.client_total ?? data.amount_paid,
+      platform_subtotal: data.platform_subtotal ?? '0.00',
+      platform_tax_amount: data.platform_tax_amount ?? '0.00',
+      platform_total_retained: data.platform_total_retained ?? '0.00',
+      station_subtotal: data.station_subtotal ?? '0.00',
+      station_tax_amount: data.station_tax_amount ?? '0.00',
+      station_total_transferred: data.station_total_transferred ?? data.station_payout ?? '0.00',
       stripe_payment_id: data.stripe_payment_id ?? null,
       ticket_code: data.ticket_code ?? null,
       walk_in_client_email: data.walk_in_client_email ?? null,
@@ -987,6 +1047,21 @@ export type RichEntry = {
   queue_position: number | null;
   ticket_code: string | null;
   amount_paid: string;
+  station_service_total: string;
+  platform_service_fee: string;
+  taxable_subtotal: string;
+  tps_amount: string;
+  tvq_amount: string;
+  client_total: string;
+  commission_rate: string;
+  commission_amount: string;
+  platform_subtotal: string;
+  platform_tax_amount: string;
+  platform_total_retained: string;
+  station_payout: string;
+  station_subtotal: string;
+  station_tax_amount: string;
+  station_total_transferred: string;
   created_at: Date;
   updated_at: Date;
   /** Completion timestamp set when the entry transitions to status='completed'. */
@@ -1096,6 +1171,21 @@ function mapToRichEntry(
     queue_position: r.queue_position as number | null,
     ticket_code: r.ticket_code as string | null,
     amount_paid: r.amount_paid as string,
+    station_service_total: r.station_service_total as string,
+    platform_service_fee: r.platform_service_fee as string,
+    taxable_subtotal: r.taxable_subtotal as string,
+    tps_amount: r.tps_amount as string,
+    tvq_amount: r.tvq_amount as string,
+    client_total: r.client_total as string,
+    commission_rate: r.commission_rate as string,
+    commission_amount: r.commission_amount as string,
+    platform_subtotal: r.platform_subtotal as string,
+    platform_tax_amount: r.platform_tax_amount as string,
+    platform_total_retained: r.platform_total_retained as string,
+    station_payout: r.station_payout as string,
+    station_subtotal: r.station_subtotal as string,
+    station_tax_amount: r.station_tax_amount as string,
+    station_total_transferred: r.station_total_transferred as string,
     created_at: r.created_at as Date,
     updated_at: r.updated_at as Date,
     completed_at: (r.completed_at as Date | null) ?? null,

@@ -11,6 +11,12 @@ export type TransactionLog = {
   amount: string;
   /** Platform commission taken. Only applies to reservations. */
   commission_amount: string | null;
+  client_total: string | null;
+  platform_total_retained: string | null;
+  station_total_transferred: string | null;
+  platform_service_fee: string | null;
+  tps_amount: string | null;
+  tvq_amount: string | null;
   status: string;
   created_at: Date;
 };
@@ -54,6 +60,12 @@ export async function listTransactionLogs(
         s.name                          AS station_name,
         r.amount_paid::text             AS amount,
         r.commission_amount::text       AS commission_amount,
+        r.client_total::text            AS client_total,
+        r.platform_total_retained::text AS platform_total_retained,
+        r.station_total_transferred::text AS station_total_transferred,
+        r.platform_service_fee::text    AS platform_service_fee,
+        r.tps_amount::text              AS tps_amount,
+        r.tvq_amount::text              AS tvq_amount,
         r.status,
         r.created_at
       FROM reservations r
@@ -72,6 +84,12 @@ export async function listTransactionLogs(
         s.name                          AS station_name,
         t.amount::text                  AS amount,
         NULL::text                      AS commission_amount,
+        NULL::text                      AS client_total,
+        NULL::text                      AS platform_total_retained,
+        NULL::text                      AS station_total_transferred,
+        NULL::text                      AS platform_service_fee,
+        NULL::text                      AS tps_amount,
+        NULL::text                      AS tvq_amount,
         t.status,
         t.created_at
       FROM reservation_tips t
@@ -90,6 +108,12 @@ export async function listTransactionLogs(
         s.name                          AS station_name,
         f.amount::text                  AS amount,
         NULL::text                      AS commission_amount,
+        NULL::text                      AS client_total,
+        NULL::text                      AS platform_total_retained,
+        NULL::text                      AS station_total_transferred,
+        NULL::text                      AS platform_service_fee,
+        NULL::text                      AS tps_amount,
+        NULL::text                      AS tvq_amount,
         f.status,
         f.created_at
       FROM no_show_fees f
@@ -106,6 +130,12 @@ export async function listTransactionLogs(
       station_name,
       amount,
       commission_amount,
+      client_total,
+      platform_total_retained,
+      station_total_transferred,
+      platform_service_fee,
+      tps_amount,
+      tvq_amount,
       status,
       created_at,
       COUNT(*) OVER() AS total_count
@@ -123,6 +153,12 @@ export async function listTransactionLogs(
     station_name: string | null;
     amount: string;
     commission_amount: string | null;
+    client_total: string | null;
+    platform_total_retained: string | null;
+    station_total_transferred: string | null;
+    platform_service_fee: string | null;
+    tps_amount: string | null;
+    tvq_amount: string | null;
     status: string;
     created_at: Date;
     total_count: string;
@@ -138,6 +174,12 @@ export async function listTransactionLogs(
     station_name: row.station_name,
     amount: row.amount,
     commission_amount: row.commission_amount,
+    client_total: row.client_total,
+    platform_total_retained: row.platform_total_retained,
+    station_total_transferred: row.station_total_transferred,
+    platform_service_fee: row.platform_service_fee,
+    tps_amount: row.tps_amount,
+    tvq_amount: row.tvq_amount,
     status: row.status,
     created_at: new Date(row.created_at),
   }));
