@@ -9,6 +9,7 @@ import type {
   StationServiceEntry,
   StationServiceExtra,
 } from '@/types/station';
+import type { FinancialSnapshot } from '@/types/financial';
 
 export default function ReceiptPreviewPage() {
   const [showModal, setShowModal] = useState(true);
@@ -31,6 +32,26 @@ export default function ReceiptPreviewPage() {
     { id: '2', name: 'Wax Finish', price: 12 },
   ] as unknown as StationServiceExtra[];
 
+  // Demo backend snapshot so the preview shows the real fiscal lines.
+  const snapshot: FinancialSnapshot = {
+    amountPaid: 82.78,
+    stationServiceTotal: 70,
+    platformServiceFee: 2,
+    taxableSubtotal: 72,
+    tpsAmount: 3.6,
+    tvqAmount: 7.18,
+    clientTotal: 82.78,
+    commissionRate: 0.1,
+    commissionAmount: 7,
+    platformSubtotal: 9,
+    platformTaxAmount: 1.35,
+    platformTotalRetained: 10.35,
+    stationPayout: 72.43,
+    stationSubtotal: 63,
+    stationTaxAmount: 9.43,
+    stationTotalTransferred: 72.43,
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0f0c] py-8 px-4">
       <div className={`max-w-5xl mx-auto ${bookingOnly || historyOnly ? 'grid gap-8 grid-cols-1 items-start justify-items-center' : 'grid gap-8 lg:grid-cols-2 items-start'}`}>
@@ -50,6 +71,7 @@ export default function ReceiptPreviewPage() {
             extrasTotal={20}
             surchargeAmount={5}
             grandTotal={70}
+            snapshot={snapshot}
             ticketCode="H7K9P2"
             queuePosition={4}
           />

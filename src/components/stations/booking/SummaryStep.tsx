@@ -156,9 +156,13 @@ export function SummaryStep({
             <span className="font-bold text-foreground">{totalDuration} min</span>
           </div>
           <div className="flex justify-between text-[18px]">
-            <span className="font-black text-foreground">{t('ticket_total')}</span>
+            <span className="font-black text-foreground">{t('summary_subtotal')}</span>
             <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
           </div>
+          {/* No backend quote endpoint exists before entry creation, so taxes and
+           * the platform service fee are only known at payment. Be explicit rather
+           * than recomputing them locally (frontend never computes TPS/TVQ). */}
+          <p className="text-[12px] text-foreground/60 leading-relaxed">{t('summary_taxes_note')}</p>
         </div>
       </div>
 

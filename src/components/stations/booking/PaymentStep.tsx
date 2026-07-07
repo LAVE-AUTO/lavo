@@ -5,12 +5,62 @@ import { useTranslations } from 'next-intl';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useTheme } from '@/context/theme-context';
+import { formatAmount, type FinancialSnapshot } from '@/types/financial';
 
 interface PaymentStepProps {
   grandTotal: number;
+  /** Backend-computed breakdown for the created entry. Null on the dev skip-payment path. */
+  snapshot: FinancialSnapshot | null;
   clientSecret: string | null;
   onConfirm: () => Promise<void>;
   onBack: () => void;
+}
+
+/**
+ * Total + tax/fee breakdown block. When the backend snapshot is available it
+ * renders the real fiscal lines and uses `client_total` as the total; otherwise
+ * it falls back to the locally computed service total (dev skip-payment path).
+ */
+function PaymentTotals({ snapshot, grandTotal }: { snapshot: FinancialSnapshot | null; grandTotal: number }) {
+  const t = useTranslations('booking');
+  const total = snapshot?.clientTotal ?? grandTotal;
+
+  return (
+    <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 space-y-2">
+      {snapshot && (
+        <div className="space-y-1.5 pb-2 border-b border-gold/40">
+          {snapshot.stationServiceTotal != null && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-foreground/70">{t('payment_line_service')}</span>
+              <span className="text-foreground/70">{formatAmount(snapshot.stationServiceTotal)}</span>
+            </div>
+          )}
+          {snapshot.platformServiceFee != null && snapshot.platformServiceFee > 0 && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-foreground/70">{t('payment_line_platform_fee')}</span>
+              <span className="text-foreground/70">{formatAmount(snapshot.platformServiceFee)}</span>
+            </div>
+          )}
+          {snapshot.tpsAmount != null && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-foreground/70">{t('payment_line_tps')}</span>
+              <span className="text-foreground/70">{formatAmount(snapshot.tpsAmount)}</span>
+            </div>
+          )}
+          {snapshot.tvqAmount != null && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-foreground/70">{t('payment_line_tvq')}</span>
+              <span className="text-foreground/70">{formatAmount(snapshot.tvqAmount)}</span>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex justify-between items-center">
+        <span className="text-[15px] font-bold text-foreground">{t('ticket_total')}</span>
+        <span className="text-[20px] font-black text-gold">{formatAmount(total)}</span>
+      </div>
+    </div>
+  );
 }
 
 // Lazy singleton: loadStripe is deferred until first client render to avoid
@@ -29,12 +79,13 @@ function getStripePromise() {
 
 interface StripeCardFormProps {
   grandTotal: number;
+  snapshot: FinancialSnapshot | null;
   clientSecret: string;
   onConfirm: () => Promise<void>;
   onBack: () => void;
 }
 
-function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeCardFormProps) {
+function StripeCardForm({ grandTotal, snapshot, clientSecret, onConfirm, onBack }: StripeCardFormProps) {
   const t = useTranslations('booking');
   const stripe = useStripe();
   const elements = useElements();
@@ -97,10 +148,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
           )}
         </div>
 
-        <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
-          <span className="text-[15px] font-bold text-foreground">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
-        </div>
+        <PaymentTotals snapshot={snapshot} grandTotal={grandTotal} />
       </div>
 
       <div className="border-t border-border pt-4 flex gap-3">
@@ -124,7 +172,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
               {t('payment_processing')}
             </span>
-          ) : t('payment_confirm', { amount: grandTotal })}
+          ) : t('payment_confirm', { amount: (snapshot?.clientTotal ?? grandTotal).toFixed(2) })}
         </button>
       </div>
     </div>
@@ -137,7 +185,7 @@ function StripeCardForm({ grandTotal, clientSecret, onConfirm, onBack }: StripeC
  *  In production, queue entries always go through StripeCardForm.
  * ------------------------------------------------------------------ */
 
-function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: number; onConfirm: () => Promise<void>; onBack: () => void }) {
+function QueueConfirmForm({ grandTotal, snapshot, onConfirm, onBack }: { grandTotal: number; snapshot: FinancialSnapshot | null; onConfirm: () => Promise<void>; onBack: () => void }) {
   const t = useTranslations('booking');
   const [processing, setProcessing] = useState(false);
 
@@ -155,10 +203,7 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-1 space-y-5 pb-4">
         <p className="text-[14px] text-foreground/70">{t('payment_queue_subtitle')}</p>
-        <div className="bg-gold/10 dark:bg-gold/5 border-2 border-gold rounded-xl p-4 flex justify-between items-center">
-          <span className="text-[15px] font-bold text-foreground">{t('ticket_total')}</span>
-          <span className="text-[20px] font-black text-gold">${grandTotal}</span>
-        </div>
+        <PaymentTotals snapshot={snapshot} grandTotal={grandTotal} />
       </div>
 
       <div className="border-t border-border pt-4 flex gap-3">
@@ -193,11 +238,11 @@ function QueueConfirmForm({ grandTotal, onConfirm, onBack }: { grandTotal: numbe
  *  Exported component
  * ------------------------------------------------------------------ */
 
-export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: PaymentStepProps) {
+export function PaymentStep({ grandTotal, snapshot, clientSecret, onConfirm, onBack }: PaymentStepProps) {
   const t = useTranslations('booking');
 
   if (!clientSecret) {
-    return <QueueConfirmForm grandTotal={grandTotal} onConfirm={onConfirm} onBack={onBack} />;
+    return <QueueConfirmForm grandTotal={grandTotal} snapshot={snapshot} onConfirm={onConfirm} onBack={onBack} />;
   }
 
   const resolvedStripePromise = getStripePromise();
@@ -225,6 +270,7 @@ export function PaymentStep({ grandTotal, clientSecret, onConfirm, onBack }: Pay
     <Elements stripe={resolvedStripePromise} options={{ clientSecret }}>
       <StripeCardForm
         grandTotal={grandTotal}
+        snapshot={snapshot}
         clientSecret={clientSecret}
         onConfirm={onConfirm}
         onBack={onBack}

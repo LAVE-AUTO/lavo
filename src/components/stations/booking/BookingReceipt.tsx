@@ -2,6 +2,7 @@
 
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslations } from 'next-intl';
+import { type FinancialSnapshot } from '@/types/financial';
 import type {
   StationDetailData,
   StationServicePublic,
@@ -24,6 +25,9 @@ interface BookingReceiptProps {
   extrasTotal: number;
   surchargeAmount: number;
   grandTotal: number;
+  /** Backend-computed breakdown. When present, its fiscal lines and client_total
+   *  are printed; otherwise the receipt falls back to the local service subtotal. */
+  snapshot: FinancialSnapshot | null;
   ticketCode: string;
   queuePosition: number | null;
 }
@@ -58,11 +62,25 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
   extrasTotal,
   surchargeAmount,
   grandTotal,
+  snapshot,
   ticketCode,
   queuePosition,
 }: BookingReceiptProps, ref) {
   const t = useTranslations('booking');
   const [copied, setCopied] = useState(false);
+
+  /* Total shown on the receipt: the backend client_total when available (includes
+   * platform fee + TPS + TVQ), otherwise the locally computed service subtotal. */
+  const receiptTotal = snapshot?.clientTotal ?? grandTotal;
+  const fiscalLines = snapshot
+    ? [
+        ...(snapshot.platformServiceFee != null && snapshot.platformServiceFee > 0
+          ? [{ label: t('payment_line_platform_fee'), amount: snapshot.platformServiceFee }]
+          : []),
+        ...(snapshot.tpsAmount != null ? [{ label: t('payment_line_tps'), amount: snapshot.tpsAmount }] : []),
+        ...(snapshot.tvqAmount != null ? [{ label: t('payment_line_tvq'), amount: snapshot.tvqAmount }] : []),
+      ]
+    : [];
 
   const escapeHtml = (s: string): string => String(s)
     .replace(/&/g, '&amp;')
@@ -107,6 +125,7 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
       ...(surchargeAmount > 0
         ? [{ label: t('receipt_reservation_surcharge'), value: `$${surchargeAmount.toFixed(2)}`, sub: '' }]
         : []),
+      ...fiscalLines.map((fl) => ({ label: fl.label, value: `$${fl.amount.toFixed(2)}`, sub: '' })),
     ];
 
     const subtotal = servicePrice + extrasTotal + surchargeAmount;
@@ -176,9 +195,9 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
       </div>
       <div class="total">
         <span class="total-l">${escapeHtml(t('receipt_total'))}</span>
-        <span class="total-v">$${grandTotal.toFixed(2)}</span>
+        <span class="total-v">$${receiptTotal.toFixed(2)}</span>
       </div>
-      ${subtotal !== grandTotal ? `<div style="margin-top:8px;font-size:11px;color:#6b7668;text-align:right">${escapeHtml(t('receipt_subtotal'))}: $${subtotal.toFixed(2)}</div>` : ''}
+      ${subtotal !== receiptTotal ? `<div style="margin-top:8px;font-size:11px;color:#6b7668;text-align:right">${escapeHtml(t('receipt_subtotal'))}: $${subtotal.toFixed(2)}</div>` : ''}
       <div class="code">
         <div class="code-badge">${escapeHtml(t('receipt_ticket_label'))}</div>
         <div class="code-value">${escapeHtml(ticketCode)}</div>
@@ -268,6 +287,14 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
               </div>
             )}
 
+            {/* Backend fiscal lines: platform service fee, TPS, TVQ (when available). */}
+            {fiscalLines.map((fl) => (
+              <div key={fl.label} className="flex items-baseline justify-between gap-3 text-[13px] text-[#FFEECA]">
+                <span>{fl.label}</span>
+                <span className="font-mono shrink-0">${fl.amount.toFixed(2)}</span>
+              </div>
+            ))}
+
             {extrasTotal > 0 || surchargeAmount > 0 ? (
               <div className="flex items-baseline justify-between gap-3 text-[12px] text-[#B0BFB1] pt-1">
                 <span>{t('receipt_subtotal')}</span>
@@ -281,7 +308,7 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
             <span className="text-[13px] font-black uppercase tracking-wider text-[#a7ad98]">
               {t('receipt_total')}
             </span>
-            <span className="text-[20px] font-black text-[#DDAF3B]">${grandTotal.toLocaleString()}</span>
+            <span className="text-[20px] font-black text-[#DDAF3B]">${receiptTotal.toFixed(2)}</span>
           </div>
 
           {/* Ticket code - copy button lives inside the box, to the right of the code */}

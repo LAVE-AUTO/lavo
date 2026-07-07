@@ -12,12 +12,21 @@ import { PaymentStep } from './PaymentStep';
 import { BookingReceipt, generateTicketCode, type BookingReceiptHandle } from './BookingReceipt';
 import { useUserLocation } from '../useUserLocation';
 import { postWithApi } from '@/services/axios-service';
+import { parseFinancialSnapshot, type FinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
 import type {
   StationDetailData,
   StationServicePublic,
   StationServiceEntry,
   TimeSlot,
 } from '@/types/station';
+
+/** Booking-creation response body: the full financial snapshot plus payment fields. */
+type BookingCreationData = RawFinancialSnapshot & {
+  reservation_id?: string;
+  stripe_client_secret?: string;
+  client_secret?: string;
+  ticket_code?: string | null;
+};
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
 type Step = 'service' | 'format' | 'extras' | 'arrival' | 'summary' | 'payment';
@@ -82,6 +91,10 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  /* Backend-computed financial breakdown (service total, platform fee, TPS, TVQ,
+   * client total) returned by the create endpoints. The frontend only displays
+   * these values; it never recomputes taxes locally. */
+  const [snapshot, setSnapshot] = useState<FinancialSnapshot | null>(null);
 
   const needsFormat = selectedService?.category === 'hand_wash';
   /* The extras step is part of the flow only when the selected service offers
@@ -184,13 +197,14 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
   const handleSummaryContinue = useCallback(async () => {
     setClientSecret(null);
     setSummaryError(null);
+    setSnapshot(null);
 
     const isQueueMode = arrivalMode === 'queue_now' || arrivalMode === 'queue_later';
 
     if (isQueueMode) {
       if (devSkipPayment) { goNext(); return; }
       setSummaryLoading(true);
-      const [ok, data] = await postWithApi<{ data: { client_secret: string; ticket_code?: string | null } }>(
+      const [ok, data] = await postWithApi<{ data: BookingCreationData }>(
         `/stations/${station.id}/queue/join`,
         {
           service_id: selectedService!.id,
@@ -205,9 +219,10 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
         );
         return;
       }
-      const queueData = data as { data: { client_secret: string; ticket_code?: string | null } };
+      const queueData = data as { data: BookingCreationData };
       setClientSecret(queueData.data?.client_secret ?? null);
       setTicketCode(queueData.data?.ticket_code ?? null);
+      setSnapshot(queueData.data ? parseFinancialSnapshot(queueData.data) : null);
       goNext();
       return;
     }
@@ -229,7 +244,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       reservationPayload.qr_token = qrToken;
       reservationPayload.v = qrVersion;
     }
-    const [ok, data] = await postWithApi<{ data: { reservation_id: string; stripe_client_secret: string; ticket_code?: string | null } }>(
+    const [ok, data] = await postWithApi<{ data: BookingCreationData }>(
       `/stations/${station.id}/reservations`,
       reservationPayload,
     );
@@ -241,9 +256,10 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       else setSummaryError(t('error_reservation_failed'));
       return;
     }
-    const resData = data as { data: { reservation_id: string; stripe_client_secret: string; ticket_code?: string | null } };
+    const resData = data as { data: BookingCreationData };
     setClientSecret(resData.data?.stripe_client_secret ?? null);
     setTicketCode(resData.data?.ticket_code ?? null);
+    setSnapshot(resData.data ? parseFinancialSnapshot(resData.data) : null);
     goNext();
   }, [arrivalMode, station.id, selectedService, selectedEntry, selectedSlot, qrToken, qrVersion, devSkipPayment, goNext, t]);
 
@@ -381,6 +397,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
         return (
           <PaymentStep
             grandTotal={grandTotal}
+            snapshot={snapshot}
             clientSecret={clientSecret}
             onConfirm={handlePaymentConfirm}
             onBack={goBack}
@@ -452,6 +469,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
               extrasTotal={extrasTotal}
               surchargeAmount={surchargeAmount}
               grandTotal={grandTotal}
+              snapshot={snapshot}
               ticketCode={ticketCode}
               queuePosition={arrivalMode === 'queue_later' ? station.queueCount + 1 : null}
             />
