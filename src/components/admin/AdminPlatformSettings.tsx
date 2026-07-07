@@ -96,6 +96,9 @@ const DEFAULTS = {
   rating_window_days: 7,
   max_advance_booking_days: 7,
 
+  // Frais de service plateforme (montant fixe CAD ajouté à chaque commande)
+  platform_service_fee: 0,
+
   // Group C — Notifications & Emails
   admin_notification_email: '',
   weekly_report_email: '',
@@ -137,6 +140,9 @@ export function AdminPlatformSettings() {
   const [reminderFirst, setReminderFirst]         = useState(DEFAULTS.reminder_first_window_hours);
   const [reminderSecond, setReminderSecond]       = useState(DEFAULTS.reminder_second_window_minutes);
 
+  // Frais de service plateforme
+  const [platformServiceFee, setPlatformServiceFee] = useState(DEFAULTS.platform_service_fee);
+
   // Group D — Limites & KYC
   const [maxTip, setMaxTip]               = useState(DEFAULTS.max_tip_amount_xaf);
   const [kycFirst, setKycFirst]           = useState(DEFAULTS.kyc_reminder_first_threshold_days);
@@ -167,6 +173,7 @@ export function AdminPlatformSettings() {
         const dw   = i('dispute_window_days');
         const rw   = i('rating_window_days');
         const ma   = i('max_advance_booking_days');
+        const psf  = p('platform_service_fee');
         const ae   = s('admin_notification_email');
         const re   = s('weekly_report_email');
         const rf   = i('reminder_first_window_hours');
@@ -185,6 +192,7 @@ export function AdminPlatformSettings() {
           dispute_window_days:                    dw  ?? DEFAULTS.dispute_window_days,
           rating_window_days:                     rw  ?? DEFAULTS.rating_window_days,
           max_advance_booking_days:               ma  ?? DEFAULTS.max_advance_booking_days,
+          platform_service_fee:                   psf ?? DEFAULTS.platform_service_fee,
           admin_notification_email:               ae  ?? DEFAULTS.admin_notification_email,
           weekly_report_email:                    re  ?? DEFAULTS.weekly_report_email,
           reminder_first_window_hours:            rf  ?? DEFAULTS.reminder_first_window_hours,
@@ -201,6 +209,7 @@ export function AdminPlatformSettings() {
         setDisputeWindow(next.dispute_window_days);
         setRatingWindow(next.rating_window_days);
         setMaxAdvance(next.max_advance_booking_days);
+        setPlatformServiceFee(next.platform_service_fee);
         setAdminEmail(next.admin_notification_email);
         setReportEmail(next.weekly_report_email);
         setReminderFirst(next.reminder_first_window_hours);
@@ -229,6 +238,7 @@ export function AdminPlatformSettings() {
     disputeWindow  !== committed.dispute_window_days ||
     ratingWindow   !== committed.rating_window_days ||
     maxAdvance     !== committed.max_advance_booking_days ||
+    platformServiceFee !== committed.platform_service_fee ||
     adminEmail     !== committed.admin_notification_email ||
     reportEmail    !== committed.weekly_report_email ||
     reminderFirst  !== committed.reminder_first_window_hours ||
@@ -247,6 +257,7 @@ export function AdminPlatformSettings() {
     if (disputeWindow < 1)                   return t('error_dispute_window_range');
     if (ratingWindow < 1)                    return t('error_rating_window_range');
     if (maxAdvance < 1 || maxAdvance > 7)    return t('error_max_advance_range');
+    if (platformServiceFee < 0)              return t('error_platform_service_fee_range');
     if (adminEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) return t('error_email_invalid');
     if (reportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reportEmail)) return t('error_email_invalid');
     if (reminderFirst < 1)                   return t('error_reminder_first_range');
@@ -275,6 +286,7 @@ export function AdminPlatformSettings() {
         dispute_window_days:                 String(disputeWindow),
         rating_window_days:                  String(ratingWindow),
         max_advance_booking_days:            String(maxAdvance),
+        platform_service_fee:                platformServiceFee.toFixed(2),
         admin_notification_email:            adminEmail,
         weekly_report_email:                 reportEmail,
         reminder_first_window_hours:         String(reminderFirst),
@@ -296,6 +308,7 @@ export function AdminPlatformSettings() {
           dispute_window_days:                    disputeWindow,
           rating_window_days:                     ratingWindow,
           max_advance_booking_days:               maxAdvance,
+          platform_service_fee:                   platformServiceFee,
           admin_notification_email:               adminEmail,
           weekly_report_email:                    reportEmail,
           reminder_first_window_hours:            reminderFirst,
@@ -473,6 +486,15 @@ export function AdminPlatformSettings() {
 
         {/* ── Groupe D — Pourboires & KYC ── */}
         <SectionCard title={t('section_limits')} icon={iconLimits} colSpan="xl:col-span-1">
+          <NumericField
+            label={t('field_platform_service_fee')}
+            hint={t('hint_platform_service_fee')}
+            value={platformServiceFee}
+            unit="CAD"
+            min={0}
+            step={0.5}
+            onChange={setPlatformServiceFee}
+          />
           <NumericField
             label={t('field_max_tip')}
             hint={t('hint_max_tip')}
