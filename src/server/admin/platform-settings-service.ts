@@ -71,6 +71,8 @@ const CANCELLATION_FREE_WINDOW_MAX_MINUTES = 7 * 24 * 60;
 
 const COMMISSION_RATE_MIN = 0;
 const COMMISSION_RATE_MAX = 1;
+const PLATFORM_SERVICE_FEE_MIN = 0;
+const DEFAULT_PLATFORM_SERVICE_FEE = "0.00";
 
 // %%%%% Commission rate %%%%%
 // Active commission rate with fallback to defaults
@@ -376,6 +378,31 @@ export async function getPlatformSettingWithFallback(
     expiresAt: Date.now() + SETTING_CACHE_TTL_MS,
   });
   return dbValue ?? process.env[envVar] ?? defaultValue;
+}
+
+/**
+ * Returns the configured platform service fee as a normalized decimal string.
+ *
+ * Source order:
+ *   1. settings table (`platform_service_fee`)
+ *   2. `PLATFORM_SERVICE_FEE` environment variable
+ *   3. hardcoded fallback `0.00`
+ *
+ * Invalid or negative values fall back to `0.00` so read paths remain safe.
+ */
+export async function getPlatformServiceFee(): Promise<string> {
+  const raw = await getPlatformSettingWithFallback(
+    "platform_service_fee",
+    "PLATFORM_SERVICE_FEE",
+    DEFAULT_PLATFORM_SERVICE_FEE,
+  );
+
+  const parsed = parseFloat(String(raw));
+  if (!Number.isFinite(parsed) || parsed < PLATFORM_SERVICE_FEE_MIN) {
+    return DEFAULT_PLATFORM_SERVICE_FEE;
+  }
+
+  return parsed.toFixed(2);
 }
 
 // %%%%% Bulk operations %%%%%

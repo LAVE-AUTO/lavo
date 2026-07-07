@@ -142,6 +142,18 @@ describe('PATCH /api/v1/admin/settings', () => {
     );
   });
 
+  it('returns 200 on valid platform_service_fee update', async () => {
+    const res = await PATCH(makePatchRequest({ platform_service_fee: '1.99' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.message).toBe('Platform settings updated');
+    expect(mockUpdatePlatformSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ platform_service_fee: '1.99' }),
+      ADMIN_AUTH.sub
+    );
+  });
+
   // --- Penalty rate auto-sync: single platform rate provided ---
 
   it('returns 200 when only cancellation_penalty_platform_rate is provided (station rate auto-sync)', async () => {
@@ -256,6 +268,15 @@ describe('PATCH /api/v1/admin/settings', () => {
 
     expect(res.status).toBe(400);
     expect(body.code).toBe('VALIDATION_FAILED');
+  });
+
+  it('returns 400 when platform_service_fee is negative', async () => {
+    const res = await PATCH(makePatchRequest({ platform_service_fee: '-1.00' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdatePlatformSettings).not.toHaveBeenCalled();
   });
 
   // --- Auth ---
