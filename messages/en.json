@@ -1364,12 +1364,17 @@
         "receipt_service_unknown": "Service not specified",
         "receipt_service_generic": "Hurryline wash service",
         "receipt_tip": "Tip",
+        "receipt_tip_separate": "Tip (charged separately)",
+        "receipt_platform_fee": "Service fee",
+        "receipt_tps": "GST",
+        "receipt_tvq": "QST",
         "receipt_items": "Details",
         "receipt_subtotal_line": "Subtotal",
         "detail_close": "Close",
         "kpi_completed_x": "{count, plural, one {# completed service} other {# completed services}}",
         "amount_paid": "Amount",
-        "includes_tip": "incl. {amount} tip"
+        "includes_tip": "incl. {amount} tip",
+        "plus_tip": "+ {amount} tip"
     },
     "faq_page": {
         "meta_title": "Frequently Asked Questions - Hurryline",

@@ -1364,12 +1364,17 @@
         "receipt_service_unknown": "Service non précisé",
         "receipt_service_generic": "Service de lavage Hurryline",
         "receipt_tip": "Pourboire",
+        "receipt_tip_separate": "Pourboire (réglé séparément)",
+        "receipt_platform_fee": "Frais de service",
+        "receipt_tps": "TPS",
+        "receipt_tvq": "TVQ",
         "receipt_items": "Détails",
         "receipt_subtotal_line": "Sous-total",
         "detail_close": "Fermer",
         "kpi_completed_x": "{count, plural, one {# service terminé} other {# services terminés}}",
         "amount_paid": "Montant",
-        "includes_tip": "{amount} de pourboire"
+        "includes_tip": "{amount} de pourboire",
+        "plus_tip": "+ {amount} de pourboire"
     },
     "faq_page": {
         "meta_title": "Foire aux questions - Hurryline",

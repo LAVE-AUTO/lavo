@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { parseFinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
 import { ReceiptModal } from './ReceiptModal';
 import { HistoryCard, type HistoryReservation } from './HistoryCard';
 import { PageSpinner } from '@/components/ui/PageSpinner';
@@ -11,7 +12,7 @@ import { PageSpinner } from '@/components/ui/PageSpinner';
 type PeriodKey = 'all' | 'week' | 'month' | '3months' | 'year';
 type StatusKey = 'all' | 'completed' | 'cancelled';
 
-type HistoryApiEntry = {
+type HistoryApiEntry = RawFinancialSnapshot & {
   id: string;
   title: string;
   status: string;
@@ -21,7 +22,6 @@ type HistoryApiEntry = {
   vehicle_format_label: string | null;
   service_name: string | null;
   service_category: string | null;
-  amount_paid: string;
   tip_amount?: string | null;
 };
 
@@ -76,6 +76,7 @@ export function ClientHistoryView() {
             entryType: entry.entry_type,
             amountPaid: Number.parseFloat(entry.amount_paid) || 0,
             tipAmount: entry.tip_amount != null ? Number.parseFloat(entry.tip_amount) || 0 : null,
+            breakdown: parseFinancialSnapshot(entry),
             status: entry.status as HistoryReservation['status'],
             createdAt: entry.created_at,
           })),

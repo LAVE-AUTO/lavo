@@ -94,8 +94,9 @@ export default function ReceiptPreviewPage() {
                 serviceName: 'Premium hand wash',
                 serviceCategory: 'hand_wash',
                 entryType: 'reservation',
-                amountPaid: 70,
+                amountPaid: 82.78,
                 tipAmount: 6,
+                breakdown: snapshot,
                 status: 'completed',
                 createdAt: new Date('2026-05-16T14:00:00.000Z').toISOString(),
               }}

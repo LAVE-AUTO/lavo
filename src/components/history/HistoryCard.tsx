@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import type { FinancialSnapshot } from '@/types/financial';
 
 export interface HistoryReservation {
   id: string;
@@ -10,9 +11,12 @@ export interface HistoryReservation {
   serviceName: string | null;
   serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
+  /** Reservation/queue total (== client_total). Excludes the tip, which is a separate charge. */
   amountPaid: number;
-  /** Tip portion of amountPaid; surfaced separately in the receipt. */
+  /** Tip charged separately from amountPaid; surfaced as its own line on the receipt. */
   tipAmount: number | null;
+  /** Backend tax/fee breakdown for the receipt. Null for legacy entries without one. */
+  breakdown: FinancialSnapshot | null;
   status: 'completed' | 'cancelled';
   createdAt: string;
 }
@@ -147,7 +151,7 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
               </p>
               {e.tipAmount != null && e.tipAmount > 0 && (
                 <p className="text-[10.5px] font-semibold text-foreground/55 dark:text-[#B0BFB1] mt-0.5">
-                  {t('includes_tip', { amount: formatAmount(e.tipAmount, locale) })}
+                  {t('plus_tip', { amount: formatAmount(e.tipAmount, locale) })}
                 </p>
               )}
             </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, getAxiosInstance } from '@/services/axios-service';
+import type { FinancialSnapshot } from '@/types/financial';
 
 interface HistoryReservation {
   id: string;
@@ -12,9 +13,12 @@ interface HistoryReservation {
   serviceName: string | null;
   serviceCategory: string | null;
   entryType: 'reservation' | 'queue';
+  /** Reservation/queue total (== client_total). Excludes the tip, a separate charge. */
   amountPaid: number;
-  /** Tip portion of amountPaid, surfaced as a separate line. Optional. */
+  /** Tip charged separately from amountPaid, surfaced as its own line. Optional. */
   tipAmount?: number | null;
+  /** Backend tax/fee breakdown. When present, the receipt prints its real lines. */
+  breakdown?: FinancialSnapshot | null;
   status: 'completed' | 'cancelled';
   createdAt: string;
 }
@@ -102,10 +106,25 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
   const isCompleted = e.status === 'completed';
 
-  /* Items breakdown: service line first (subtotal = total - tip) and an
-   * optional tip line. Commission is internal accounting and never shown. */
+  /* Items breakdown. When the backend snapshot is present we print the real
+   * fiscal lines (service, platform fee, TPS, TVQ) and use client_total as the
+   * reservation total. The tip is a separate charge, always shown on its own
+   * line. Commission and platform/station shares are internal and never shown. */
   const tipAmount = Number(e.tipAmount ?? 0);
-  const subtotal = Math.max(0, e.amountPaid - tipAmount);
+  const b = e.breakdown ?? null;
+  const hasBreakdown = b != null && b.clientTotal != null && b.clientTotal > 0;
+  const serviceAmount = hasBreakdown ? (b.stationServiceTotal ?? e.amountPaid) : e.amountPaid;
+  const reservationTotal = hasBreakdown ? (b.clientTotal ?? e.amountPaid) : e.amountPaid;
+  /* Fiscal lines rendered between the service line and the total. */
+  const fiscalLines: { label: string; amount: number }[] = hasBreakdown
+    ? [
+        ...(b.platformServiceFee != null && b.platformServiceFee > 0
+          ? [{ label: t('receipt_platform_fee'), amount: b.platformServiceFee }]
+          : []),
+        ...(b.tpsAmount != null ? [{ label: t('receipt_tps'), amount: b.tpsAmount }] : []),
+        ...(b.tvqAmount != null ? [{ label: t('receipt_tvq'), amount: b.tvqAmount }] : []),
+      ]
+    : [];
 
   const handleDownload = async () => {
     // If Stripe receipt URL is available, open it directly
@@ -519,12 +538,12 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               <div class="item-title">${escapeHtml(serviceLabel)}</div>
               <div class="item-sub">${escapeHtml(vehicleLine)} &middot; ${escapeHtml(typeLabel)}</div>
             </td>
-            <td class="amount-cell">$${subtotal.toFixed(2)}</td>
+            <td class="amount-cell">$${serviceAmount.toFixed(2)}</td>
           </tr>
-          ${tipAmount > 0 ? `<tr>
-            <td><div class="item-title">${escapeHtml(t('receipt_tip'))}</div></td>
-            <td class="amount-cell amount-secondary">$${tipAmount.toFixed(2)}</td>
-          </tr>` : ''}
+          ${fiscalLines.map((fl) => `<tr>
+            <td><div class="item-title">${escapeHtml(fl.label)}</div></td>
+            <td class="amount-cell amount-secondary">$${fl.amount.toFixed(2)}</td>
+          </tr>`).join('')}
           <tr>
             <td><div class="item-title item-secondary">${t('receipt_status')}</div></td>
             <td class="amount-cell"><span class="status-chip status-${e.status}">${t(`status_${e.status}`)}</span></td>
@@ -533,14 +552,14 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       </table>
 
       <div class="total-block">
-        ${tipAmount > 0 ? `<div class="subtotal-line">
-          <span class="subtotal-label">${t('receipt_subtotal_line')}</span>
-          <span class="subtotal-amount">$${subtotal.toFixed(2)}</span>
-        </div>` : ''}
         <div class="total-line">
           <span class="total-label">${t('receipt_total')}</span>
-          <span class="total-amount">$${e.amountPaid.toFixed(2)}</span>
+          <span class="total-amount">$${reservationTotal.toFixed(2)}</span>
         </div>
+        ${tipAmount > 0 ? `<div class="subtotal-line" style="border-bottom:none;border-top:1px solid rgba(122,154,125,0.25);padding-top:10px;margin-top:10px;margin-bottom:0">
+          <span class="subtotal-label">${t('receipt_tip_separate')}</span>
+          <span class="subtotal-amount">$${tipAmount.toFixed(2)}</span>
+        </div>` : ''}
       </div>
 
     </div>
@@ -641,15 +660,15 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                     <div className="text-[13px] font-bold text-[#FFEECA] truncate">{serviceLabel}</div>
                     <div className="text-[11px] text-[#B0BFB1] mt-0.5">{vehicleLine} · {typeLabel}</div>
                   </div>
-                  <span className="text-[13px] font-mono font-bold text-[#FFEECA] whitespace-nowrap">${subtotal.toFixed(2)}</span>
+                  <span className="text-[13px] font-mono font-bold text-[#FFEECA] whitespace-nowrap">${serviceAmount.toFixed(2)}</span>
                 </div>
-                {/* Tip line (only when present) */}
-                {tipAmount > 0 && (
-                  <div className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#001A05]">
-                    <div className="text-[13px] font-semibold text-[#FFEECA]">{t('receipt_tip')}</div>
-                    <span className="text-[13px] font-mono font-semibold text-[#FFEECA] whitespace-nowrap">${tipAmount.toFixed(2)}</span>
+                {/* Backend fiscal lines: platform service fee, TPS, TVQ */}
+                {fiscalLines.map((fl) => (
+                  <div key={fl.label} className="flex items-start justify-between gap-4 px-3.5 py-3 border-b border-[#001A05]">
+                    <div className="text-[13px] font-semibold text-[#B0BFB1]">{fl.label}</div>
+                    <span className="text-[13px] font-mono font-semibold text-[#FFEECA] whitespace-nowrap">${fl.amount.toFixed(2)}</span>
                   </div>
-                )}
+                ))}
                 {/* Status row */}
                 <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
                   <span className="text-[11px] font-bold text-[#B0BFB1] uppercase tracking-wide">{t('receipt_status')}</span>
@@ -660,18 +679,18 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
               </div>
             </div>
 
-            {/* Subtotal + Total */}
+            {/* Total + optional separate tip */}
             <div className="rounded-2xl bg-dark-bg border border-[#001A05] px-4 py-3 space-y-2">
-              {tipAmount > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#B0BFB1] uppercase tracking-wider">{t('receipt_subtotal_line')}</span>
-                  <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">${subtotal.toFixed(2)}</span>
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#B0BFB1] uppercase tracking-widest">{t('receipt_total')}</span>
-                <span className="text-[26px] font-black text-[#DDAF3B] leading-none whitespace-nowrap">${e.amountPaid.toFixed(2)}</span>
+                <span className="text-[26px] font-black text-[#DDAF3B] leading-none whitespace-nowrap">${reservationTotal.toFixed(2)}</span>
               </div>
+              {tipAmount > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-[#001A05]">
+                  <span className="text-[11px] font-semibold text-[#B0BFB1] uppercase tracking-wider">{t('receipt_tip_separate')}</span>
+                  <span className="text-[13px] font-mono text-[#C0C0B0] whitespace-nowrap">${tipAmount.toFixed(2)}</span>
+                </div>
+              )}
             </div>
 
             <p className="text-[11px] text-[#B0BFB1] text-center pb-1">{t('receipt_footer')}</p>
