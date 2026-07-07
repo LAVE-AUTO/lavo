@@ -25,9 +25,11 @@ const mockListEntriesByUserPaginated = jest.fn();
 const mockHasActiveEntryAtStation = jest.fn();
 const mockUpdateEntry = jest.fn();
 const mockDecrementSlotBookedCount = jest.fn();
+const mockCancelExpiredPendingPaymentsForSlot = jest.fn();
 
 jest.mock('@/server/admin/platform-settings-service', () => ({
   getActiveCommissionRate: jest.fn().mockResolvedValue('0.10'),
+  getPlatformServiceFee: jest.fn().mockResolvedValue('0.00'),
   getPlatformSetting: jest.fn().mockResolvedValue(null),
   getPlatformSettingWithFallback: jest.fn().mockResolvedValue('7'),
   isAdminEscrowPushEnabled: jest.fn().mockResolvedValue(false),
@@ -91,6 +93,8 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   repositionQueueEntry: jest.fn(),
   getNextQueuePosition: jest.fn().mockResolvedValue(1),
   createQueueEntry: jest.fn(),
+  cancelExpiredPendingPaymentsForSlot: (...args: unknown[]) =>
+    mockCancelExpiredPendingPaymentsForSlot(...args),
   setStripePaymentSucceededNotifiedAtIfMissing: (...args: unknown[]) =>
     mockSetStripePaymentSucceededNotifiedAtIfMissing(...args),
   clearStripePaymentSucceededNotifiedAt: (...args: unknown[]) =>
@@ -129,6 +133,7 @@ describe('reservation-service', () => {
     mockHasActiveEntryAtStation.mockResolvedValue(false);
     mockHasActiveReservationForSlot.mockResolvedValue(false);
     mockFindPendingPaymentReservationForSlot.mockResolvedValue(null);
+    mockCancelExpiredPendingPaymentsForSlot.mockResolvedValue([]);
     mockFindServiceByIdAndStation.mockResolvedValue({ id: formatId });
     mockFindServiceVehicleEntryForBooking.mockResolvedValue({ price: '10', is_active: true });
     mockCreatePaymentIntent.mockResolvedValue({ paymentIntentId: 'pi_default', clientSecret: 'secret_default' });
@@ -200,12 +205,17 @@ describe('reservation-service', () => {
       expect(result.entry.stripe_payment_id).toBe('pi_123');
       expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
       expect(mockCreateReservationEntry).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'pending_payment', booking_source: 'standard' }),
+        expect.objectContaining({
+          status: 'pending_payment',
+          booking_source: 'standard',
+          station_service_total: expect.any(String),
+          taxable_subtotal: expect.any(String),
+          client_total: expect.any(String),
+          station_total_transferred: expect.any(String),
+        }),
         expect.anything()
       );
-      expect(mockNotifyEntry).toHaveBeenCalledWith(
-        expect.objectContaining({ entryId, type: 'reservation_created' })
-      );
+      expect(mockNotifyEntry).not.toHaveBeenCalled();
     });
 
     it('propagates Stripe error without any DB side effects (Stripe-first pattern)', async () => {
@@ -247,7 +257,10 @@ describe('reservation-service', () => {
           booking_source: 'qr',
           commission_rate: '0.0000',
           commission_amount: '0.00',
-          station_payout: '12.00',
+          amount_paid: '13.80',
+          station_payout: '13.80',
+          station_service_total: '12.00',
+          client_total: '13.80',
         }),
         expect.anything()
       );

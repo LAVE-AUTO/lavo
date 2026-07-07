@@ -90,6 +90,27 @@ function parseDecimal(s: string | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function mapSplitToEntryFinancialSnapshot(split: Awaited<ReturnType<typeof computeReservationSplit>>) {
+  return {
+    amount_paid: toDecimal(split.client_total),
+    commission_rate: split.commissionRate,
+    commission_amount: toDecimal(split.commissionAmount),
+    station_payout: toDecimal(split.station_total_transferred),
+    station_service_total: toDecimal(split.station_service_total),
+    platform_service_fee: toDecimal(split.platform_service_fee),
+    taxable_subtotal: toDecimal(split.taxable_subtotal),
+    tps_amount: toDecimal(split.tps_amount),
+    tvq_amount: toDecimal(split.tvq_amount),
+    client_total: toDecimal(split.client_total),
+    platform_subtotal: toDecimal(split.platform_subtotal),
+    platform_tax_amount: toDecimal(split.platform_tax_amount),
+    platform_total_retained: toDecimal(split.platform_total_retained),
+    station_subtotal: toDecimal(split.station_subtotal),
+    station_tax_amount: toDecimal(split.station_tax_amount),
+    station_total_transferred: toDecimal(split.station_total_transferred),
+  };
+}
+
 /**
  * Reads the max advance booking days setting and returns the cutoff in milliseconds.
  * Stripe card authorizations expire after 7 days, so bookings beyond this window must be rejected.
@@ -306,11 +327,8 @@ export async function createReservation(
         service_id: serviceId,
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: split.bookingSource,
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
         ticket_code: generateTicketCode(),
       },
@@ -459,11 +477,8 @@ export async function createReservationByStartTime(
         post_id: fresh.post_id,
         time_slot_id: slot.id,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: split.bookingSource,
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
         ticket_code: generateTicketCode(),
       },
@@ -904,11 +919,8 @@ export async function upgradeQueueToReservation(
         time_slot_id: timeSlotId,
         queue_position: null,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: 'standard',
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
       },
       tx
@@ -1053,11 +1065,8 @@ export async function upgradeQueueToReservationByStartTime(
         time_slot_id: slot.id,
         queue_position: null,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: 'standard',
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
       },
       tx
