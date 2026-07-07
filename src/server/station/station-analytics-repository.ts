@@ -68,7 +68,7 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
     // KPIs from completed reservations this month
     db
       .select({
-        total_revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`,
+        total_revenue: sql<string>`COALESCE(SUM(${reservations.station_total_transferred}), 0)::text`,
         total_clients: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,
         total_completed: sql<number>`COUNT(*)::int`,
       })
@@ -112,7 +112,7 @@ export async function getDashboardKpis(stationId: string): Promise<DashboardKpis
     // Previous period: revenue and client count (last calendar month)
     db
       .select({
-        revenue_previous_period: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`,
+        revenue_previous_period: sql<string>`COALESCE(SUM(${reservations.station_total_transferred}), 0)::text`,
         clients_previous_period: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,
       })
       .from(reservations)
@@ -210,7 +210,7 @@ export async function getAnalyticsTimeSeries(
   let valueExpr: SQL<string>;
 
   if (metric === 'revenue') {
-    valueExpr = sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`;
+    valueExpr = sql<string>`COALESCE(SUM(${reservations.station_total_transferred}), 0)::text`;
   } else if (metric === 'clients') {
     valueExpr = sql<string>`COUNT(DISTINCT ${reservations.user_id})::text`;
   } else {
@@ -260,7 +260,7 @@ export async function getStationDailySummary(
 ): Promise<StationDailySummary> {
   const [row] = await db
     .select({
-      revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0)::text`,
+      revenue: sql<string>`COALESCE(SUM(${reservations.station_total_transferred}), 0)::text`,
       tips: sql<string>`COALESCE(SUM(${reservations.tip_amount}), 0)::text`,
       completed: sql<number>`COUNT(*)::int`,
       clients: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,

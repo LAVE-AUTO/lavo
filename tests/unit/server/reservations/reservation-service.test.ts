@@ -203,6 +203,12 @@ describe('reservation-service', () => {
       const result = await createReservation(userId, stationId, stripeAccountId, slotId, formatId, null);
       expect(result.clientSecret).toBe('pi_123_secret_abc');
       expect(result.entry.stripe_payment_id).toBe('pi_123');
+      expect(mockCreatePaymentIntent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amountCents: 1380,
+          applicationFeeAmountCents: 138,
+        })
+      );
       expect(mockIncrementSlotBookedCount).toHaveBeenCalledWith(slotId, expect.anything());
       expect(mockCreateReservationEntry).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -265,7 +271,10 @@ describe('reservation-service', () => {
         expect.anything()
       );
       expect(mockCreatePaymentIntent).toHaveBeenCalledWith(
-        expect.objectContaining({ commissionCents: 0 })
+        expect.objectContaining({
+          amountCents: 1380,
+          applicationFeeAmountCents: 0,
+        })
       );
     });
 

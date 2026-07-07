@@ -5,8 +5,9 @@
  *     summary: Join the walk-in queue at a station
  *     description: >
  *       Adds the authenticated client to the walk-in queue at the given station.
- *       No payment is required. The client is served when the station picks their entry
- *       via POST /stations/queue/:queueId/pick.
+ *       A Stripe PaymentIntent is created immediately for the queue entry; the payload
+ *       returns `client_secret` so the frontend can confirm the payment before the
+ *       station serves the client via POST /stations/queue/:queueId/pick.
  *     tags:
  *       - Queue
  *     security:
@@ -122,4 +123,3 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     return error500(e);
   }
 }
-

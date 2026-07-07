@@ -75,7 +75,7 @@ export type CreatePaymentIntentParams = {
   userId: string;
   stationId: string;
   stationStripeAccountId: string;
-  commissionCents: number;
+  applicationFeeAmountCents: number;
   metadata?: Record<string, string>;
   /**
    * Stripe idempotency key — prevents duplicate PIs when the client retries
@@ -99,13 +99,13 @@ export type CreatePaymentIntentResult = {
 export async function createPaymentIntent(
   params: CreatePaymentIntentParams
 ): Promise<CreatePaymentIntentResult> {
-  const {
+ const {
     amountCents,
     // Default sourced from server-constants so reservations and tips share the same default
     // currency (bug #25). Per-call override still supported.
     currency = DEFAULT_PLATFORM_CURRENCY,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     metadata = {},
     idempotencyKey,
   } = params;
@@ -113,8 +113,12 @@ export async function createPaymentIntent(
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new ValidationError('Invalid payment amount');
   }
-  if (!Number.isInteger(commissionCents) || commissionCents < 0 || commissionCents > amountCents) {
-    throw new ValidationError('Invalid commission amount');
+  if (
+    !Number.isInteger(applicationFeeAmountCents) ||
+    applicationFeeAmountCents < 0 ||
+    applicationFeeAmountCents > amountCents
+  ) {
+    throw new ValidationError('Invalid application fee amount');
   }
   const destination = stationStripeAccountId.trim();
   if (!destination.startsWith('acct_')) {
@@ -134,7 +138,7 @@ export async function createPaymentIntent(
         amount: amountCents,
         currency,
         capture_method: 'manual',
-        application_fee_amount: commissionCents,
+        application_fee_amount: applicationFeeAmountCents,
         transfer_data: { destination },
         metadata: mergedMetadata,
         automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
@@ -169,7 +173,7 @@ export async function createPaymentIntent(
     currency,
     userId: params.userId,
     stationId: params.stationId,
-    meta: { commission_cents: commissionCents },
+    meta: { application_fee_amount_cents: applicationFeeAmountCents },
   });
 
   return {
@@ -367,7 +371,7 @@ export type CreateTipPaymentIntentParams = {
   reservationId: string;
   /** Platform commission in cents. Applied as application_fee_amount so the platform
    *  earns revenue on tips and is not left absorbing Stripe processing fees alone. */
-  commissionCents: number;
+  commissionCents?: number;
   metadata?: Record<string, string>;
   /**
    * Stripe idempotency key — prevents duplicate PIs when the client retries (or two
@@ -387,7 +391,14 @@ export type CreateTipPaymentIntentParams = {
 export async function createTipPaymentIntent(
   params: CreateTipPaymentIntentParams
 ): Promise<CreatePaymentIntentResult> {
-  const { amountCents, currency, stationStripeAccountId, commissionCents, metadata = {}, idempotencyKey } = params;
+  const {
+    amountCents,
+    currency,
+    stationStripeAccountId,
+    commissionCents = 0,
+    metadata = {},
+    idempotencyKey,
+  } = params;
 
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new ValidationError('Invalid tip amount');

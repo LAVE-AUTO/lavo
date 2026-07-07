@@ -97,7 +97,7 @@ const VALID_PI_PARAMS = {
   userId: 'user-uuid-0001',
   stationId: 'station-uuid-0001',
   stationStripeAccountId: 'acct_test123',
-  commissionCents: 500,
+  applicationFeeAmountCents: 500,
 };
 
 const FAKE_PI_ID = 'pi_fake_0001';
@@ -228,12 +228,12 @@ describe('createPaymentIntent', () => {
     await expect(createPaymentIntent({ ...VALID_PI_PARAMS, amountCents: 99.5 })).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it('throws ValidationError when commissionCents exceeds amountCents', async () => {
-    await expect(createPaymentIntent({ ...VALID_PI_PARAMS, commissionCents: 6000 })).rejects.toBeInstanceOf(ValidationError);
+  it('throws ValidationError when applicationFeeAmountCents exceeds amountCents', async () => {
+    await expect(createPaymentIntent({ ...VALID_PI_PARAMS, applicationFeeAmountCents: 6000 })).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it('throws ValidationError when commissionCents is negative', async () => {
-    await expect(createPaymentIntent({ ...VALID_PI_PARAMS, commissionCents: -1 })).rejects.toBeInstanceOf(ValidationError);
+  it('throws ValidationError when applicationFeeAmountCents is negative', async () => {
+    await expect(createPaymentIntent({ ...VALID_PI_PARAMS, applicationFeeAmountCents: -1 })).rejects.toBeInstanceOf(ValidationError);
   });
 
   it('throws ValidationError when stationStripeAccountId does not start with acct_', async () => {
@@ -292,7 +292,10 @@ describe('capturePaymentIntent', () => {
 
   it('returns charged=false when PI was already canceled', async () => {
     const unexpectedStateError = makeInvalidRequestError('payment_intent_unexpected_state', 'PI already canceled');
-    unexpectedStateError.code = 'payment_intent_unexpected_state';
+    Object.defineProperty(unexpectedStateError, 'code', {
+      value: 'payment_intent_unexpected_state',
+      configurable: true,
+    });
     mockPaymentIntentsCapture.mockRejectedValue(unexpectedStateError);
     mockPaymentIntentsRetrieve.mockResolvedValue({ id: FAKE_PI_ID, status: 'canceled', latest_charge: null });
 
@@ -305,7 +308,10 @@ describe('capturePaymentIntent', () => {
 
   it('returns charged=true (idempotent) when PI was already succeeded before capture', async () => {
     const unexpectedStateError = makeInvalidRequestError('payment_intent_unexpected_state', 'PI already succeeded');
-    unexpectedStateError.code = 'payment_intent_unexpected_state';
+    Object.defineProperty(unexpectedStateError, 'code', {
+      value: 'payment_intent_unexpected_state',
+      configurable: true,
+    });
     mockPaymentIntentsCapture.mockRejectedValue(unexpectedStateError);
     mockPaymentIntentsRetrieve.mockResolvedValue({
       id: FAKE_PI_ID,

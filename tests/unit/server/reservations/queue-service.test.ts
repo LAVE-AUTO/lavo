@@ -136,6 +136,12 @@ describe('queue-service', () => {
         }),
         expect.anything(),
       );
+      expect(mockCreatePaymentIntent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amountCents: 1898,
+          applicationFeeAmountCents: 345,
+        })
+      );
       expect(mockNotifyEntry).toHaveBeenCalledWith(
         expect.objectContaining({ entryId, type: 'queue_joined' })
       );

@@ -34,6 +34,18 @@ export type StationHistoryItem = {
   station_payout: string | null;
   commission_rate: string;
   commission_amount: string | null;
+  station_service_total: string | null;
+  platform_service_fee: string | null;
+  taxable_subtotal: string | null;
+  tps_amount: string | null;
+  tvq_amount: string | null;
+  client_total: string | null;
+  platform_subtotal: string | null;
+  platform_tax_amount: string | null;
+  platform_total_retained: string | null;
+  station_subtotal: string | null;
+  station_tax_amount: string | null;
+  station_total_transferred: string | null;
   tip_amount: string | null;
   penalty_amount: string | null;
   stripe_payment_id: string | null;
@@ -94,6 +106,18 @@ export async function listStationHistory(
         station_payout: reservations.station_payout,
         commission_rate: reservations.commission_rate,
         commission_amount: reservations.commission_amount,
+        station_service_total: reservations.station_service_total,
+        platform_service_fee: reservations.platform_service_fee,
+        taxable_subtotal: reservations.taxable_subtotal,
+        tps_amount: reservations.tps_amount,
+        tvq_amount: reservations.tvq_amount,
+        client_total: reservations.client_total,
+        platform_subtotal: reservations.platform_subtotal,
+        platform_tax_amount: reservations.platform_tax_amount,
+        platform_total_retained: reservations.platform_total_retained,
+        station_subtotal: reservations.station_subtotal,
+        station_tax_amount: reservations.station_tax_amount,
+        station_total_transferred: reservations.station_total_transferred,
         tip_amount: reservations.tip_amount,
         penalty_amount: reservations.penalty_amount,
         stripe_payment_id: reservations.stripe_payment_id,

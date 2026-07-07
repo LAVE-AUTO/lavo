@@ -1047,6 +1047,21 @@ export type RichEntry = {
   queue_position: number | null;
   ticket_code: string | null;
   amount_paid: string;
+  station_service_total: string;
+  platform_service_fee: string;
+  taxable_subtotal: string;
+  tps_amount: string;
+  tvq_amount: string;
+  client_total: string;
+  commission_rate: string;
+  commission_amount: string;
+  platform_subtotal: string;
+  platform_tax_amount: string;
+  platform_total_retained: string;
+  station_payout: string;
+  station_subtotal: string;
+  station_tax_amount: string;
+  station_total_transferred: string;
   created_at: Date;
   updated_at: Date;
   /** Completion timestamp set when the entry transitions to status='completed'. */
@@ -1156,6 +1171,21 @@ function mapToRichEntry(
     queue_position: r.queue_position as number | null,
     ticket_code: r.ticket_code as string | null,
     amount_paid: r.amount_paid as string,
+    station_service_total: r.station_service_total as string,
+    platform_service_fee: r.platform_service_fee as string,
+    taxable_subtotal: r.taxable_subtotal as string,
+    tps_amount: r.tps_amount as string,
+    tvq_amount: r.tvq_amount as string,
+    client_total: r.client_total as string,
+    commission_rate: r.commission_rate as string,
+    commission_amount: r.commission_amount as string,
+    platform_subtotal: r.platform_subtotal as string,
+    platform_tax_amount: r.platform_tax_amount as string,
+    platform_total_retained: r.platform_total_retained as string,
+    station_payout: r.station_payout as string,
+    station_subtotal: r.station_subtotal as string,
+    station_tax_amount: r.station_tax_amount as string,
+    station_total_transferred: r.station_total_transferred as string,
     created_at: r.created_at as Date,
     updated_at: r.updated_at as Date,
     completed_at: (r.completed_at as Date | null) ?? null,

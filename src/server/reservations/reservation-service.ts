@@ -235,8 +235,8 @@ export async function createReservation(
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
 
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Cancel any stale pending_payment entry for this user+slot before creating a new PI.
   // This lets users retry after abandoning the Stripe form without hitting a duplicate error.
@@ -282,7 +282,7 @@ export async function createReservation(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       time_slot_id: timeSlotId,
@@ -421,8 +421,8 @@ export async function createReservationByStartTime(
     isQrBooking,
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   /* Stripe-first: create PI before the DB transaction. If the txn fails,
    * the PI auto-expires after 24h (never charged).
@@ -434,7 +434,7 @@ export async function createReservationByStartTime(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       service_id: serviceId,
@@ -865,7 +865,7 @@ export async function upgradeQueueToReservation(
   // The queue's service_id stays attached to the upgraded reservation row.
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
-  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  const amountTotal = parseDecimal(String(entry.station_service_total)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
   const applicablePromotion = await findApplicablePromotionForUserReservation(userId, stationId);
@@ -875,8 +875,8 @@ export async function upgradeQueueToReservation(
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
 
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
   // entryId is known at this point (queue entry being upgraded), so we can derive a stable
@@ -886,7 +886,7 @@ export async function upgradeQueueToReservation(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: `pi-create:upgrade:${entryId}`,
     metadata: {
       time_slot_id: timeSlotId,
@@ -995,7 +995,7 @@ export async function upgradeQueueToReservationByStartTime(
 
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
-  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  const amountTotal = parseDecimal(String(entry.station_service_total)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
   const durationMin = Math.max(1, config?.wash_duration_minutes ?? 30);
@@ -1015,8 +1015,8 @@ export async function upgradeQueueToReservationByStartTime(
     isQrBooking: false,
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Idempotency key: scoped to the queue entry being upgraded and the chosen start time, so
   // a network-retry returns the same PI instead of producing a second card authorization.
@@ -1026,7 +1026,7 @@ export async function upgradeQueueToReservationByStartTime(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       vehicle_format_id: entry.vehicle_format_id ?? '',

@@ -30,7 +30,7 @@
  *               amount:
  *                 type: number
  *                 description: >
- *                   Partial refund amount in EUR. Omit for a full refund.
+ *                   Partial refund amount in CAD. Omit for a full refund.
  *                 minimum: 0.01
  *     responses:
  *       200:
@@ -116,7 +116,7 @@ const refundLimiter = createEndpointRateLimiter({ maxRequests: 10, windowMs: 60_
  * Role: admin only.
  *
  * Body:
- *   amount? (number) - partial refund amount in EUR; omit for full refund
+ *   amount? (number) - partial refund amount in CAD; omit for full refund
  *
  * Responses:
  *   200 { data: Dispute }

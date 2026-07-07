@@ -87,8 +87,8 @@ export async function joinQueue(
   const entryPrice = parseFloat(String(vehicleEntry.price));
   const split = await computeReservationSplit({ amountTotal: entryPrice, isQrBooking: false });
 
-  const amountCents = Math.round(entryPrice * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Cancel any stale pending_payment queue entry before creating a new PI.
   // Allows users to retry after abandoning the Stripe form.
@@ -141,7 +141,7 @@ export async function joinQueue(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       service_id: serviceId,

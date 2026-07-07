@@ -34,11 +34,24 @@ type ClientHistoryAppReceipt = {
     slot_start_time: string | null;
   };
   amount: {
-    /** Total paid by the client (service + tip when applicable). */
+    /** Total paid by the client for the reservation/queue entry, excluding tip. */
     total: string;
+    station_service_total: string | null;
+    platform_service_fee: string | null;
+    taxable_subtotal: string | null;
+    tps_amount: string | null;
+    tvq_amount: string | null;
+    client_total: string | null;
+    commission_amount: string | null;
+    platform_subtotal: string | null;
+    platform_tax_amount: string | null;
+    platform_total_retained: string | null;
+    station_subtotal: string | null;
+    station_tax_amount: string | null;
+    station_total_transferred: string | null;
     /** Tip recorded for this entry, if any. Used on the receipt as a separate line. */
     tip: string | null;
-    currency: 'EUR';
+    currency: 'CAD';
   };
 };
 
@@ -59,6 +72,19 @@ export type ClientHistoryItem = {
   service_name: string | null;
   service_category: string | null;
   amount_paid: string;
+  station_service_total: string | null;
+  platform_service_fee: string | null;
+  taxable_subtotal: string | null;
+  tps_amount: string | null;
+  tvq_amount: string | null;
+  client_total: string | null;
+  commission_amount: string | null;
+  platform_subtotal: string | null;
+  platform_tax_amount: string | null;
+  platform_total_retained: string | null;
+  station_subtotal: string | null;
+  station_tax_amount: string | null;
+  station_total_transferred: string | null;
   tip_amount: string | null;
   receipt_available: boolean;
   receipt_type: 'stripe_link' | 'app_payload' | 'none';
@@ -128,7 +154,20 @@ function buildAppReceipt(row: ClientHistoryRepositoryItem): ClientHistoryAppRece
     amount: {
       total: row.amount_paid,
       tip: row.tip_amount,
-      currency: 'EUR',
+      station_service_total: row.station_service_total,
+      platform_service_fee: row.platform_service_fee,
+      taxable_subtotal: row.taxable_subtotal,
+      tps_amount: row.tps_amount,
+      tvq_amount: row.tvq_amount,
+      client_total: row.client_total,
+      commission_amount: row.commission_amount,
+      platform_subtotal: row.platform_subtotal,
+      platform_tax_amount: row.platform_tax_amount,
+      platform_total_retained: row.platform_total_retained,
+      station_subtotal: row.station_subtotal,
+      station_tax_amount: row.station_tax_amount,
+      station_total_transferred: row.station_total_transferred,
+      currency: 'CAD',
     },
   };
 }
@@ -159,6 +198,19 @@ function mapHistoryItem(row: ClientHistoryRepositoryItem): ClientHistoryItem {
     service_name: row.service_name,
     service_category: row.service_category,
     amount_paid: row.amount_paid,
+    station_service_total: row.station_service_total,
+    platform_service_fee: row.platform_service_fee,
+    taxable_subtotal: row.taxable_subtotal,
+    tps_amount: row.tps_amount,
+    tvq_amount: row.tvq_amount,
+    client_total: row.client_total,
+    commission_amount: row.commission_amount,
+    platform_subtotal: row.platform_subtotal,
+    platform_tax_amount: row.platform_tax_amount,
+    platform_total_retained: row.platform_total_retained,
+    station_subtotal: row.station_subtotal,
+    station_tax_amount: row.station_tax_amount,
+    station_total_transferred: row.station_total_transferred,
     tip_amount: row.tip_amount,
     receipt_available: receiptAvailable,
     receipt_type: receiptType,
@@ -173,11 +225,13 @@ async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string):
   };
   const t = messages.history;
 
-  /* Items breakdown: service line first, optional tip line, then total.
-   * Commission is internal accounting and never surfaced to the client. */
+  /* Items breakdown: service line first, then taxes/fees, optional tip, then total. */
   const tip = receipt.amount.tip ? Number.parseFloat(receipt.amount.tip) : 0;
   const total = Number.parseFloat(receipt.amount.total);
-  const subtotal = Math.max(0, total - tip);
+  const stationServiceTotal = Number.parseFloat(receipt.amount.station_service_total ?? '0');
+  const platformServiceFee = Number.parseFloat(receipt.amount.platform_service_fee ?? '0');
+  const tpsAmount = Number.parseFloat(receipt.amount.tps_amount ?? '0');
+  const tvqAmount = Number.parseFloat(receipt.amount.tvq_amount ?? '0');
 
   const lines: string[] = [
     `Hurryline - ${t['receipt_title'] ?? 'Receipt'}`,
@@ -188,7 +242,10 @@ async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string):
     `${t['receipt_address'] ?? 'Address'}: ${receipt.station.address ?? '-'} ${receipt.station.city ?? ''}`.trim(),
     '',
     `${t['receipt_items'] ?? 'Items'}:`,
-    `- ${receipt.service.title ?? '-'} (${receipt.service.entry_type}): ${subtotal.toFixed(2)} ${receipt.amount.currency}`,
+    `- ${receipt.service.title ?? '-'} (${receipt.service.entry_type}): ${stationServiceTotal.toFixed(2)} ${receipt.amount.currency}`,
+    `- Platform service fee: ${platformServiceFee.toFixed(2)} ${receipt.amount.currency}`,
+    `- TPS: ${tpsAmount.toFixed(2)} ${receipt.amount.currency}`,
+    `- TVQ: ${tvqAmount.toFixed(2)} ${receipt.amount.currency}`,
   ];
   if (tip > 0) {
     lines.push(`- ${t['receipt_tip'] ?? 'Tip'}: ${tip.toFixed(2)} ${receipt.amount.currency}`);
@@ -303,4 +360,3 @@ export async function getClientHistoryReceiptPdf(
     text_lines,
   };
 }
-
