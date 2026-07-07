@@ -106,8 +106,12 @@ export function StationHistoryPage() {
 
   const stats = useMemo(() => {
     const completed = entries.filter((e) => e.status === 'completed');
-    const revenue = completed.reduce((s, e) => s + safeFloat(e.amount_paid), 0);
-    const payouts = completed.reduce((s, e) => s + safeFloat(e.station_payout), 0);
+    /* Client volume: gross total clients paid (client_total includes the platform
+     * fee and taxes). Prefer client_total; fall back to amount_paid for legacy rows. */
+    const revenue = completed.reduce((s, e) => s + safeFloat(e.client_total ?? e.amount_paid), 0);
+    /* Station net: what the station actually receives. Prefer the true transferred
+     * amount; fall back to the legacy payout for rows without a snapshot. */
+    const payouts = completed.reduce((s, e) => s + safeFloat(e.station_total_transferred ?? e.station_payout), 0);
     const commission = completed.reduce((s, e) => s + safeFloat(e.commission_amount), 0);
     return { count: meta?.total ?? entries.length, revenue, payouts, commission };
   }, [entries, meta]);
