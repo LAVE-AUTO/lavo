@@ -35,7 +35,7 @@ jest.mock('@/lib/endpoint-rate-limiter', () => ({
 }));
 
 import { GET, PATCH } from '@/app/api/v1/admin/settings/route';
-import { ValidationError, AppError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 
 // ---------------------------------------------------------------------------
 // Fixtures

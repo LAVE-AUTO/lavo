@@ -293,7 +293,7 @@ export async function createReservation(
 
   // Atomic: expire stale pending_payment entries, duplicate check, slot lock, capacity check,
   // entry insert, slot increment. Entry is created with stripe_payment_id already set — no orphan window.
-  let expiredPiIds: string[] = [];
+  const expiredPiIds: string[] = [];
   const entry = await db.transaction(async (tx) => {
     // Free slots held by pending_payment entries older than PENDING_PAYMENT_TTL_MS (30 min).
     // Runs inside the transaction so booked_count decrements are atomic with the capacity check.

@@ -29,14 +29,6 @@ export type SeriesPoint = {
 };
 
 /**
- * Internal row returned by DATE_TRUNC queries.
- */
-type RawSeriesRow = {
-  date: Date | string;
-  value: string | number | null;
-};
-
-/**
  * Returns completed-reservation counts grouped by the requested granularity.
  *
  * @param from    - Start of the period (inclusive).
