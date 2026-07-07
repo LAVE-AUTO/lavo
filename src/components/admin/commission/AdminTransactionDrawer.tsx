@@ -7,11 +7,23 @@ import { useToast } from '@/context/toast-context';
 import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
 export type TxStatus = 'succeeded' | 'refunded' | 'failed';
+export type TxType = 'reservation' | 'tip' | 'penalty';
 
 export interface TxRow {
   id: string; stripe_id: string; station: string; client: string;
   gross: number; commission: number; payout: number;
   status: TxStatus; date: string;
+  /** Transaction family. Only `reservation` carries the detailed tax breakdown. */
+  type: TxType;
+  /** Localized type label shown in the list and drawer. */
+  typeLabel: string;
+  /* Detailed snapshot (reservation only; null for tip/penalty rows). */
+  clientTotal: number | null;
+  platformServiceFee: number | null;
+  tps: number | null;
+  tvq: number | null;
+  platformRetained: number | null;
+  stationTransferred: number | null;
 }
 
 const STATUS_STYLE: Record<TxStatus, { badge: string; dot: string; bar: string }> = {
@@ -70,6 +82,13 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
         payoutLabel:     t('drawer_payout'),
         stationLabel:    t('drawer_station'),
         clientLabel:     t('drawer_client'),
+        typeLabel:       t('drawer_type'),
+        clientTotalLabel:        t('drawer_client_total'),
+        platformFeeLabel:        t('drawer_platform_fee'),
+        tpsLabel:                t('drawer_tps'),
+        tvqLabel:                t('drawer_tvq'),
+        platformRetainedLabel:   t('drawer_platform_retained'),
+        stationTransferredLabel: t('drawer_station_transferred'),
         sectionAmounts:  t('section_amounts'),
         sectionParties:  t('section_parties'),
         statusText:      STATUS_LABELS[tx.status],
@@ -85,6 +104,8 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
 
   if (!tx) return null;
   const s = STATUS_STYLE[tx.status];
+  /* Only reservation rows carry the detailed tax breakdown. */
+  const isReservation = tx.type === 'reservation' && tx.clientTotal != null;
 
   return (
     <>
@@ -118,19 +139,34 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
           <div className="rounded-2xl border border-[#FFF9EC] bg-[#F9F8F5] p-5 dark:border-[#1E2E18] dark:bg-[#0E1A0C]">
             <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_amounts')}</p>
             <div className="flex flex-col gap-3">
-              <div className="flex justify-between">
-                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_gross')}</span>
-                <span className="text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]">{fmt(tx.gross)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_commission')}</span>
-                <span className="text-[15px] font-black text-[#DDAF3B]">−{fmt(tx.commission)}</span>
-              </div>
-              <div className="h-px bg-[#FFF9EC] dark:bg-[#1E2E18]" />
-              <div className="flex justify-between">
-                <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('drawer_payout')}</span>
-                <span className="text-[17px] font-black text-[#5A8A50] dark:text-[#7AAA6A]">{fmt(tx.payout)}</span>
-              </div>
+              {/* Reservations expose the full tax/fee breakdown; tip and penalty
+                  rows carry no snapshot, so they show a compact gross + net only. */}
+              {isReservation ? (
+                <>
+                  <AmountRow label={t('drawer_client_total')} value={fmt(tx.clientTotal ?? tx.gross)} strong />
+                  {tx.platformServiceFee != null && tx.platformServiceFee > 0 && (
+                    <AmountRow label={t('drawer_platform_fee')} value={fmt(tx.platformServiceFee)} />
+                  )}
+                  {tx.tps != null && tx.tps > 0 && (
+                    <AmountRow label={t('drawer_tps')} value={fmt(tx.tps)} />
+                  )}
+                  {tx.tvq != null && tx.tvq > 0 && (
+                    <AmountRow label={t('drawer_tvq')} value={fmt(tx.tvq)} />
+                  )}
+                  <AmountRow label={t('drawer_commission')} value={fmt(tx.commission)} gold />
+                  <div className="h-px bg-[#FFF9EC] dark:bg-[#1E2E18]" />
+                  <AmountRow label={t('drawer_platform_retained')} value={fmt(tx.platformRetained ?? tx.commission)} gold />
+                  <div className="flex justify-between">
+                    <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('drawer_station_transferred')}</span>
+                    <span className="text-[17px] font-black text-[#5A8A50] dark:text-[#7AAA6A]">{fmt(tx.stationTransferred ?? tx.payout)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{t('drawer_gross')}</span>
+                  <span className="text-[17px] font-black text-[#001201] dark:text-[#FFF9EC]">{fmt(tx.gross)}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -139,12 +175,12 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
             <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{t('section_parties')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_station')}</span>
-                <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.station}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_type')}</span>
+                <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.typeLabel}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_client')}</span>
-                <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.client}</span>
+                <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{t('drawer_station')}</span>
+                <span className="text-right text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">{tx.station}</span>
               </div>
             </div>
           </div>
@@ -169,5 +205,18 @@ export function AdminTransactionDrawer({ tx, onClose }: Props) {
         </div>
       </div>
     </>
+  );
+}
+
+/** One label/value line inside the drawer's amounts section. */
+function AmountRow({ label, value, strong, gold }: { label: string; value: string; strong?: boolean; gold?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-[13px] text-foreground/65 dark:text-[#B0BFB1]">{label}</span>
+      <span className={[
+        strong ? 'text-[15px] font-black text-[#001201] dark:text-[#FFF9EC]' : 'text-[14px] font-bold',
+        gold ? 'text-[#DDAF3B]' : strong ? '' : 'text-[#001201] dark:text-[#FFF9EC]',
+      ].join(' ')}>{value}</span>
+    </div>
   );
 }
