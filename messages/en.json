@@ -1946,6 +1946,7 @@
         "availability_modal_from": "From",
         "availability_modal_to": "To",
         "availability_modal_section_postes": "BAYS",
+        "availability_modal_postes_hint": "Select one or more bays to open for these slots.",
         "availability_modal_quick_dates": "SHORTCUTS",
         "availability_modal_quick_dates_hint": "Add several dates in one click. The number shows how many dates will actually be added to your selection.",
         "availability_modal_today": "Today",

@@ -1946,6 +1946,7 @@
         "availability_modal_from": "De",
         "availability_modal_to": "À",
         "availability_modal_section_postes": "POSTES",
+        "availability_modal_postes_hint": "Sélectionnez un ou plusieurs postes à ouvrir sur ces créneaux.",
         "availability_modal_quick_dates": "RACCOURCIS",
         "availability_modal_quick_dates_hint": "Ajoutez plusieurs dates en un clic. Le nombre indique les dates qui seront effectivement ajoutées à votre sélection.",
         "availability_modal_today": "Aujourd'hui",

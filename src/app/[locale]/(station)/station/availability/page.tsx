@@ -195,15 +195,27 @@ export default function StationAvailabilityPage() {
   }
 
   async function handleSave(data: Omit<AvailabilityBlock, 'id'>) {
-    if (data.dates.length === 0 || !activePostId) return;
+    if (data.dates.length === 0) return;
 
-    // One slot per date for the active post (one car per bay at a time → capacity 1).
-    const newSlots = data.dates.map((date) => ({
-      start_time: localTimeToIsoUtc(date, data.startTime),
-      end_time: localTimeToIsoUtc(date, data.endTime),
-      capacity: 1,
-      post_id: activePostId,
-    }));
+    /* Target posts. Editing stays scoped to the post being viewed; creating honours
+     * the modal's multi-select ('all' or a list of post ids), so one availability
+     * block can be applied to several wash posts at once. */
+    const targetPostIds = editingBlock
+      ? (activePostId ? [activePostId] : [])
+      : (data.bayIds.includes('all') || data.bayIds.length === 0
+          ? posts.map((p) => p.id)
+          : data.bayIds.filter((id) => posts.some((p) => p.id === id)));
+    if (targetPostIds.length === 0) return;
+
+    // One slot per date per selected post (one car per post at a time → capacity 1).
+    const newSlots = data.dates.flatMap((date) =>
+      targetPostIds.map((postId) => ({
+        start_time: localTimeToIsoUtc(date, data.startTime),
+        end_time: localTimeToIsoUtc(date, data.endTime),
+        capacity: 1,
+        post_id: postId,
+      })),
+    );
 
     let ok = false;
     if (editingBlock) {
@@ -338,9 +350,13 @@ export default function StationAvailabilityPage() {
         onSave={handleSave}
         editingBlock={editingBlock}
         numBays={Math.max(1, posts.length)}
+        posts={posts}
+        defaultPostId={activePostId}
         defaultStartTime={openingTime}
         defaultEndTime={closingTime}
-        lockedPostLabel={activePostLabel}
+        /* Editing an existing slot stays scoped to the viewed post; creating lets the
+           merchant pick one or several posts via the modal's multi-select. */
+        lockedPostLabel={editingBlock ? activePostLabel : undefined}
         preselectedDate={preselectedDate ?? (selectedDay && selectedDay >= todayISO() ? selectedDay : null)}
       />
       <DayDetailsModal
