@@ -33,6 +33,7 @@ export const ALLOWED_PLATFORM_SETTING_KEYS = [
   'cancellation_penalty_percent',
   'cancellation_penalty_platform_rate',
   'cancellation_penalty_station_rate',
+  'platform_service_fee',
   'max_advance_booking_days',
   'rating_window_days',
   'default_late_tolerance_minutes',
@@ -198,6 +199,13 @@ export const updatePlatformSettingsSchema = z
 
 
     // --- Group B: Reservations & booking ---
+
+    if ('platform_service_fee' in obj) {
+      const val = parseDecimalString(obj.platform_service_fee!, 2);
+      if (isNaN(val) || val < 0) {
+        addIssue(ctx, 'platform_service_fee', 'platform_service_fee must be a non-negative decimal with at most 2 decimal places');
+      }
+    }
 
     if ('max_advance_booking_days' in obj) {
       const val = parseBoundedInteger(obj.max_advance_booking_days!, 1, MAX_STRIPE_AUTH_DAYS);

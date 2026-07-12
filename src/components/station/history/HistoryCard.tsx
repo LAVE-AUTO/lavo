@@ -8,6 +8,11 @@ interface Props {
   entry: StationHistoryEntry;
 }
 
+/** Formats a decimal string amount as "12.34$" for the detail rows. */
+function money(value: string): string {
+  return `${(parseFloat(value) || 0).toFixed(2)}$`;
+}
+
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
   confirmed:   { bg: '#057960ff', text: '#FFFFFF' },
   completed:   { bg: '#00C851', text: '#FFFFFF' },
@@ -159,19 +164,37 @@ export function HistoryCard({ entry }: Props) {
                 {t('col_amount')}
               </p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] sm:grid-cols-3">
-                <DetailRow label={t('col_amount')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
-                {entry.station_payout && (
-                  <DetailRow label={t('col_payout')} value={`${parseFloat(entry.station_payout).toFixed(2)}$`} gold />
+                <DetailRow label={t('col_amount')} value={money(entry.client_total ?? entry.amount_paid)} gold />
+                {entry.station_service_total && (
+                  <DetailRow label={t('col_service_total')} value={money(entry.station_service_total)} />
+                )}
+                {entry.platform_service_fee && parseFloat(entry.platform_service_fee) > 0 && (
+                  <DetailRow label={t('col_platform_fee')} value={money(entry.platform_service_fee)} />
+                )}
+                {entry.tps_amount && parseFloat(entry.tps_amount) > 0 && (
+                  <DetailRow label={t('col_tps')} value={money(entry.tps_amount)} />
+                )}
+                {entry.tvq_amount && parseFloat(entry.tvq_amount) > 0 && (
+                  <DetailRow label={t('col_tvq')} value={money(entry.tvq_amount)} />
                 )}
                 <DetailRow label={t('detail_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
                 {entry.commission_amount && (
-                  <DetailRow label={t('col_commission')} value={`${parseFloat(entry.commission_amount).toFixed(2)}$`} />
+                  <DetailRow label={t('col_commission')} value={money(entry.commission_amount)} />
                 )}
+                {entry.station_tax_amount && parseFloat(entry.station_tax_amount) > 0 && (
+                  <DetailRow label={t('col_station_tax')} value={money(entry.station_tax_amount)} />
+                )}
+                {/* Reference net figure: the true amount transferred to the station. */}
+                <DetailRow
+                  label={t('col_net_transferred')}
+                  value={money(entry.station_total_transferred ?? entry.station_payout ?? '0')}
+                  gold
+                />
                 {entry.tip_amount && parseFloat(entry.tip_amount) > 0 && (
-                  <DetailRow label={t('col_tip')} value={`+${parseFloat(entry.tip_amount).toFixed(2)}$`} gold />
+                  <DetailRow label={t('col_tip')} value={`+${money(entry.tip_amount)}`} gold />
                 )}
                 {entry.penalty_amount && parseFloat(entry.penalty_amount) > 0 && (
-                  <DetailRow label={t('col_penalty')} value={`-${parseFloat(entry.penalty_amount).toFixed(2)}$`} danger />
+                  <DetailRow label={t('col_penalty')} value={`-${money(entry.penalty_amount)}`} danger />
                 )}
               </div>
             </div>

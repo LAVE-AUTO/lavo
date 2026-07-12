@@ -19,6 +19,18 @@ export type StationHistoryEntry = {
   station_payout: string | null;
   commission_rate: string;
   commission_amount: string | null;
+  station_service_total: string | null;
+  platform_service_fee: string | null;
+  taxable_subtotal: string | null;
+  tps_amount: string | null;
+  tvq_amount: string | null;
+  client_total: string | null;
+  platform_subtotal: string | null;
+  platform_tax_amount: string | null;
+  platform_total_retained: string | null;
+  station_subtotal: string | null;
+  station_tax_amount: string | null;
+  station_total_transferred: string | null;
   tip_amount: string | null;
   penalty_amount: string | null;
   reservation_ref: string | null;
@@ -78,6 +90,18 @@ export async function getStationHistory(
     station_payout: item.station_payout,
     commission_rate: item.commission_rate,
     commission_amount: item.commission_amount,
+    station_service_total: item.station_service_total,
+    platform_service_fee: item.platform_service_fee,
+    taxable_subtotal: item.taxable_subtotal,
+    tps_amount: item.tps_amount,
+    tvq_amount: item.tvq_amount,
+    client_total: item.client_total,
+    platform_subtotal: item.platform_subtotal,
+    platform_tax_amount: item.platform_tax_amount,
+    platform_total_retained: item.platform_total_retained,
+    station_subtotal: item.station_subtotal,
+    station_tax_amount: item.station_tax_amount,
+    station_total_transferred: item.station_total_transferred,
     tip_amount: item.tip_amount,
     penalty_amount: item.penalty_amount,
     reservation_ref: item.id,

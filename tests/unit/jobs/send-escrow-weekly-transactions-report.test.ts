@@ -139,4 +139,42 @@ describe('runSendEscrowWeeklyTransactionsReport', () => {
       })
     );
   });
+
+  it('maps the weekly report to the retained and transferred financial snapshot amounts', async () => {
+    process.env.WEEKLY_TRANSACTIONS_REPORT_EMAIL = 'weekly@example.com';
+    const succeededAt = new Date('2026-01-05T12:00:00.000Z');
+    getDbMocks().mockOrderBy.mockResolvedValueOnce([
+      {
+        reservationId: 'res-2',
+        reservationStatus: 'completed',
+        succeededAt,
+        clientEmail: 'client@example.com',
+        stationName: 'Station B',
+        amountPaid: '20.00',
+        commissionAmount: '2.00',
+        stationPayout: '18.00',
+        clientTotal: '23.00',
+        platformTotalRetained: '4.60',
+        stationTotalTransferred: '18.40',
+        stripePaymentId: 'pi_y',
+        stripeTransferId: 'tr_y',
+      },
+    ]);
+
+    await runSendEscrowWeeklyTransactionsReport();
+
+    expect(sendWeeklyEscrowTransactionsReportEmail).toHaveBeenCalledWith(
+      'weekly@example.com',
+      expect.objectContaining({
+        rows: [
+          expect.objectContaining({
+            reservationId: 'res-2',
+            amountPaid: '23.00',
+            commissionAmount: '4.60',
+            stationPayout: '18.40',
+          }),
+        ],
+      })
+    );
+  });
 });

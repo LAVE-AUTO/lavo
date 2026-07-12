@@ -12,6 +12,11 @@ interface Props {
   onSave: (block: Omit<AvailabilityBlock, 'id'>) => void;
   editingBlock?: AvailabilityBlock | null;
   numBays?: number;
+  /** Real station posts. When provided, the multi-select emits post IDs in `bayIds`
+   *  ('all' when every post is selected). Falls back to synthetic 1..numBays labels. */
+  posts?: { id: string; position: number }[];
+  /** Post pre-checked when opening a fresh block (usually the post being viewed). */
+  defaultPostId?: string | null;
   /** Station opening hours — used to pre-fill the time range on a new block. */
   defaultStartTime?: string;
   defaultEndTime?: string;
@@ -96,6 +101,8 @@ export function CreateBlockModal({
   onSave,
   editingBlock,
   numBays = 4,
+  posts,
+  defaultPostId,
   defaultStartTime = '08:00',
   defaultEndTime = '18:00',
   lockedPostLabel,
@@ -103,6 +110,13 @@ export function CreateBlockModal({
 }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
+
+  /* Selectable posts. Prefer the real station posts (value = post id) so the
+   * parent can create slots per post; fall back to synthetic 1..numBays labels. */
+  const postOptions = (posts && posts.length > 0)
+    ? posts.map((p) => ({ value: p.id, label: `${t('availability_modal_poste')} ${p.position}` }))
+    : Array.from({ length: numBays }, (_, i) => ({ value: String(i + 1), label: `${t('availability_modal_poste')} ${i + 1}` }));
+  const postCount = postOptions.length;
   // Monday-first narrow weekday initials for the active locale (Jan 1 2024 is a Monday).
   const miniWeekdays = Array.from({ length: 7 }, (_, i) => {
     const ref = new Date(2024, 0, 1);
@@ -137,11 +151,13 @@ export function CreateBlockModal({
       // Pre-fill the time range with the station's opening hours (editable).
       setStartTime(defaultStartTime);
       setEndTime(defaultEndTime);
-      setSelectedBays([]);
+      // Pre-check the post currently being viewed so the flow stays intuitive;
+      // the merchant can then add more posts or switch to "all".
+      setSelectedBays(defaultPostId ? [defaultPostId] : []);
       setAllBays(false);
     }
     setErrors({});
-  }, [isOpen, editingBlock, preselectedDate, defaultStartTime, defaultEndTime]);
+  }, [isOpen, editingBlock, preselectedDate, defaultStartTime, defaultEndTime, defaultPostId]);
 
   function addDate(iso: string) {
     if (iso < todayISO()) return; // no past dates
@@ -166,13 +182,13 @@ export function CreateBlockModal({
     if (allBays) {
       // Uncheck allBays, keep all except this one selected
       setAllBays(false);
-      setSelectedBays(Array.from({ length: numBays }, (_, i) => String(i + 1)).filter((b) => b !== bay));
+      setSelectedBays(postOptions.map((o) => o.value).filter((b) => b !== bay));
     } else {
       const next = selectedBays.includes(bay)
         ? selectedBays.filter((b) => b !== bay)
         : [...selectedBays, bay];
-      // If all individual bays selected, upgrade to allBays
-      if (next.length === numBays) {
+      // If all individual posts selected, upgrade to allBays
+      if (next.length === postCount) {
         setAllBays(true);
         setSelectedBays([]);
       } else {
@@ -249,7 +265,6 @@ export function CreateBlockModal({
   const threeMonths = getNextMonthsRange(3);
   // Sub-labels reflect the addable (future) span, since past days are skipped.
   const futureOf = (arr: string[]) => arr.filter((d) => d >= todayStr);
-  const bays = Array.from({ length: numBays }, (_, i) => String(i + 1));
 
   return (
     <Modal
@@ -364,9 +379,14 @@ export function CreateBlockModal({
 
           {/* Postes */}
           <div>
-            <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[#DDAF3B]">
               {t('availability_modal_section_postes')}
             </p>
+            {!lockedPostLabel && (
+              <p className="mb-3 text-xs text-foreground/65 dark:text-[#B0BFB1]">
+                {t('availability_modal_postes_hint')}
+              </p>
+            )}
             {lockedPostLabel ? (
               <div className="inline-flex items-center gap-2 rounded-xl border border-[#DDAF3B]/30 bg-[#DDAF3B]/10 px-3.5 py-2.5 text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -388,29 +408,29 @@ export function CreateBlockModal({
                   {t('availability_block_all_postes')}
                 </span>
               </label>
-              {bays.map((bay) => (
+              {postOptions.map((opt) => (
                 <label
-                  key={bay}
+                  key={opt.value}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-3 transition-colors ${
-                    allBays || selectedBays.includes(bay)
+                    allBays || selectedBays.includes(opt.value)
                       ? 'border-[#DDAF3B] bg-[#DDAF3B]/10'
                       : 'border-[#DDAF3B]/20 bg-[#F0EDE0] dark:bg-[#001A05]'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={allBays || selectedBays.includes(bay)}
-                    onChange={() => toggleBay(bay)}
+                    checked={allBays || selectedBays.includes(opt.value)}
+                    onChange={() => toggleBay(opt.value)}
                     className="accent-[#DDAF3B]"
                   />
                   <span
                     className={`text-[13px] font-semibold ${
-                      allBays || selectedBays.includes(bay)
+                      allBays || selectedBays.includes(opt.value)
                         ? 'text-[#DDAF3B]'
                         : 'text-foreground/65 dark:text-[#B0BFB1]'
                     }`}
                   >
-                    {t('availability_modal_poste')} {bay}
+                    {opt.label}
                   </span>
                 </label>
               ))}

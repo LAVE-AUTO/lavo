@@ -131,7 +131,7 @@ export async function getReservationMetrics(
     .select({
       total_transactions: sql<number>`COUNT(*)::int`,
       total_revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0.00)::numeric::text`,
-      total_commissions: sql<string>`COALESCE(SUM(${reservations.commission_amount}), 0.00)::numeric::text`,
+      total_commissions: sql<string>`COALESCE(SUM(${reservations.platform_total_retained}), 0.00)::numeric::text`,
     })
     .from(reservations)
     .where(

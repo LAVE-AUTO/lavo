@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
-import { AdminTransactionDrawer, type TxRow, type TxStatus } from './AdminTransactionDrawer';
+import { AdminTransactionDrawer, type TxRow, type TxStatus, type TxType } from './AdminTransactionDrawer';
 import { AdminPagination } from '../ui/AdminPagination';
 
 interface ApiTransactionLog {
@@ -15,8 +15,29 @@ interface ApiTransactionLog {
   station_name: string | null;
   amount: string;
   commission_amount: string | null;
+  /* Detailed snapshot: non-null for `reservation`, null for `tip`/`penalty`. */
+  client_total: string | null;
+  platform_total_retained: string | null;
+  station_total_transferred: string | null;
+  platform_service_fee: string | null;
+  tps_amount: string | null;
+  tvq_amount: string | null;
   status: string;
   created_at: string;
+}
+
+/** Restricts backend type strings to the known families. */
+function mapType(type: string): TxType {
+  if (type === 'tip') return 'tip';
+  if (type === 'penalty') return 'penalty';
+  return 'reservation';
+}
+
+/** Parses a decimal string to a number, or null when absent/unparseable. */
+function parseNullableMoney(value: string | null): number | null {
+  if (value == null) return null;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 interface ApiMeta { total: number; total_pages: number; page: number; per_page?: number }
@@ -81,14 +102,32 @@ export function AdminTransactionsView() {
       if (!ok) { setFetchError(true); setLoading(false); return; }
       const result = (data as { data: { logs: ApiTransactionLog[]; meta: ApiMeta } }).data;
       const logs = result?.logs ?? [];
+      const typeLabels: Record<TxType, string> = {
+        reservation: t('type_reservation'),
+        tip: t('type_tip'),
+        penalty: t('type_penalty'),
+      };
       const mapped = logs.map((l): TxRow => {
         const amount = parseFloat(l.amount) || 0;
         const commission = parseFloat(l.commission_amount ?? '0') || 0;
+        const type = mapType(l.type);
+        const stationTransferred = parseNullableMoney(l.station_total_transferred);
         return {
           id: l.id, stripe_id: l.id,
           station: l.station_name ?? t('unknown_station'),
-          client: l.type,
-          gross: amount, commission, payout: amount - commission,
+          client: typeLabels[type],
+          type,
+          typeLabel: typeLabels[type],
+          gross: amount, commission,
+          /* Prefer the true station transfer; fall back to gross-minus-commission
+           * for legacy rows and for tip/penalty (which carry no snapshot). */
+          payout: stationTransferred ?? amount - commission,
+          clientTotal: parseNullableMoney(l.client_total),
+          platformServiceFee: parseNullableMoney(l.platform_service_fee),
+          tps: parseNullableMoney(l.tps_amount),
+          tvq: parseNullableMoney(l.tvq_amount),
+          platformRetained: parseNullableMoney(l.platform_total_retained),
+          stationTransferred,
           status: mapStatus(l.status), date: l.created_at,
         };
       });

@@ -35,7 +35,7 @@ jest.mock('@/lib/endpoint-rate-limiter', () => ({
 }));
 
 import { GET, PATCH } from '@/app/api/v1/admin/settings/route';
-import { ValidationError, AppError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -138,6 +138,18 @@ describe('PATCH /api/v1/admin/settings', () => {
     expect(body.data).toEqual({});
     expect(mockUpdatePlatformSettings).toHaveBeenCalledWith(
       expect.objectContaining({ cancellation_free_window_minutes: '60' }),
+      ADMIN_AUTH.sub
+    );
+  });
+
+  it('returns 200 on valid platform_service_fee update', async () => {
+    const res = await PATCH(makePatchRequest({ platform_service_fee: '1.99' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.message).toBe('Platform settings updated');
+    expect(mockUpdatePlatformSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ platform_service_fee: '1.99' }),
       ADMIN_AUTH.sub
     );
   });
@@ -256,6 +268,15 @@ describe('PATCH /api/v1/admin/settings', () => {
 
     expect(res.status).toBe(400);
     expect(body.code).toBe('VALIDATION_FAILED');
+  });
+
+  it('returns 400 when platform_service_fee is negative', async () => {
+    const res = await PATCH(makePatchRequest({ platform_service_fee: '-1.00' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(mockUpdatePlatformSettings).not.toHaveBeenCalled();
   });
 
   // --- Auth ---

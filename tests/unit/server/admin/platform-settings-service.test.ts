@@ -53,6 +53,7 @@ import { ValidationError } from '@/lib/errors';
 const ADMIN_ID = 'admin-uuid-0001';
 const PLATFORM_KEY = 'cancellation_penalty_platform_rate';
 const STATION_KEY = 'cancellation_penalty_station_rate';
+const PLATFORM_SERVICE_FEE_KEY = 'platform_service_fee';
 
 
 // %%%%% Setup %%%%%
@@ -262,6 +263,25 @@ describe('updatePlatformSettings - penalty rate auto-sync', () => {
         (e) => e.key === PLATFORM_KEY || e.key === STATION_KEY
       );
       expect(rateKeys).toHaveLength(0);
+    });
+
+    it('persists platform_service_fee as a regular admin setting', async () => {
+      await updatePlatformSettings(
+        { [PLATFORM_SERVICE_FEE_KEY]: '1.99' } as Record<typeof PLATFORM_SERVICE_FEE_KEY, string>,
+        ADMIN_ID
+      );
+
+      expect(mockUpsertPlatformSettings).toHaveBeenCalledTimes(1);
+      const entries: Array<{ key: string; value: string }> =
+        mockUpsertPlatformSettings.mock.calls[0][0];
+
+      expect(entries).toEqual([
+        {
+          key: PLATFORM_SERVICE_FEE_KEY,
+          value: '1.99',
+          updatedBy: ADMIN_ID,
+        },
+      ]);
     });
   });
 

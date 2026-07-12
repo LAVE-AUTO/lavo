@@ -90,6 +90,27 @@ function parseDecimal(s: string | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function mapSplitToEntryFinancialSnapshot(split: Awaited<ReturnType<typeof computeReservationSplit>>) {
+  return {
+    amount_paid: toDecimal(split.client_total),
+    commission_rate: split.commissionRate,
+    commission_amount: toDecimal(split.commissionAmount),
+    station_payout: toDecimal(split.station_total_transferred),
+    station_service_total: toDecimal(split.station_service_total),
+    platform_service_fee: toDecimal(split.platform_service_fee),
+    taxable_subtotal: toDecimal(split.taxable_subtotal),
+    tps_amount: toDecimal(split.tps_amount),
+    tvq_amount: toDecimal(split.tvq_amount),
+    client_total: toDecimal(split.client_total),
+    platform_subtotal: toDecimal(split.platform_subtotal),
+    platform_tax_amount: toDecimal(split.platform_tax_amount),
+    platform_total_retained: toDecimal(split.platform_total_retained),
+    station_subtotal: toDecimal(split.station_subtotal),
+    station_tax_amount: toDecimal(split.station_tax_amount),
+    station_total_transferred: toDecimal(split.station_total_transferred),
+  };
+}
+
 /**
  * Reads the max advance booking days setting and returns the cutoff in milliseconds.
  * Stripe card authorizations expire after 7 days, so bookings beyond this window must be rejected.
@@ -214,8 +235,8 @@ export async function createReservation(
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
 
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Cancel any stale pending_payment entry for this user+slot before creating a new PI.
   // This lets users retry after abandoning the Stripe form without hitting a duplicate error.
@@ -261,7 +282,7 @@ export async function createReservation(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       time_slot_id: timeSlotId,
@@ -272,7 +293,7 @@ export async function createReservation(
 
   // Atomic: expire stale pending_payment entries, duplicate check, slot lock, capacity check,
   // entry insert, slot increment. Entry is created with stripe_payment_id already set — no orphan window.
-  let expiredPiIds: string[] = [];
+  const expiredPiIds: string[] = [];
   const entry = await db.transaction(async (tx) => {
     // Free slots held by pending_payment entries older than PENDING_PAYMENT_TTL_MS (30 min).
     // Runs inside the transaction so booked_count decrements are atomic with the capacity check.
@@ -306,11 +327,8 @@ export async function createReservation(
         service_id: serviceId,
         time_slot_id: timeSlotId,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: split.bookingSource,
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
         ticket_code: generateTicketCode(),
       },
@@ -403,8 +421,8 @@ export async function createReservationByStartTime(
     isQrBooking,
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   /* Stripe-first: create PI before the DB transaction. If the txn fails,
    * the PI auto-expires after 24h (never charged).
@@ -416,7 +434,7 @@ export async function createReservationByStartTime(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       service_id: serviceId,
@@ -459,11 +477,8 @@ export async function createReservationByStartTime(
         post_id: fresh.post_id,
         time_slot_id: slot.id,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: split.bookingSource,
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
         ticket_code: generateTicketCode(),
       },
@@ -850,7 +865,7 @@ export async function upgradeQueueToReservation(
   // The queue's service_id stays attached to the upgraded reservation row.
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
-  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  const amountTotal = parseDecimal(String(entry.station_service_total)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
   const applicablePromotion = await findApplicablePromotionForUserReservation(userId, stationId);
@@ -860,8 +875,8 @@ export async function upgradeQueueToReservation(
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
 
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Create Stripe PaymentIntent before the DB transaction (Stripe-first pattern).
   // entryId is known at this point (queue entry being upgraded), so we can derive a stable
@@ -871,7 +886,7 @@ export async function upgradeQueueToReservation(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: `pi-create:upgrade:${entryId}`,
     metadata: {
       time_slot_id: timeSlotId,
@@ -904,11 +919,8 @@ export async function upgradeQueueToReservation(
         time_slot_id: timeSlotId,
         queue_position: null,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: 'standard',
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
       },
       tx
@@ -983,7 +995,7 @@ export async function upgradeQueueToReservationByStartTime(
 
   const config = await getConfigByStationId(stationId);
   const surcharge = config?.reservation_surcharge ? parseDecimal(String(config.reservation_surcharge)) : 0;
-  const amountTotal = parseDecimal(String(entry.amount_paid)) + surcharge;
+  const amountTotal = parseDecimal(String(entry.station_service_total)) + surcharge;
   if (amountTotal <= 0) throw new ConflictError('Invalid amount for upgrade');
 
   const durationMin = Math.max(1, config?.wash_duration_minutes ?? 30);
@@ -1003,8 +1015,8 @@ export async function upgradeQueueToReservationByStartTime(
     isQrBooking: false,
     promotionReductionRate: applicablePromotion?.commission_rate ?? null,
   });
-  const amountCents = Math.round(amountTotal * 100);
-  const commissionCents = Math.round(split.commissionAmount * 100);
+  const amountCents = Math.round(split.client_total * 100);
+  const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
   // Idempotency key: scoped to the queue entry being upgraded and the chosen start time, so
   // a network-retry returns the same PI instead of producing a second card authorization.
@@ -1014,7 +1026,7 @@ export async function upgradeQueueToReservationByStartTime(
     userId,
     stationId,
     stationStripeAccountId,
-    commissionCents,
+    applicationFeeAmountCents,
     idempotencyKey: piIdempotencyKey,
     metadata: {
       vehicle_format_id: entry.vehicle_format_id ?? '',
@@ -1053,11 +1065,8 @@ export async function upgradeQueueToReservationByStartTime(
         time_slot_id: slot.id,
         queue_position: null,
         status: STATUS_PENDING_PAYMENT,
-        amount_paid: toDecimal(amountTotal),
         booking_source: 'standard',
-        commission_rate: split.commissionRate,
-        commission_amount: toDecimal(split.commissionAmount),
-        station_payout: toDecimal(split.stationPayout),
+        ...mapSplitToEntryFinancialSnapshot(split),
         stripe_payment_id: paymentIntentId,
       },
       tx

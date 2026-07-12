@@ -1,4 +1,7 @@
-import { getActiveCommissionRate } from '@/server/admin/platform-settings-service';
+import {
+  getActiveCommissionRate,
+  getPlatformServiceFee,
+} from '@/server/admin/platform-settings-service';
 
 export type BookingSource = 'standard' | 'qr';
 
@@ -7,7 +10,22 @@ export type ReservationSplit = {
   commissionRate: string;
   commissionAmount: number;
   stationPayout: number;
+  station_service_total: number;
+  platform_service_fee: number;
+  taxable_subtotal: number;
+  tps_amount: number;
+  tvq_amount: number;
+  client_total: number;
+  platform_subtotal: number;
+  platform_tax_amount: number;
+  platform_total_retained: number;
+  station_subtotal: number;
+  station_tax_amount: number;
+  station_total_transferred: number;
 };
+
+const TPS_RATE = 0.05;
+const TVQ_RATE = 0.09975;
 
 /**
  * Parses a normalized rate string into a usable decimal number
@@ -69,6 +87,68 @@ function normalizeMoneyToCents(amount: number): number {
   return Math.round(normalized * 100);
 }
 
+function parseNonNegativeMoney(value: string, label: string): number {
+  const parsed = parseFloat(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`Invalid ${label} configuration`);
+  }
+
+  return normalizeMoneyToCents(parsed);
+}
+
+function centsToMoney(amountCents: number): number {
+  return amountCents / 100;
+}
+
+function buildReservationSplitSnapshot(params: {
+  bookingSource: BookingSource;
+  serviceTotalCents: number;
+  platformServiceFeeCents: number;
+  commissionRate: string;
+  commissionCents: number;
+}): ReservationSplit {
+  const {
+    bookingSource,
+    serviceTotalCents,
+    platformServiceFeeCents,
+    commissionRate,
+    commissionCents,
+  } = params;
+
+  const stationSubtotalCents = serviceTotalCents - commissionCents;
+  const platformSubtotalCents = commissionCents + platformServiceFeeCents;
+  const taxableSubtotalCents = serviceTotalCents + platformServiceFeeCents;
+  const tpsCents = Math.round(taxableSubtotalCents * TPS_RATE);
+  const tvqCents = Math.round(taxableSubtotalCents * TVQ_RATE);
+  const clientTotalCents = taxableSubtotalCents + tpsCents + tvqCents;
+
+  const platformTpsCents = Math.round(platformSubtotalCents * TPS_RATE);
+  const platformTvqCents = Math.round(platformSubtotalCents * TVQ_RATE);
+  const platformTaxCents = platformTpsCents + platformTvqCents;
+  const stationTaxCents = tpsCents + tvqCents - platformTaxCents;
+  const stationTotalTransferredCents = stationSubtotalCents + stationTaxCents;
+  const platformTotalRetainedCents = platformSubtotalCents + platformTaxCents;
+
+  return {
+    bookingSource,
+    commissionRate,
+    commissionAmount: centsToMoney(commissionCents),
+    stationPayout: centsToMoney(stationTotalTransferredCents),
+    station_service_total: centsToMoney(serviceTotalCents),
+    platform_service_fee: centsToMoney(platformServiceFeeCents),
+    taxable_subtotal: centsToMoney(taxableSubtotalCents),
+    tps_amount: centsToMoney(tpsCents),
+    tvq_amount: centsToMoney(tvqCents),
+    client_total: centsToMoney(clientTotalCents),
+    platform_subtotal: centsToMoney(platformSubtotalCents),
+    platform_tax_amount: centsToMoney(platformTaxCents),
+    platform_total_retained: centsToMoney(platformTotalRetainedCents),
+    station_subtotal: centsToMoney(stationSubtotalCents),
+    station_tax_amount: centsToMoney(stationTaxCents),
+    station_total_transferred: centsToMoney(stationTotalTransferredCents),
+  };
+}
+
 /**
  * Computes the final reservation split between platform and station
  *
@@ -109,15 +189,21 @@ export async function computeReservationSplit(params: {
   promotionReductionRate?: string | null;
 }): Promise<ReservationSplit> {
   const { amountTotal, isQrBooking, promotionReductionRate = null } = params;
-  const totalCents = normalizeMoneyToCents(amountTotal);
+  const serviceTotalCents = normalizeMoneyToCents(amountTotal);
+  const platformServiceFeeRaw = await getPlatformServiceFee();
+  const platformServiceFeeCents = parseNonNegativeMoney(
+    platformServiceFeeRaw,
+    'platform service fee',
+  );
 
   if (isQrBooking) {
-    return {
+    return buildReservationSplitSnapshot({
       bookingSource: 'qr',
+      serviceTotalCents,
+      platformServiceFeeCents,
       commissionRate: '0.0000',
-      commissionAmount: 0,
-      stationPayout: totalCents / 100,
-    };
+      commissionCents: 0,
+    });
   }
 
   const commissionRate = await getActiveCommissionRate();
@@ -127,26 +213,24 @@ export async function computeReservationSplit(params: {
     const reductionRateNumber = parseRate(promotionReductionRate, 'promotion reduction rate');
     const effectiveCommissionRate = commissionRateNumber * (1 - reductionRateNumber);
     const effectiveCommissionRateString = effectiveCommissionRate.toFixed(4);
-    const commissionCents = Math.round(totalCents * effectiveCommissionRate);
-    const commissionAmount = commissionCents / 100;
-    const stationPayout = (totalCents - commissionCents) / 100;
+    const commissionCents = Math.round(serviceTotalCents * effectiveCommissionRate);
 
-    return {
+    return buildReservationSplitSnapshot({
       bookingSource: 'standard',
+      serviceTotalCents,
+      platformServiceFeeCents,
       commissionRate: effectiveCommissionRateString,
-      commissionAmount,
-      stationPayout,
-    };
+      commissionCents,
+    });
   }
 
-  const commissionCents = Math.round(totalCents * commissionRateNumber);
-  const commissionAmount = commissionCents / 100;
-  const stationPayout = (totalCents - commissionCents) / 100;
+  const commissionCents = Math.round(serviceTotalCents * commissionRateNumber);
 
-  return {
+  return buildReservationSplitSnapshot({
     bookingSource: 'standard',
+    serviceTotalCents,
+    platformServiceFeeCents,
     commissionRate,
-    commissionAmount,
-    stationPayout,
-  };
+    commissionCents,
+  });
 }

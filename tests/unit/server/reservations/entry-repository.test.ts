@@ -82,7 +82,12 @@ import {
   updateEntry,
   shiftQueuePositions,
   listLateUnconfirmedReservations,
+  setStripeTransferIdIfMissing,
+  setStripePaymentSucceededAtIfMissing,
+  setStripePaymentSucceededNotifiedAtIfMissing,
+  clearStripePaymentSucceededNotifiedAt,
 } from '@/server/reservations/entry-repository';
+import { db } from '@/lib/db';
 
 const __dbMocks = (global as unknown as { __entryRepoDbMocks: Record<string, jest.Mock> }).__entryRepoDbMocks;
 const mockInsertValues = __dbMocks.mockInsertValues;
@@ -92,7 +97,6 @@ const mockUpdateWhere = __dbMocks.mockUpdateWhere;
 const mockUpdateReturning = __dbMocks.mockUpdateReturning;
 const mockFindFirst = __dbMocks.mockFindFirst;
 const mockFindMany = __dbMocks.mockFindMany;
-const orderByMock = __dbMocks.orderByMock;
 const fromWhereMock = __dbMocks.fromWhereMock;
 const innerWhereMock = __dbMocks.innerWhereMock;
 const limitOffsetMock = __dbMocks.limitOffsetMock;
@@ -111,6 +115,18 @@ const mockReservationRow = {
   commission_rate: '0.1000',
   commission_amount: '1.20',
   station_payout: '10.80',
+  station_service_total: '12.00',
+  platform_service_fee: '1.50',
+  taxable_subtotal: '13.50',
+  tps_amount: '0.68',
+  tvq_amount: '1.35',
+  client_total: '15.53',
+  platform_subtotal: '2.70',
+  platform_tax_amount: '0.41',
+  platform_total_retained: '3.11',
+  station_subtotal: '10.80',
+  station_tax_amount: '1.62',
+  station_total_transferred: '12.42',
   stripe_payment_id: null,
   stripe_charge_id: null,
   stripe_transfer_id: null,
@@ -136,8 +152,22 @@ describe('entry-repository', () => {
         vehicle_format_id: 'format-1',
         time_slot_id: 'slot-1',
         status: 'pending',
-        amount_paid: '12.00',
+        amount_paid: '15.53',
         commission_rate: '0.1000',
+        commission_amount: '1.20',
+        station_payout: '12.42',
+        station_service_total: '12.00',
+        platform_service_fee: '1.50',
+        taxable_subtotal: '13.50',
+        tps_amount: '0.68',
+        tvq_amount: '1.35',
+        client_total: '15.53',
+        platform_subtotal: '2.70',
+        platform_tax_amount: '0.41',
+        platform_total_retained: '3.11',
+        station_subtotal: '10.80',
+        station_tax_amount: '1.62',
+        station_total_transferred: '12.42',
       };
       const result = await createReservationEntry(data);
       expect(result).toEqual(mockReservationRow);
@@ -146,6 +176,11 @@ describe('entry-repository', () => {
           entry_type: 'reservation',
           time_slot_id: 'slot-1',
           queue_position: null,
+          amount_paid: '15.53',
+          station_service_total: '12.00',
+          platform_service_fee: '1.50',
+          client_total: '15.53',
+          station_total_transferred: '12.42',
         })
       );
     });
@@ -176,8 +211,22 @@ describe('entry-repository', () => {
         vehicle_format_id: 'format-1',
         queue_position: 1,
         status: 'pending',
-        amount_paid: '15.00',
+        amount_paid: '15.53',
         commission_rate: '0.1000',
+        commission_amount: '1.20',
+        station_payout: '12.42',
+        station_service_total: '12.00',
+        platform_service_fee: '1.50',
+        taxable_subtotal: '13.50',
+        tps_amount: '0.68',
+        tvq_amount: '1.35',
+        client_total: '15.53',
+        platform_subtotal: '2.70',
+        platform_tax_amount: '0.41',
+        platform_total_retained: '3.11',
+        station_subtotal: '10.80',
+        station_tax_amount: '1.62',
+        station_total_transferred: '12.42',
       };
       const result = await createQueueEntry(data);
       expect(result.queue_position).toBe(1);
@@ -186,6 +235,11 @@ describe('entry-repository', () => {
           entry_type: 'queue',
           time_slot_id: null,
           queue_position: 1,
+          amount_paid: '15.53',
+          station_service_total: '12.00',
+          platform_service_fee: '1.50',
+          client_total: '15.53',
+          station_total_transferred: '12.42',
         })
       );
     });
@@ -305,15 +359,13 @@ describe('entry-repository', () => {
   describe('shiftQueuePositions', () => {
     it('calls update with sql for queue_position', async () => {
       mockUpdateWhere.mockResolvedValueOnce(undefined);
-      const db = require('@/lib/db').db;
       const updateChain = db.update as jest.Mock;
       updateChain.mockReturnValueOnce({
         set: jest.fn().mockReturnValue({
           where: jest.fn().mockResolvedValue(undefined),
         }),
       });
-      const { shiftQueuePositions: shift } = require('@/server/reservations/entry-repository');
-      await shift('station-1', 1, 1);
+      await shiftQueuePositions('station-1', 1, 1);
       expect(updateChain).toHaveBeenCalled();
     });
   });
@@ -329,12 +381,10 @@ describe('entry-repository', () => {
 
   describe('shiftQueuePositions', () => {
     it('does not call update when delta is 0', async () => {
-      const db = require('@/lib/db').db;
       await shiftQueuePositions('station-1', 1, 0);
       expect(db.update).not.toHaveBeenCalled();
     });
     it('calls update when delta is non-zero', async () => {
-      const db = require('@/lib/db').db;
       await shiftQueuePositions('station-1', 1, 1);
       expect(db.update).toHaveBeenCalled();
     });
@@ -343,7 +393,6 @@ describe('entry-repository', () => {
   describe('stripe idempotence helpers', () => {
     it('setStripeTransferIdIfMissing returns true when stripe_transfer_id is null', async () => {
       mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
-      const { setStripeTransferIdIfMissing } = require('@/server/reservations/entry-repository');
       const updated = await setStripeTransferIdIfMissing(validUuid, 'tr_123');
       expect(updated).toBe(true);
       expect(mockUpdateSet).toHaveBeenCalledWith(
@@ -353,14 +402,12 @@ describe('entry-repository', () => {
 
     it('setStripeTransferIdIfMissing returns false when already set (no row updated)', async () => {
       mockUpdateReturning.mockResolvedValueOnce([]);
-      const { setStripeTransferIdIfMissing } = require('@/server/reservations/entry-repository');
       const updated = await setStripeTransferIdIfMissing(validUuid, 'tr_123');
       expect(updated).toBe(false);
     });
 
     it('setStripePaymentSucceededAtIfMissing sets succeeded_at once', async () => {
       mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
-      const { setStripePaymentSucceededAtIfMissing } = require('@/server/reservations/entry-repository');
       const succeededAt = new Date('2026-01-01T00:00:00.000Z');
       const updated = await setStripePaymentSucceededAtIfMissing(validUuid, succeededAt);
       expect(updated).toBe(true);
@@ -371,9 +418,6 @@ describe('entry-repository', () => {
 
     it('setStripePaymentSucceededNotifiedAtIfMissing sets notified_at once', async () => {
       mockUpdateReturning.mockResolvedValueOnce([{ id: validUuid }]);
-      const {
-        setStripePaymentSucceededNotifiedAtIfMissing,
-      } = require('@/server/reservations/entry-repository');
       const notifiedAt = new Date('2026-01-02T00:00:00.000Z');
       const updated = await setStripePaymentSucceededNotifiedAtIfMissing(validUuid, notifiedAt);
       expect(updated).toBe(true);
@@ -383,7 +427,6 @@ describe('entry-repository', () => {
     });
 
     it('clearStripePaymentSucceededNotifiedAt remet notified_at à null', async () => {
-      const { clearStripePaymentSucceededNotifiedAt } = require('@/server/reservations/entry-repository');
       await clearStripePaymentSucceededNotifiedAt(validUuid);
       expect(mockUpdateSet).toHaveBeenCalledWith(
         expect.objectContaining({ stripe_payment_succeeded_notified_at: null })

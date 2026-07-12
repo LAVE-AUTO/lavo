@@ -11,6 +11,7 @@ const mockCancelPaymentIntent = jest.fn();
 const mockRefundPaymentIntent = jest.fn();
 const mockDistributePenalty = jest.fn();
 const mockNotifyEntry = jest.fn();
+const mockClassifyStripeError = jest.fn();
 
 jest.mock('@/server/reservations/entry-repository', () => ({
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
@@ -38,6 +39,7 @@ jest.mock('@/server/payments/payment-service', () => ({
   refundPaymentIntent: (...args: unknown[]) => mockRefundPaymentIntent(...args),
   distributePenalty: (...args: unknown[]) => mockDistributePenalty(...args),
   updatePaymentIntentMetadata: jest.fn(),
+  classifyStripeError: (...args: unknown[]) => mockClassifyStripeError(...args),
 }));
 
 jest.mock('@/server/reservations/cancellation-service', () => ({
@@ -134,6 +136,11 @@ beforeEach(() => {
   mockGetCancellationPolicy.mockResolvedValue(DEFAULT_POLICY);
   mockNotifyEntry.mockResolvedValue(undefined);
   mockShiftQueuePositions.mockResolvedValue(undefined);
+  mockClassifyStripeError.mockReturnValue({
+    class: 'unknown',
+    code: null,
+    message: 'Stripe capture failed',
+  });
 });
 
 describe('cancelEntry - queue cancellation path', () => {
@@ -142,7 +149,7 @@ describe('cancelEntry - queue cancellation path', () => {
       const entry = makeQueueEntry();
       mockFindEntryByIdAndUser.mockResolvedValue(entry);
       mockUpdateEntry.mockResolvedValue(entry);
-      mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
+      mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null, charged: true });
       mockRefundPaymentIntent.mockResolvedValue('re_test');
       mockDistributePenalty.mockResolvedValue(undefined);
 
@@ -156,6 +163,7 @@ describe('cancelEntry - queue cancellation path', () => {
       );
       expect(mockDistributePenalty).toHaveBeenCalledWith(
         'pi_test',
+        expect.any(Number),
         expect.any(Number),
         DEFAULT_POLICY.stationPenaltyShare,
         expect.stringContaining('queue-cancel-penalty:'),
