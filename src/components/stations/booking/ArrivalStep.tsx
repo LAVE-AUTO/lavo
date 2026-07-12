@@ -111,11 +111,11 @@ function generateDates(count: number, appLocale: string): { key: string; dayShor
   return days;
 }
 
-/** Booking window length, kept under Stripe's 7-day card authorization limit
- * is enforced server-side; here we cap visible dates at 5 weeks because that
- * is what the product asked for. The backend rejects bookings beyond its own
- * advance-booking ceiling regardless. */
-const MAX_BOOKING_DAYS = 35;
+/** Stripe card authorizations expire after 7 days, so the backend rejects any
+ * booking beyond that window (see MAX_ADVANCE_BOOKING_DAYS in constants.ts).
+ * The visible date range must match, otherwise clients can pick a date the
+ * server will then refuse. */
+const MAX_BOOKING_DAYS = 7;
 
 interface MonthGridDay {
   key: string;
