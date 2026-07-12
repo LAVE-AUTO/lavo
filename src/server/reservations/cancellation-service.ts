@@ -4,7 +4,9 @@
  *
  * Policy:
  *   - Free cancellation if cancelled >= freeWindowMinutes before service start.
- *   - Late cancellation: penalty = amount_paid * penaltyRate; refund = amount_paid - penalty.
+ *   - Late cancellation: penalty = station_service_total * penaltyRate (pre-tax, pre-platform-fee
+ *     price only — the client isn't penalized on tax or the platform fee); refund = amount_paid - penalty
+ *     (amount_paid is the full tax-inclusive total actually captured by Stripe).
  *
  * Flow:
  *   1. Load reservation + time_slot start_time.
@@ -99,11 +101,13 @@ export async function cancelReservation(
     isStationFaultCancellation(reservation.slotStartTime, reservation.station_id),
   ]);
 
-  // Defensive: amount_paid comes from the DB as a string. Clamp to a non-negative finite number so
-  // a corrupt / migrated row (negative value, NaN text) cannot produce negative cents passed to
-  // Stripe. Mirrors the clamp applied in no-show-service.
+  // Defensive: amount_paid / station_service_total come from the DB as strings. Clamp to a
+  // non-negative finite number so a corrupt / migrated row (negative value, NaN text) cannot
+  // produce negative cents passed to Stripe. Mirrors the clamp applied in no-show-service.
   const rawAmount = parseFloat(reservation.amount_paid);
   const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
+  const rawServiceAmount = parseFloat(reservation.station_service_total);
+  const penaltyBaseAmount = Number.isFinite(rawServiceAmount) && rawServiceAmount > 0 ? rawServiceAmount : 0;
   const now = new Date();
   const slotStart = reservation.slotStartTime;
 
@@ -116,7 +120,7 @@ export async function cancelReservation(
   const isLateCancellation = !stationFault && minutesUntilService < policy.freeWindowMinutes;
 
   const penaltyAmount = isLateCancellation
-    ? Math.max(0, Math.round(amountPaid * policy.penaltyRate * 100) / 100)
+    ? Math.max(0, Math.round(penaltyBaseAmount * policy.penaltyRate * 100) / 100)
     : 0;
   const refundedAmount = Math.max(0, Math.round((amountPaid - penaltyAmount) * 100) / 100);
 

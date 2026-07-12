@@ -60,6 +60,7 @@ function makeEntry(overrides: Record<string, unknown> = {}) {
     user_id: 'user-1',
     status: 'confirmed',
     amount_paid: '50.00',
+    station_service_total: '50.00',
     stripe_payment_id: 'pi_test',
     entry_type: 'queue',
     queue_position: 1,
@@ -216,7 +217,7 @@ describe('markQueueNoShows', () => {
   });
 
   it('clamps a negative or invalid amount_paid so Stripe never receives negative cents', async () => {
-    const entry = makeEntry({ amount_paid: '-10.00' });
+    const entry = makeEntry({ amount_paid: '-10.00', station_service_total: '-10.00' });
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
     mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });

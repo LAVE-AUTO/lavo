@@ -61,8 +61,10 @@ export async function getTransactionsSeries(
 }
 
 /**
- * Returns total revenue (amount_paid) for completed reservations grouped by granularity.
- * Values are decimal strings.
+ * Returns total revenue (taxable_subtotal) for completed reservations grouped by granularity.
+ * Uses taxable_subtotal (service + platform fee, pre-tax) rather than amount_paid/client_total,
+ * which also includes TPS/TVQ sales tax collected on behalf of the government — tax pass-through
+ * isn't platform revenue. Values are decimal strings.
  *
  * @param from    - Start of the period (inclusive).
  * @param to      - End of the period (inclusive).
@@ -77,7 +79,7 @@ export async function getRevenueSeries(
   const rows = await db
     .select({
       date: sql<Date>`DATE_TRUNC(${sql.raw(GROUP_BY_SQL[groupBy])}, ${reservations.created_at})`,
-      value: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0.00)::numeric::text`,
+      value: sql<string>`COALESCE(SUM(COALESCE(NULLIF(${reservations.taxable_subtotal}, 0.00), ${reservations.amount_paid})), 0.00)::numeric::text`,
     })
     .from(reservations)
     .where(

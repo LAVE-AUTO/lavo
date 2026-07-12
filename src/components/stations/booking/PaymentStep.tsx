@@ -41,13 +41,13 @@ function PaymentTotals({ snapshot, grandTotal }: { snapshot: FinancialSnapshot |
               <span className="text-foreground/70">{formatAmount(snapshot.platformServiceFee)}</span>
             </div>
           )}
-          {snapshot.tpsAmount != null && (
+          {snapshot.tpsAmount != null && snapshot.tpsAmount > 0 && (
             <div className="flex justify-between text-[13px]">
               <span className="text-foreground/70">{t('payment_line_tps')}</span>
               <span className="text-foreground/70">{formatAmount(snapshot.tpsAmount)}</span>
             </div>
           )}
-          {snapshot.tvqAmount != null && (
+          {snapshot.tvqAmount != null && snapshot.tvqAmount > 0 && (
             <div className="flex justify-between text-[13px]">
               <span className="text-foreground/70">{t('payment_line_tvq')}</span>
               <span className="text-foreground/70">{formatAmount(snapshot.tvqAmount)}</span>

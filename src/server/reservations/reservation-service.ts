@@ -69,7 +69,7 @@ import {
   listEntriesByStationPaginated,
   cancelExpiredPendingPaymentsForSlot,
 } from './entry-repository';
-import { computeReservationSplit } from './compute-reservation-split';
+import { computeReservationSplit, computeWalkInSplit, mapSplitToEntryFinancialSnapshot } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
 import { refreshStationStats } from '@/server/station/station-stats-service';
 import { findApplicablePromotionForUserReservation } from '@/server/station/station-promotion-service';
@@ -88,27 +88,6 @@ function parseDecimal(s: string | null | undefined): number {
   if (s == null) return 0;
   const n = parseFloat(String(s));
   return Number.isFinite(n) ? n : 0;
-}
-
-function mapSplitToEntryFinancialSnapshot(split: Awaited<ReturnType<typeof computeReservationSplit>>) {
-  return {
-    amount_paid: toDecimal(split.client_total),
-    commission_rate: split.commissionRate,
-    commission_amount: toDecimal(split.commissionAmount),
-    station_payout: toDecimal(split.station_total_transferred),
-    station_service_total: toDecimal(split.station_service_total),
-    platform_service_fee: toDecimal(split.platform_service_fee),
-    taxable_subtotal: toDecimal(split.taxable_subtotal),
-    tps_amount: toDecimal(split.tps_amount),
-    tvq_amount: toDecimal(split.tvq_amount),
-    client_total: toDecimal(split.client_total),
-    platform_subtotal: toDecimal(split.platform_subtotal),
-    platform_tax_amount: toDecimal(split.platform_tax_amount),
-    platform_total_retained: toDecimal(split.platform_total_retained),
-    station_subtotal: toDecimal(split.station_subtotal),
-    station_tax_amount: toDecimal(split.station_tax_amount),
-    station_total_transferred: toDecimal(split.station_total_transferred),
-  };
 }
 
 /**
@@ -1454,6 +1433,10 @@ export async function createWalkInEntry(opts: CreateWalkInOptions): Promise<Entr
   const walkInEmail = isClient ? null : clientEmail ?? null;
   const walkInName = isClient ? null : clientName ?? null;
 
+  // Walk-ins are paid off-platform (cash/card at the station), so they carry no commission or
+  // platform service fee, but the station still owes sales tax on the service — see computeWalkInSplit.
+  const split = computeWalkInSplit(parseDecimal(String(amount)));
+
   if (timeSlotId) {
     return createReservationEntry({
       user_id: entryUserId,
@@ -1463,10 +1446,7 @@ export async function createWalkInEntry(opts: CreateWalkInOptions): Promise<Entr
       time_slot_id: timeSlotId,
       booking_source: 'standard',
       status: STATUS_CONFIRMED,
-      amount_paid: toDecimal(String(amount)),
-      commission_rate: '0',
-      commission_amount: '0',
-      station_payout: toDecimal(String(amount)),
+      ...mapSplitToEntryFinancialSnapshot(split),
       ticket_code: generateTicketCode(),
       walk_in_client_email: walkInEmail,
       walk_in_client_name: walkInName,
@@ -1481,10 +1461,7 @@ export async function createWalkInEntry(opts: CreateWalkInOptions): Promise<Entr
     service_id: serviceId,
     queue_position: queuePosition,
     status: STATUS_CONFIRMED,
-    amount_paid: toDecimal(String(amount)),
-    commission_rate: '0',
-    commission_amount: '0',
-    station_payout: toDecimal(String(amount)),
+    ...mapSplitToEntryFinancialSnapshot(split),
     ticket_code: generateTicketCode(),
     walk_in_client_email: walkInEmail,
     walk_in_client_name: walkInName,

@@ -133,7 +133,9 @@ export async function runSendEscrowWeeklyTransactionsReport(): Promise<SendEscro
       clientEmail: r.clientEmail,
       stationName: r.stationName,
       amountPaid: r.clientTotal ?? r.amountPaid,
-      commissionAmount: r.platformTotalRetained ?? r.commissionAmount,
+      // Platform's total retained share (commission + platform fee + platform's tax cut),
+      // not pure commission — see WeeklyEscrowTransactionRow.platformRetained.
+      platformRetained: r.platformTotalRetained ?? r.commissionAmount,
       stationPayout: r.stationTotalTransferred ?? r.stationPayout,
       stripePaymentId: r.stripePaymentId,
       stripeTransferId: r.stripeTransferId,

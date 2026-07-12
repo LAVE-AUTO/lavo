@@ -130,7 +130,11 @@ export async function getReservationMetrics(
   const result = await db
     .select({
       total_transactions: sql<number>`COUNT(*)::int`,
-      total_revenue: sql<string>`COALESCE(SUM(${reservations.amount_paid}), 0.00)::numeric::text`,
+      // taxable_subtotal (service + platform fee, pre-tax) rather than amount_paid/client_total,
+      // which also includes TPS/TVQ sales tax collected on behalf of the government.
+      total_revenue: sql<string>`COALESCE(SUM(COALESCE(NULLIF(${reservations.taxable_subtotal}, 0.00), ${reservations.amount_paid})), 0.00)::numeric::text`,
+      // Platform's total retained share (commission + platform fee + platform's tax cut) —
+      // displayed under the "Platform retained" label (kpi_platform_retained), not pure commission.
       total_commissions: sql<string>`COALESCE(SUM(${reservations.platform_total_retained}), 0.00)::numeric::text`,
     })
     .from(reservations)

@@ -1292,7 +1292,10 @@ export type WeeklyEscrowTransactionRow = {
   clientEmail: string;
   stationName: string;
   amountPaid: string; // decimal as string from DB
-  commissionAmount: string | null;
+  /** Platform's total retained share: commission + flat platform fee + platform's TPS/TVQ
+   *  cut. NOT pure commission — deliberately named/labeled to avoid conflating remittable
+   *  sales tax with commission revenue in this ops report. */
+  platformRetained: string | null;
   stationPayout: string | null;
   stripePaymentId: string | null;
   stripeTransferId: string | null;
@@ -1329,7 +1332,7 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
   const subject = locale === 'en' ? subjectEn : subjectFr;
 
   const totalAmount = rows.reduce((acc, r) => acc + (parseFloat(r.amountPaid) || 0), 0);
-  const totalCommission = rows.reduce((acc, r) => acc + (parseFloat(r.commissionAmount ?? '0') || 0), 0);
+  const totalPlatformRetained = rows.reduce((acc, r) => acc + (parseFloat(r.platformRetained ?? '0') || 0), 0);
   const totalPayout = rows.reduce((acc, r) => acc + (parseFloat(r.stationPayout ?? '0') || 0), 0);
 
   const emptyRowMessage =
@@ -1354,7 +1357,7 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resId}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${resStat}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.amountPaid)}</td>
-              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.commissionAmount)}</td>
+              <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.platformRetained)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee; text-align:right;">${formatMoneyCAD(r.stationPayout)}</td>
               <td style="padding: 8px 8px; border-bottom: 1px solid #eee;">${xfer}</td>
             </tr>`;
@@ -1366,7 +1369,7 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
     <div style="margin: 0 0 12px; color: #444;">
       <div><strong>${locale === 'en' ? 'Transactions:' : 'Transactions :'} </strong>${rows.length}</div>
       <div><strong>${locale === 'en' ? 'Total paid:' : 'Total payé :'} </strong>${formatMoneyCAD(totalAmount)}</div>
-      <div><strong>${locale === 'en' ? 'Total commission:' : 'Total commission :'} </strong>${formatMoneyCAD(totalCommission)}</div>
+      <div><strong>${locale === 'en' ? 'Total platform retained:' : 'Total retenu plateforme :'} </strong>${formatMoneyCAD(totalPlatformRetained)}</div>
       <div><strong>${locale === 'en' ? 'Total station payout:' : 'Total payout station :'} </strong>${formatMoneyCAD(totalPayout)}</div>
     </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">
@@ -1378,7 +1381,7 @@ export async function sendWeeklyEscrowTransactionsReportEmail(
           <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Reservation ID' : 'ID réservation'}</th>
           <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Status' : 'Statut'}</th>
           <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Paid' : 'Payé'}</th>
-          <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Commission' : 'Commission'}</th>
+          <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Platform retained' : 'Retenu plateforme'}</th>
           <th align="right" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Payout' : 'Payout'}</th>
           <th align="left" style="padding: 8px 8px; border-bottom: 1px solid #e8e4da;">${locale === 'en' ? 'Transfer ID' : 'Transfer ID'}</th>
         </tr>

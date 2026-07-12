@@ -77,8 +77,8 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
         ...(snapshot.platformServiceFee != null && snapshot.platformServiceFee > 0
           ? [{ label: t('payment_line_platform_fee'), amount: snapshot.platformServiceFee }]
           : []),
-        ...(snapshot.tpsAmount != null ? [{ label: t('payment_line_tps'), amount: snapshot.tpsAmount }] : []),
-        ...(snapshot.tvqAmount != null ? [{ label: t('payment_line_tvq'), amount: snapshot.tvqAmount }] : []),
+        ...(snapshot.tpsAmount != null && snapshot.tpsAmount > 0 ? [{ label: t('payment_line_tps'), amount: snapshot.tpsAmount }] : []),
+        ...(snapshot.tvqAmount != null && snapshot.tvqAmount > 0 ? [{ label: t('payment_line_tvq'), amount: snapshot.tvqAmount }] : []),
       ]
     : [];
 

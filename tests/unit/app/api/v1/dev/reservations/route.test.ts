@@ -28,6 +28,7 @@ jest.mock('@/server/station/config-repository', () => ({
   getConfigByStationId: (...args: unknown[]) => mockGetConfigByStationId(...args),
 }));
 jest.mock('@/server/reservations/compute-reservation-split', () => ({
+  ...jest.requireActual('@/server/reservations/compute-reservation-split'),
   computeReservationSplit: (...args: unknown[]) => mockComputeReservationSplit(...args),
 }));
 jest.mock('@/server/station/slot-repository', () => ({

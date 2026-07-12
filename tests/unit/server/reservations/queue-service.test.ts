@@ -57,6 +57,7 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   findPendingPaymentQueueEntryAtStation: (...args: unknown[]) => mockFindPendingPaymentQueueEntryAtStation(...args),
 }));
 jest.mock('@/server/reservations/compute-reservation-split', () => ({
+  ...jest.requireActual('@/server/reservations/compute-reservation-split'),
   computeReservationSplit: (...args: unknown[]) => mockComputeReservationSplit(...args),
 }));
 jest.mock('@/server/reservations/queue-position-helper', () => ({

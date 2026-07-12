@@ -84,14 +84,19 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   result.processed = toProcess.length;
 
   const settled = await runWithConcurrencyLimit(toProcess, NO_SHOW_CONCURRENCY, async (entry) => {
-    // Defensive: DB could theoretically contain a non-numeric or negative amount_paid
-    // (data-migration bug, manual edit). Clamp to a non-negative finite number so we can
-    // never compute negative Stripe cents, which would be rejected or misapplied.
+    // Defensive: DB could theoretically contain a non-numeric or negative amount_paid /
+    // station_service_total (data-migration bug, manual edit). Clamp to a non-negative finite
+    // number so we can never compute negative Stripe cents, which would be rejected or misapplied.
     const rawAmount = parseFloat(String(entry.amount_paid));
     const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
+    // Penalty is a percentage of the pre-tax, pre-platform-fee service price only — the client
+    // isn't penalized on tax or the platform fee (amount_paid is the tax-inclusive total captured
+    // by Stripe, station_service_total is the pre-tax service price).
+    const rawServiceAmount = parseFloat(String(entry.station_service_total));
+    const penaltyBaseAmount = Number.isFinite(rawServiceAmount) && rawServiceAmount > 0 ? rawServiceAmount : 0;
     const penaltyAmount = Math.max(
       0,
-      Math.round(amountPaid * policy.penaltyRate * 100) / 100
+      Math.round(penaltyBaseAmount * policy.penaltyRate * 100) / 100
     );
     const refundedAmount = Math.max(
       0,

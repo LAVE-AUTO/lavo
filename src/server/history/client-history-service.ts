@@ -247,11 +247,13 @@ async function toPdfTextLines(receipt: ClientHistoryAppReceipt, locale: string):
     `- TPS: ${tpsAmount.toFixed(2)} ${receipt.amount.currency}`,
     `- TVQ: ${tvqAmount.toFixed(2)} ${receipt.amount.currency}`,
   ];
-  if (tip > 0) {
-    lines.push(`- ${t['receipt_tip'] ?? 'Tip'}: ${tip.toFixed(2)} ${receipt.amount.currency}`);
-  }
   lines.push('');
   lines.push(`${t['receipt_total'] ?? 'Total'}: ${total.toFixed(2)} ${receipt.amount.currency}`);
+  // Tip is a separate charge, never summed into Total — kept out of the itemized
+  // breakdown above and shown after it, matching the on-screen ReceiptModal.
+  if (tip > 0) {
+    lines.push(`${t['receipt_tip_separate'] ?? 'Tip (charged separately)'}: ${tip.toFixed(2)} ${receipt.amount.currency}`);
+  }
 
   return lines;
 }

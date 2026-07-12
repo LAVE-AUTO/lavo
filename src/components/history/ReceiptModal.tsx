@@ -121,8 +121,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
         ...(b.platformServiceFee != null && b.platformServiceFee > 0
           ? [{ label: t('receipt_platform_fee'), amount: b.platformServiceFee }]
           : []),
-        ...(b.tpsAmount != null ? [{ label: t('receipt_tps'), amount: b.tpsAmount }] : []),
-        ...(b.tvqAmount != null ? [{ label: t('receipt_tvq'), amount: b.tvqAmount }] : []),
+        ...(b.tpsAmount != null && b.tpsAmount > 0 ? [{ label: t('receipt_tps'), amount: b.tpsAmount }] : []),
+        ...(b.tvqAmount != null && b.tvqAmount > 0 ? [{ label: t('receipt_tvq'), amount: b.tvqAmount }] : []),
       ]
     : [];
 

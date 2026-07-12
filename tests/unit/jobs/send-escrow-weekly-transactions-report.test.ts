@@ -170,7 +170,7 @@ describe('runSendEscrowWeeklyTransactionsReport', () => {
           expect.objectContaining({
             reservationId: 'res-2',
             amountPaid: '23.00',
-            commissionAmount: '4.60',
+            platformRetained: '4.60',
             stationPayout: '18.40',
           }),
         ],

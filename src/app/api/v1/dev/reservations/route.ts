@@ -12,16 +12,12 @@ import { findStationById } from '@/server/station/station-repository';
 import { findServiceVehicleEntryForBooking } from '@/server/station/service-repository';
 import { lockSlotForUpdate, countReservationsBySlotId, incrementSlotBookedCount } from '@/server/station/slot-repository';
 import { getConfigByStationId } from '@/server/station/config-repository';
-import { computeReservationSplit } from '@/server/reservations/compute-reservation-split';
+import { computeReservationSplit, mapSplitToEntryFinancialSnapshot } from '@/server/reservations/compute-reservation-split';
 import { hasActiveReservationForSlot, createReservationEntry } from '@/server/reservations/entry-repository';
 import { serializeEntry } from '@/server/reservations/entry-serializer';
 import { ActiveReservationExistsError, SlotFullError, NotFoundError } from '@/lib/errors';
 import { db } from '@/lib/db';
 import type { NextResponse } from 'next/server';
-
-function toDecimal(value: number): string {
-  return value.toFixed(2);
-}
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (process.env.NODE_ENV === 'production') {
@@ -89,22 +85,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           vehicle_format_id,
           time_slot_id,
           status: 'confirmed',
-          amount_paid: toDecimal(split.client_total),
-          commission_rate: split.commissionRate,
-          commission_amount: toDecimal(split.commissionAmount),
-          station_payout: toDecimal(split.station_total_transferred),
-          station_service_total: toDecimal(split.station_service_total),
-          platform_service_fee: toDecimal(split.platform_service_fee),
-          taxable_subtotal: toDecimal(split.taxable_subtotal),
-          tps_amount: toDecimal(split.tps_amount),
-          tvq_amount: toDecimal(split.tvq_amount),
-          client_total: toDecimal(split.client_total),
-          platform_subtotal: toDecimal(split.platform_subtotal),
-          platform_tax_amount: toDecimal(split.platform_tax_amount),
-          platform_total_retained: toDecimal(split.platform_total_retained),
-          station_subtotal: toDecimal(split.station_subtotal),
-          station_tax_amount: toDecimal(split.station_tax_amount),
-          station_total_transferred: toDecimal(split.station_total_transferred),
+          ...mapSplitToEntryFinancialSnapshot(split),
           stripe_payment_id: null,
         },
         tx

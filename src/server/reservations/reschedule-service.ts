@@ -193,6 +193,10 @@ export async function rescheduleReservation(
 
   const policy = await getCancellationPolicy();
   const amountPaid = parseFloat(reservation.amount_paid);
+  // Penalty is a percentage of the pre-tax, pre-platform-fee service price only — the client
+  // isn't penalized on tax or the platform fee (amount_paid is the tax-inclusive total captured
+  // by Stripe, station_service_total is the pre-tax service price).
+  const penaltyBaseAmount = parseFloat(reservation.station_service_total ?? reservation.amount_paid);
   const slotStart = reservation.slotStartTime;
   const minutesUntilService = slotStart
     ? (slotStart.getTime() - Date.now()) / 60_000
@@ -200,7 +204,7 @@ export async function rescheduleReservation(
 
   const isLateCancellation = minutesUntilService < policy.freeWindowMinutes;
   const penaltyAmount = isLateCancellation
-    ? Math.round(amountPaid * policy.penaltyRate * 100) / 100
+    ? Math.round(penaltyBaseAmount * policy.penaltyRate * 100) / 100
     : 0;
   const refundedAmount = Math.round((amountPaid - penaltyAmount) * 100) / 100;
 

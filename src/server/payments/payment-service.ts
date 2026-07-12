@@ -370,8 +370,10 @@ export type CreateTipPaymentIntentParams = {
   stationStripeAccountId: string;
   reservationId: string;
   /** Platform commission in cents. Applied as application_fee_amount so the platform
-   *  earns revenue on tips and is not left absorbing Stripe processing fees alone. */
-  commissionCents?: number;
+   *  earns revenue on tips and is not left absorbing Stripe processing fees alone.
+   *  Required (not defaulted) so every call site must state its commission explicitly —
+   *  a silent default of 0 would give the platform no revenue on that tip. */
+  commissionCents: number;
   metadata?: Record<string, string>;
   /**
    * Stripe idempotency key — prevents duplicate PIs when the client retries (or two
@@ -395,7 +397,7 @@ export async function createTipPaymentIntent(
     amountCents,
     currency,
     stationStripeAccountId,
-    commissionCents = 0,
+    commissionCents,
     metadata = {},
     idempotencyKey,
   } = params;

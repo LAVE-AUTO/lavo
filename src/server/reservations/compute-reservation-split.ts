@@ -100,6 +100,36 @@ function centsToMoney(amountCents: number): number {
   return amountCents / 100;
 }
 
+function toDecimal(v: string | number): string {
+  return typeof v === 'number' ? v.toFixed(2) : String(v);
+}
+
+/**
+ * Maps a ReservationSplit to the reservations table's financial-snapshot columns.
+ * Shared by every entry-creation path (standard/QR reservations, queue joins, walk-ins)
+ * so the 16-column mapping never drifts between call sites.
+ */
+export function mapSplitToEntryFinancialSnapshot(split: ReservationSplit) {
+  return {
+    amount_paid: toDecimal(split.client_total),
+    commission_rate: split.commissionRate,
+    commission_amount: toDecimal(split.commissionAmount),
+    station_payout: toDecimal(split.station_total_transferred),
+    station_service_total: toDecimal(split.station_service_total),
+    platform_service_fee: toDecimal(split.platform_service_fee),
+    taxable_subtotal: toDecimal(split.taxable_subtotal),
+    tps_amount: toDecimal(split.tps_amount),
+    tvq_amount: toDecimal(split.tvq_amount),
+    client_total: toDecimal(split.client_total),
+    platform_subtotal: toDecimal(split.platform_subtotal),
+    platform_tax_amount: toDecimal(split.platform_tax_amount),
+    platform_total_retained: toDecimal(split.platform_total_retained),
+    station_subtotal: toDecimal(split.station_subtotal),
+    station_tax_amount: toDecimal(split.station_tax_amount),
+    station_total_transferred: toDecimal(split.station_total_transferred),
+  };
+}
+
 function buildReservationSplitSnapshot(params: {
   bookingSource: BookingSource;
   serviceTotalCents: number;
@@ -183,6 +213,29 @@ function buildReservationSplitSnapshot(params: {
  *   isQrBooking: false,
  * });
  */
+/**
+ * Computes the financial snapshot for a walk-in entry (payment collected on-site,
+ * off-platform — no Stripe PaymentIntent, no platform commission, no platform service fee).
+ *
+ * The station still owes TPS/TVQ on the service it sold, so the sales tax is computed on the
+ * service price alone and attributed entirely to the station (station_total_transferred),
+ * while commission/platform_service_fee/platform_total_retained stay at 0 — the platform never
+ * processes or takes a cut of this payment.
+ *
+ * @param {number} amountTotal - Walk-in service total in major currency units
+ * @returns {ReservationSplit} Split with zeroed platform commission/fee and full tax attributed to the station
+ */
+export function computeWalkInSplit(amountTotal: number): ReservationSplit {
+  const serviceTotalCents = normalizeMoneyToCents(amountTotal);
+  return buildReservationSplitSnapshot({
+    bookingSource: 'standard',
+    serviceTotalCents,
+    platformServiceFeeCents: 0,
+    commissionRate: '0.0000',
+    commissionCents: 0,
+  });
+}
+
 export async function computeReservationSplit(params: {
   amountTotal: number;
   isQrBooking: boolean;
@@ -190,13 +243,14 @@ export async function computeReservationSplit(params: {
 }): Promise<ReservationSplit> {
   const { amountTotal, isQrBooking, promotionReductionRate = null } = params;
   const serviceTotalCents = normalizeMoneyToCents(amountTotal);
-  const platformServiceFeeRaw = await getPlatformServiceFee();
-  const platformServiceFeeCents = parseNonNegativeMoney(
-    platformServiceFeeRaw,
-    'platform service fee',
-  );
 
   if (isQrBooking) {
+    // QR bookings never need the commission rate (they zero it out), so skip that lookup.
+    const platformServiceFeeRaw = await getPlatformServiceFee();
+    const platformServiceFeeCents = parseNonNegativeMoney(
+      platformServiceFeeRaw,
+      'platform service fee',
+    );
     return buildReservationSplitSnapshot({
       bookingSource: 'qr',
       serviceTotalCents,
@@ -206,7 +260,16 @@ export async function computeReservationSplit(params: {
     });
   }
 
-  const commissionRate = await getActiveCommissionRate();
+  // Independent settings lookups — run in parallel instead of two sequential round trips
+  // on every booking/queue-join.
+  const [platformServiceFeeRaw, commissionRate] = await Promise.all([
+    getPlatformServiceFee(),
+    getActiveCommissionRate(),
+  ]);
+  const platformServiceFeeCents = parseNonNegativeMoney(
+    platformServiceFeeRaw,
+    'platform service fee',
+  );
   const commissionRateNumber = parseRate(commissionRate, 'commission rate');
 
   if (promotionReductionRate != null) {

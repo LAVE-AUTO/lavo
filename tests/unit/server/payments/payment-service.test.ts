@@ -511,6 +511,7 @@ describe('createTipPaymentIntent', () => {
     stationId: 'station-uuid-0001',
     stationStripeAccountId: 'acct_test123',
     reservationId: 'rsv-uuid-0001',
+    commissionCents: 0,
   };
 
   beforeEach(() => {
