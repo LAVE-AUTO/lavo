@@ -32,6 +32,15 @@ interface Props {
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
+/** Normalize a stored time to HH:mm. The API returns HH:mm:ss (Postgres `time`),
+ *  but PATCH /station/hours only accepts HH:mm — so seconds must be stripped
+ *  before sending, otherwise the whole save fails validation. */
+function toHHMM(time: string | null | undefined): string | null {
+  if (!time) return null;
+  const m = String(time).match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${m[1].padStart(2, '0')}:${m[2]}` : null;
+}
+
 function buildDefaultDays(): HourDay[] {
   return [0, 1, 2, 3, 4, 5, 6].map((d) => ({
     day_of_week: d,
@@ -166,7 +175,18 @@ export function HoursTab({ config, locked }: Props) {
       if (Array.isArray(rows) && rows.length > 0) {
         const merged = buildDefaultDays().map((def) => {
           const found = rows.find((r) => r.day_of_week === def.day_of_week);
-          return found ?? def;
+          if (!found) return def;
+          /* Keep only the fields we manage and normalize times to HH:mm — the
+           * API hydrates HH:mm:ss and carries extra columns (station_id,
+           * updated_at) that must not leak back into the PATCH payload. */
+          return {
+            day_of_week: found.day_of_week,
+            is_open: found.is_open,
+            morning_start: toHHMM(found.morning_start),
+            morning_end: toHHMM(found.morning_end),
+            afternoon_start: toHHMM(found.afternoon_start),
+            afternoon_end: toHHMM(found.afternoon_end),
+          };
         });
         setDays(merged);
         /* Rehydrate the Modèle d'horaires inputs from the saved per-day
@@ -234,9 +254,20 @@ export function HoursTab({ config, locked }: Props) {
     if (derived.opening_time) configPayload.opening_time = derived.opening_time;
     if (derived.closing_time) configPayload.closing_time = derived.closing_time;
 
+    /* Clean per-day payload: only the managed fields, times normalized to HH:mm
+     * (PATCH /station/hours rejects HH:mm:ss and any extra column). */
+    const daysPayload = days.map((d) => ({
+      day_of_week: d.day_of_week,
+      is_open: d.is_open,
+      morning_start: toHHMM(d.morning_start),
+      morning_end: toHHMM(d.morning_end),
+      afternoon_start: toHHMM(d.afternoon_start),
+      afternoon_end: toHHMM(d.afternoon_end),
+    }));
+
     const [[configOk], [hoursOk]] = await Promise.all([
       patchWithApi('/station/config', configPayload),
-      patchWithApi('/station/hours', { days }),
+      patchWithApi('/station/hours', { days: daysPayload }),
     ]);
 
     if (configOk && hoursOk) {
