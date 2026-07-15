@@ -303,6 +303,11 @@ export default function StationAvailabilityPage() {
   const activePost = posts.find((p) => p.id === activePostId) ?? null;
   const activePostLabel = activePost ? `${t('availability_modal_poste')} ${activePost.position}` : undefined;
 
+  // Label of the post owning the block being edited — keeps the edit modal
+  // scoped and clearly labelled even from the aggregated "all posts" view.
+  const editingPost = editingBlock?.postId ? posts.find((p) => p.id === editingBlock.postId) ?? null : null;
+  const editingPostLabel = editingPost ? `${t('availability_modal_poste')} ${editingPost.position}` : activePostLabel;
+
   // For the aggregated "all posts" view: one bucket per active post, each also
   // carrying legacy (post-less) slots since those apply to every post.
   const postsBlocks = posts.map((post) => ({
@@ -396,7 +401,7 @@ export default function StationAvailabilityPage() {
         defaultEndTime={closingTime}
         /* Editing an existing slot stays scoped to the viewed post; creating lets the
            merchant pick one or several posts via the modal's multi-select. */
-        lockedPostLabel={editingBlock ? activePostLabel : undefined}
+        lockedPostLabel={editingBlock ? editingPostLabel : undefined}
         preselectedDate={preselectedDate ?? (selectedDay && selectedDay >= todayISO() ? selectedDay : null)}
       />
       <DayDetailsModal
