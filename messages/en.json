@@ -2077,6 +2077,8 @@
         "delays_status_pending": "To handle",
         "availability_save_success": "Availability saved",
         "availability_save_error": "Could not save the availability. Please retry.",
+        "availability_see_more_count": "See {count, plural, one {# more} other {# more}}",
+        "availability_post_no_slots": "No availability configured",
         "availability_delete_success": "Availability removed",
         "availability_delete_error": "Could not remove the availability.",
         "availability_delete_has_reservations": "This slot cannot be deleted because reservations are already attached to it.",
