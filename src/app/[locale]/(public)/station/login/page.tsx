@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StationBrandPanel } from '@/components/stations/apply/StationBrandPanel';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -47,7 +48,24 @@ export default async function StationLoginPage({ params }: Props) {
 
             {/* Mobile top bar */}
             <div className="flex items-center justify-between mb-5 lg:hidden">
-              <span className="text-[16px] font-bold text-dark-bg dark:text-white tracking-wide">Hurryline</span>
+              {/* Light mode: full wordmark */}
+              <Image
+                src={locale === 'fr' ? '/logo/logo2_2.png' : '/logo/logo_anglais_1.png'}
+                alt="Hurryline"
+                width={190}
+                height={50}
+                className="object-contain h-12 w-auto dark:hidden"
+                priority
+              />
+              {/* Dark mode: full dark-background wordmark */}
+              <Image
+                src={locale === 'fr' ? '/logo/logo22_2.png' : '/logo/logo_anglais_2.png'}
+                alt="Hurryline"
+                width={190}
+                height={50}
+                className="object-contain h-12 w-auto hidden dark:block"
+                priority
+              />
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <LangToggle />
