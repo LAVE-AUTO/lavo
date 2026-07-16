@@ -338,7 +338,7 @@ export function CreateBlockModal({
                     e.target.value = '';
                   }
                 }}
-                className="rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
+                className="rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC] dark:[color-scheme:dark]"
               />
               <span className="text-xs text-foreground/65 dark:text-[#B0BFB1]">
                 {t('availability_modal_add_date')}
@@ -363,7 +363,7 @@ export function CreateBlockModal({
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC] dark:[color-scheme:dark]"
                 />
               </div>
               <div>
@@ -374,7 +374,7 @@ export function CreateBlockModal({
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC]"
+                  className="w-full rounded-xl border border-[#DDAF3B]/30 bg-[#F0EDE0] px-3 py-2 text-sm text-[#001201] focus:border-[#DDAF3B] focus:outline-none dark:bg-[#001A05] dark:text-[#FFF9EC] dark:[color-scheme:dark]"
                 />
               </div>
             </div>
