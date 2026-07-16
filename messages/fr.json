@@ -1407,6 +1407,26 @@
         "cta_desc": "Notre équipe est disponible du lundi au vendredi, de 9 h à 18 h (HE).",
         "cta_btn": "Nous contacter"
     },
+    "faq_stations_page": {
+        "meta_title": "FAQ marchands - Hurryline",
+        "meta_desc": "Questions fréquentes pour les stations partenaires : configuration, paiements, litiges et gestion des réservations.",
+        "eyebrow": "FAQ marchands",
+        "title": "FAQ",
+        "title_accent": "marchands",
+        "subtitle": "Tout ce que vous devez savoir pour gérer votre station sur Hurryline. Si vous ne trouvez pas votre réponse ici, contactez notre équipe.",
+        "cta_title": "Encore des questions ?",
+        "cta_desc": "Notre équipe marchand est disponible du lundi au vendredi, de 9 h à 18 h (HE).",
+        "cta_btn": "Contacter le support"
+    },
+    "guide_station_page": {
+        "meta_title": "Guide de démarrage - Hurryline",
+        "meta_desc": "Guide pas à pas pour configurer et lancer votre station de lavage sur Hurryline.",
+        "eyebrow": "Guide",
+        "title": "Guide de démarrage",
+        "updated": "Dernière mise à jour : juillet 2025",
+        "questions": "Vous avez besoin d'aide ?",
+        "contact_btn": "Nous contacter"
+    },
     "cancel_policy": {
         "meta_title": "Politique d'annulation - Hurryline",
         "meta_desc": "Consultez notre politique d'annulation et de remboursement pour les réservations de lavage auto.",
@@ -3688,6 +3708,10 @@
         "page_cancellation_desc": "Délais, conditions, remboursements.",
         "page_faq": "FAQ",
         "page_faq_desc": "Questions fréquentes de la landing.",
+        "page_faq_stations": "FAQ marchands",
+        "page_faq_stations_desc": "Questions fréquentes côté marchand.",
+        "page_guide_station": "Guide de démarrage",
+        "page_guide_station_desc": "Guide pas à pas pour les stations.",
         "group_legal": "Pages légales",
         "group_site": "Site & landing",
         "empty_page_title": "Aucun contenu enregistré pour cette page",

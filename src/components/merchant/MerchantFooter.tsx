@@ -15,8 +15,8 @@ export async function MerchantFooter() {
   ];
 
   const resourceLinks = [
-    { href: '/faq', label: t('resources_guide') },
-    { href: '/faq', label: t('resources_faq') },
+    { href: '/guide-station', label: t('resources_guide') },
+    { href: '/faq-stations', label: t('resources_faq') },
     { href: '/support', label: t('resources_support') },
     { href: '/nous-contacter', label: t('resources_contact') },
   ];

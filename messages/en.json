@@ -1407,6 +1407,26 @@
         "cta_desc": "Our team is available Monday to Friday, 9 AM to 6 PM (ET).",
         "cta_btn": "Contact us"
     },
+    "faq_stations_page": {
+        "meta_title": "Merchant FAQ - Hurryline",
+        "meta_desc": "Frequently asked questions for partner stations: setup, payments, disputes and booking management.",
+        "eyebrow": "Merchant FAQ",
+        "title": "Frequently Asked",
+        "title_accent": "Questions",
+        "subtitle": "Everything you need to know to manage your station on Hurryline. If you can't find your answer here, reach out to our team.",
+        "cta_title": "Still have questions?",
+        "cta_desc": "Our merchant support team is available Monday to Friday, 9 AM to 6 PM (ET).",
+        "cta_btn": "Contact support"
+    },
+    "guide_station_page": {
+        "meta_title": "Getting Started Guide - Hurryline",
+        "meta_desc": "Step-by-step guide to set up and launch your car wash station on Hurryline.",
+        "eyebrow": "Guide",
+        "title": "Getting Started Guide",
+        "updated": "Last updated: July 2025",
+        "questions": "Need help?",
+        "contact_btn": "Contact us"
+    },
     "cancel_policy": {
         "meta_title": "Cancellation Policy - Hurryline",
         "meta_desc": "Review our cancellation and refund policy for car wash bookings.",
@@ -3688,6 +3708,10 @@
         "page_cancellation_desc": "Deadlines, conditions, refunds.",
         "page_faq": "FAQ",
         "page_faq_desc": "Frequently asked questions on the landing.",
+        "page_faq_stations": "Merchant FAQ",
+        "page_faq_stations_desc": "Frequently asked questions for merchants.",
+        "page_guide_station": "Getting Started Guide",
+        "page_guide_station_desc": "Step-by-step guide for stations.",
         "group_legal": "Legal pages",
         "group_site": "Site & landing",
         "empty_page_title": "No content saved for this page yet",
