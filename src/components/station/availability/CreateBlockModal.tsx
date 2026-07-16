@@ -152,9 +152,15 @@ export function CreateBlockModal({
       setStartTime(defaultStartTime);
       setEndTime(defaultEndTime);
       // Pre-check the post currently being viewed so the flow stays intuitive;
-      // the merchant can then add more posts or switch to "all".
-      setSelectedBays(defaultPostId ? [defaultPostId] : []);
-      setAllBays(false);
+      // the merchant can then add more posts or switch to "all". From the
+      // aggregated "all posts" view (defaultPostId === 'all') pre-select every post.
+      if (defaultPostId === 'all') {
+        setSelectedBays([]);
+        setAllBays(true);
+      } else {
+        setSelectedBays(defaultPostId ? [defaultPostId] : []);
+        setAllBays(false);
+      }
     }
     setErrors({});
   }, [isOpen, editingBlock, preselectedDate, defaultStartTime, defaultEndTime, defaultPostId]);

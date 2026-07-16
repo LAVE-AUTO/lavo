@@ -2077,6 +2077,8 @@
         "delays_status_pending": "À traiter",
         "availability_save_success": "Disponibilité enregistrée",
         "availability_save_error": "Impossible d’enregistrer la disponibilité. Réessaie.",
+        "availability_see_more_count": "Voir {count, plural, one {# autre} other {# autres}}",
+        "availability_post_no_slots": "Aucune disponibilité configurée",
         "availability_delete_success": "Disponibilité supprimée",
         "availability_delete_error": "Impossible de supprimer la disponibilité.",
         "availability_delete_has_reservations": "Ce créneau ne peut pas être supprimé car des réservations y sont déjà associées.",

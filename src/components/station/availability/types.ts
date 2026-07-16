@@ -5,4 +5,5 @@ export interface AvailabilityBlock {
     startTime: string;   // "12:00"
     endTime: string;     // "13:00"
     bayIds: string[];    // ["1", "2"] or ["all"] for all bays
+    postId?: string | null; // owning wash post (null = legacy, shown on every post)
 }

@@ -15,6 +15,7 @@ import { getFromApi, postWithApi, deleteWithApi, updateWithApi } from '@/service
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { BlocksPanel } from '@/components/station/availability/BlocksPanel';
+import { AllPostsBlocksPanel } from '@/components/station/availability/AllPostsBlocksPanel';
 import { MonthCalendar } from '@/components/station/availability/MonthCalendar';
 import { CreateBlockModal } from '@/components/station/availability/CreateBlockModal';
 import { DayDetailsModal } from '@/components/station/availability/DayDetailsModal';
@@ -79,8 +80,12 @@ function slotToBlock(slot: RawSlot, dateISO: string): AvailabilityBlock {
     startTime: extractTime(slot.start_time),
     endTime: extractTime(slot.end_time),
     bayIds: ['all'],
+    postId: slot.post_id,
   };
 }
+
+/** Sentinel post id for the "all posts" aggregated view. */
+const ALL_POSTS = 'all';
 
 export default function StationAvailabilityPage() {
   const t = useTranslations('station_dashboard');
@@ -160,9 +165,10 @@ export default function StationAvailabilityPage() {
     return () => { cancelled = true; };
   }, [authLoading, currentMonth, fetchMonth]);
 
-  // A slot belongs to the active post, or is a legacy (post-less) slot shown everywhere.
+  // A slot belongs to the active post, or is a legacy (post-less) slot shown
+  // everywhere. In the "all posts" view every slot matches.
   const slotMatchesActive = useCallback(
-    (s: RawSlot) => s.post_id === activePostId || !s.post_id,
+    (s: RawSlot) => activePostId === ALL_POSTS || s.post_id === activePostId || !s.post_id,
     [activePostId],
   );
 
@@ -197,11 +203,13 @@ export default function StationAvailabilityPage() {
   async function handleSave(data: Omit<AvailabilityBlock, 'id'>) {
     if (data.dates.length === 0) return;
 
-    /* Target posts. Editing stays scoped to the post being viewed; creating honours
-     * the modal's multi-select ('all' or a list of post ids), so one availability
-     * block can be applied to several wash posts at once. */
+    /* Target posts. Editing stays scoped to the edited block's own post (falling
+     * back to the viewed post for legacy post-less slots), so it works from the
+     * aggregated "all posts" view too; creating honours the modal's multi-select
+     * ('all' or a list of post ids). */
+    const editFallbackPost = activePostId && activePostId !== ALL_POSTS ? [activePostId] : posts.map((p) => p.id);
     const targetPostIds = editingBlock
-      ? (activePostId ? [activePostId] : [])
+      ? (editingBlock.postId ? [editingBlock.postId] : editFallbackPost)
       : (data.bayIds.includes('all') || data.bayIds.length === 0
           ? posts.map((p) => p.id)
           : data.bayIds.filter((id) => posts.some((p) => p.id === id)));
@@ -291,8 +299,23 @@ export default function StationAvailabilityPage() {
 
   if (initialLoading) return <PageLoader label={t('loading')} />;
 
+  const isAllPostsView = activePostId === ALL_POSTS;
   const activePost = posts.find((p) => p.id === activePostId) ?? null;
   const activePostLabel = activePost ? `${t('availability_modal_poste')} ${activePost.position}` : undefined;
+
+  // Label of the post owning the block being edited — keeps the edit modal
+  // scoped and clearly labelled even from the aggregated "all posts" view.
+  const editingPost = editingBlock?.postId ? posts.find((p) => p.id === editingBlock.postId) ?? null : null;
+  const editingPostLabel = editingPost ? `${t('availability_modal_poste')} ${editingPost.position}` : activePostLabel;
+
+  // For the aggregated "all posts" view: one bucket per active post, each also
+  // carrying legacy (post-less) slots since those apply to every post.
+  const postsBlocks = posts.map((post) => ({
+    post,
+    blocks: Object.entries(slotsByDate).flatMap(([date, slots]) =>
+      slots.filter((s) => s.post_id === post.id || !s.post_id).map((s) => slotToBlock(s, date)),
+    ),
+  }));
 
   return (
     <div className="flex h-full flex-col">
@@ -320,6 +343,20 @@ export default function StationAvailabilityPage() {
           <span className="shrink-0 text-[11px] font-black uppercase tracking-[1px] text-[#AAAAAA] dark:text-[#5A5A4A]">
             {t('post_selector_label')}
           </span>
+          {posts.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setActivePostId(ALL_POSTS)}
+              aria-pressed={activePostId === ALL_POSTS}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors ${
+                activePostId === ALL_POSTS
+                  ? 'bg-[#DDAF3B] text-[#001201]'
+                  : 'border border-[#DDAF3B]/30 text-[#5A5A4A] hover:bg-[#DDAF3B]/10 dark:text-[#B0BFB1]'
+              }`}
+            >
+              {t('availability_all_postes_short')}
+            </button>
+          )}
           {posts.map((p) => (
             <button
               key={p.id}
@@ -340,7 +377,15 @@ export default function StationAvailabilityPage() {
 
       {/* Two-panel calendar */}
       <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-        <BlocksPanel blocks={allBlocks} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
+        {isAllPostsView ? (
+          <AllPostsBlocksPanel
+            postsBlocks={postsBlocks}
+            onSelectPost={setActivePostId}
+            onCreateClick={openCreateModal}
+          />
+        ) : (
+          <BlocksPanel blocks={allBlocks} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
+        )}
         <MonthCalendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} getBlocksForDate={getBlocksForDate} onDayClick={handleDayClick} selectedDateISO={selectedDay} />
       </div>
 
@@ -356,7 +401,7 @@ export default function StationAvailabilityPage() {
         defaultEndTime={closingTime}
         /* Editing an existing slot stays scoped to the viewed post; creating lets the
            merchant pick one or several posts via the modal's multi-select. */
-        lockedPostLabel={editingBlock ? activePostLabel : undefined}
+        lockedPostLabel={editingBlock ? editingPostLabel : undefined}
         preselectedDate={preselectedDate ?? (selectedDay && selectedDay >= todayISO() ? selectedDay : null)}
       />
       <DayDetailsModal
