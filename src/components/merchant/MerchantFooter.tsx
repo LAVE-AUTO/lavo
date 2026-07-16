@@ -15,17 +15,17 @@ export async function MerchantFooter() {
   ];
 
   const resourceLinks = [
-    { href: '#', label: t('resources_guide') },
-    { href: '#', label: t('resources_faq') },
-    { href: '#', label: t('resources_support') },
-    { href: '#', label: t('resources_contact') },
+    { href: '/faq', label: t('resources_guide') },
+    { href: '/faq', label: t('resources_faq') },
+    { href: '/support', label: t('resources_support') },
+    { href: '/nous-contacter', label: t('resources_contact') },
   ];
 
   const legalLinks = [
-    { href: '#', label: t('legal_tos') },
-    { href: '#', label: t('legal_privacy') },
-    { href: '#', label: t('legal_cancel') },
-    { href: '#', label: t('legal_law25') },
+    { href: '/cgu-stations', label: t('legal_tos') },
+    { href: '/politique-de-confidentialite', label: t('legal_privacy') },
+    { href: '/politique-annulation', label: t('legal_cancel') },
+    { href: '/politique-de-confidentialite', label: t('legal_law25') },
   ];
 
   return (
@@ -79,9 +79,9 @@ export async function MerchantFooter() {
             <ul className="flex flex-col gap-[9px]">
               {resourceLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
+                  <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -95,9 +95,9 @@ export async function MerchantFooter() {
             <ul className="flex flex-col gap-[9px]">
               {legalLinks.map(({ href, label }) => (
                 <li key={label}>
-                  <a href={href} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
+                  <Link href={href as Parameters<typeof Link>[0]['href']} className="text-[13px] text-[#B0BFB1] hover:text-[#FFEECA] transition-colors duration-300">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -109,15 +109,15 @@ export async function MerchantFooter() {
             {t('copyright', { year })}
           </p>
           <div className="flex items-center gap-5">
-            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
+            <Link href="/politique-de-confidentialite" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_privacy')}
-            </a>
-            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
+            </Link>
+            <Link href="/cgu-stations" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_tos')}
-            </a>
-            <a href="#" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
+            </Link>
+            <Link href="/politique-annulation" className="text-[11px] text-[#B0BFB1] hover:text-[#DDAF3B] transition-colors duration-300">
               {t('legal_cancel')}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
