@@ -2170,7 +2170,15 @@
         "detail_entry_id": "ID",
         "detail_slot": "Créneau",
         "detail_completed_at": "Terminé à",
-        "detail_no_slot": "Sans créneau"
+        "detail_no_slot": "Sans créneau",
+        "col_service_total": "Service",
+        "col_platform_fee": "Frais de service",
+        "col_tps": "TPS",
+        "col_tvq": "TVQ",
+        "col_commission": "Commission",
+        "col_station_tax": "Taxes station",
+        "col_net_transferred": "Net transféré",
+        "detail_commission_rate": "Taux de commission"
     },
     "station_history": {
         "page_title": "Historique",

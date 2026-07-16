@@ -2170,7 +2170,15 @@
         "detail_entry_id": "ID",
         "detail_slot": "Time slot",
         "detail_completed_at": "Completed at",
-        "detail_no_slot": "No slot"
+        "detail_no_slot": "No slot",
+        "col_service_total": "Service",
+        "col_platform_fee": "Service fee",
+        "col_tps": "GST",
+        "col_tvq": "QST",
+        "col_commission": "Commission",
+        "col_station_tax": "Station taxes",
+        "col_net_transferred": "Net transferred",
+        "detail_commission_rate": "Commission rate"
     },
     "station_history": {
         "page_title": "History",

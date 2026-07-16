@@ -17,6 +17,19 @@ export interface ReservationEntry {
   status: EntryStatus;
   queue_position: number | null;
   amount_paid: string | null;
+  /* Financial snapshot (decimal strings, nullable for legacy entries). */
+  station_service_total?: string | null;
+  platform_service_fee?: string | null;
+  tps_amount?: string | null;
+  tvq_amount?: string | null;
+  client_total?: string | null;
+  commission_rate?: string | null;
+  commission_amount?: string | null;
+  station_tax_amount?: string | null;
+  /** True amount that will be transferred to the station. Reference net figure. */
+  station_total_transferred?: string | null;
+  /** Legacy payout. Prefer station_total_transferred as the reference net amount. */
+  station_payout?: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;

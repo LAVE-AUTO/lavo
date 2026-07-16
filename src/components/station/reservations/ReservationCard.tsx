@@ -34,6 +34,11 @@ const ACCENT_MAP: Record<string, string> = {
   in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
 };
 
+/** Formats a decimal string amount as "12.34$" for the detail rows. */
+function money(value: string): string {
+  return `${(parseFloat(value) || 0).toFixed(2)}$`;
+}
+
 function canDoStart(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'pending_payment'; }
 function canDoValidate(s: EntryStatus) { return s === 'in_progress'; }
 function canDoCancel(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'late'; }
@@ -174,10 +179,46 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
               {entry.completed_at && (
                 <DetailRow label={t('detail_completed_at')} value={formatTime(entry.completed_at)} />
               )}
-              {entry.amount_paid && (
-                <DetailRow label={t('amount_label')} value={`${parseFloat(entry.amount_paid).toFixed(2)}$`} gold />
-              )}
             </div>
+
+            {/* Financial section */}
+            {entry.amount_paid && (
+              <div className="mb-3 rounded-xl bg-white/40 p-3 dark:bg-surface/60">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
+                  {t('amount_label')}
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+                  <DetailRow label={t('amount_label')} value={money(entry.client_total ?? entry.amount_paid)} gold />
+                  {entry.station_service_total && (
+                    <DetailRow label={t('col_service_total')} value={money(entry.station_service_total)} />
+                  )}
+                  {entry.platform_service_fee && parseFloat(entry.platform_service_fee) > 0 && (
+                    <DetailRow label={t('col_platform_fee')} value={money(entry.platform_service_fee)} />
+                  )}
+                  {entry.tps_amount && parseFloat(entry.tps_amount) > 0 && (
+                    <DetailRow label={t('col_tps')} value={money(entry.tps_amount)} />
+                  )}
+                  {entry.tvq_amount && parseFloat(entry.tvq_amount) > 0 && (
+                    <DetailRow label={t('col_tvq')} value={money(entry.tvq_amount)} />
+                  )}
+                  {entry.commission_rate && (
+                    <DetailRow label={t('detail_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
+                  )}
+                  {entry.commission_amount && (
+                    <DetailRow label={t('col_commission')} value={money(entry.commission_amount)} />
+                  )}
+                  {entry.station_tax_amount && parseFloat(entry.station_tax_amount) > 0 && (
+                    <DetailRow label={t('col_station_tax')} value={money(entry.station_tax_amount)} />
+                  )}
+                  {/* Reference net figure: the true amount that will be transferred to the station. */}
+                  <DetailRow
+                    label={t('col_net_transferred')}
+                    value={money(entry.station_total_transferred ?? entry.station_payout ?? '0')}
+                    gold
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             {hasActions && (
