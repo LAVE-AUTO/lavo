@@ -25,7 +25,6 @@ export async function MerchantFooter() {
     { href: '/cgu-stations', label: t('legal_tos') },
     { href: '/politique-de-confidentialite', label: t('legal_privacy') },
     { href: '/politique-annulation', label: t('legal_cancel') },
-    { href: '/politique-de-confidentialite', label: t('legal_law25') },
   ];
 
   return (
