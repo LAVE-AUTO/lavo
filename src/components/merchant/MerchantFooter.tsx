@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 
@@ -34,8 +35,14 @@ export async function MerchantFooter() {
 
           {/* Brand column */}
           <div>
-            <div className="font-playfair text-[30px] font-black text-[#DDAF3B] tracking-[4px] mb-3">
-              Hurryline
+            <div className="mb-3">
+              <Image
+                src="/logo/logo_anglais_2.png"
+                alt="Hurryline"
+                width={160}
+                height={36}
+                className="h-9 w-auto"
+              />
             </div>
             <p className="text-[13px] text-[#B0BFB1] leading-[1.7] max-w-[260px]">
               {t('tagline')}
