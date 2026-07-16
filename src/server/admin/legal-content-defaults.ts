@@ -125,7 +125,7 @@ const FR_DEFAULTS: Record<LegalContentKey, string> = {
   ].join('\n'),
 
   landing_faq_stations: qa([
-    { q: 'Comment créer mon compte station ?', a: 'Rendez-vous sur la page « Devenir partenaire », remplissez le formulaire d\'inscription en trois étapes (compte, commerce, documents), puis soumettez votre dossier. Notre équipe valide votre inscription sous 48 h ouvrées.' },
+    { q: 'Comment créer mon compte station ?', a: 'Rendez-vous sur la page d\'inscription station, remplissez le formulaire en trois étapes (compte, commerce, documents), puis soumettez votre dossier. Notre équipe valide votre inscription sous 48 h ouvrées.' },
     { q: 'Comment configurer mes horaires d\'ouverture ?', a: 'Dans votre tableau de bord, accédez à Configuration → Horaires. Définissez vos heures d\'ouverture pour chaque jour de la semaine. Vous pouvez également fermer des créneaux spécifiques depuis l\'onglet Disponibilités.' },
     { q: 'Comment fonctionne la commission Hurryline ?', a: 'Hurryline prélève une commission sur chaque réservation effectuée via la plateforme. Le taux applicable est visible dans votre contrat. Le reversement du solde net (prix de vente moins commission) s\'effectue chaque semaine via Stripe Connect.' },
     { q: 'Comment configurer mes postes de lavage ?', a: 'Depuis votre tableau de bord, allez dans l\'onglet Postes de lavage. Vous pouvez définir le nombre de postes, leurs types (automatique, manuel) et les formats de véhicules acceptés pour chacun.' },
@@ -140,7 +140,7 @@ const FR_DEFAULTS: Record<LegalContentKey, string> = {
   landing_guide_station: [
     '<p>Bienvenue sur Hurryline ! Ce guide vous accompagne pas à pas dans la configuration et la gestion de votre station de lavage. Suivez les étapes ci-dessous pour lancer votre activité sur la plateforme.</p>',
     '<h2>Étape 1 — Créez votre compte station</h2>',
-    '<p>Rendez-vous sur la page <a href="/station/apply">Devenir partenaire</a> pour créer votre compte. Le processus d\'inscription comprend trois étapes :</p>',
+    '<p>Rendez-vous sur la page <a href="/station/apply">Formulaire d\'adhésion</a> pour créer votre compte. Le processus d\'inscription comprend trois étapes :</p>',
     '<ul>',
     '<li><strong>Compte</strong> — Renseignez votre e-mail, téléphone et mot de passe</li>',
     '<li><strong>Commerce</strong> — Informations sur votre station : nom, adresse, nombre de postes, types de lavage</li>',
