@@ -7,6 +7,8 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
+import { ReceiptModal, type HistoryReservation } from '@/components/history/ReceiptModal';
+import { parseFinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
 
 /* ------------------------------------------------------------------ */
 /* API shapes (rich entry returned by GET /me/entries)                  */
@@ -23,7 +25,7 @@ interface ApiRichStation {
   free_cancellation_minutes: number | null;
 }
 
-interface ApiRichEntry {
+interface ApiRichEntry extends Partial<Omit<RawFinancialSnapshot, 'amount_paid'>> {
   id: string;
   entry_type: 'reservation' | 'queue';
   time_slot_id: string | null;
@@ -36,6 +38,8 @@ interface ApiRichEntry {
   created_at: string;
   station: ApiRichStation;
   vehicle_format: { id: string; label: string; price: string } | null;
+  service?: { id: string; name: string; category: string } | null;
+  tip_amount?: string | null;
   is_rated?: boolean;
   is_tipped?: boolean;
   slot_start_time: string | null;
@@ -65,6 +69,8 @@ interface EnrichedReservation {
   ticketCode: string | null;
   isRated: boolean;
   isTipped: boolean;
+  /** Data handed to the receipt modal — available at any time for paid entries. */
+  receipt: HistoryReservation;
 }
 
 /** Free cancellation rule: more than 1h before service start. */
@@ -108,6 +114,7 @@ export default function ReservationDetailPage() {
   const disputeDialogRef = useRef<HTMLDivElement | null>(null);
   const [confirmPresenceLoading, setConfirmPresenceLoading] = useState(false);
   const [presenceConfirmed, setPresenceConfirmed] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
   const { success: showSuccess, error: showError } = useToast();
 
   const loadReservation = useCallback(async () => {
@@ -163,6 +170,39 @@ export default function ReservationDetailPage() {
       ticketCode: entry.ticket_code,
       isRated: Boolean(entry.is_rated),
       isTipped: Boolean(entry.is_tipped),
+      receipt: {
+        id: entry.id,
+        stationName: entry.station?.name ?? `#${entry.station_id.slice(0, 8)}`,
+        stationAddress: entry.station ? `${entry.station.address}, ${entry.station.city}` : '',
+        vehicleFormatLabel: entry.vehicle_format?.label ?? null,
+        serviceName: entry.service?.name ?? null,
+        serviceCategory: entry.service?.category ?? null,
+        entryType: entry.entry_type,
+        amountPaid: parseFloat(entry.client_total ?? entry.amount_paid ?? '0') || 0,
+        tipAmount: entry.tip_amount ? parseFloat(entry.tip_amount) : null,
+        breakdown: entry.amount_paid
+          ? parseFinancialSnapshot({
+              amount_paid: entry.amount_paid,
+              station_service_total: entry.station_service_total ?? null,
+              platform_service_fee: entry.platform_service_fee ?? null,
+              taxable_subtotal: entry.taxable_subtotal ?? null,
+              tps_amount: entry.tps_amount ?? null,
+              tvq_amount: entry.tvq_amount ?? null,
+              client_total: entry.client_total ?? null,
+              commission_rate: entry.commission_rate ?? null,
+              commission_amount: entry.commission_amount ?? null,
+              platform_subtotal: entry.platform_subtotal ?? null,
+              platform_tax_amount: entry.platform_tax_amount ?? null,
+              platform_total_retained: entry.platform_total_retained ?? null,
+              station_payout: entry.station_payout ?? null,
+              station_subtotal: entry.station_subtotal ?? null,
+              station_tax_amount: entry.station_tax_amount ?? null,
+              station_total_transferred: entry.station_total_transferred ?? null,
+            } as RawFinancialSnapshot)
+          : null,
+        status: entry.status,
+        createdAt: entry.created_at,
+      },
     });
     setLoading(false);
   }, [id]);
@@ -513,7 +553,39 @@ export default function ReservationDetailPage() {
             )}
           </div>
         )}
+        {/* Receipt access — available at any time for a paid entry. */}
+        {reservation.totalPrice > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowReceipt(true)}
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border-2 border-border text-[15px] font-bold text-foreground/80 hover:border-gold/50 hover:text-gold transition-colors cursor-pointer"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="9" y1="13" x2="15" y2="13" />
+              <line x1="9" y1="17" x2="15" y2="17" />
+            </svg>
+            {t('receipt_btn')}
+          </button>
+        )}
       </div>
+
+      {/* Receipt modal */}
+      {showReceipt && (
+        <ReceiptModal
+          entry={{
+            ...reservation.receipt,
+            /* Only statuses with a translation get a localized chip label;
+             * anything else falls back to the raw status string. */
+            statusLabel: ['confirmed', 'in_progress', 'completed', 'cancelled', 'pending', 'pending_payment'].includes(reservation.status)
+              ? t(`status_${reservation.status}` as Parameters<typeof t>[0])
+              : reservation.status,
+          }}
+          locale={locale}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
 
       {/* Dispute modal */}
       {showDisputeModal && (

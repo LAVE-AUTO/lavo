@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, forwardRef, useImperativeHandle } from 'react';
-import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { useTranslations, useLocale } from 'next-intl';
+import { generateReceiptPdf } from '@/components/receipts/generate-receipt-pdf';
 import { type FinancialSnapshot } from '@/types/financial';
 import type {
   StationDetailData,
@@ -67,6 +69,7 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
   queuePosition,
 }: BookingReceiptProps, ref) {
   const t = useTranslations('booking');
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
 
   /* Total shown on the receipt: the backend client_total when available (includes
@@ -115,7 +118,43 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   });
 
-  const handleDownload = () => {
+  /* Real file download via the shared branded PDF generator. The legacy
+   * print-window path remains as a fallback if PDF generation fails. */
+  const handleDownload = async () => {
+    const pdfLines = [
+      { label: serviceName, amount: `$${servicePrice.toFixed(2)}`, sub: formatLabel ?? undefined },
+      ...extras.map((ex) => ({ label: `+ ${ex.name}`, amount: `$${ex.price.toFixed(2)}` })),
+      ...(surchargeAmount > 0
+        ? [{ label: t('receipt_reservation_surcharge'), amount: `$${surchargeAmount.toFixed(2)}`, secondary: true }]
+        : []),
+      ...fiscalLines.map((fl) => ({ label: fl.label, amount: `$${fl.amount.toFixed(2)}`, secondary: true })),
+    ];
+    try {
+      await generateReceiptPdf({
+        title: t('receipt_title'),
+        reference: ticketCode ? `#${ticketCode}` : '',
+        dateLabel: issuedAt,
+        stationName: station.name,
+        stationAddress: `${station.address}, ${station.city}`,
+        lines: [
+          { label: t('receipt_arrival'), amount: '', sub: arrivalLabel, secondary: true },
+          ...pdfLines,
+        ],
+        totalLabel: t('receipt_total'),
+        totalAmount: `$${receiptTotal.toFixed(2)}`,
+        ticketLabel: t('receipt_ticket_label'),
+        ticketCode,
+        ticketHint: t('receipt_ticket_hint'),
+        footer: t('receipt_footer'),
+        fileName: `hurryline-receipt-${ticketCode || Date.now()}`,
+        locale,
+      });
+    } catch {
+      handlePrintFallback();
+    }
+  };
+
+  const handlePrintFallback = () => {
     const win = window.open('', '_blank', 'width=920,height=1200');
     if (!win) return;
 
@@ -224,10 +263,14 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
         {/* Header band */}
         <div className="bg-gradient-to-r from-[#1b241d] to-[#141c16] px-5 py-4 flex items-center justify-between border-b border-[#323b30]">
           <div>
-            <div className="text-[11px] font-black uppercase tracking-[2px] text-[#B0BFB1]">
-              Hurryline
-            </div>
-            <div className="text-[18px] font-black text-[#FFEECA] leading-tight">
+            <Image
+              src={locale === 'en' ? '/logo/logo_anglais_2.png' : '/logo/logo22_2.png'}
+              alt="Hurryline"
+              width={110}
+              height={28}
+              className="h-6 w-auto"
+            />
+            <div className="mt-1 text-[18px] font-black text-[#FFEECA] leading-tight">
               {t('receipt_title')}
             </div>
           </div>

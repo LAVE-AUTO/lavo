@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { getFromApi, getAxiosInstance } from '@/services/axios-service';
+import { getFromApi } from '@/services/axios-service';
+import { generateReceiptPdf } from '@/components/receipts/generate-receipt-pdf';
 import type { FinancialSnapshot } from '@/types/financial';
 
-interface HistoryReservation {
+export interface HistoryReservation {
   id: string;
   stationName: string;
   stationAddress: string;
@@ -19,7 +21,11 @@ interface HistoryReservation {
   tipAmount?: number | null;
   /** Backend tax/fee breakdown. When present, the receipt prints its real lines. */
   breakdown?: FinancialSnapshot | null;
-  status: 'completed' | 'cancelled';
+  /** Any entry status. The status chip and label adapt; download is offered
+   *  for every paid entry so clients can retrieve their receipt at any time. */
+  status: string;
+  /** Optional label override for statuses outside completed/cancelled. */
+  statusLabel?: string;
   createdAt: string;
 }
 
@@ -104,7 +110,19 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     ?? t('receipt_service_generic');
   const vehicleLine = e.vehicleFormatLabel ?? t('receipt_service_unknown');
 
-  const isCompleted = e.status === 'completed';
+  /* Status chip: history entries are completed/cancelled; entries opened from
+   * the reservation detail page can carry any lifecycle status, rendered with
+   * the caller-provided label and a neutral gold chip. */
+  const statusLabel = e.statusLabel
+    ?? (e.status === 'completed' || e.status === 'cancelled' ? t(`status_${e.status}`) : e.status);
+  const statusChipClass = e.status === 'completed'
+    ? 'bg-Hurryline-success/15 text-Hurryline-success'
+    : e.status === 'cancelled'
+    ? 'bg-Hurryline-error/15 text-Hurryline-error'
+    : 'bg-[#DDAF3B]/15 text-[#DDAF3B]';
+
+  /* Receipts stay retrievable at any time for every paid entry. */
+  const canDownload = e.status === 'completed' || e.amountPaid > 0;
 
   /* Items breakdown. When the backend snapshot is present we print the real
    * fiscal lines (service, platform fee, TPS, TVQ) and use client_total as the
@@ -133,22 +151,27 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
       return;
     }
 
-    // Otherwise, fetch PDF from backend
+    // Otherwise, generate the branded PDF locally (real file download).
     setDownloading(true);
     try {
-      const response = await getAxiosInstance().get(`/history/client/${e.id}/receipt.pdf`, {
-        responseType: 'blob',
+      await generateReceiptPdf({
+        title: t('receipt_title'),
+        reference: `#${shortRef}`,
+        dateLabel,
+        stationName: e.stationName,
+        stationAddress: e.stationAddress,
+        lines: [
+          { label: serviceLabel, amount: `$${serviceAmount.toFixed(2)}`, sub: `${vehicleLine} - ${typeLabel}` },
+          ...fiscalLines.map((fl) => ({ label: fl.label, amount: `$${fl.amount.toFixed(2)}`, secondary: true })),
+          { label: t('receipt_status'), amount: statusLabel, secondary: true },
+        ],
+        totalLabel: t('receipt_total'),
+        totalAmount: `$${reservationTotal.toFixed(2)}`,
+        totalNote: tipAmount > 0 ? `${t('receipt_tip_separate')}: $${tipAmount.toFixed(2)}` : null,
+        footer: t('receipt_footer'),
+        fileName: `hurryline-receipt-${shortRef}`,
+        locale,
       });
-      if (!mountedRef.current) return;
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${e.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     } catch {
       // Fallback: open print dialog with HTML receipt
       handlePrintFallback();
@@ -546,7 +569,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           </tr>`).join('')}
           <tr>
             <td><div class="item-title item-secondary">${t('receipt_status')}</div></td>
-            <td class="amount-cell"><span class="status-chip status-${e.status}">${t(`status_${e.status}`)}</span></td>
+            <td class="amount-cell"><span class="status-chip status-${e.status === 'cancelled' ? 'cancelled' : 'completed'}">${escapeHtml(statusLabel)}</span></td>
           </tr>
         </tbody>
       </table>
@@ -618,8 +641,14 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           {/* Brand strip */}
           <div className="bg-gradient-to-r from-[#001A05] to-[#001201] px-5 py-4 flex items-center justify-between border-b border-[#001A05]">
             <div>
-              <div className="text-[18px] font-black text-[#DDAF3B] tracking-widest uppercase">Hurryline</div>
-              <div className="text-[11px] text-[#B0BFB1] mt-0.5">Hurryline.app</div>
+              <Image
+                src={locale === 'en' ? '/logo/logo_anglais_2.png' : '/logo/logo22_2.png'}
+                alt="Hurryline"
+                width={120}
+                height={30}
+                className="h-6 w-auto"
+              />
+              <div className="text-[11px] text-[#B0BFB1] mt-1">hurryline.app</div>
             </div>
             <span className="text-[10px] font-black text-[#001201] bg-[#DDAF3B] px-3 py-1 rounded-full tracking-wider uppercase">
               {t('receipt_title')}
@@ -672,8 +701,8 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                 {/* Status row */}
                 <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
                   <span className="text-[11px] font-bold text-[#B0BFB1] uppercase tracking-wide">{t('receipt_status')}</span>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.status === 'completed' ? 'bg-Hurryline-success/15 text-Hurryline-success' : 'bg-Hurryline-error/15 text-Hurryline-error'}`}>
-                    {t(`status_${e.status}`)}
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${statusChipClass}`}>
+                    {statusLabel}
                   </span>
                 </div>
               </div>
@@ -706,7 +735,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
           >
             {t('detail_close')}
           </button>
-          {isCompleted && (
+          {canDownload && (
             <button
               type="button"
               onClick={handleDownload}

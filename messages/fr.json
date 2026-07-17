@@ -277,7 +277,18 @@
         "error_password_change_required": "Vous devez changer votre mot de passe.",
         "toast_success": "Connexion réussie",
         "error_wrong_space": "Ce compte ne correspond pas à cet espace de connexion.",
-        "wrong_space_link_label": "Accéder au bon espace"
+        "wrong_space_link_label": "Accéder au bon espace",
+        "error_verification_required": "Vous devez vérifier votre adresse email avant de vous reconnecter. Consultez votre boîte mail ou demandez un nouveau lien.",
+        "verification_required_link_label": "Recevoir un nouveau lien"
+    },
+    "unverified_banner": {
+        "message": "Votre compte n'est pas encore vérifié. Confirmez votre adresse email pour conserver l'accès.",
+        "cta_resend": "Renvoyer l'email de vérification",
+        "cta_sending": "Envoi...",
+        "cta_sent": "Email envoyé",
+        "toast_sent": "Email de vérification envoyé. Pensez à vérifier vos spams.",
+        "error_rate_limit": "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
+        "error_generic": "L'email n'a pas pu être envoyé. Veuillez réessayer plus tard."
     },
     "forgot_password": {
         "title": "Mot de passe oublié",
@@ -976,8 +987,8 @@
         "payment_confirm": "Confirmer et payer ${amount}",
         "payment_line_service": "Service",
         "payment_line_platform_fee": "Frais de service",
-        "payment_line_tps": "TPS",
-        "payment_line_tvq": "TVQ",
+        "payment_line_tps": "TPS (5 %)",
+        "payment_line_tvq": "TVQ (9,975 %)",
         "result_success_title": "Paiement réussi !",
         "result_success_desc": "Votre réservation a été confirmée. Vous recevrez un courriel de confirmation sous peu.",
         "result_error_title": "Paiement échoué",
@@ -1138,7 +1149,8 @@
         "dispute_btn_cancel": "Annuler",
         "dispute_success": "Votre contestation a été envoyée avec succès.",
         "dispute_error": "Impossible d'envoyer la contestation. Veuillez réessayer.",
-        "dispute_already_exists": "Une contestation existe déjà pour cette réservation."
+        "dispute_already_exists": "Une contestation existe déjà pour cette réservation.",
+        "receipt_btn": "Voir le reçu"
     },
     "queue_detail": {
         "title": "Ma file d'attente",
@@ -1366,8 +1378,8 @@
         "receipt_tip": "Pourboire",
         "receipt_tip_separate": "Pourboire (réglé séparément)",
         "receipt_platform_fee": "Frais de service",
-        "receipt_tps": "TPS",
-        "receipt_tvq": "TVQ",
+        "receipt_tps": "TPS (5 %)",
+        "receipt_tvq": "TVQ (9,975 %)",
         "receipt_items": "Détails",
         "receipt_subtotal_line": "Sous-total",
         "detail_close": "Fermer",
