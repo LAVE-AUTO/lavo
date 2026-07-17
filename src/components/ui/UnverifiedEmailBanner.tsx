@@ -40,10 +40,12 @@ export function UnverifiedEmailBanner() {
     }
   };
 
+  /* Static (not sticky): the public/station navbars are sticky top-0
+   * themselves and would collide with a sticky banner on scroll. */
   return (
     <div
       role="status"
-      className="sticky top-0 z-[120] flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 bg-[#4A3A08] px-4 py-2 text-center dark:bg-[#3A2E06]"
+      className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 bg-[#4A3A08] px-4 py-2 text-center dark:bg-[#3A2E06]"
     >
       <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#FFEECA]">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DDAF3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
