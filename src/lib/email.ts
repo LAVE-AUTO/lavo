@@ -63,6 +63,26 @@ function warnResendMissingOnce(context: string): void {
   console.warn(`${context}: RESEND_API_KEY not set, skipping email`);
 }
 
+/**
+ * The Resend SDK never rejects on API errors — it resolves with
+ * `{ data, error }`. Ignoring `error` makes failed sends (unverified sender
+ * domain, sandbox key restricted to the account owner, invalid FROM…) look
+ * successful, so emails silently never arrive. This wrapper surfaces the
+ * error to the caller: fire-and-forget callers log it, request-scoped
+ * callers propagate it to the client.
+ */
+async function sendEmailOrThrow(
+  client: Resend,
+  context: string,
+  payload: Parameters<Resend['emails']['send']>[0],
+): Promise<void> {
+  const result = await client.emails.send(payload);
+  if (result.error) {
+    const { name, message } = result.error;
+    throw new Error(`${context}: Resend rejected the send (${name ?? 'error'}: ${message ?? 'unknown'})`);
+  }
+}
+
 
 // %%%%% END - Resend client %%%%%
 
@@ -480,7 +500,7 @@ export async function sendVerificationEmail(
       `${APP_URL}/${locale}/verify-email?token=${encodeURIComponent(token)}`
     ) ?? '';
 
-  await client.emails.send({
+  await sendEmailOrThrow(client, 'sendVerificationEmail', {
     from: FROM,
     to,
     subject: t.subject,
@@ -514,7 +534,7 @@ export async function sendPasswordResetEmail(
       `${APP_URL}/${locale}/reset-password?token=${encodeURIComponent(token)}`
     ) ?? '';
 
-  await client.emails.send({
+  await sendEmailOrThrow(client, 'sendPasswordResetEmail', {
     from: FROM,
     to,
     subject: t.subject,
