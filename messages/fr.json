@@ -2328,6 +2328,7 @@
         "field_description": "Description",
         "field_description_placeholder": "Décrivez votre station en quelques mots...",
         "field_service_scope": "Type de service proposé",
+        "field_service_scope_hint": "Indiquez aux clients ce que votre station prend en charge. Ce choix sert de filtre dans la recherche de stations : si vous proposez les deux prestations, choisissez « Ext. & Int. ».",
         "service_scope_exterior": "Lavage extérieur uniquement",
         "service_scope_interior": "Lavage intérieur uniquement",
         "service_scope_both": "Extérieur et intérieur",

@@ -2328,6 +2328,7 @@
         "field_description": "Description",
         "field_description_placeholder": "Describe your station in a few words...",
         "field_service_scope": "Service type offered",
+        "field_service_scope_hint": "Tell clients what your station covers. This choice is used as a filter in the station search: if you offer both, pick \"Ext. & Int.\".",
         "service_scope_exterior": "Exterior wash only",
         "service_scope_interior": "Interior wash only",
         "service_scope_both": "Exterior and interior",

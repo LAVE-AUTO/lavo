@@ -252,6 +252,13 @@ export function StationProfileForm({ profile, onSaved, locked = false }: Props) 
                       </button>
                     ))}
                   </div>
+                  {/* Explains what the scope drives (client-side search filter) and why
+                   * it is a single choice — "Ext. & Int." covers stations doing both. */}
+                  <p className="mt-1.5 text-[12px] leading-snug text-foreground/55 dark:text-[#B0BFB1]">
+                    {serviceScope
+                      ? `${t(`service_scope_${serviceScope}`)} — ${t('field_service_scope_hint')}`
+                      : t('field_service_scope_hint')}
+                  </p>
                 </Field>
               </div>
 
