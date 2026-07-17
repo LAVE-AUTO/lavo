@@ -218,13 +218,8 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                   {showStart && (
                     <button
                       type="button"
-                      disabled={!withinStartWindow}
                       onClick={(e) => { e.stopPropagation(); onStart(entry.id); }}
-                      className={`flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-[13px] font-bold transition-all ${
-                        withinStartWindow
-                          ? 'bg-[#C09A18] text-dark-bg hover:bg-gold-hover active:scale-[0.98]'
-                          : 'cursor-not-allowed bg-[#C09A18]/20 text-[#C09A18]/50 dark:bg-[#C09A18]/10 dark:text-[#C09A18]/40'
-                      }`}
+                      className="flex items-center gap-1.5 rounded-[10px] bg-[#C09A18] px-4 py-2 text-[13px] font-bold text-dark-bg transition-all hover:bg-gold-hover active:scale-[0.98]"
                     >
                       <PlayIcon />
                       {t('btn_start_service')}
@@ -233,20 +228,16 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                   {showCancel && (
                     <button
                       type="button"
-                      disabled={!withinStartWindow}
                       onClick={(e) => { e.stopPropagation(); onCancel(entry.id); }}
-                      className={`flex items-center gap-1.5 rounded-[10px] border-[1.5px] px-3 py-2 text-[13px] font-semibold transition-all ${
-                        withinStartWindow
-                          ? 'border-[#FF2525]/30 text-[#FF2525] hover:bg-[#FF2525]/10 active:scale-[0.98]'
-                          : 'cursor-not-allowed border-[#FF2525]/15 text-[#FF2525]/40 dark:border-[#FF2525]/10 dark:text-[#FF2525]/30'
-                      }`}
+                      className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-[#FF2525]/30 px-3 py-2 text-[13px] font-semibold text-[#FF2525] transition-all hover:bg-[#FF2525]/10 active:scale-[0.98]"
                     >
                       <CancelIcon />
                       {t('btn_cancel_entry')}
                     </button>
                   )}
                 </div>
-                {/* Countdown hint while outside the start window */}
+                {/* Informational countdown to the scheduled slot. The buttons stay
+                 * active at all times — confirmation flows guard accidental taps. */}
                 {!withinStartWindow && (showStart || showCancel) && minutesLeft > 0 && (
                   <p className="flex items-center gap-1.5 text-[11px] text-[#000717]/45 dark:text-[#FFFFF0]/35">
                     <ClockIcon />
