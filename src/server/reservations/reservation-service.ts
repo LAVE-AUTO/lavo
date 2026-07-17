@@ -68,6 +68,7 @@ import {
   listEntriesByUserPaginated,
   listEntriesByStationPaginated,
   cancelExpiredPendingPaymentsForSlot,
+  findEntryByStripePaymentId,
 } from './entry-repository';
 import { computeReservationSplit, computeWalkInSplit, mapSplitToEntryFinancialSnapshot } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
@@ -421,6 +422,15 @@ export async function createReservationByStartTime(
       start_time: startTime.toISOString(),
     },
   });
+
+  /* Retry guard: the idempotency key above hands back the SAME PaymentIntent
+   * on rapid retries (double-click, client network retry). Without this check
+   * each retry inserted a fresh entry on another free post, producing several
+   * bookings tied to one payment — all later confirmed by the webhook/cron. */
+  const existingForPi = await findEntryByStripePaymentId(paymentIntentId);
+  if (existingForPi && existingForPi.status !== STATUS_CANCELLED) {
+    return { entry: existingForPi, clientSecret };
+  }
 
   const entry = await db.transaction(async (tx) => {
     /* Lock all active posts of the station to serialise concurrent bookings.
