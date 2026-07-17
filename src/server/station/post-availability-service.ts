@@ -29,6 +29,13 @@ import {
   timeSlots,
 } from '@/lib/db/schema';
 import { NotFoundError } from '@/lib/errors';
+import {
+  stationDateKey,
+  stationNowMinutes,
+  stationTodayKey,
+  stationWallTimeToUtc,
+  utcToStationMinutes,
+} from '@/helpers/station-time';
 
 export interface AvailabilitySlot {
   /** ISO 8601 datetime, with the station-local UTC offset preserved. */
@@ -58,14 +65,6 @@ function timeStringToMinutes(s: string | null | undefined): number | null {
   const mm = parseInt(m[2], 10);
   if (Number.isNaN(h) || Number.isNaN(mm)) return null;
   return h * 60 + mm;
-}
-
-/** Build a Date for the given local-day base + minutes-since-midnight. */
-function dateAtMinutes(base: Date, minutes: number): Date {
-  const d = new Date(base);
-  d.setHours(0, 0, 0, 0);
-  d.setMinutes(minutes);
-  return d;
 }
 
 /** Subtract `occupied` from `windows`, return remaining free intervals. */
@@ -155,15 +154,21 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   const duration = Math.max(1, Math.floor(args.durationMin));
   const dateKey = args.date;
 
-  const dateAt = new Date(`${dateKey}T00:00:00`);
-  if (Number.isNaN(dateAt.getTime())) {
+  const [yearPart, monthPart, dayPart] = dateKey.split('-').map(Number);
+  if (!yearPart || !monthPart || !dayPart) {
     return { date: dateKey, slots: [] };
   }
-  const dayOfWeek = dateAt.getDay();
-  const startOfDay = new Date(dateAt);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(startOfDay);
-  endOfDay.setDate(endOfDay.getDate() + 1);
+  /* Day-of-week of the calendar date itself (timezone-independent). */
+  const dayOfWeek = new Date(Date.UTC(yearPart, monthPart - 1, dayPart)).getUTCDay();
+  /* Station-local day bounds as real UTC instants. All wall-clock minutes in
+   * this function are expressed in the station timezone (America/Toronto);
+   * emitting instants through stationWallTimeToUtc keeps the ISO payload
+   * correct no matter which timezone the server process runs in. */
+  const startOfDay = stationWallTimeToUtc(dateKey, 0);
+  const endOfDay = stationWallTimeToUtc(dateKey, 24 * 60);
+  if (Number.isNaN(startOfDay.getTime())) {
+    return { date: dateKey, slots: [] };
+  }
 
   const [hourRow, exceptionRow, postsRows, configRow] = await Promise.all([
     db.query.stationHours.findFirst({
@@ -288,8 +293,10 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
   const occupiedByPost = new Map<string, OccupiedInterval[]>();
   for (const row of occupiedRows) {
     if (!row.post_id) continue;
-    const startMin = (row.start_time.getHours() * 60 + row.start_time.getMinutes()) - marginBefore;
-    const endMin = (row.end_time.getHours() * 60 + row.end_time.getMinutes()) + marginAfter;
+    /* Reservation instants → station-local wall minutes, so subtraction happens
+     * in the same coordinate system as the opening windows. */
+    const startMin = utcToStationMinutes(row.start_time) - marginBefore;
+    const endMin = utcToStationMinutes(row.end_time) + marginAfter;
     const list = occupiedByPost.get(row.post_id) ?? [];
     list.push({ startMin, endMin });
     occupiedByPost.set(row.post_id, list);
@@ -299,16 +306,8 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
    * Station hours are stored as naive local times (America/Toronto); use the
    * same timezone for "now" so the cutoff aligns with the station's coordinate
    * system (avoids a UTC-vs-local offset on Vercel's UTC servers). */
-  const now = new Date();
-  const torontoParts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Toronto',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: 'numeric', minute: 'numeric', hour12: false,
-  }).formatToParts(now);
-  const get = (t: string) => parseInt(torontoParts.find((p) => p.type === t)!.value, 10);
-  const todayTorontoStr = `${torontoParts.find((p) => p.type === 'year')!.value}-${torontoParts.find((p) => p.type === 'month')!.value}-${torontoParts.find((p) => p.type === 'day')!.value}`;
-  const isToday = dateKey === todayTorontoStr;
-  const nowMin = isToday ? get('hour') * 60 + get('minute') : -Infinity;
+  const isToday = dateKey === stationTodayKey();
+  const nowMin = isToday ? stationNowMinutes() : -Infinity;
 
   /* Per-post hours overrides for this day of week. When a post has a row it can
    * only narrow availability within the station window (validated on save); no
@@ -338,8 +337,8 @@ export async function computeAvailability(args: ComputeAvailabilityArgs): Promis
       const chunks = chunkInterval({ startMin: startCutoff, endMin: interval.endMin }, duration);
       for (const c of chunks) {
         slots.push({
-          start_time: dateAtMinutes(startOfDay, c.startMin).toISOString(),
-          end_time: dateAtMinutes(startOfDay, c.endMin).toISOString(),
+          start_time: stationWallTimeToUtc(dateKey, c.startMin).toISOString(),
+          end_time: stationWallTimeToUtc(dateKey, c.endMin).toISOString(),
           post_id: post.id,
         });
       }
@@ -382,7 +381,9 @@ export async function findMatchingAvailabilitySlot(
 ): Promise<AvailabilitySlot | null> {
   const start = new Date(startTimeIso);
   if (Number.isNaN(start.getTime())) return null;
-  const dateKey = start.toISOString().slice(0, 10);
+  /* Station-local calendar date — a 21:00 Toronto slot is already the next
+   * day in UTC, so slicing the ISO string would query the wrong day. */
+  const dateKey = stationDateKey(start);
   const result = await computeAvailability({ stationId, date: dateKey, durationMin });
   const candidates = postId
     ? result.slots.filter((s) => s.post_id === postId)

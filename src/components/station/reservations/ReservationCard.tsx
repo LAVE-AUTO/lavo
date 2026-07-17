@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
+import { STATION_TIMEZONE, formatStationTime } from '@/helpers/station-time';
 import type { ReservationEntry, EntryStatus } from './types';
 
 interface Props {
@@ -297,13 +298,14 @@ function money(v: string | null | undefined): string {
   return `${(isNaN(n) ? 0 : n).toFixed(2)}$`;
 }
 
+/* Times shown to the merchant are wall times at the station, not the
+ * browser's timezone — keeps the card aligned with the booking picker. */
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit', timeZone: STATION_TIMEZONE });
 }
 
 function formatHourMinute(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return formatStationTime(iso);
 }
 
 function ExtraTimeInput({
