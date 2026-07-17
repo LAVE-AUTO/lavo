@@ -81,12 +81,16 @@ export function LoginForm({
   const [isLoading, setIsLoading]       = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [wrongSpaceHref, setWrongSpaceHref] = useState<string | null>(null);
+  /* Set when login is blocked because the unverified-login grace is spent.
+   * Renders a banner pointing to the verification/resend page. */
+  const [verificationRequired, setVerificationRequired] = useState(false);
 
   const handleChange =
     (field: keyof LoginFormData) => (e: ChangeEvent<HTMLInputElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
       if (wrongSpaceHref) setWrongSpaceHref(null);
+      if (verificationRequired) setVerificationRequired(false);
     };
 
   const handleBlurEmail = () => {
@@ -196,6 +200,11 @@ export function LoginForm({
           setWrongSpaceHref(loginHrefForRole(actualRole));
         }
         showError(t('error_wrong_space'));
+      } else if (data?.code === 'EMAIL_VERIFICATION_REQUIRED') {
+        /* Grace logins exhausted: the account works but the email must be
+           verified before signing in again. */
+        setVerificationRequired(true);
+        showError(t('error_verification_required'));
       } else if (data?.code === 'FORBIDDEN') {
         // Generic fallback for any non-approved status the backend may return
         // without a more specific code (e.g. ACCOUNT_SUSPENDED).
@@ -290,6 +299,20 @@ export function LoginForm({
             className="shrink-0 text-[13px] font-bold text-gold hover:text-gold-hover transition-colors whitespace-nowrap"
           >
             {t('wrong_space_link_label')}
+          </Link>
+        </div>
+      )}
+
+      {verificationRequired && (
+        <div className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gold/30 bg-gold/5 animate-fade-in">
+          <p className="text-[13px] text-foreground/70 dark:text-Hurryline-muted leading-snug">
+            {t('error_verification_required')}
+          </p>
+          <Link
+            href="/verify-email"
+            className="shrink-0 text-[13px] font-bold text-gold hover:text-gold-hover transition-colors whitespace-nowrap"
+          >
+            {t('verification_required_link_label')}
           </Link>
         </div>
       )}
