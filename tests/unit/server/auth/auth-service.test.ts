@@ -16,6 +16,7 @@ const mockCreateUser = jest.fn();
 const mockUpdateEmailVerified = jest.fn();
 const mockUpdatePassword = jest.fn();
 const mockUpdateForcePasswordChange = jest.fn();
+const mockIncrementUnverifiedLoginCount = jest.fn();
 
 jest.mock('@/server/auth/user-repository', () => ({
   findByEmail: (...args: unknown[]) => mockFindByEmail(...args),
@@ -25,6 +26,7 @@ jest.mock('@/server/auth/user-repository', () => ({
   updateEmailVerified: (...args: unknown[]) => mockUpdateEmailVerified(...args),
   updatePassword: (...args: unknown[]) => mockUpdatePassword(...args),
   updateForcePasswordChange: (...args: unknown[]) => mockUpdateForcePasswordChange(...args),
+  incrementUnverifiedLoginCount: (...args: unknown[]) => mockIncrementUnverifiedLoginCount(...args),
 }));
 
 const mockCreateToken = jest.fn();
@@ -404,8 +406,40 @@ describe('login', () => {
     expect(mockBcryptCompare).toHaveBeenCalled();
   });
 
-  it('throws ForbiddenError BUSINESS_NOT_APPROVED when account is pending_verification', async () => {
-    mockFindByEmail.mockResolvedValue({ ...FAKE_USER_WITH_HASH, status: 'pending_verification' });
+  it('grants a grace login and increments the counter for an unverified client', async () => {
+    mockFindByEmail.mockResolvedValue({
+      ...FAKE_USER_WITH_HASH,
+      status: 'pending_verification',
+      unverified_login_count: 0,
+    });
+    mockBcryptCompare.mockResolvedValue(true);
+    mockIncrementUnverifiedLoginCount.mockResolvedValue(1);
+
+    const result = await login(dto);
+    expect(result.user.email).toBe(FAKE_USER_WITH_HASH.email);
+    expect(mockIncrementUnverifiedLoginCount).toHaveBeenCalledWith(FAKE_USER_WITH_HASH.id);
+  });
+
+  it('throws ForbiddenError EMAIL_VERIFICATION_REQUIRED once the grace budget is spent', async () => {
+    mockFindByEmail.mockResolvedValue({
+      ...FAKE_USER_WITH_HASH,
+      status: 'pending_verification',
+      unverified_login_count: 5,
+    });
+    mockBcryptCompare.mockResolvedValue(true);
+
+    const err = await login(dto).catch((e) => e);
+    expect(err).toBeInstanceOf(ForbiddenError);
+    expect(err.code).toBe(ApiCode.EMAIL_VERIFICATION_REQUIRED);
+    expect(mockIncrementUnverifiedLoginCount).not.toHaveBeenCalled();
+  });
+
+  it('throws ForbiddenError BUSINESS_NOT_APPROVED when a non-client account is pending_verification', async () => {
+    mockFindByEmail.mockResolvedValue({
+      ...FAKE_USER_WITH_HASH,
+      role: 'station',
+      status: 'pending_verification',
+    });
     mockBcryptCompare.mockResolvedValue(true);
 
     const err = await login(dto).catch((e) => e);
