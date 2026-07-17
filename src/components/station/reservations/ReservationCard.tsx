@@ -35,6 +35,12 @@ const ACCENT_MAP: Record<string, string> = {
   in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
 };
 
+/** Decimal string from the backend snapshot → "12.34$". Falls back to 0.00$. */
+function money(v: string | null | undefined): string {
+  const n = parseFloat(v ?? '0');
+  return `${(isNaN(n) ? 0 : n).toFixed(2)}$`;
+}
+
 function canDoStart(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'pending_payment'; }
 function canDoValidate(s: EntryStatus) { return s === 'in_progress'; }
 function canDoCancel(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'late'; }
@@ -208,6 +214,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                   {entry.station_tax_amount && parseFloat(entry.station_tax_amount) > 0 && (
                     <DetailRow label={t('amount_station_tax')} value={money(entry.station_tax_amount)} />
                   )}
+                  {/* Reference net figure: the true amount that will be transferred to the station. */}
                   <DetailRow
                     label={t('amount_net_transferred')}
                     value={money(entry.station_total_transferred ?? entry.station_payout ?? '0')}
@@ -290,12 +297,6 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
       </div>
     </div>
   );
-}
-
-/** Decimal string from the backend snapshot → "1.15$". Falls back to 0.00$. */
-function money(v: string | null | undefined): string {
-  const n = parseFloat(v ?? '0');
-  return `${(isNaN(n) ? 0 : n).toFixed(2)}$`;
 }
 
 /* Times shown to the merchant are wall times at the station, not the
