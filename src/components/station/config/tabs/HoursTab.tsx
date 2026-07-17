@@ -32,6 +32,15 @@ interface Props {
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
+/** Normalize a stored time to HH:mm. The API returns HH:mm:ss (Postgres `time`),
+ *  but PATCH /station/hours only accepts HH:mm — so seconds must be stripped
+ *  before sending, otherwise the whole save fails validation. */
+function toHHMM(time: string | null | undefined): string | null {
+  if (!time) return null;
+  const m = String(time).match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${m[1].padStart(2, '0')}:${m[2]}` : null;
+}
+
 function buildDefaultDays(): HourDay[] {
   return [0, 1, 2, 3, 4, 5, 6].map((d) => ({
     day_of_week: d,
@@ -98,6 +107,44 @@ function deriveTemplateFromDays(days: HourDay[]): HourTemplate {
   };
 }
 
+/**
+ * Derives the station-config hours envelope from the real per-day schedule.
+ * opening_time / closing_time are the earliest start and latest end across all
+ * opened days; break_* come from the most frequent plage. This keeps the config
+ * consistent with the per-day rows and — crucially — never depends on the
+ * "Modèle d'horaires" convenience inputs being filled, so editing a single day
+ * saves without the merchant re-typing the template first.
+ *
+ * opening_time / closing_time are returned as `null` when no day is open; the
+ * caller must omit them from the PATCH payload since the API rejects a null
+ * opening/closing (only break_start/break_end are nullable).
+ */
+function deriveConfigFromDays(days: HourDay[]): {
+  opening_time: string | null;
+  closing_time: string | null;
+  break_start: string | null;
+  break_end: string | null;
+} {
+  const openDays = days.filter((d) => d.is_open);
+  const starts = openDays
+    .flatMap((d) => [d.morning_start, d.afternoon_start])
+    .filter((v): v is string => !!v)
+    .sort();
+  const ends = openDays
+    .flatMap((d) => [d.morning_end, d.afternoon_end])
+    .filter((v): v is string => !!v)
+    .sort();
+
+  const template = deriveTemplateFromDays(days);
+
+  return {
+    opening_time: starts.length > 0 ? starts[0] : null,
+    closing_time: ends.length > 0 ? ends[ends.length - 1] : null,
+    break_start: template.morning_end || null,
+    break_end: template.afternoon_start || null,
+  };
+}
+
 const timeInputClass =
   'w-full rounded-lg border border-separator bg-white px-2.5 py-1.5 text-center font-mono text-[12px] tabular-nums text-[#001201] outline-none transition-all duration-150 placeholder:text-[#BBBBAA] hover:border-[#D0C8B0] focus:border-[#DDAF3B] focus:shadow-[0_0_0_3px_rgba(221, 175, 59,0.12)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#001A05] dark:bg-dark-bg dark:text-[#FFF9EC] dark:placeholder:text-[#4A4A3A] dark:hover:border-[#2E3C2A]';
 
@@ -128,7 +175,18 @@ export function HoursTab({ config, locked }: Props) {
       if (Array.isArray(rows) && rows.length > 0) {
         const merged = buildDefaultDays().map((def) => {
           const found = rows.find((r) => r.day_of_week === def.day_of_week);
-          return found ?? def;
+          if (!found) return def;
+          /* Keep only the fields we manage and normalize times to HH:mm — the
+           * API hydrates HH:mm:ss and carries extra columns (station_id,
+           * updated_at) that must not leak back into the PATCH payload. */
+          return {
+            day_of_week: found.day_of_week,
+            is_open: found.is_open,
+            morning_start: toHHMM(found.morning_start),
+            morning_end: toHHMM(found.morning_end),
+            afternoon_start: toHHMM(found.afternoon_start),
+            afternoon_end: toHHMM(found.afternoon_end),
+          };
         });
         setDays(merged);
         /* Rehydrate the Modèle d'horaires inputs from the saved per-day
@@ -179,16 +237,37 @@ export function HoursTab({ config, locked }: Props) {
   async function handleSave() {
     setSaving(true);
 
-    const configPayload = {
-      opening_time: template.morning_start || null,
-      break_start: template.morning_end || null,
-      break_end: template.afternoon_start || null,
-      closing_time: template.afternoon_end || null,
+    /* Derive the config hours envelope from the real per-day schedule rather
+     * than from the Modèle d'horaires inputs, so a single-day edit saves even
+     * when the template is left blank. opening_time / closing_time are omitted
+     * when no day is open (the API rejects null for those). */
+    const derived = deriveConfigFromDays(days);
+    const configPayload: {
+      opening_time?: string;
+      closing_time?: string;
+      break_start: string | null;
+      break_end: string | null;
+    } = {
+      break_start: derived.break_start,
+      break_end: derived.break_end,
     };
+    if (derived.opening_time) configPayload.opening_time = derived.opening_time;
+    if (derived.closing_time) configPayload.closing_time = derived.closing_time;
+
+    /* Clean per-day payload: only the managed fields, times normalized to HH:mm
+     * (PATCH /station/hours rejects HH:mm:ss and any extra column). */
+    const daysPayload = days.map((d) => ({
+      day_of_week: d.day_of_week,
+      is_open: d.is_open,
+      morning_start: toHHMM(d.morning_start),
+      morning_end: toHHMM(d.morning_end),
+      afternoon_start: toHHMM(d.afternoon_start),
+      afternoon_end: toHHMM(d.afternoon_end),
+    }));
 
     const [[configOk], [hoursOk]] = await Promise.all([
       patchWithApi('/station/config', configPayload),
-      patchWithApi('/station/hours', { days }),
+      patchWithApi('/station/hours', { days: daysPayload }),
     ]);
 
     if (configOk && hoursOk) {

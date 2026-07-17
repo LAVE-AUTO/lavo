@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { RevealOnScroll } from './RevealOnScroll';
 
@@ -90,8 +91,14 @@ export function NotificationsSection() {
             {/* Right: phone mockup with notifications */}
             <div className="flex justify-center">
               <div className="w-[260px] rounded-[24px] border-2 border-[rgba(221,175,59,0.2)] bg-[#001A05] p-4 shadow-[0_30px_60px_rgba(0,0,0,0.5)] flex flex-col gap-2.5">
-                <div className="font-playfair py-1 text-center text-[16px] font-black tracking-[3px] text-[#DDAF3B]">
-                  Hurryline
+                <div className="py-1 text-center">
+                  <Image
+                    src="/logo/logo_anglais_2.png"
+                    alt="Hurryline"
+                    width={140}
+                    height={32}
+                    className="mx-auto h-8 w-auto"
+                  />
                 </div>
 
                 {notifs.map((notif, i) => (

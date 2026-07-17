@@ -22,6 +22,8 @@ import { z } from 'zod';
  *   - mentions_legales:          Legal notices                       (/mentions-legales)
  *   - contact:                   Contact page content                (/nous-contacter)
  *   - landing_faq:               FAQ section on the landing          (/#faq)
+ *   - landing_faq_stations:      Merchant FAQ                        (/faq-stations)
+ *   - landing_guide_station:     Getting started guide for stations  (/guide-station)
  *   - landing_how_it_works:      "How it works" section on landing   (/#how-it-works)
  *
  * All keys are stored in the generic `settings` table (type='legal', entity_id=null)
@@ -35,6 +37,8 @@ export const LEGAL_CONTENT_KEYS = [
   'mentions_legales',
   'contact',
   'landing_faq',
+  'landing_faq_stations',
+  'landing_guide_station',
   'landing_how_it_works',
 ] as const;
 
