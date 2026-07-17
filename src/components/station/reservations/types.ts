@@ -17,6 +17,17 @@ export interface ReservationEntry {
   status: EntryStatus;
   queue_position: number | null;
   amount_paid: string | null;
+  /* Financial snapshot persisted by the backend on paid entries. Decimal
+   * strings; null on legacy/unpaid rows. Rendered on completed entries. */
+  station_service_total?: string | null;
+  tps_amount?: string | null;
+  tvq_amount?: string | null;
+  client_total?: string | null;
+  commission_rate?: string | null;
+  commission_amount?: string | null;
+  station_tax_amount?: string | null;
+  station_total_transferred?: string | null;
+  station_payout?: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
