@@ -38,9 +38,9 @@ import {
 } from '@/helpers/station-time';
 
 export interface AvailabilitySlot {
-  /** ISO 8601 datetime, with the station-local UTC offset preserved. */
+  /** ISO 8601 UTC instant for the station-local wall time (America/Toronto). */
   start_time: string;
-  /** ISO 8601 datetime; equals start_time + duration_min. */
+  /** ISO 8601 UTC instant; equals start_time + duration_min. */
   end_time: string;
   /** Internal — which wash bay would handle this slot. Hidden in the public response. */
   post_id: string;
