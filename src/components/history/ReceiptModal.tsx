@@ -519,7 +519,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
     <div class="header">
       <div>
         <div class="brand-name">Hurryline</div>
-        <div class="brand-sub">Hurryline.app - Lavage auto simplifié</div>
+        <div class="brand-sub">Hurryline.com - Lavage auto simplifié</div>
       </div>
       <div class="receipt-badge">${t('receipt_title')}</div>
     </div>
@@ -589,7 +589,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
 
     <div class="footer">
       <p class="thank-you">${t('receipt_footer')}</p>
-      <p>Hurryline inc. &mdash; Hurryline.app</p>
+      <p>Hurryline inc. &mdash; Hurryline.com</p>
     </div>
 
   </div>
@@ -648,7 +648,7 @@ export function ReceiptModal({ entry: e, locale, onClose }: ReceiptModalProps) {
                 height={30}
                 className="h-6 w-auto"
               />
-              <div className="text-[11px] text-[#B0BFB1] mt-1">hurryline.app</div>
+              <div className="text-[11px] text-[#B0BFB1] mt-1">hurryline.com</div>
             </div>
             <span className="text-[10px] font-black text-[#001201] bg-[#DDAF3B] px-3 py-1 rounded-full tracking-wider uppercase">
               {t('receipt_title')}

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { fetchStations, type FetchStationsResult } from '@/services/station-api';
+import { useUnverifiedEmailBanner, UNVERIFIED_BANNER_HEIGHT } from '@/components/ui/UnverifiedEmailBanner';
 import { useUserLocation, requestUserLocation } from './useUserLocation';
 import { SearchBar } from './SearchBar';
 import { StationCard } from './StationCard';
@@ -66,6 +67,10 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
   const [filters, setFilters] = useState<StationFiltersState>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>('default');
   const [panelOpen, setPanelOpen] = useState(false);
+  /* The fixed header grows when the email-verification banner is shown; the
+   * sticky controls must stick right below it, not underneath. */
+  const showVerifyBanner = useUnverifiedEmailBanner();
+  const stickyTop = 58 + (showVerifyBanner ? UNVERIFIED_BANNER_HEIGHT : 0);
 
   /* Desktop detection — false on SSR, updated after hydration. */
   const [isDesktop, setIsDesktop] = useState(false);
@@ -265,7 +270,7 @@ export function StationListView({ washTypes, vehicleFormats }: StationListViewPr
     <div className="animate-fade-in">
 
       {/* Sticky controls */}
-      <div className="sticky top-[58px] z-30 bg-[#FFF9EC] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
+      <div style={{ top: stickyTop }} className="sticky z-30 bg-[#FFF9EC] dark:bg-background pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 space-y-3">
         {/* Unified search row + filter button */}
         <div className="flex gap-2">
           <div className="flex-1">

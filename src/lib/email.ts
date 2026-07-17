@@ -24,7 +24,7 @@ import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 // %%%%% Constants %%%%%
 // Email configuration
 
-const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.app';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.com';
 
 type Locale = 'fr' | 'en';
 
@@ -851,17 +851,17 @@ export async function sendStationDailyReportEmail(params: {
 
   const rows: Array<[string, string]> = locale === 'fr'
     ? [
-        ['Services terminés', String(completed)],
-        ['Revenu', money(revenue)],
-        ['Pourboires', money(tips)],
-        ['Clients servis', String(clients)],
-      ]
+      ['Services terminés', String(completed)],
+      ['Revenu', money(revenue)],
+      ['Pourboires', money(tips)],
+      ['Clients servis', String(clients)],
+    ]
     : [
-        ['Completed services', String(completed)],
-        ['Revenue', money(revenue)],
-        ['Tips', money(tips)],
-        ['Clients served', String(clients)],
-      ];
+      ['Completed services', String(completed)],
+      ['Revenue', money(revenue)],
+      ['Tips', money(tips)],
+      ['Clients served', String(clients)],
+    ];
 
   const tableRows = rows
     .map(
@@ -986,8 +986,8 @@ export async function sendWalkInReceiptEmail(params: {
   const receiptHtml = rows.length
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e8e4d8;border-radius:8px;overflow:hidden;margin:18px 0;width:100%;max-width:520px;">
         ${rows
-          .map(
-            (row, idx) => `
+      .map(
+        (row, idx) => `
               <tr>
                 <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:38%;">
                   ${escapeHtmlPlain(row.label)}
@@ -996,8 +996,8 @@ export async function sendWalkInReceiptEmail(params: {
                   ${escapeHtmlPlain(row.value)}
                 </td>
               </tr>`,
-          )
-          .join('')}
+      )
+      .join('')}
       </table>`
     : '';
 
@@ -1233,13 +1233,13 @@ export async function sendAdminWelcomeEmail(
   }
   if (!isReasonableRecipientEmail(toEmail)) return;
 
-  const safeName     = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
   const safePassword = escapeHtmlPlain(safePlainTextSnippet(tempPassword, 128));
-  const loginUrl     = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
+  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
 
   const roleLabelFr: Record<string, string> = {
-    client:  'client',
-    admin:   'administrateur',
+    client: 'client',
+    admin: 'administrateur',
     station: 'station',
   };
   const roleLabel = roleLabelFr[role] ?? role;
@@ -1280,7 +1280,7 @@ export async function sendAdminWelcomeEmail(
     html: brandedEmail('fr', {
       greeting: `Bonjour ${safeName},`,
       bodyHtml,
-      ctaUrl:   loginUrl || undefined,
+      ctaUrl: loginUrl || undefined,
       ctaLabel: 'Se connecter',
       footNote: 'Si vous n\'avez pas sollicité la création de ce compte, contactez le support immédiatement.',
     }),

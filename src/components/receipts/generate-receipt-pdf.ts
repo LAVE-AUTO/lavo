@@ -111,7 +111,7 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.setTextColor(176, 191, 177);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('hurryline.app', pageW - margin, 24, { align: 'right' });
+  doc.text('hurryline.com', pageW - margin, 24, { align: 'right' });
 
   /* ── Meta bar ── */
   let y = 44;
@@ -215,7 +215,7 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.text(data.footer, pageW / 2, pageH - 17, { align: 'center' });
-  doc.text('Hurryline inc. - hurryline.app', pageW / 2, pageH - 12, { align: 'center' });
+  doc.text('Hurryline inc. - hurryline.com', pageW / 2, pageH - 12, { align: 'center' });
 
   doc.save(`${data.fileName}.pdf`);
 }
