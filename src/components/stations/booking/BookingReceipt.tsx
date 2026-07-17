@@ -146,7 +146,7 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
         ticketCode,
         ticketHint: t('receipt_ticket_hint'),
         footer: t('receipt_footer'),
-        fileName: `hurryline-receipt-${ticketCode || Date.now()}`,
+        fileName: `hurryline-receipt-${ticketCode || 'booking'}`,
         locale,
       });
     } catch {
