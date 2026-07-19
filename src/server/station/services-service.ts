@@ -9,7 +9,6 @@ import {
   createService as repoCreateService,
   updateService as repoUpdateService,
   softDeleteServiceById,
-  findServiceVehicleEntries,
   deleteServiceVehicleEntriesByServiceId,
   createServiceVehicleEntry as repoCreateServiceVehicleEntry,
   findExtrasByStationId,

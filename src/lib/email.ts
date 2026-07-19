@@ -834,8 +834,16 @@ export async function sendStationDailyReportEmail(params: {
   revenue: number;
   tips: number;
   clients: number;
+  /** Gross service total before commission & fees. */
+  totalService: number;
+  /** Platform commission deducted from the service total. */
+  commission: number;
+  /** Sum of platform service fees per order. */
+  platformFees: number;
+  /** TPS + TVQ attributed to the station. */
+  stationTaxes: number;
 }): Promise<void> {
-  const { to, locale = 'fr', stationName, date, completed, revenue, tips, clients } = params;
+  const { to, locale = 'fr', stationName, date, completed, revenue, tips, clients, totalService, commission, platformFees, stationTaxes } = params;
   const client = getResendClient();
   if (!client) {
     warnResendMissingOnce('sendStationDailyReportEmail');
@@ -852,13 +860,21 @@ export async function sendStationDailyReportEmail(params: {
   const rows: Array<[string, string]> = locale === 'fr'
     ? [
       ['Services terminés', String(completed)],
-      ['Revenu', money(revenue)],
+      ['Total brut des services', money(totalService)],
+      ['Commission plateforme', `−${money(commission)}`],
+      ['Frais de service', `−${money(platformFees)}`],
+      ['Taxes (TPS/TVQ) station', money(stationTaxes)],
+      ['Revenu net transféré', money(revenue)],
       ['Pourboires', money(tips)],
       ['Clients servis', String(clients)],
     ]
     : [
       ['Completed services', String(completed)],
-      ['Revenue', money(revenue)],
+      ['Gross service total', money(totalService)],
+      ['Platform commission', `−${money(commission)}`],
+      ['Service fees', `−${money(platformFees)}`],
+      ['Station taxes (GST/QST)', money(stationTaxes)],
+      ['Net revenue transferred', money(revenue)],
       ['Tips', money(tips)],
       ['Clients served', String(clients)],
     ];

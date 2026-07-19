@@ -112,6 +112,7 @@ const FAKE_USER_WITH_HASH = {
   status: 'active' as const,
   force_password_change: false,
   email_verified_at: new Date('2024-01-01'),
+  unverified_login_count: 0,
   created_at: new Date('2024-01-01'),
   updated_at: new Date('2024-01-01'),
   password_hash: FAKE_PASSWORD_HASH,
