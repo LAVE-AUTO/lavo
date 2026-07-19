@@ -11,7 +11,7 @@ import { ReceiptModal, type HistoryReservation } from '@/components/history/Rece
 import { parseFinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
 
 /* ------------------------------------------------------------------ */
-/* API shapes (rich entry returned by GET /me/entries)                  */
+/* API shapes (rich entry returned by GET /me/entries/:id)               */
 /* ------------------------------------------------------------------ */
 
 interface ApiRichStation {
@@ -120,10 +120,9 @@ export default function ReservationDetailPage() {
   const loadReservation = useCallback(async () => {
     setLoading(true);
 
-    /* Rich entries already include denormalised station, slot times, vehicle
-     * format, ticket_code and is_rated/is_tipped flags - no extra fetch
-     * needed. */
-    const [ok, data] = await getFromApi('/me/entries?per_page=100');
+    /* Fetch the single entry directly — avoids the pagination pitfall where
+     * a client with 100+ entries would never find an older reservation. */
+    const [ok, data] = await getFromApi(`/me/entries/${id}`);
     if (!mountedRef.current) return;
 
     if (!ok) {
@@ -132,9 +131,7 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    const res = data as { data: { entries: ApiRichEntry[] } };
-    const entries: ApiRichEntry[] = res?.data?.entries ?? [];
-    const entry = entries.find((e) => e.id === id);
+    const entry = (data as { data: ApiRichEntry }).data;
 
     if (!entry) {
       setNotFound(true);

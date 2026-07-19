@@ -271,6 +271,15 @@ export async function createReservation(
     },
   });
 
+  // Retry guard: the idempotency key returns the SAME PaymentIntent for rapid
+  // retries (double-click, network retry). Without this check the retry would
+  // hit the ActiveReservationExistsError inside the transaction and show a 409
+  // instead of returning the already-confirmed entry.
+  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
+    return { entry: existingForPaymentIntent, clientSecret };
+  }
+
   // Atomic: expire stale pending_payment entries, duplicate check, slot lock, capacity check,
   // entry insert, slot increment. Entry is created with stripe_payment_id already set — no orphan window.
   const expiredPiIds: string[] = [];
@@ -427,9 +436,9 @@ export async function createReservationByStartTime(
    * on rapid retries (double-click, client network retry). Without this check
    * each retry inserted a fresh entry on another free post, producing several
    * bookings tied to one payment — all later confirmed by the webhook/cron. */
-  const existingForPi = await findEntryByStripePaymentId(paymentIntentId);
-  if (existingForPi && existingForPi.status !== STATUS_CANCELLED) {
-    return { entry: existingForPi, clientSecret };
+  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
+    return { entry: existingForPaymentIntent, clientSecret };
   }
 
   const entry = await db.transaction(async (tx) => {
