@@ -253,6 +253,26 @@ export async function updateEmailVerified(userId: string): Promise<void> {
 }
 
 /**
+ * Increments the grace-login counter of an unverified account.
+ *
+ * Called on each successful login while status = 'pending_verification'.
+ * Returns the new counter value so the caller can decide whether the grace
+ * budget is exhausted without a second read.
+ */
+export async function incrementUnverifiedLoginCount(userId: string): Promise<number> {
+  const [row] = await db
+    .update(users)
+    .set({
+      unverified_login_count: sql`${users.unverified_login_count} + 1`,
+      updated_at: new Date(),
+    })
+    .where(eq(users.id, userId))
+    .returning({ unverified_login_count: users.unverified_login_count });
+  await invalidateUserCache(userId);
+  return row?.unverified_login_count ?? 0;
+}
+
+/**
  * Applies a partial profile update to a user
  *
  * Supports profile-edit flows that can modify first name, last name, or phone

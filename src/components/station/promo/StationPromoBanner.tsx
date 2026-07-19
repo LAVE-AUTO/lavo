@@ -47,13 +47,13 @@ export function StationPromoBanner() {
 
   const referralUrl = promo.referral_url;
 
-  /* End date shown as a compact pill (e.g. "Jusqu'au 31 juil."). Hidden when the
-   * promotion has no explicit expiry. */
+  /* End date shown as a compact pill (e.g. "Jusqu'au 31 juil. 2026"). Hidden when
+   * the promotion has no explicit expiry. */
   const untilLabel = (() => {
     if (!promo.expires_at) return null;
     const d = new Date(promo.expires_at);
     if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
   })();
 
   const bold = (chunks: React.ReactNode) => <strong className="font-black text-foreground">{chunks}</strong>;

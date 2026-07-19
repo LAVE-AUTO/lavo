@@ -24,7 +24,7 @@ import { getPlatformSetting } from '@/server/admin/platform-settings-service';
 // %%%%% Constants %%%%%
 // Email configuration
 
-const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.app';
+const FROM = process.env.EMAIL_FROM ?? 'noreply@Hurryline.com';
 
 type Locale = 'fr' | 'en';
 
@@ -61,6 +61,26 @@ function warnResendMissingOnce(context: string): void {
   if (process.env.NODE_ENV === 'test' || warnedResendApiKeyMissing) return;
   warnedResendApiKeyMissing = true;
   console.warn(`${context}: RESEND_API_KEY not set, skipping email`);
+}
+
+/**
+ * The Resend SDK never rejects on API errors — it resolves with
+ * `{ data, error }`. Ignoring `error` makes failed sends (unverified sender
+ * domain, sandbox key restricted to the account owner, invalid FROM…) look
+ * successful, so emails silently never arrive. This wrapper surfaces the
+ * error to the caller: fire-and-forget callers log it, request-scoped
+ * callers propagate it to the client.
+ */
+async function sendEmailOrThrow(
+  client: Resend,
+  context: string,
+  payload: Parameters<Resend['emails']['send']>[0],
+): Promise<void> {
+  const result = await client.emails.send(payload);
+  if (result.error) {
+    const { name, message } = result.error;
+    throw new Error(`${context}: Resend rejected the send (${name ?? 'error'}: ${message ?? 'unknown'})`);
+  }
 }
 
 
@@ -480,7 +500,7 @@ export async function sendVerificationEmail(
       `${APP_URL}/${locale}/verify-email?token=${encodeURIComponent(token)}`
     ) ?? '';
 
-  await client.emails.send({
+  await sendEmailOrThrow(client, 'sendVerificationEmail', {
     from: FROM,
     to,
     subject: t.subject,
@@ -514,7 +534,7 @@ export async function sendPasswordResetEmail(
       `${APP_URL}/${locale}/reset-password?token=${encodeURIComponent(token)}`
     ) ?? '';
 
-  await client.emails.send({
+  await sendEmailOrThrow(client, 'sendPasswordResetEmail', {
     from: FROM,
     to,
     subject: t.subject,
@@ -814,8 +834,16 @@ export async function sendStationDailyReportEmail(params: {
   revenue: number;
   tips: number;
   clients: number;
+  /** Gross service total before commission & fees. */
+  totalService: number;
+  /** Platform commission deducted from the service total. */
+  commission: number;
+  /** Sum of platform service fees per order. */
+  platformFees: number;
+  /** TPS + TVQ attributed to the station. */
+  stationTaxes: number;
 }): Promise<void> {
-  const { to, locale = 'fr', stationName, date, completed, revenue, tips, clients } = params;
+  const { to, locale = 'fr', stationName, date, completed, revenue, tips, clients, totalService, commission, platformFees, stationTaxes } = params;
   const client = getResendClient();
   if (!client) {
     warnResendMissingOnce('sendStationDailyReportEmail');
@@ -831,17 +859,25 @@ export async function sendStationDailyReportEmail(params: {
 
   const rows: Array<[string, string]> = locale === 'fr'
     ? [
-        ['Services terminés', String(completed)],
-        ['Revenu', money(revenue)],
-        ['Pourboires', money(tips)],
-        ['Clients servis', String(clients)],
-      ]
+      ['Services terminés', String(completed)],
+      ['Total brut des services', money(totalService)],
+      ['Commission plateforme', `−${money(commission)}`],
+      ['Frais de service', `−${money(platformFees)}`],
+      ['Taxes (TPS/TVQ) station', money(stationTaxes)],
+      ['Revenu net transféré', money(revenue)],
+      ['Pourboires', money(tips)],
+      ['Clients servis', String(clients)],
+    ]
     : [
-        ['Completed services', String(completed)],
-        ['Revenue', money(revenue)],
-        ['Tips', money(tips)],
-        ['Clients served', String(clients)],
-      ];
+      ['Completed services', String(completed)],
+      ['Gross service total', money(totalService)],
+      ['Platform commission', `−${money(commission)}`],
+      ['Service fees', `−${money(platformFees)}`],
+      ['Station taxes (GST/QST)', money(stationTaxes)],
+      ['Net revenue transferred', money(revenue)],
+      ['Tips', money(tips)],
+      ['Clients served', String(clients)],
+    ];
 
   const tableRows = rows
     .map(
@@ -966,8 +1002,8 @@ export async function sendWalkInReceiptEmail(params: {
   const receiptHtml = rows.length
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e8e4d8;border-radius:8px;overflow:hidden;margin:18px 0;width:100%;max-width:520px;">
         ${rows
-          .map(
-            (row, idx) => `
+      .map(
+        (row, idx) => `
               <tr>
                 <td style="padding:10px 14px;background:${idx % 2 === 0 ? '#FFEECA' : '#FFF9EC'};font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:38%;">
                   ${escapeHtmlPlain(row.label)}
@@ -976,8 +1012,8 @@ export async function sendWalkInReceiptEmail(params: {
                   ${escapeHtmlPlain(row.value)}
                 </td>
               </tr>`,
-          )
-          .join('')}
+      )
+      .join('')}
       </table>`
     : '';
 
@@ -1213,13 +1249,13 @@ export async function sendAdminWelcomeEmail(
   }
   if (!isReasonableRecipientEmail(toEmail)) return;
 
-  const safeName     = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
+  const safeName = escapeHtmlPlain(safePlainTextSnippet(firstName || 'utilisateur', 100));
   const safePassword = escapeHtmlPlain(safePlainTextSnippet(tempPassword, 128));
-  const loginUrl     = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
+  const loginUrl = safeHttpUrlForEmailHref(`${APP_URL}/fr/login`) ?? '';
 
   const roleLabelFr: Record<string, string> = {
-    client:  'client',
-    admin:   'administrateur',
+    client: 'client',
+    admin: 'administrateur',
     station: 'station',
   };
   const roleLabel = roleLabelFr[role] ?? role;
@@ -1260,7 +1296,7 @@ export async function sendAdminWelcomeEmail(
     html: brandedEmail('fr', {
       greeting: `Bonjour ${safeName},`,
       bodyHtml,
-      ctaUrl:   loginUrl || undefined,
+      ctaUrl: loginUrl || undefined,
       ctaLabel: 'Se connecter',
       footNote: 'Si vous n\'avez pas sollicité la création de ce compte, contactez le support immédiatement.',
     }),

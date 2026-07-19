@@ -404,11 +404,10 @@ function SlotBlock({ entry, openMinutes, closeMinutes, onSelect, nowMs }: SlotBl
   const height = Math.max(64, (clampedEnd - clampedStart) * PX_PER_MINUTE);
   const styles = statusToBlockClass(entry.status);
   const statusLbl = t(statusLabelKey(entry.status));
-  // "Démarrer" only appears within the start window before the slot; "Terminer"
-  // (in_progress) is always available.
+  // "Démarrer" and "Terminer" stay available at all times — merchants asked
+  // for full control; confirmation flows guard accidental taps.
   const isStartPhase = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
-  const showPrimary = entry.status === 'in_progress'
-    || (isStartPhase && isWithinStartWindow(entry.slotStart, nowMs));
+  const showPrimary = entry.status === 'in_progress' || isStartPhase;
   const primaryLabel = entry.status === 'in_progress' ? t('btn_complete') : t('btn_start');
   const primaryClass = entry.status === 'in_progress'
     ? 'bg-[#2ECC71] text-white'

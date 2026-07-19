@@ -9,7 +9,6 @@ import {
   createService as repoCreateService,
   updateService as repoUpdateService,
   softDeleteServiceById,
-  findServiceVehicleEntries,
   deleteServiceVehicleEntriesByServiceId,
   createServiceVehicleEntry as repoCreateServiceVehicleEntry,
   findExtrasByStationId,
@@ -53,10 +52,10 @@ async function filterCompatibleExtras(
     if (category === 'hand_wash') {
       // Scope rule: exterior service → exterior+both extras
       //             interior service → interior+both extras
-      //             complete service → all extras
+      //             complete/detailing service → all extras
       if (serviceType === 'exterior') return extra.scope === 'exterior' || extra.scope === 'both';
       if (serviceType === 'interior') return extra.scope === 'interior' || extra.scope === 'both';
-      if (serviceType === 'complete') return true;
+      if (serviceType === 'complete' || serviceType === 'detailing') return true;
     }
 
     // Other categories: no extras (automatic, self_service)

@@ -1,5 +1,5 @@
 export type ServiceCategory = 'hand_wash' | 'automatic' | 'self_service';
-export type ServiceType = 'exterior' | 'interior' | 'complete';
+export type ServiceType = 'exterior' | 'interior' | 'complete' | 'detailing';
 
 export interface VehicleFormat {
   id: string;

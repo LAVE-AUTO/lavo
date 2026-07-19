@@ -40,6 +40,10 @@ export const EMAIL_VERIFICATION_TTL_MS = parseInt(process.env.EMAIL_VERIFICATION
 /** Password reset token lifetime in milliseconds (default 60 min). */
 export const PASSWORD_RESET_TTL_MS = parseInt(process.env.PASSWORD_RESET_TTL_MINUTES ?? '60', 10) * 60 * 1000;
 
+/** Successful logins allowed for a client whose email is still unverified.
+ *  Past this budget, email verification is required to sign in again. */
+export const UNVERIFIED_LOGIN_GRACE = 5;
+
 /** Admin OTP lifetime in milliseconds (default 10 min). */
 export const OTP_TTL_MS = parseInt(process.env.OTP_TTL_MINUTES ?? '10', 10) * 60 * 1000;
 

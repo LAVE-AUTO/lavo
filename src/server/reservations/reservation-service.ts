@@ -68,6 +68,7 @@ import {
   listEntriesByUserPaginated,
   listEntriesByStationPaginated,
   cancelExpiredPendingPaymentsForSlot,
+  findEntryByStripePaymentId,
 } from './entry-repository';
 import { computeReservationSplit, computeWalkInSplit, mapSplitToEntryFinancialSnapshot } from './compute-reservation-split';
 import { verifyQrToken } from '@/server/qr/qr-token-service';
@@ -270,6 +271,15 @@ export async function createReservation(
     },
   });
 
+  // Retry guard: the idempotency key returns the SAME PaymentIntent for rapid
+  // retries (double-click, network retry). Without this check the retry would
+  // hit the ActiveReservationExistsError inside the transaction and show a 409
+  // instead of returning the already-confirmed entry.
+  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
+    return { entry: existingForPaymentIntent, clientSecret };
+  }
+
   // Atomic: expire stale pending_payment entries, duplicate check, slot lock, capacity check,
   // entry insert, slot increment. Entry is created with stripe_payment_id already set — no orphan window.
   const expiredPiIds: string[] = [];
@@ -421,6 +431,15 @@ export async function createReservationByStartTime(
       start_time: startTime.toISOString(),
     },
   });
+
+  /* Retry guard: the idempotency key above hands back the SAME PaymentIntent
+   * on rapid retries (double-click, client network retry). Without this check
+   * each retry inserted a fresh entry on another free post, producing several
+   * bookings tied to one payment — all later confirmed by the webhook/cron. */
+  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
+    return { entry: existingForPaymentIntent, clientSecret };
+  }
 
   const entry = await db.transaction(async (tx) => {
     /* Lock all active posts of the station to serialise concurrent bookings.

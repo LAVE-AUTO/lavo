@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { formatStationTime, stationNowMinutes } from '@/helpers/station-time';
 import type { StationDetailData, StationConfigPublic, TimeSlot } from '@/types/station';
 
 type ArrivalMode = 'queue_now' | 'queue_later' | 'book_slot';
@@ -63,11 +64,12 @@ function minutesToHHMM(minutes: number): string {
   return `${h}:${m}`;
 }
 
-/** Can the client join/reserve immediately right now? */
+/** Can the client join/reserve immediately right now?
+ * Station opening hours are wall times in the station timezone, so "now" is
+ * evaluated there too — a visitor in another timezone sees the same reality. */
 function canJoinNow(config: StationConfigPublic | null, serviceDuration: number): boolean {
   if (!config) return true;
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = stationNowMinutes();
   const openingMinutes = parseTimeToMinutes(config.openingTime);
   const closingMinutes = parseTimeToMinutes(config.closingTime);
   return currentMinutes >= openingMinutes && currentMinutes + serviceDuration <= closingMinutes;
@@ -76,8 +78,7 @@ function canJoinNow(config: StationConfigPublic | null, serviceDuration: number)
 /** Generate valid "later" time slots at 30-min intervals within today's operating window. */
 function generateLaterSlots(config: StationConfigPublic | null, serviceDuration: number): string[] {
   if (!config) return ['14:00', '15:00', '16:00', '17:00'];
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = stationNowMinutes();
   const openingMinutes = parseTimeToMinutes(config.openingTime);
   const closingMinutes = parseTimeToMinutes(config.closingTime);
   const latestStart = closingMinutes - serviceDuration;
@@ -280,8 +281,7 @@ export function ArrivalStep({
     if (!customTime) return;
     const minutes = parseTimeToMinutes(customTime);
     const config = stationConfig;
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentMinutes = stationNowMinutes();
     const opening = config ? parseTimeToMinutes(config.openingTime) : 0;
     const closing = config ? parseTimeToMinutes(config.closingTime) : 24 * 60;
     if (minutes <= currentMinutes) {
@@ -305,11 +305,14 @@ export function ArrivalStep({
    * creates the underlying time_slots row at booking time. */
   const timeSlotsFromAvailability = useMemo<TimeSlot[]>(() => {
     if (!selectedDate || arrivalMode !== 'book_slot') return [];
-    return availability.map((s) => {
-      const start = new Date(s.start_time);
-      const time = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
-      return { id: s.start_time, date: selectedDate, time, available: true };
-    });
+    return availability.map((s) => ({
+      id: s.start_time,
+      date: selectedDate,
+      /* Wall time in the station timezone — never the visitor's local time,
+       * otherwise slots appear shifted (e.g. 08:10 rendered as 04:10). */
+      time: formatStationTime(s.start_time),
+      available: true,
+    }));
   }, [availability, selectedDate, arrivalMode]);
 
   const [openSection, setOpenSection] = useState<'queue' | 'book' | null>(() => {
