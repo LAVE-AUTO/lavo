@@ -1244,12 +1244,9 @@ export async function listRichEntriesByUser(
   if (status) {
     conditions.push(eq(reservations.status, status));
   } else {
-    // Hide auto-cancelled payment failures — dead booking attempts the client
-    // never completed. pending_payment stays visible: the client sees it as
-    // "confirmed" (displayStatus() in the reservations page) the instant the
-    // row exists, without waiting on the Stripe webhook to flip the status —
-    // matching what the station side sees immediately.
-    conditions.push(notInArray(reservations.status, ['payment_failed']));
+    // Hide incomplete payment attempts and auto-cancelled payment failures.
+    // Only manually cancelled entries (status='cancelled') remain visible.
+    conditions.push(notInArray(reservations.status, ['pending_payment', 'payment_failed']));
   }
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));
