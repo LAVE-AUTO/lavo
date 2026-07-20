@@ -10,6 +10,7 @@ interface Props {
   onClose: () => void;
   date: string | null; // ISO: "2026-02-10"
   blocks: AvailabilityBlock[];
+  posts: { id: string; position: number }[];
   onDeleteBlock: (id: string) => void;
   onEditBlock: (block: AvailabilityBlock) => void;
   onCreateForDay: (dateISO: string) => void;
@@ -20,6 +21,7 @@ export function DayDetailsModal({
   onClose,
   date,
   blocks,
+  posts,
   onDeleteBlock,
   onEditBlock,
   onCreateForDay,
@@ -29,7 +31,8 @@ export function DayDetailsModal({
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_block_all_postes');
-    return `${t('availability_modal_poste')}${bayIds.length > 1 ? 's' : ''} ${bayIds.join(', ')}`;
+    const labels = bayIds.map((b) => posts.find((p) => p.id === b)?.position ?? b);
+    return `${t('availability_modal_poste')}${labels.length > 1 ? 's' : ''} ${labels.join(', ')}`;
   }
 
   const displayDate = date

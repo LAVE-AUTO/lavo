@@ -6,18 +6,21 @@ import type { AvailabilityBlock } from './types';
 
 interface Props {
   blocks: AvailabilityBlock[];
+  posts: { id: string; position: number }[];
   onDelete: (ids: string[]) => void;
   onEdit: (block: AvailabilityBlock) => void;
   onCreateClick: () => void;
 }
 
-export function BlocksPanel({ blocks, onDelete, onEdit, onCreateClick }: Props) {
+export function BlocksPanel({ blocks, posts, onDelete, onEdit, onCreateClick }: Props) {
   const t = useTranslations('station_dashboard');
   const locale = useLocale();
 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
-    return bayIds.map((b) => `${t('availability_poste_short')}${b}`).join(', ');
+    return bayIds
+      .map((b) => `${t('availability_poste_short')}${posts.find((p) => p.id === b)?.position ?? b}`)
+      .join(', ');
   }
 
   const grouped = groupBlocks(blocks);

@@ -79,7 +79,9 @@ function slotToBlock(slot: RawSlot, dateISO: string): AvailabilityBlock {
     dates: [dateISO],
     startTime: extractTime(slot.start_time),
     endTime: extractTime(slot.end_time),
-    bayIds: ['all'],
+    // Real post id when the slot is bound to one bay, so the edit modal can
+    // pre-select the right post; ['all'] for legacy post-less slots.
+    bayIds: slot.post_id ? [slot.post_id] : ['all'],
     postId: slot.post_id,
   };
 }
@@ -384,9 +386,9 @@ export default function StationAvailabilityPage() {
             onCreateClick={openCreateModal}
           />
         ) : (
-          <BlocksPanel blocks={allBlocks} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
+          <BlocksPanel blocks={allBlocks} posts={posts} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
         )}
-        <MonthCalendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} getBlocksForDate={getBlocksForDate} onDayClick={handleDayClick} selectedDateISO={selectedDay} />
+        <MonthCalendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} getBlocksForDate={getBlocksForDate} onDayClick={handleDayClick} selectedDateISO={selectedDay} posts={posts} />
       </div>
 
       <CreateBlockModal
@@ -409,6 +411,7 @@ export default function StationAvailabilityPage() {
         onClose={() => setIsDayModalOpen(false)}
         date={selectedDay}
         blocks={selectedDay ? getBlocksForDate(selectedDay) : []}
+        posts={posts}
         onDeleteBlock={handleDelete}
         onEditBlock={openEditModal}
         onCreateForDay={openCreateForDay}
