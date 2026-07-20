@@ -19,7 +19,7 @@ export function BlocksPanel({ blocks, posts, onDelete, onEdit, onCreateClick }: 
   function formatBays(bayIds: string[]): string {
     if (bayIds.length === 0 || bayIds.includes('all')) return t('availability_all_postes_short');
     return bayIds
-      .map((b) => `${t('availability_poste_short')}${posts.find((p) => p.id === b)?.position ?? b}`)
+      .map((b) => `${posts.find((p) => p.id === b)?.position ?? b}`)
       .join(', ');
   }
 

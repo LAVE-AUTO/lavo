@@ -45,7 +45,7 @@ export function MonthCalendar({
     const bays =
       first.bayIds.includes('all') || first.bayIds.length === 0
         ? t('availability_all_postes_short')
-        : `${t('availability_poste_short')}${first.bayIds.map((b) => posts.find((p) => p.id === b)?.position ?? b).join(',')}`;
+        : first.bayIds.map((b) => posts.find((p) => p.id === b)?.position ?? b).join(',');
     const timeLabel = first.startTime.replace(':00', 'h');
     const suffix = blocks.length > 1 ? ` +${blocks.length - 1}` : '';
     return `${bays} ${timeLabel}${suffix}`;
