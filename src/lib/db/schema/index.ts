@@ -40,6 +40,7 @@ import { stationHours, stationHourExceptions } from "./station-hours";
 import { stationPostHours } from "./station-post-hours";
 import { userNotifications } from "./user-notifications";
 import {
+  serviceTypes,
 } from "./services";
 
 
@@ -186,6 +187,7 @@ export const stationPromotionEnrollmentsRelations = relations(stationPromotionEn
 
 export const washTypesRelations = relations(washTypes, ({ many }) => ({
   stationWashTypes: many(stationWashTypes),
+  serviceTypes: many(serviceTypes),
 }));
 
 export const stationWashTypesRelations = relations(stationWashTypes, ({ one }) => ({
@@ -195,6 +197,13 @@ export const stationWashTypesRelations = relations(stationWashTypes, ({ one }) =
   }),
   washType: one(washTypes, {
     fields: [stationWashTypes.wash_type_id],
+    references: [washTypes.id],
+  }),
+}));
+
+export const serviceTypesRelations = relations(serviceTypes, ({ one }) => ({
+  washType: one(washTypes, {
+    fields: [serviceTypes.wash_type_id],
     references: [washTypes.id],
   }),
 }));

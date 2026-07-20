@@ -13,12 +13,28 @@ import {
   type StationExtra,
 } from '@/lib/db/schema';
 
+// Extra enriched with its category code (resolved from category_id), for
+// frontend consumption — the raw category_id UUID stays an implementation detail.
+export type EnrichedExtra = StationExtra & { category: string | null };
+
+async function attachCategoryCode(extras: StationExtra[]): Promise<EnrichedExtra[]> {
+  if (extras.length === 0) return [];
+  const categoryIds = [...new Set(extras.map((e) => e.category_id).filter((id): id is string => !!id))];
+  const categories = categoryIds.length
+    ? await db.query.washTypes.findMany({ where: (wt, { inArray }) => inArray(wt.id, categoryIds) })
+    : [];
+  const codeById = new Map(categories.map((c) => [c.id, c.code]));
+  return extras.map((e) => ({ ...e, category: e.category_id ? codeById.get(e.category_id) ?? null : null }));
+}
+
 // ===== TYPES =====
 
 export type CreateServiceData = {
   name: string;
   category: string;
   service_type: string;
+  category_id: string;
+  type_id?: string | null;
   description?: string;
   is_active?: boolean;
   is_popular?: boolean;
@@ -28,6 +44,8 @@ export type UpdateServiceData = Partial<{
   name: string;
   category: string;
   service_type: string;
+  category_id: string;
+  type_id: string | null;
   description: string;
   is_active: boolean;
   is_popular: boolean;
@@ -47,6 +65,7 @@ export type CreateServiceVehicleEntryData = {
 export type CreateExtraData = {
   label: string;
   scope: string;
+  category_id: string;
   price: string | number;
   duration_min?: number;
   staff_required?: number;
@@ -56,6 +75,7 @@ export type CreateExtraData = {
 export type UpdateExtraData = Partial<{
   label: string;
   scope: string;
+  category_id: string;
   price: string | number;
   duration_min: number;
   staff_required: number;
@@ -101,6 +121,8 @@ export async function createService(
       name: data.name,
       category: data.category,
       service_type: data.service_type,
+      category_id: data.category_id,
+      type_id: data.type_id ?? null,
       description: data.description,
       is_active: data.is_active ?? true,
       is_popular: data.is_popular ?? false,
@@ -166,29 +188,34 @@ export async function deleteServiceVehicleEntriesByServiceId(serviceId: string):
 
 // ===== EXTRAS =====
 
-export async function findExtrasByStationId(stationId: string): Promise<StationExtra[]> {
-  return db.query.stationExtras.findMany({
+export async function findExtrasByStationId(stationId: string): Promise<EnrichedExtra[]> {
+  const extras = await db.query.stationExtras.findMany({
     where: eq(stationExtras.station_id, stationId),
     orderBy: (e, { asc }) => [asc(e.created_at)],
   });
+  return attachCategoryCode(extras);
 }
 
 export async function findExtraByIdAndStation(
   extraId: string,
   stationId: string
-): Promise<StationExtra | undefined> {
-  return db.query.stationExtras.findFirst({
+): Promise<EnrichedExtra | undefined> {
+  const extra = await db.query.stationExtras.findFirst({
     where: and(eq(stationExtras.id, extraId), eq(stationExtras.station_id, stationId)),
   });
+  if (!extra) return undefined;
+  const [enriched] = await attachCategoryCode([extra]);
+  return enriched;
 }
 
-export async function createExtra(stationId: string, data: CreateExtraData): Promise<StationExtra> {
+export async function createExtra(stationId: string, data: CreateExtraData): Promise<EnrichedExtra> {
   const [row] = await db
     .insert(stationExtras)
     .values({
       station_id: stationId,
       label: data.label,
       scope: data.scope,
+      category_id: data.category_id,
       price: String(data.price),
       duration_min: data.duration_min ?? 10,
       staff_required: data.staff_required ?? 0,
@@ -196,10 +223,11 @@ export async function createExtra(stationId: string, data: CreateExtraData): Pro
     })
     .returning();
   if (!row) throw new Error('Insert extra failed');
-  return row;
+  const [enriched] = await attachCategoryCode([row]);
+  return enriched;
 }
 
-export async function updateExtra(id: string, data: UpdateExtraData): Promise<StationExtra> {
+export async function updateExtra(id: string, data: UpdateExtraData): Promise<EnrichedExtra> {
   const payload: Record<string, unknown> = { ...data, updated_at: new Date() };
   if (payload.price !== undefined) payload.price = String(payload.price);
   const [row] = await db
@@ -208,7 +236,8 @@ export async function updateExtra(id: string, data: UpdateExtraData): Promise<St
     .where(eq(stationExtras.id, id))
     .returning();
   if (!row) throw new Error('Update extra failed');
-  return row;
+  const [enriched] = await attachCategoryCode([row]);
+  return enriched;
 }
 
 export async function deleteExtraById(id: string): Promise<void> {

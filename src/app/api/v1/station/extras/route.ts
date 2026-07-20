@@ -80,7 +80,7 @@ export async function POST(request: Request) {
 
     const extra = await createExtraWithAuth(auth.sub, {
       label: validated.name,
-      scope: validated.applicable_on,
+      category: validated.category,
       price: validated.price,
       duration_min: validated.duration,
       is_active: validated.is_active,
