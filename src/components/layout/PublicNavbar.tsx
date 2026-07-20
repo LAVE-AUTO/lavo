@@ -7,6 +7,11 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { LangToggle } from '@/components/auth/LangToggle';
 import { ShareMenu } from '@/components/layout/ShareMenu';
+import {
+  UnverifiedEmailBanner,
+  useUnverifiedEmailBanner,
+  UNVERIFIED_BANNER_HEIGHT,
+} from '@/components/ui/UnverifiedEmailBanner';
 import { useTheme } from '@/context/theme-context';
 import { useAuth } from '@/context';
 import { deleteWithApi, getFromApi, patchWithApi } from '@/services/axios-service';
@@ -66,6 +71,9 @@ export function PublicNavbar({
   const { resolvedTheme } = useTheme();
   const isDark   = resolvedTheme === 'dark';
   const { user, isAuthenticated, isLoading, logout, isClient, isStation, isSuperAdmin } = useAuth();
+  /* The verification banner adds its height to the fixed header, so the
+   * content spacer must grow by the same amount. */
+  const showVerifyBanner = useUnverifiedEmailBanner();
 
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -219,6 +227,10 @@ export function PublicNavbar({
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[#FFF9EC] dark:bg-dark-bg backdrop-blur-[16px] border-b border-[rgba(221,175,59,0.18)]">
+        {/* Email-verification nag for unverified clients. Lives inside the fixed
+         * header so it is truly at the top and never hidden behind the navbar;
+         * the bottom spacer grows by the same height (UNVERIFIED_BANNER_HEIGHT). */}
+        <UnverifiedEmailBanner />
         <div className="max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 py-2">
 
           {/* Logo */}
@@ -550,7 +562,12 @@ export function PublicNavbar({
       </header>
 
       {/* Spacer - push page content below fixed header (can be disabled per-layout) */}
-      {withTopSpacer && <div className="h-[60px]" aria-hidden="true" />}
+      {withTopSpacer && (
+        <div
+          style={{ height: 60 + (showVerifyBanner ? UNVERIFIED_BANNER_HEIGHT : 0) }}
+          aria-hidden="true"
+        />
+      )}
       {/* Extra spacer for mobile bottom nav (can be disabled per-layout) */}
       {withMobileScrollSpacer && <div className="sm:hidden" aria-hidden="true" />}
     </>

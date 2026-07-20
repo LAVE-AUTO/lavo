@@ -5,6 +5,7 @@
 import {
   boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -40,6 +41,11 @@ export const users = pgTable(
       mode: "date",
       withTimezone: true,
     }),
+    // Successful logins granted while the email is still unverified. Clients
+    // get a limited grace (5 logins) before verification becomes mandatory.
+    unverified_login_count: integer("unverified_login_count")
+      .notNull()
+      .default(0),
     stripe_customer_id: varchar("stripe_customer_id", { length: 100 }),
     created_at: timestamp("created_at", {
       mode: "date",

@@ -663,7 +663,7 @@ const serviceVehicleEntrySchema = z.object({
 export const createServiceBodySchema = z.object({
   name: z.string().min(1).max(255, 'Service name must not exceed 255 characters'),
   category: z.enum(['hand_wash', 'automatic', 'self_service']),
-  service_type: z.enum(['exterior', 'interior', 'complete']),
+  service_type: z.enum(['exterior', 'interior', 'complete', 'detailing']),
   description: z.string().max(2000).optional(),
   is_active: z.boolean().optional().default(true),
   is_popular: z.boolean().optional().default(false),

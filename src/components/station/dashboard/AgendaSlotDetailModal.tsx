@@ -44,10 +44,12 @@ export function AgendaSlotDetailModal({
   if (!entry) return null;
 
   const visuals = statusVisuals(entry.status);
-  // Start / Cancel only surface within the start window before the slot.
+  /* Start / Cancel stay available at all times — merchants asked for full
+   * control; confirmation flows guard accidental taps. The start-window hint
+   * remains purely informational. */
   const inStartWindow = isWithinStartWindow(entry.slotStart, now);
   const canStartPhase = entry.status === 'confirmed' || entry.status === 'pending' || entry.status === 'pending_payment';
-  const isStartable = canStartPhase && inStartWindow;
+  const isStartable = canStartPhase;
   const isRunning = entry.status === 'in_progress';
   const waitingForWindow = canStartPhase && !inStartWindow;
 

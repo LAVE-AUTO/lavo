@@ -18,6 +18,7 @@ import {
   BCRYPT_ROUNDS,
   EMAIL_VERIFICATION_TTL_MS,
   PASSWORD_RESET_TTL_MS,
+  UNVERIFIED_LOGIN_GRACE,
 } from '@/helpers/server-constants';
 import {
   findByEmail,
@@ -27,6 +28,7 @@ import {
   updateEmailVerified,
   updatePassword,
   updateForcePasswordChange,
+  incrementUnverifiedLoginCount,
   type SafeUser,
 } from './user-repository';
 import { db } from '@/lib/db';
@@ -351,6 +353,17 @@ export async function login(dto: LoginDto): Promise<AuthResult> {
   if (user.status !== 'active') {
     switch (user.status) {
       case 'pending_verification':
+        /* Clients get a grace budget: they may sign in UNVERIFIED_LOGIN_GRACE
+         * times while their email is still unverified (a banner nags them in
+         * the app). Past the budget, verification becomes mandatory. Other
+         * roles keep the strict behaviour. */
+        if (user.role === 'client') {
+          if ((user.unverified_login_count ?? 0) >= UNVERIFIED_LOGIN_GRACE) {
+            throw new ForbiddenError('Email verification required', ApiCode.EMAIL_VERIFICATION_REQUIRED);
+          }
+          await incrementUnverifiedLoginCount(user.id);
+          break;
+        }
         throw new ForbiddenError('Account is pending validation', ApiCode.BUSINESS_NOT_APPROVED);
 
       case 'suspended':

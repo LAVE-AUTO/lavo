@@ -17,7 +17,8 @@ export interface ReservationEntry {
   status: EntryStatus;
   queue_position: number | null;
   amount_paid: string | null;
-  /* Financial snapshot (decimal strings, nullable for legacy entries). */
+  /* Financial snapshot persisted by the backend on paid entries. Decimal
+   * strings; null on legacy/unpaid rows. Rendered on completed entries. */
   station_service_total?: string | null;
   platform_service_fee?: string | null;
   tps_amount?: string | null;

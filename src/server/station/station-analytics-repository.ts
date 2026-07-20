@@ -247,6 +247,14 @@ export type StationDailySummary = {
   tips: string;
   completed: number;
   clients: number;
+  /** Sum of station_service_total — gross service price before commission & fees. */
+  totalService: string;
+  /** Sum of commission_amount — platform commission deducted. */
+  commission: string;
+  /** Sum of platform_service_fee — fixed platform fee per order. */
+  platformFees: string;
+  /** Sum of station_tax_amount — TPS+TVQ attributed to the station. */
+  stationTaxes: string;
 };
 
 /**
@@ -264,6 +272,10 @@ export async function getStationDailySummary(
       tips: sql<string>`COALESCE(SUM(${reservations.tip_amount}), 0)::text`,
       completed: sql<number>`COUNT(*)::int`,
       clients: sql<number>`COUNT(DISTINCT ${reservations.user_id})::int`,
+      totalService: sql<string>`COALESCE(SUM(${reservations.station_service_total}), 0)::text`,
+      commission: sql<string>`COALESCE(SUM(${reservations.commission_amount}), 0)::text`,
+      platformFees: sql<string>`COALESCE(SUM(${reservations.platform_service_fee}), 0)::text`,
+      stationTaxes: sql<string>`COALESCE(SUM(${reservations.station_tax_amount}), 0)::text`,
     })
     .from(reservations)
     .where(
@@ -275,5 +287,5 @@ export async function getStationDailySummary(
       )
     );
 
-  return row ?? { revenue: '0', tips: '0', completed: 0, clients: 0 };
+  return row ?? { revenue: '0', tips: '0', completed: 0, clients: 0, totalService: '0', commission: '0', platformFees: '0', stationTaxes: '0' };
 }

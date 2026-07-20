@@ -6,7 +6,7 @@ import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
 import { useCommission } from '@/context/commission-context';
-import { updateWithApi } from '@/services/axios-service';
+import { getFromApi, patchWithApi, updateWithApi } from '@/services/axios-service';
 
 function formatDate(d: string, locale: string) {
   try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short', year: 'numeric' }); }
@@ -35,6 +35,56 @@ export function AdminCommissionView() {
 
   const [rate, setRate]     = useState(savedRate);
   const [saving, setSaving] = useState(false);
+
+  /* Platform service fee (fixed CAD amount added to every client order).
+   * Lives on the pricing page alongside the commission rate; persisted through
+   * the same /admin/settings key-value store as before. */
+  const ts = useTranslations('admin_settings');
+  const [savedFee, setSavedFee]   = useState(0);
+  const [fee, setFee]             = useState(0);
+  const [feeLoading, setFeeLoading] = useState(true);
+  const [feeSaving, setFeeSaving]   = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ok, data] = await getFromApi('/admin/settings');
+        if (!mountedRef.current || !ok) return;
+        const rows = (data as { data: { key: string; value: string | null }[] }).data ?? [];
+        const raw = rows.find((r) => r.key === 'platform_service_fee')?.value ?? null;
+        const parsedFee = raw !== null ? parseFloat(raw) : NaN;
+        if (!isNaN(parsedFee)) {
+          setSavedFee(parsedFee);
+          setFee(parsedFee);
+        }
+      } catch {
+        // keep defaults on failure
+      } finally {
+        if (mountedRef.current) setFeeLoading(false);
+      }
+    })();
+  }, []);
+
+  const feeDirty = fee !== savedFee;
+
+  async function handleSaveFee() {
+    if (fee < 0) { toastError(ts('error_platform_service_fee_range')); return; }
+    setFeeSaving(true);
+    try {
+      const [ok] = await patchWithApi('/admin/settings', { platform_service_fee: fee.toFixed(2) });
+      if (!mountedRef.current) return;
+      if (ok) {
+        setSavedFee(fee);
+        toastSuccess(ts('save_success'));
+      } else {
+        toastError(ts('save_error'));
+      }
+    } catch {
+      if (mountedRef.current) toastError(ts('save_error'));
+    } finally {
+      if (mountedRef.current) setFeeSaving(false);
+    }
+  }
 
   /* Sync local input when savedRate changes (e.g. changed from platform-settings) */
   useEffect(() => { setRate(savedRate); }, [savedRate]);
@@ -145,6 +195,35 @@ export function AdminCommissionView() {
                 </button>
                 {isDirty && !saving && (
                   <p className="mt-2 text-center text-[12px] font-semibold text-[#DDAF3B]">{t('unsaved_dot')}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Platform service fee (fixed CAD amount) */}
+            <div className="overflow-hidden rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1E2E18] dark:bg-[#131E10]">
+              <div className="border-b border-[#F0EDE6] bg-gradient-to-r from-[#F9F8F5] to-white px-5 py-3 dark:border-[#1A2A14] dark:from-[#0E1A0C] dark:to-[#131E10]">
+                <p className="text-[12px] font-black uppercase tracking-widest text-[#AAAAAA] dark:text-[#B0BFB1]">{ts('field_platform_service_fee')}</p>
+              </div>
+              <div className="p-5">
+                {feeLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <div className="h-5 w-5 animate-spin rounded-full border-[3px] border-[#DDAF3B] border-t-transparent" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221,175,59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:focus-within:border-[#DDAF3B]">
+                      <input type="number" min={0} step={0.5} value={fee}
+                        onChange={(e) => { const v = parseFloat(e.target.value); setFee(isNaN(v) ? 0 : Math.max(0, v)); }}
+                        className="flex-1 bg-transparent px-5 py-3 text-[24px] font-black text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />
+                      <span className="flex items-center border-l border-[#FFF9EC] bg-[#F5F2EC] px-5 text-[16px] font-black text-[#AAAAAA] dark:border-[#001A05] dark:bg-[#0E1A0C]">CAD</span>
+                    </div>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[#AAAAAA] dark:text-[#B0BFB1]">{ts('hint_platform_service_fee')}</p>
+                    <button type="button" disabled={feeSaving || !feeDirty} onClick={handleSaveFee}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#DDAF3B] px-4 py-3 text-[13px] font-bold text-[#001201] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#B08A14] hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">
+                      {feeDirty && !feeSaving && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-dark-bg" />}
+                      {feeSaving ? ts('btn_saving') : ts('btn_save')}
+                    </button>
+                  </>
                 )}
               </div>
             </div>

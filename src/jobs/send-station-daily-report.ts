@@ -47,6 +47,10 @@ export async function runSendStationDailyReport(): Promise<SendDailyReportResult
       revenue: Number.parseFloat(summary.revenue) || 0,
       tips: Number.parseFloat(summary.tips) || 0,
       clients: summary.clients,
+      totalService: Number.parseFloat(summary.totalService) || 0,
+      commission: Number.parseFloat(summary.commission) || 0,
+      platformFees: Number.parseFloat(summary.platformFees) || 0,
+      stationTaxes: Number.parseFloat(summary.stationTaxes) || 0,
     });
     sent += 1;
   });

@@ -28,7 +28,7 @@ interface AutomaticPackage {
 }
 
 const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
-const TYPES: ServiceType[] = ['exterior', 'interior', 'complete'];
+const TYPES: ServiceType[] = ['exterior', 'interior', 'complete', 'detailing'];
 
 const DEFAULT_BASE_PRICE = '45';
 const DEFAULT_BASE_DURATION = '60';
@@ -562,6 +562,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     ? t('type_hint_exterior')
                     : effectiveServiceType === 'interior'
                     ? t('type_hint_interior')
+                    : effectiveServiceType === 'detailing'
+                    ? t('type_hint_detailing')
                     : t('type_hint_complete')}
                 </p>
               </div>

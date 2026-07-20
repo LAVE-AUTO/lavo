@@ -17,7 +17,7 @@ interface LocationPermissionToastProps {
  */
 export function LocationPermissionToast({ duration = 10_000 }: LocationPermissionToastProps) {
   const t = useTranslations('location_toast');
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isClient } = useAuth();
   const { visible, request, dismiss } = useGeolocationBanner();
 
   const [progress, setProgress] = useState(100);
@@ -49,7 +49,9 @@ export function LocationPermissionToast({ duration = 10_000 }: LocationPermissio
     };
   }, [visible, duration, dismiss]);
 
-  if (isLoading || !isAuthenticated || !visible) return null;
+  /* Distance-to-station only matters for clients browsing stations.
+   * Admin and station accounts must never be prompted for geolocation. */
+  if (isLoading || !isAuthenticated || !isClient || !visible) return null;
 
   return (
     <div
