@@ -8,6 +8,7 @@ import UpgradeToReservationModal from '@/components/reservations/UpgradeToReserv
 import { getFromApi, patchWithApi } from '@/services/axios-service';
 import { useToast } from '@/context';
 import { useAuth } from '@/context/auth-context';
+import { stationDateKey, utcToStationMinutes } from '@/helpers/station-time';
 
 type Tab = 'reservations' | 'queue';
 type ReservationStatus = 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'pending_payment' | 'pending';
@@ -202,14 +203,15 @@ function displayStatus(status: ReservationStatus): ReservationStatus {
   return status;
 }
 
+/* Always in the station's own timezone (not the visitor's browser timezone) —
+ * otherwise the same reservation shows a different hour depending on where
+ * the client happens to be. See src/helpers/station-time.ts. */
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
   const d = new Date(startTime);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return { date: `${yyyy}-${mm}-${dd}`, timeSlot: `${h}:${m}` };
+  const minutes = utcToStationMinutes(d);
+  const h = String(Math.floor(minutes / 60) % 24).padStart(2, '0');
+  const m = String(minutes % 60).padStart(2, '0');
+  return { date: stationDateKey(d), timeSlot: `${h}:${m}` };
 }
 
 function enrichEntry(entry: ApiRichEntry): ClientReservation | ClientQueueEntry {

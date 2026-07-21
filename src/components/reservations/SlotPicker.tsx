@@ -4,6 +4,8 @@
 /* SlotPicker - grille de sélection de créneau horaire                 */
 /* ------------------------------------------------------------------ */
 
+import { STATION_TIMEZONE, utcToStationMinutes } from '@/helpers/station-time';
+
 export interface AvailableSlot {
   id: string;
   startTime: string; /* ISO string */
@@ -17,13 +19,16 @@ interface SlotPickerProps {
   locale: string;
 }
 
+/* Station-local wall time (not the visitor's browser timezone) — a slot
+ * booked for "16:04" station-local must show as "16:04" everywhere. */
 function formatSlotTime(isoString: string, locale: string): { date: string; time: string } {
   const d = new Date(isoString);
   const date = d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-    weekday: 'short', day: 'numeric', month: 'short',
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: STATION_TIMEZONE,
   });
-  const h = String(d.getHours()).padStart(2, '0');
-  const mn = String(d.getMinutes()).padStart(2, '0');
+  const minutes = utcToStationMinutes(d);
+  const h = String(Math.floor(minutes / 60) % 24).padStart(2, '0');
+  const mn = String(minutes % 60).padStart(2, '0');
   return { date, time: `${h}:${mn}` };
 }
 

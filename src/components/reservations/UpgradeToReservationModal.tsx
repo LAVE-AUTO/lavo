@@ -7,6 +7,7 @@ import { useToast } from '@/context/toast-context';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { AvailableSlot } from './SlotPicker';
+import { STATION_TIMEZONE, stationDateKey, utcToStationMinutes } from '@/helpers/station-time';
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 function getStripePromise() {
@@ -415,12 +416,13 @@ interface SlotStepPickerProps {
 function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel, pickTimeLabel, emptyDayLabel }: SlotStepPickerProps) {
   const dateFmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
 
-  /* Index slots by ISO local date so the chip strip only shows days that have slots. */
+  /* Index slots by their station-local calendar date (not the visitor's
+   * browser timezone) so the chip strip and time labels always agree with
+   * the wall-clock time the station itself operates on. */
   const grouped = useMemo(() => {
     const map = new Map<string, AvailableSlot[]>();
     for (const slot of slots) {
-      const d = new Date(slot.startTime);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const key = stationDateKey(new Date(slot.startTime));
       const list = map.get(key) ?? [];
       list.push(slot);
       map.set(key, list);
@@ -429,9 +431,9 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
       const sample = new Date(daySlots[0].startTime);
       return {
         key,
-        dayShort: sample.toLocaleDateString(dateFmtLocale, { weekday: 'short' }).slice(0, 3),
-        dayFull:  sample.toLocaleDateString(dateFmtLocale, { weekday: 'long', day: 'numeric', month: 'long' }),
-        dateNum:  sample.getDate(),
+        dayShort: sample.toLocaleDateString(dateFmtLocale, { weekday: 'short', timeZone: STATION_TIMEZONE }).slice(0, 3),
+        dayFull:  sample.toLocaleDateString(dateFmtLocale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: STATION_TIMEZONE }),
+        dateNum:  parseInt(key.split('-')[2], 10),
         slots:    daySlots.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
       };
     }).sort((a, b) => a.key.localeCompare(b.key));
@@ -441,10 +443,7 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
   const initialDate = useMemo(() => {
     if (selectedSlotId) {
       const sel = slots.find((s) => s.id === selectedSlotId);
-      if (sel) {
-        const d = new Date(sel.startTime);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      }
+      if (sel) return stationDateKey(new Date(sel.startTime));
     }
     return grouped[0]?.key ?? null;
   }, [selectedSlotId, slots, grouped]);
@@ -493,7 +492,8 @@ function SlotStepPicker({ slots, selectedSlotId, onSelect, locale, pickDateLabel
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {activeGroup.slots.map((slot) => {
               const d = new Date(slot.startTime);
-              const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+              const dMinutes = utcToStationMinutes(d);
+              const time = `${String(Math.floor(dMinutes / 60) % 24).padStart(2, '0')}:${String(dMinutes % 60).padStart(2, '0')}`;
               const isSelected = slot.id === selectedSlotId;
               const isDisabled = slot.isFull;
               return (

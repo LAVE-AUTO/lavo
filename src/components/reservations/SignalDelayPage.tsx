@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
+import { STATION_TIMEZONE, utcToStationMinutes } from '@/helpers/station-time';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -76,13 +77,14 @@ export default function SignalDelayPage() {
       return;
     }
 
+    const slotMinutes = utcToStationMinutes(slotStart);
     setRes({
       stationName: entry?.station?.name ?? '-',
       forfaitName: entry?.vehicle_format?.label ?? '-',
       dateLabel: slotStart.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: STATION_TIMEZONE,
       }),
-      timeSlot: `${String(slotStart.getHours()).padStart(2, '0')}:${String(slotStart.getMinutes()).padStart(2, '0')}`,
+      timeSlot: `${String(Math.floor(slotMinutes / 60) % 24).padStart(2, '0')}:${String(slotMinutes % 60).padStart(2, '0')}`,
     });
     setPageState('form');
   }, [id, locale]);

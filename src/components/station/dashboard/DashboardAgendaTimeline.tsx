@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { isWithinStartWindow } from '@/helpers/start-window';
+import { utcToStationMinutes } from '@/helpers/station-time';
 
 export interface AgendaEntry {
   id: string;
@@ -52,14 +53,21 @@ function parseHHMM(value: string | null, fallback: string): { h: number; m: numb
   return { h: parseInt(m[1], 10), m: parseInt(m[2], 10) };
 }
 
+/* Positions and labels are computed in the station's own timezone (wall
+ * clock, e.g. America/Toronto) rather than the viewer's browser timezone —
+ * otherwise a slot booked for "16:04" station-local can render at a
+ * completely different hour depending on where the merchant/client happens
+ * to be. See src/helpers/station-time.ts. */
 function minutesSinceOpen(date: Date | null, openMinutes: number): number | null {
   if (!date) return null;
-  const total = date.getHours() * 60 + date.getMinutes();
-  return total - openMinutes;
+  return utcToStationMinutes(date) - openMinutes;
 }
 
 function formatTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  const minutes = utcToStationMinutes(date);
+  const h = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function statusToBlockClass(status: string): { bg: string; border: string; chip: string; chipBg: string } {
@@ -167,7 +175,7 @@ export function DashboardAgendaTimeline({
 
   const nowLineTop = useMemo(() => {
     if (!isSameDay(now, selectedDate)) return null;
-    const m = now.getHours() * 60 + now.getMinutes() - openMinutes;
+    const m = utcToStationMinutes(now) - openMinutes;
     if (m < 0 || m > totalMinutes) return null;
     return m * PX_PER_MINUTE;
   }, [now, selectedDate, openMinutes, totalMinutes]);

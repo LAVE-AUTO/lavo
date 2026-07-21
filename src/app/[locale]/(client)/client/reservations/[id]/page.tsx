@@ -9,6 +9,7 @@ import { useToast } from '@/context/toast-context';
 import { getFromApi, patchWithApi, postWithApi } from '@/services/axios-service';
 import { ReceiptModal, type HistoryReservation } from '@/components/history/ReceiptModal';
 import { parseFinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
+import { STATION_TIMEZONE, stationDateKey, utcToStationMinutes } from '@/helpers/station-time';
 
 /* ------------------------------------------------------------------ */
 /* API shapes (rich entry returned by GET /me/entries/:id)               */
@@ -76,14 +77,14 @@ interface EnrichedReservation {
 /** Free cancellation rule: more than 1h before service start. */
 const FREE_CANCEL_THRESHOLD_MS = 60 * 60 * 1000;
 
+/* Station-local wall time (not the visitor's browser timezone) — see
+ * src/helpers/station-time.ts. */
 function slotToDateParts(startTime: string): { date: string; timeSlot: string } {
   const d = new Date(startTime);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return { date: `${yyyy}-${mm}-${dd}`, timeSlot: `${h}:${m}` };
+  const minutes = utcToStationMinutes(d);
+  const h = String(Math.floor(minutes / 60) % 24).padStart(2, '0');
+  const m = String(minutes % 60).padStart(2, '0');
+  return { date: stationDateKey(d), timeSlot: `${h}:${m}` };
 }
 
 /* ------------------------------------------------------------------ */
@@ -285,7 +286,7 @@ export default function ReservationDetailPage() {
   const isUpcoming = !isPast && (reservation.status === 'confirmed' || reservation.status === 'pending');
 
   const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: STATION_TIMEZONE,
   });
 
   const statusColors: Record<string, string> = {
