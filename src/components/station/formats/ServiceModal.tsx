@@ -129,7 +129,8 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, categor
   const isCreateSelfService = !isEdit && isSelfService;
   const selectedCategory = categories.find((c) => c.code === category);
   const showTypeSelector = (selectedCategory?.types.length ?? 0) > 0;
-  const showExtrasSection = isHandWash;
+  const compatibleExtras: StationExtra[] = availableExtras.filter((e) => e.category === category);
+  const showExtrasSection = compatibleExtras.length > 0;
   const showDurationField = true;
   const showFormatSection = isHandWash;
   const showAutomaticPackagesSection = isAutomatic;
@@ -199,8 +200,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, categor
     }
     setSaving(true);
     setError(null);
-
-    const compatibleExtras: StationExtra[] = availableExtras.filter((e) => e.category === category);
 
     const selectedExtras = compatibleExtras
       .filter((e) => selectedExtraIds.includes(e.id))
@@ -376,7 +375,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, categor
   const minDur = durations.length > 0 ? Math.min(...durations) : null;
   const maxDur = durations.length > 0 ? Math.max(...durations) : null;
   const selectedFormats = activeEntries.map((e) => e.vehicle_label);
-  const compatibleExtras: StationExtra[] = availableExtras.filter((e) => e.category === category);
 
   // Base price / duration drive every non-overridden vehicle row, so editing the
   // base updates all rows the merchant hasn't customised. Customised rows keep
