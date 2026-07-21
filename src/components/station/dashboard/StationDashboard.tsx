@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
+import { stationDateKey, stationWallTimeToUtc, STATION_TIMEZONE } from '@/helpers/station-time';
 import { useToast } from '@/context/toast-context';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -125,29 +126,46 @@ function clientNameOf(entry: RawEntry): string {
 }
 
 function dayRange(date: Date): { from: string; to: string } {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { from: start.toISOString(), to: end.toISOString() };
+  const key = stationDateKey(date);
+  return {
+    from: stationWallTimeToUtc(key, 0).toISOString(),
+    to: stationWallTimeToUtc(key, 24 * 60).toISOString(),
+  };
 }
 
 function buildDateRange(date: Date, view: 'daily' | 'weekly' | 'monthly'): { from: string; to: string } {
+  if (view === 'daily') return dayRange(date);
+
+  const key = stationDateKey(date);
+  const [y, m] = key.split('-').map(Number);
+
   if (view === 'weekly') {
-    const mon = new Date(date);
-    const dow = mon.getDay();
-    mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
-    mon.setHours(0, 0, 0, 0);
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 7);
-    return { from: mon.toISOString(), to: sun.toISOString() };
+    const dowUtc = stationWallTimeToUtc(key, 12 * 60);
+    const dowName = new Intl.DateTimeFormat('en-US', { timeZone: STATION_TIMEZONE, weekday: 'short' }).format(dowUtc);
+    const dowMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const dow = dowMap[dowName] ?? 1;
+    const offset = dow === 0 ? -6 : -(dow - 1);
+    const monKey = shiftStationDate(key, offset);
+    return {
+      from: stationWallTimeToUtc(monKey, 0).toISOString(),
+      to: stationWallTimeToUtc(monKey, 7 * 24 * 60).toISOString(),
+    };
   }
-  if (view === 'monthly') {
-    const start = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 1, 0, 0, 0, 0);
-    return { from: start.toISOString(), to: end.toISOString() };
-  }
-  return dayRange(date);
+
+  const firstKey = `${key.slice(0, 7)}-01`;
+  const nextM = (m ?? 1) === 12 ? 1 : (m ?? 1) + 1;
+  const nextY = (m ?? 1) === 12 ? (y ?? 2026) + 1 : (y ?? 2026);
+  const nextFirstKey = `${String(nextY).padStart(4, '0')}-${String(nextM).padStart(2, '0')}-01`;
+  return {
+    from: stationWallTimeToUtc(firstKey, 0).toISOString(),
+    to: stationWallTimeToUtc(nextFirstKey, 0).toISOString(),
+  };
+}
+
+function shiftStationDate(dateKey: string, deltaDays: number): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const shifted = new Date(Date.UTC(y!, (m ?? 1) - 1, (d ?? 1) + deltaDays, 12, 0, 0));
+  return stationDateKey(shifted);
 }
 
 function buildQueueEntries(raw: RawEntry[]): QueueEntry[] {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
+import { stationDateKey, stationWallTimeToUtc } from '@/helpers/station-time';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StartServiceModal } from '@/components/station/dashboard/StartServiceModal';
@@ -38,15 +39,13 @@ function toISO(d: Date): string {
 }
 
 function dayStart(d: Date): Date {
-  const s = new Date(d);
-  s.setHours(0, 0, 0, 0);
-  return s;
+  const key = stationDateKey(d);
+  return stationWallTimeToUtc(key, 0);
 }
 
 function dayEnd(d: Date): Date {
-  const s = dayStart(d);
-  s.setDate(s.getDate() + 1);
-  return s;
+  const key = stationDateKey(d);
+  return stationWallTimeToUtc(key, 24 * 60);
 }
 
 function formatDateLabel(d: Date, locale: string): string {
