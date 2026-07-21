@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { StartServiceModal } from '@/components/station/dashboard/StartServiceModal';
 import { StatusTabs } from './StatusTabs';
 import { ReservationCard } from './ReservationCard';
 import type { ReservationEntry, StatusTab } from './types';
@@ -73,6 +74,7 @@ export function StationReservationsPage() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [startEntry, setStartEntry] = useState<ReservationEntry | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -137,14 +139,19 @@ export function StationReservationsPage() {
     return { revenue, active, done, total: entries.length };
   }, [entries]);
 
+  function clientLabelFor(entry: ReservationEntry | undefined): string {
+    if (!entry) return '';
+    const walkInName = entry.walk_in_client_name?.trim();
+    if (walkInName) return walkInName;
+    const firstName = entry.user?.first_name?.trim();
+    const lastName = entry.user?.last_name?.trim();
+    const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
+    return fullName.length > 0 ? fullName : `#${entry.user_id.slice(0, 8)}`;
+  }
+
   function requestAction(type: ActionType, entryId: string) {
     const entry = entries.find((e) => e.id === entryId);
-    const firstName = entry?.user?.first_name?.trim();
-    const lastName = entry?.user?.last_name?.trim();
-    const fullName = [firstName, lastName].filter((part): part is string => Boolean(part && part.length > 0)).join(' ');
-    const clientIdentity = fullName.length > 0 ? fullName : (entry ? `#${entry.user_id.slice(0, 8)}` : '');
-    const clientLabel = entry ? clientIdentity : '';
-    setPending({ type, entryId, clientLabel });
+    setPending({ type, entryId, clientLabel: clientLabelFor(entry) });
     setActionError(null);
   }
 
@@ -162,11 +169,38 @@ export function StationReservationsPage() {
     else { setActionError(t('error_action')); }
   }
 
-  async function handleStartEntry(entryId: string) {
+  /** Starts a walk-in entry directly (no code required) — the off-platform
+   *  client never received a ticket code. */
+  async function startWalkInDirectly(entryId: string) {
     const [ok] = await patchWithApi(`/station/entries/${entryId}`, { status: 'in_progress' });
     if (!mountedRef.current) return;
     if (ok) { await loadData(); }
     else { setActionError(t('error_action')); }
+  }
+
+  function requestStart(entryId: string) {
+    const entry = entries.find((e) => e.id === entryId);
+    if (!entry) return;
+    if (entry.is_walk_in) {
+      void startWalkInDirectly(entry.id);
+      return;
+    }
+    // Real reservations keep the ticket-code verification flow so the
+    // merchant confirms it's the right client before starting the wash.
+    setStartEntry(entry);
+  }
+
+  async function submitStartCode(code: string): Promise<{ ok: boolean; reason?: 'invalid_code' | 'generic' }> {
+    if (!startEntry) return { ok: false, reason: 'generic' };
+    const [ok, data] = await postWithApi(`/station/entries/${startEntry.id}/start`, { code });
+    if (!mountedRef.current) return { ok: false, reason: 'generic' };
+    if (ok) {
+      await loadData();
+      return { ok: true };
+    }
+    const payload = data as { message?: string; code?: string } | null;
+    const isInvalidCode = payload?.code === 'VALIDATION_FAILED' && /code/i.test(payload?.message ?? '');
+    return { ok: false, reason: isInvalidCode ? 'invalid_code' : 'generic' };
   }
 
   async function handleExtraTime(entryId: string, minutes: number) {
@@ -297,7 +331,7 @@ export function StationReservationsPage() {
                 key={entry.id}
                 entry={entry}
                 onValidate={(id) => requestAction('validate', id)}
-                onStart={handleStartEntry}
+                onStart={requestStart}
                 onCancel={(id) => requestAction('cancel', id)}
                 onExtraTime={handleExtraTime}
               />
@@ -317,6 +351,13 @@ export function StationReservationsPage() {
         cancelLabel={t('btn_cancel')}
         onConfirm={executeAction}
         onCancel={() => setPending(null)}
+      />
+
+      <StartServiceModal
+        open={startEntry !== null}
+        clientName={clientLabelFor(startEntry ?? undefined)}
+        onClose={() => setStartEntry(null)}
+        onSubmit={submitStartCode}
       />
     </div>
   );
