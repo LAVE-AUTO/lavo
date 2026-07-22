@@ -662,8 +662,8 @@ const serviceVehicleEntrySchema = z.object({
 
 export const createServiceBodySchema = z.object({
   name: z.string().min(1).max(255, 'Service name must not exceed 255 characters'),
-  category: z.enum(['hand_wash', 'automatic', 'self_service']),
-  service_type: z.enum(['exterior', 'interior', 'complete', 'detailing']),
+  category: z.string().min(1, 'category is required'),
+  service_type: z.string().min(1, 'service_type is required'),
   description: z.string().max(2000).optional(),
   is_active: z.boolean().optional().default(true),
   is_popular: z.boolean().optional().default(false),
@@ -675,7 +675,7 @@ export const patchServiceBodySchema = createServiceBodySchema.partial();
 
 export const createExtraBodySchema = z.object({
   name: z.string().min(1).max(255, 'Extra name must not exceed 255 characters'),
-  applicable_on: z.enum(['exterior', 'interior', 'both']),
+  category: z.string().min(1, 'category is required'),
   price: z.union([z.number().min(0), z.string().regex(/^\d+(\.\d{1,2})?$/)]),
   duration: z.number().int().min(0).optional().default(10),
   is_active: z.boolean().optional().default(true),

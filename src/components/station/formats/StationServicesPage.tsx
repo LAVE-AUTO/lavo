@@ -5,8 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { getFromApi } from '@/services';
 import { useAuth } from '@/context/auth-context';
-import type { StationExtras, StationExtra } from '@/components/station/config/station-extras-types';
-import type { Service, VehicleFormat } from './types';
+import type { StationExtra } from '@/components/station/config/station-extras-types';
+import type { Service, VehicleFormat, ServiceCategoryOption } from './types';
 import { ServiceCard } from './ServiceCard';
 import { ExtraCard } from './ExtraCard';
 import { ServiceModal } from './ServiceModal';
@@ -22,11 +22,14 @@ interface FormatsData {
 interface ServicesData {
   data: { items: Service[] };
 }
+interface CategoriesData {
+  data: { items: ServiceCategoryOption[] };
+}
 interface RawExtra {
   id: string;
   label: string;
   price: string;
-  scope: 'exterior' | 'interior' | 'both';
+  category: string | null;
   duration_min: number;
   staff_required: number;
   is_active: boolean;
@@ -35,22 +38,17 @@ interface ExtrasData {
   data: { items: RawExtra[] };
 }
 
-function groupExtras(raw: RawExtra[]): StationExtras {
-  const result: StationExtras = { exterior: [], interior: [], both: [] };
-  for (const e of raw) {
-    const extra: StationExtra = {
-      id: e.id,
-      label: e.label,
-      description: '',
-      price: e.price,
-      is_active: e.is_active,
-      scope: e.scope,
-      duration_min: e.duration_min,
-      staff_required: e.staff_required,
-    };
-    result[e.scope ?? 'both'].push(extra);
-  }
-  return result;
+function toStationExtra(e: RawExtra): StationExtra {
+  return {
+    id: e.id,
+    label: e.label,
+    description: '',
+    price: e.price,
+    is_active: e.is_active,
+    category: e.category,
+    duration_min: e.duration_min,
+    staff_required: e.staff_required,
+  };
 }
 
 const StatsIcon = () => (
@@ -74,7 +72,8 @@ export function StationServicesPage() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [formats, setFormats] = useState<VehicleFormat[]>([]);
-  const [extras, setExtras] = useState<StationExtras>({ exterior: [], interior: [], both: [] });
+  const [extras, setExtras] = useState<StationExtra[]>([]);
+  const [categories, setCategories] = useState<ServiceCategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [serviceModal, setServiceModal] = useState<Service | null | 'new'>(null);
@@ -84,17 +83,19 @@ export function StationServicesPage() {
     setLoading(true);
     setLoadError(false);
 
-    const [meResult, servicesResult, extrasResult, formatsResult] = await Promise.all([
+    const [meResult, servicesResult, extrasResult, formatsResult, categoriesResult] = await Promise.all([
       getFromApi('/station/me'),
       getFromApi('/station/services?limit=100'),
       getFromApi('/station/extras?limit=100'),
       getFromApi('/formats?page=1&per_page=100'),
+      getFromApi('/service-categories'),
     ]);
 
     const [meOk] = meResult;
     const [servicesOk, servicesData] = servicesResult;
     const [extrasOk, extrasData] = extrasResult;
     const [formatsOk, formatsData] = formatsResult;
+    const [categoriesOk, categoriesData] = categoriesResult;
 
     if (!meOk) {
       setLoadError(true);
@@ -109,10 +110,11 @@ export function StationServicesPage() {
 
     if (extrasOk) {
       const items = (extrasData as ExtrasData).data?.items ?? [];
-      setExtras(groupExtras(items));
+      setExtras(items.map(toStationExtra));
     }
 
     if (formatsOk) setFormats((formatsData as FormatsData).data?.items ?? []);
+    if (categoriesOk) setCategories((categoriesData as CategoriesData).data?.items ?? []);
     setLoading(false);
   }, []);
 
@@ -141,27 +143,16 @@ export function StationServicesPage() {
     setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
   }, []);
 
-  const allExtras: StationExtra[] = [...extras.exterior, ...extras.interior, ...extras.both];
-
   const handleExtraDeleted = useCallback((id: string) => {
-    setExtras((prev) => ({
-      exterior: prev.exterior.filter((e) => e.id !== id),
-      interior: prev.interior.filter((e) => e.id !== id),
-      both: prev.both.filter((e) => e.id !== id),
-    }));
+    setExtras((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
   const handleExtraToggled = useCallback((updated: StationExtra) => {
-    const map = (list: StationExtra[]) => list.map((e) => (e.id === updated.id ? updated : e));
-    setExtras((prev) => ({
-      exterior: map(prev.exterior),
-      interior: map(prev.interior),
-      both: map(prev.both),
-    }));
+    setExtras((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
   }, []);
 
   const activeServiceCount = services.filter((s) => s.is_active).length;
-  const activeExtraCount = allExtras.filter((e) => e.is_active).length;
+  const activeExtraCount = extras.filter((e) => e.is_active).length;
 
   if (loading) {
     return <PageLoader label={t('loading')} />;
@@ -240,7 +231,7 @@ export function StationServicesPage() {
                       onEdit={setServiceModal}
                       onDeleted={handleServiceDeleted}
                       onToggled={handleServiceToggled}
-                      allExtras={allExtras}
+                      allExtras={extras}
                       onExtraToggled={handleExtraToggled}
                     />
                   </div>
@@ -258,7 +249,7 @@ export function StationServicesPage() {
                 {t('section_extras_available')}
               </h2>
               <span className="text-[12px] font-semibold text-foreground/55 dark:text-[#B0BFB1]">
-                {t('extras_active_count', { active: activeExtraCount, total: allExtras.length })}
+                {t('extras_active_count', { active: activeExtraCount, total: extras.length })}
               </span>
             </div>
             <button
@@ -271,13 +262,13 @@ export function StationServicesPage() {
             </button>
           </div>
 
-          {allExtras.length === 0 ? (
+          {extras.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#FFF9EC] py-12 text-center dark:border-[#001A05]">
               <span className="text-[13px] text-[#BBBBAA] dark:text-[#4A4A3A]">{t('extras_none')}</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {allExtras.map((extra) => (
+              {extras.map((extra) => (
                 <ExtraCard
                   key={extra.id}
                   extra={extra}
@@ -297,6 +288,7 @@ export function StationServicesPage() {
           service={serviceModal === 'new' ? null : serviceModal}
           vehicleFormats={formats}
           availableExtras={extras}
+          categories={categories}
           onClose={() => setServiceModal(null)}
           onSaved={handleServiceSaved}
         />
@@ -306,24 +298,17 @@ export function StationServicesPage() {
       {extraModal !== null && (
         <ExtraModal
           extra={extraModal === 'new' ? null : extraModal}
+          categories={categories}
           onClose={() => setExtraModal(null)}
           onSaved={(saved) => {
-            const scope = saved.scope ?? 'both';
             setExtras((prev) => {
-              const isEdit = extraModal !== 'new';
-              if (isEdit) {
-                // Replace the updated extra in whichever bucket it was in
-                const removeFrom = (list: StationExtra[]) => list.filter((e) => e.id !== saved.id);
-                const updated = {
-                  exterior: removeFrom(prev.exterior),
-                  interior: removeFrom(prev.interior),
-                  both: removeFrom(prev.both),
-                };
-                updated[scope] = [...updated[scope], saved];
-                return updated;
+              const idx = prev.findIndex((e) => e.id === saved.id);
+              if (idx !== -1) {
+                const next = [...prev];
+                next[idx] = saved;
+                return next;
               }
-              // New extra: add to the right scope bucket
-              return { ...prev, [scope]: [...prev[scope], saved] };
+              return [...prev, saved];
             });
             setExtraModal(null);
           }}

@@ -6,33 +6,13 @@ import { postWithApi, updateWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
 import type { StationExtra } from '@/components/station/config/station-extras-types';
+import type { ServiceCategoryOption } from './types';
 
 interface Props {
   extra: StationExtra | null;
+  categories: ServiceCategoryOption[];
   onClose: () => void;
   onSaved: (extra: StationExtra) => void;
-}
-
-type Scope = 'exterior' | 'interior' | 'both';
-
-/* "Applicable sur" is a multi-select of the two base scopes. Selecting both is
- * equivalent to the legacy "both" value, so the backend contract (a single
- * `applicable_on` enum) stays unchanged: we derive it from the selected set. */
-const SELECTABLE_SCOPES = ['exterior', 'interior'] as const;
-type SelectableScope = typeof SELECTABLE_SCOPES[number];
-
-function scopeToSet(scope: Scope): Set<SelectableScope> {
-  if (scope === 'both') return new Set(SELECTABLE_SCOPES);
-  return new Set([scope as SelectableScope]);
-}
-
-function setToScope(set: Set<SelectableScope>): Scope | null {
-  const hasExterior = set.has('exterior');
-  const hasInterior = set.has('interior');
-  if (hasExterior && hasInterior) return 'both';
-  if (hasExterior) return 'exterior';
-  if (hasInterior) return 'interior';
-  return null;
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -43,19 +23,14 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ExtraModal({ extra, onClose, onSaved }: Props) {
+export function ExtraModal({ extra, categories, onClose, onSaved }: Props) {
   const t = useTranslations('station_services');
   const tc = useTranslations('common');
   const isEdit = extra !== null;
-  const scopeLabel: Record<Scope, string> = {
-    exterior: t('extra_scope_exterior'),
-    interior: t('extra_scope_interior'),
-    both: t('extra_scope_both'),
-  };
   const title = isEdit ? t('extra_edit_title') : t('extra_create_title');
 
   const [name, setName] = useState('');
-  const [scopes, setScopes] = useState<Set<SelectableScope>>(new Set(SELECTABLE_SCOPES));
+  const [category, setCategory] = useState(categories[0]?.code ?? '');
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -65,19 +40,19 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
   useEffect(() => {
     if (extra) {
       setName(extra.label);
-      setScopes(scopeToSet((extra.scope as Scope) ?? 'both'));
+      setCategory(extra.category ?? categories[0]?.code ?? '');
       setPrice(extra.price);
       setDuration(String(extra.duration_min ?? 0));
       setIsActive(extra.is_active);
     } else {
       setName('');
-      setScopes(new Set(SELECTABLE_SCOPES));
+      setCategory(categories[0]?.code ?? '');
       setPrice('');
       setDuration('');
       setIsActive(true);
     }
     setError(null);
-  }, [extra]);
+  }, [extra, categories]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,9 +61,8 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
       setError(t('extra_error_name_required'));
       return;
     }
-    const scope = setToScope(scopes);
-    if (!scope) {
-      setError(t('extra_error_scope_required'));
+    if (!category) {
+      setError(t('extra_error_category_required'));
       return;
     }
     setSaving(true);
@@ -96,7 +70,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
 
     const apiPayload = {
       name: trimmedName,
-      applicable_on: scope,
+      category,
       price: parseFloat(price) || 0,
       duration: parseInt(duration, 10) || 0,
       is_active: isActive,
@@ -120,7 +94,7 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
       description: '',
       price: String(raw.price),
       is_active: Boolean(raw.is_active),
-      scope: (raw.scope as Scope) ?? scope,
+      category: (raw.category as string | null) ?? category,
       duration_min: Number(raw.duration_min ?? 0),
       staff_required: 0,
     };
@@ -179,37 +153,26 @@ export function ExtraModal({ extra, onClose, onSaved }: Props) {
                 />
               </div>
 
-              {/* Scope — multi-select: an extra can apply to exterior, interior, or both. */}
+              {/* Category — which service category this extra is compatible with. */}
               <div className="flex flex-col gap-1.5">
-                <FieldLabel>{t('extra_scope_label')}</FieldLabel>
-                <div className="flex flex-wrap gap-2" role="group" aria-label={t('extra_scope_label')}>
-                  {SELECTABLE_SCOPES.map((s) => {
-                    const selected = scopes.has(s);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() =>
-                          setScopes((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(s)) next.delete(s);
-                            else next.add(s);
-                            return next;
-                          })
-                        }
-                        className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
-                          selected
-                            ? 'bg-[#DDAF3B] text-[#001201]'
-                            : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
-                        }`}
-                      >
-                        {scopeLabel[s]}
-                      </button>
-                    );
-                  })}
+                <FieldLabel>{t('extra_category_label')}</FieldLabel>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t('extra_category_label')}>
+                  {categories.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={category === c.code}
+                      onClick={() => setCategory(c.code)}
+                      className={`rounded-lg px-3 py-2 text-[12px] font-bold transition-all ${
+                        category === c.code
+                          ? 'bg-[#DDAF3B] text-[#001201]'
+                          : 'bg-[#FFF9EC] text-[#5A5A4A] hover:bg-[#F0EDE4] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
+                      }`}
+                    >
+                      {t(`cat_${c.code}`)}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-[11px] text-foreground/50 dark:text-[#7A8A7B]">{t('extra_scope_hint')}</p>
               </div>
 
               {/* Price + Duration */}

@@ -23,43 +23,53 @@ import {
   type UpdateExtraData,
   type EnrichedService,
 } from './service-repository';
-import { NotFoundError } from '@/lib/errors';
+import {
+  findWashTypeByCode,
+  findServiceTypeByCodeAndCategory,
+} from './service-category-repository';
+import { NotFoundError, ValidationError } from '@/lib/errors';
 
-// ===== CATEGORY RULES (extensible per-category strategy) =====
+// ===== CATEGORY / TYPE RESOLUTION =====
+
+/**
+ * Resolve a category code (e.g. "hand_wash") to its wash_types row.
+ * Throws ValidationError if the code is unknown or inactive.
+ */
+async function resolveCategory(categoryCode: string) {
+  const category = await findWashTypeByCode(categoryCode);
+  if (!category) throw new ValidationError(`Unknown service category: ${categoryCode}`);
+  return category;
+}
+
+/**
+ * Resolve a service_type code against the given category's service_types.
+ * Categories without any service_types (automatic, self_service) resolve to
+ * null — service_type stays a legacy string with no relational type row.
+ */
+async function resolveServiceType(categoryId: string, typeCode: string) {
+  const type = await findServiceTypeByCodeAndCategory(categoryId, typeCode);
+  return type ?? null;
+}
 
 /**
  * Filter extra IDs to keep only those compatible with the given service
- * category and service type. Unrecognised categories pass all extras through.
- *
- * Add a new branch here when implementing a new category.
+ * category — an extra is compatible when it belongs to the same category.
  */
 async function filterCompatibleExtras(
   stationId: string,
-  category: string,
-  serviceType: string,
+  categoryId: string,
   proposedExtraIds: string[]
 ): Promise<string[]> {
   if (proposedExtraIds.length === 0) return [];
 
-  // Load all extras for the station so we can validate ownership and scope
+  // Load all extras for the station so we can validate ownership and category
   const stationExtras = await findExtrasByStationId(stationId);
   const stationExtraMap = new Map(stationExtras.map((e) => [e.id, e]));
 
   return proposedExtraIds.filter((id) => {
     const extra = stationExtraMap.get(id);
     if (!extra) return false; // extra doesn't belong to this station
-
-    if (category === 'hand_wash') {
-      // Scope rule: exterior service → exterior+both extras
-      //             interior service → interior+both extras
-      //             complete/detailing service → all extras
-      if (serviceType === 'exterior') return extra.scope === 'exterior' || extra.scope === 'both';
-      if (serviceType === 'interior') return extra.scope === 'interior' || extra.scope === 'both';
-      if (serviceType === 'complete' || serviceType === 'detailing') return true;
-    }
-
-    // Other categories: no extras (automatic, self_service)
-    return false;
+    return extra.category_id === categoryId;
   });
 }
 
@@ -95,10 +105,15 @@ export async function createServiceWithEntries(
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
+  const category = await resolveCategory(dto.category);
+  const type = await resolveServiceType(category.id, dto.service_type);
+
   const service = await repoCreateService(station.id, {
     name: dto.name,
     category: dto.category,
     service_type: dto.service_type,
+    category_id: category.id,
+    type_id: type?.id ?? null,
     description: dto.description,
     is_active: dto.is_active ?? true,
     is_popular: dto.is_popular ?? false,
@@ -121,8 +136,7 @@ export async function createServiceWithEntries(
 
   const validatedExtraIds = await filterCompatibleExtras(
     station.id,
-    dto.category,
-    dto.service_type ?? 'exterior',
+    category.id,
     dto.compatible_extra_ids ?? []
   );
   for (const extraId of validatedExtraIds) {
@@ -162,11 +176,32 @@ export async function updateServiceWithEntries(
   const service = await findServiceByIdAndStation(serviceId, station.id);
   if (!service) throw new NotFoundError('Service not found');
 
+  // Resolve category/type when changing, otherwise fall back to the service's current values.
+  let effectiveCategoryId = service.category_id;
+  if (dto.category !== undefined) {
+    const category = await resolveCategory(dto.category);
+    effectiveCategoryId = category.id;
+  }
+  if (!effectiveCategoryId) throw new ValidationError('Service has no resolved category');
+
+  let effectiveTypeId: string | null = service.type_id;
+  if (dto.category !== undefined || dto.service_type !== undefined) {
+    const typeCode = dto.service_type ?? service.service_type;
+    const type = await resolveServiceType(effectiveCategoryId, typeCode);
+    effectiveTypeId = type?.id ?? null;
+  }
+
   // Update base fields
   const updateData: Parameters<typeof repoUpdateService>[1] = {};
   if (dto.name !== undefined) updateData.name = dto.name;
-  if (dto.category !== undefined) updateData.category = dto.category;
+  if (dto.category !== undefined) {
+    updateData.category = dto.category;
+    updateData.category_id = effectiveCategoryId;
+  }
   if (dto.service_type !== undefined) updateData.service_type = dto.service_type;
+  if (dto.category !== undefined || dto.service_type !== undefined) {
+    updateData.type_id = effectiveTypeId;
+  }
   if (dto.description !== undefined) updateData.description = dto.description;
   if (dto.is_active !== undefined) updateData.is_active = dto.is_active;
   if (dto.is_popular !== undefined) updateData.is_popular = dto.is_popular;
@@ -192,13 +227,9 @@ export async function updateServiceWithEntries(
 
   // Sync compatible extras when provided
   if (dto.compatible_extra_ids !== undefined) {
-    const effectiveCategory = dto.category ?? service.category;
-    const effectiveType = dto.service_type ?? service.service_type;
-
     const validatedExtraIds = await filterCompatibleExtras(
       station.id,
-      effectiveCategory,
-      effectiveType,
+      effectiveCategoryId,
       dto.compatible_extra_ids
     );
 
@@ -238,20 +269,36 @@ export async function getExtrasByStationUser(userId: string) {
   return findExtrasByStationId(station.id);
 }
 
-export async function createExtraWithAuth(userId: string, dto: CreateExtraData) {
+export type CreateExtraDto = Omit<CreateExtraData, 'scope' | 'category_id'> & { category: string };
+export type UpdateExtraDto = Omit<UpdateExtraData, 'scope' | 'category_id'> & { category?: string };
+
+export async function createExtraWithAuth(userId: string, dto: CreateExtraDto) {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
-  return repoCreateExtra(station.id, dto);
+  const { category, ...rest } = dto;
+  const categoryRow = await resolveCategory(category);
+  return repoCreateExtra(station.id, {
+    ...rest,
+    scope: 'both',
+    category_id: categoryRow.id,
+  });
 }
 
-export async function updateExtraWithAuth(userId: string, extraId: string, dto: UpdateExtraData) {
+export async function updateExtraWithAuth(userId: string, extraId: string, dto: UpdateExtraDto) {
   const station = await findStationByUserId(userId);
   if (!station) throw new NotFoundError('No station associated with this account');
 
   const extra = await findExtraByIdAndStation(extraId, station.id);
   if (!extra) throw new NotFoundError('Extra not found');
 
-  return repoUpdateExtra(extraId, dto);
+  const { category, ...rest } = dto;
+  const updateData: UpdateExtraData = { ...rest };
+  if (category !== undefined) {
+    const categoryRow = await resolveCategory(category);
+    updateData.category_id = categoryRow.id;
+  }
+
+  return repoUpdateExtra(extraId, updateData);
 }
 
 export async function deleteExtraWithAuth(userId: string, extraId: string): Promise<void> {

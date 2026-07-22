@@ -50,6 +50,8 @@ export interface ReservationEntry {
   walk_in_client_email?: string | null;
   walk_in_client_name?: string | null;
   is_walk_in?: boolean;
+  /** 6-char code the client shows the merchant to confirm identity before start. */
+  ticket_code?: string | null;
 }
 
 export type StatusTab = 'all' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'late';

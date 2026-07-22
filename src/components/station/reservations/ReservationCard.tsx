@@ -79,7 +79,7 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
         : fullName.length > 0
           ? fullName
           : `#${entry.user_id.slice(0, 8)}`;
-  const time = formatHourMinute(entry.created_at);
+  const time = formatHourMinute(entry.slot_start_time ?? entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
 
   // "Démarrer" / "Annuler" only appear within START_WINDOW_MINUTES before the

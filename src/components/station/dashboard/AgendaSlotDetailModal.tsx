@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Modal } from '@/components/ui/Modal';
 import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
+import { utcToStationMinutes } from '@/helpers/station-time';
 import type { AgendaEntry } from './DashboardAgendaTimeline';
 
 interface Props {
@@ -18,8 +19,8 @@ interface Props {
 
 function formatTime(iso: string | null, fallback = '—'): string {
   if (!iso) return fallback;
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const minutes = utcToStationMinutes(new Date(iso));
+  return `${String(Math.floor(minutes / 60) % 24).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 }
 
 function statusVisuals(status: string): { dot: string; label: string } {

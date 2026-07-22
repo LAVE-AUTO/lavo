@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { getFromApi, postWithApi } from '@/services/axios-service';
 import type { AvailableSlot } from '@/components/reservations/SlotPicker';
 import RescheduleSuccessView from '@/components/reservations/RescheduleSuccessView';
+import { STATION_TIMEZONE, stationDateKey, utcToStationMinutes } from '@/helpers/station-time';
 
 /* ------------------------------------------------------------------ */
 /* Shapes API                                                           */
@@ -47,11 +48,13 @@ const RESCHEDULE_HORIZON_DAYS = 14;
 /* Helpers                                                              */
 /* ------------------------------------------------------------------ */
 
-function toLocalDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+/* Adds whole calendar days to a "YYYY-MM-DD" key. Pure date-string
+ * arithmetic (via a UTC-anchored Date used only as a calendar, never as a
+ * real instant) so it never depends on the host's own timezone. */
+function addDaysToDateKey(dateKey: string, days: number): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, (m ?? 1) - 1, (d ?? 1) + days));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -121,9 +124,10 @@ export default function RescheduleReservationPage() {
     if (entry.slot_start_time) {
       const slotDate = new Date(entry.slot_start_time);
       currentSlotMs = slotDate.getTime();
+      const slotMinutes = utcToStationMinutes(slotDate);
       const label = slotDate.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-        weekday: 'short', day: 'numeric', month: 'short',
-      }) + ' ' + String(slotDate.getHours()).padStart(2, '0') + ':' + String(slotDate.getMinutes()).padStart(2, '0');
+        weekday: 'short', day: 'numeric', month: 'short', timeZone: STATION_TIMEZONE,
+      }) + ' ' + String(Math.floor(slotMinutes / 60) % 24).padStart(2, '0') + ':' + String(slotMinutes % 60).padStart(2, '0');
       setCurrentLabel(label);
 
       const minutesUntil = (currentSlotMs - now) / 60000;
@@ -149,10 +153,9 @@ export default function RescheduleReservationPage() {
      * the ISO start_time itself — that's what the modern booking flow uses
      * and what the reschedule endpoint expects in `new_start_time`. */
     const candidateDays: string[] = [];
+    const todayKey = stationDateKey(new Date(now));
     for (let day = 0; day < RESCHEDULE_HORIZON_DAYS; day++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() + day);
-      candidateDays.push(toLocalDateKey(d));
+      candidateDays.push(addDaysToDateKey(todayKey, day));
     }
 
     const results = await Promise.all(
@@ -187,13 +190,13 @@ export default function RescheduleReservationPage() {
     const fmtLocale = locale === 'en' ? 'en-CA' : 'fr-FR';
     for (const slot of availableSlots) {
       const d = new Date(slot.startTime);
-      const key = toLocalDateKey(d);
+      const key = stationDateKey(d);
       if (!seen.has(key)) {
         seen.add(key);
         result.push({
           key,
-          dayShort: d.toLocaleDateString(fmtLocale, { weekday: 'short' }).slice(0, 3),
-          dateNum: d.getDate(),
+          dayShort: d.toLocaleDateString(fmtLocale, { weekday: 'short', timeZone: STATION_TIMEZONE }).slice(0, 3),
+          dateNum: parseInt(key.split('-')[2], 10),
         });
       }
     }
@@ -204,12 +207,12 @@ export default function RescheduleReservationPage() {
   const slotsForDate = useMemo(() => {
     if (!selectedDate) return [];
     return availableSlots
-      .filter((s) => toLocalDateKey(new Date(s.startTime)) === selectedDate)
+      .filter((s) => stationDateKey(new Date(s.startTime)) === selectedDate)
       .map((s) => {
-        const d = new Date(s.startTime);
+        const minutes = utcToStationMinutes(new Date(s.startTime));
         return {
           ...s,
-          time: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
+          time: String(Math.floor(minutes / 60) % 24).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0'),
         };
       });
   }, [availableSlots, selectedDate]);
@@ -220,10 +223,11 @@ export default function RescheduleReservationPage() {
     if (!slot) return '';
     const d = new Date(slot.startTime);
     const datePart = d.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-      weekday: 'long', day: 'numeric', month: 'long',
+      weekday: 'long', day: 'numeric', month: 'long', timeZone: STATION_TIMEZONE,
     });
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
+    const minutes = utcToStationMinutes(d);
+    const h = String(Math.floor(minutes / 60) % 24).padStart(2, '0');
+    const m = String(minutes % 60).padStart(2, '0');
     return `${datePart} - ${h}:${m}`;
   }, [selectedSlotId, availableSlots, locale]);
 

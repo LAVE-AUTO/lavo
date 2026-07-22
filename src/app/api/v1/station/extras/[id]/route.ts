@@ -6,8 +6,8 @@ import { requireRole } from '@/lib/require-role';
 import {
   updateExtraWithAuth,
   deleteExtraWithAuth,
+  type UpdateExtraDto,
 } from '@/server/station/services-service';
-import type { UpdateExtraData } from '@/server/station/service-repository';
 import { patchExtraBodySchema, extraIdParamSchema } from '@/validators/station';
 import { handleError } from '@/lib/responses';
 
@@ -22,9 +22,9 @@ export async function PATCH(
     const body = await request.json();
     const validated = patchExtraBodySchema.parse(body);
 
-    const dto: UpdateExtraData = {};
+    const dto: UpdateExtraDto = {};
     if (validated.name !== undefined) dto.label = validated.name;
-    if (validated.applicable_on !== undefined) dto.scope = validated.applicable_on;
+    if (validated.category !== undefined) dto.category = validated.category;
     if (validated.price !== undefined) dto.price = validated.price;
     if (validated.duration !== undefined) dto.duration_min = validated.duration;
     if (validated.is_active !== undefined) dto.is_active = validated.is_active;

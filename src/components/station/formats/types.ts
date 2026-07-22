@@ -1,5 +1,17 @@
-export type ServiceCategory = 'hand_wash' | 'automatic' | 'self_service';
-export type ServiceType = 'exterior' | 'interior' | 'complete' | 'detailing';
+/** A service type belonging to a category (only "hand_wash" has any today). */
+export interface ServiceCategoryType {
+  id: string;
+  code: string;
+  label: string;
+}
+
+/** A service category, fetched from /service-categories — no more hardcoded enum. */
+export interface ServiceCategoryOption {
+  id: string;
+  code: string;
+  label: string;
+  types: ServiceCategoryType[];
+}
 
 export interface VehicleFormat {
   id: string;
@@ -33,8 +45,8 @@ export interface ServiceVehicleEntry {
 export interface Service {
   id: string;
   name: string;
-  category: ServiceCategory;
-  service_type: ServiceType;
+  category: string;
+  service_type: string;
   description: string;
   is_active: boolean;
   is_popular?: boolean;

@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { isWithinStartWindow } from '@/helpers/start-window';
+import { utcToStationMinutes } from '@/helpers/station-time';
 
 export interface AgendaEntry {
   id: string;
@@ -52,14 +53,21 @@ function parseHHMM(value: string | null, fallback: string): { h: number; m: numb
   return { h: parseInt(m[1], 10), m: parseInt(m[2], 10) };
 }
 
+/* Positions and labels are computed in the station's own timezone (wall
+ * clock, e.g. America/Toronto) rather than the viewer's browser timezone —
+ * otherwise a slot booked for "16:04" station-local can render at a
+ * completely different hour depending on where the merchant/client happens
+ * to be. See src/helpers/station-time.ts. */
 function minutesSinceOpen(date: Date | null, openMinutes: number): number | null {
   if (!date) return null;
-  const total = date.getHours() * 60 + date.getMinutes();
-  return total - openMinutes;
+  return utcToStationMinutes(date) - openMinutes;
 }
 
 function formatTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  const minutes = utcToStationMinutes(date);
+  const h = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function statusToBlockClass(status: string): { bg: string; border: string; chip: string; chipBg: string } {
@@ -167,7 +175,7 @@ export function DashboardAgendaTimeline({
 
   const nowLineTop = useMemo(() => {
     if (!isSameDay(now, selectedDate)) return null;
-    const m = now.getHours() * 60 + now.getMinutes() - openMinutes;
+    const m = utcToStationMinutes(now) - openMinutes;
     if (m < 0 || m > totalMinutes) return null;
     return m * PX_PER_MINUTE;
   }, [now, selectedDate, openMinutes, totalMinutes]);
@@ -192,11 +200,20 @@ export function DashboardAgendaTimeline({
     return active.filter((p) => p.id === selectedPostId);
   }, [posts, selectedPostId]);
 
+  /* When the station has no configured/active post, fall back to a single
+   * synthetic column instead of rendering nothing — otherwise every confirmed
+   * reservation silently vanished from the agenda (still visible on the
+   * reservations page, which doesn't bucket by post). */
+  const UNASSIGNED_POST_ID = '__unassigned__';
+  const displayPosts = useMemo(
+    () => (visiblePosts.length > 0 ? visiblePosts : [{ id: UNASSIGNED_POST_ID, position: 0, isActive: true }]),
+    [visiblePosts],
+  );
+
   // Distribute orphan entries (post_id = null) across visible posts deterministically by hash.
   const entriesByPost = useMemo(() => {
     const map = new Map<string, AgendaEntry[]>();
-    visiblePosts.forEach((p) => map.set(p.id, []));
-    if (visiblePosts.length === 0) return map;
+    displayPosts.forEach((p) => map.set(p.id, []));
     for (const entry of entries) {
       if (!entry.slotStart) continue;
       if (entry.status === 'cancelled') continue;
@@ -206,20 +223,25 @@ export function DashboardAgendaTimeline({
       if (!bucketId || !map.has(bucketId)) {
         // Round-robin fallback for entries with no post assigned yet
         const hash = [...entry.id].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-        bucketId = visiblePosts[hash % visiblePosts.length].id;
+        bucketId = displayPosts[hash % displayPosts.length].id;
       }
       const bucket = map.get(bucketId);
       if (bucket) bucket.push(entry);
     }
     map.forEach((arr) => arr.sort((a, b) => (a.slotStart ?? '').localeCompare(b.slotStart ?? '')));
     return map;
-  }, [entries, visiblePosts, selectedDate]);
+  }, [entries, displayPosts, selectedDate]);
 
   const totalHeight = totalMinutes * PX_PER_MINUTE;
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="mx-4 my-3 flex flex-col rounded-2xl border border-separator/25 bg-card-surface shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] dark:border-[#1A2A14] dark:bg-dark-bg">
+      {visiblePosts.length === 0 && (
+        <div className="border-b border-separator/40 px-4 py-1.5 text-center text-[11px] text-foreground/55 dark:border-[#1A2A14] dark:text-[#B0BFB1]">
+          {t('agenda_no_posts')}
+        </div>
+      )}
       {/* Header strip — bay names, always visible */}
       <div className="flex border-b border-separator/40 bg-transparent dark:border-[#1A2A14]">
         {/* Collapse toggle in the gutter slot */}
@@ -241,29 +263,23 @@ export function DashboardAgendaTimeline({
             </svg>
           </button>
         </div>
-        {visiblePosts.length === 0 ? (
-          <div className="flex-1 px-4 py-3 text-center text-[12px] text-foreground/55 dark:text-[#B0BFB1]">
-            {t('agenda_no_posts')}
-          </div>
-        ) : (
-          visiblePosts.map((post) => {
-            const bucket = entriesByPost.get(post.id) ?? [];
-            const inProgress = bucket.some((e) => e.status === 'in_progress');
-            return (
-              <div
-                key={post.id}
-                className="min-w-[200px] flex-1 border-l border-separator/25 px-3 py-2 dark:border-[#1A2A14]"
-              >
-                <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
-                  {t('filter_post', { n: post.position })}
-                </div>
-                <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#1E40AF] dark:text-[#8AB4FF]'}`}>
-                  {inProgress ? `● ${t('post_in_service')}` : `● ${t('post_available')}`}
-                </div>
+        {displayPosts.map((post) => {
+          const bucket = entriesByPost.get(post.id) ?? [];
+          const inProgress = bucket.some((e) => e.status === 'in_progress');
+          return (
+            <div
+              key={post.id}
+              className="min-w-[200px] flex-1 border-l border-separator/25 px-3 py-2 dark:border-[#1A2A14]"
+            >
+              <div className="text-[13px] font-bold text-[#001201] dark:text-[#FFF9EC]">
+                {post.id === UNASSIGNED_POST_ID ? t('filter_all_posts') : t('filter_post', { n: post.position })}
               </div>
-            );
-          })
-        )}
+              <div className={`mt-0.5 text-[11px] font-bold ${inProgress ? 'text-[#0E8C45] dark:text-[#65E69A]' : 'text-[#1E40AF] dark:text-[#8AB4FF]'}`}>
+                {inProgress ? `● ${t('post_in_service')}` : `● ${t('post_available')}`}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Collapsible body */}
@@ -289,7 +305,7 @@ export function DashboardAgendaTimeline({
         </div>
 
         {/* Post columns */}
-        {visiblePosts.map((post) => {
+        {displayPosts.map((post) => {
           const bucket = entriesByPost.get(post.id) ?? [];
           return (
             <div

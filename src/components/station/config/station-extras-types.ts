@@ -14,15 +14,10 @@ export interface StationExtra {
   description: string;
   price: string;
   is_active: boolean;
-  scope?: 'exterior' | 'interior' | 'both';
+  /** Category code (e.g. "hand_wash") this extra is compatible with. */
+  category?: string | null;
   duration_min?: number;
   staff_required?: number;
   /** Optional per-vehicle pricing. When absent, the flat `price` applies to all formats. */
   vehicle_entries?: ExtraVehicleEntry[];
-}
-
-export interface StationExtras {
-  exterior: StationExtra[];
-  interior: StationExtra[];
-  both: StationExtra[];
 }

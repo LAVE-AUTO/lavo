@@ -6,14 +6,15 @@ import { patchWithApi, postWithApi } from '@/services';
 import { TextField } from '@/components/station/config/TextField';
 import { Textarea } from '@/components/station/config/Textarea';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
-import type { StationExtras, StationExtra } from '@/components/station/config/station-extras-types';
-import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategory, ServiceType } from './types';
+import type { StationExtra } from '@/components/station/config/station-extras-types';
+import type { Service, VehicleFormat, ServiceVehicleEntry, ServiceCategoryOption } from './types';
 import { ServiceVehicleRows } from './ServiceVehicleRows';
 
 interface Props {
   service: Service | null;
   vehicleFormats: VehicleFormat[];
-  availableExtras: StationExtras;
+  availableExtras: StationExtra[];
+  categories: ServiceCategoryOption[];
   onClose: () => void;
   onSaved: (service: Service) => void;
 }
@@ -26,9 +27,6 @@ interface AutomaticPackage {
   duration: string;
   is_active: boolean;
 }
-
-const CATEGORIES: ServiceCategory[] = ['hand_wash', 'automatic', 'self_service'];
-const TYPES: ServiceType[] = ['exterior', 'interior', 'complete', 'detailing'];
 
 const DEFAULT_BASE_PRICE = '45';
 const DEFAULT_BASE_DURATION = '60';
@@ -101,13 +99,13 @@ function buildAutomaticPackages(existing?: ServiceVehicleEntry[]): AutomaticPack
   ];
 }
 
-export function ServiceModal({ service, vehicleFormats, availableExtras, onClose, onSaved }: Props) {
+export function ServiceModal({ service, vehicleFormats, availableExtras, categories, onClose, onSaved }: Props) {
   const t = useTranslations('station_services');
   const isEdit = service !== null;
 
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<ServiceCategory>('hand_wash');
-  const [serviceType, setServiceType] = useState<ServiceType>('exterior');
+  const [category, setCategory] = useState<string>('hand_wash');
+  const [serviceType, setServiceType] = useState<string>('exterior');
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [entries, setEntries] = useState<ServiceVehicleEntry[]>([]);
@@ -129,12 +127,14 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const isCreateHandWash = !isEdit && isHandWash;
   const isCreateAutomatic = !isEdit && isAutomatic;
   const isCreateSelfService = !isEdit && isSelfService;
-  const showTypeSelector = isHandWash;
-  const showExtrasSection = isHandWash;
+  const selectedCategory = categories.find((c) => c.code === category);
+  const showTypeSelector = (selectedCategory?.types.length ?? 0) > 0;
+  const compatibleExtras: StationExtra[] = availableExtras.filter((e) => e.category === category);
+  const showExtrasSection = compatibleExtras.length > 0;
   const showDurationField = true;
   const showFormatSection = isHandWash;
   const showAutomaticPackagesSection = isAutomatic;
-  const effectiveServiceType: ServiceType = !isEdit && category !== 'hand_wash' ? 'exterior' : serviceType;
+  const effectiveServiceType: string = !isEdit && !showTypeSelector ? 'exterior' : serviceType;
   const computedCreateName = `${t(`cat_${category}`)} · ${t(`type_${effectiveServiceType}`)}`;
 
   useEffect(() => {
@@ -201,13 +201,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
     setSaving(true);
     setError(null);
 
-    const extrasByType: StationExtra[] = effectiveServiceType === 'exterior'
-      ? [...availableExtras.exterior, ...availableExtras.both]
-      : effectiveServiceType === 'interior'
-      ? [...availableExtras.interior, ...availableExtras.both]
-      : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
-
-    const selectedExtras = extrasByType
+    const selectedExtras = compatibleExtras
       .filter((e) => selectedExtraIds.includes(e.id))
       .map((e) => ({ id: e.id, name: e.label }));
 
@@ -381,11 +375,6 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
   const minDur = durations.length > 0 ? Math.min(...durations) : null;
   const maxDur = durations.length > 0 ? Math.max(...durations) : null;
   const selectedFormats = activeEntries.map((e) => e.vehicle_label);
-  const extrasByType: StationExtra[] = effectiveServiceType === 'exterior'
-    ? [...availableExtras.exterior, ...availableExtras.both]
-    : effectiveServiceType === 'interior'
-    ? [...availableExtras.interior, ...availableExtras.both]
-    : [...availableExtras.exterior, ...availableExtras.interior, ...availableExtras.both];
 
   // Base price / duration drive every non-overridden vehicle row, so editing the
   // base updates all rows the merchant hasn't customised. Customised rows keep
@@ -513,18 +502,18 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
               <div className="flex flex-col gap-1.5">
                 <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#B0BFB1]">{t('field_category')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((key) => (
+                  {categories.map((c) => (
                     <button
-                      key={key}
+                      key={c.id}
                       type="button"
-                      onClick={() => setCategory(key)}
+                      onClick={() => setCategory(c.code)}
                       className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
-                        category === key
+                        category === c.code
                           ? 'bg-[#DDAF3B] text-[#001201]'
                           : 'bg-[#1E2A18] text-[#B0BFB1] hover:text-[#FFF9EC] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
                       }`}
                     >
-                      {t(`cat_${key}`)}
+                      {t(`cat_${c.code}`)}
                     </button>
                   ))}
                 </div>
@@ -534,18 +523,18 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] font-medium text-[#5A5A4A] dark:text-[#B0BFB1]">{t('field_type')}</label>
                   <div className="flex flex-wrap gap-2">
-                    {TYPES.map((key) => (
+                    {(selectedCategory?.types ?? []).map((type) => (
                       <button
-                        key={key}
+                        key={type.id}
                         type="button"
-                        onClick={() => setServiceType(key)}
+                        onClick={() => setServiceType(type.code)}
                         className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold transition-all ${
-                          serviceType === key
+                          serviceType === type.code
                             ? 'bg-[#DDAF3B] text-[#001201]'
                             : 'bg-[#1E2A18] text-[#B0BFB1] hover:text-[#FFF9EC] dark:bg-[#1E2A18] dark:text-[#B0BFB1]'
                         }`}
                       >
-                        {t(`type_${key}`)}
+                        {t(`type_${type.code}`)}
                       </button>
                     ))}
                   </div>
@@ -774,11 +763,11 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                 <span className="text-[11px] font-black tracking-[.08em] text-[#DDAF3B] uppercase">
                   {t('extras_label')}
                 </span>
-                {extrasByType.length === 0 ? (
+                {compatibleExtras.length === 0 ? (
                   <p className="text-[12px] text-foreground/55 dark:text-[#B0BFB1]">{t('extras_empty_modal')}</p>
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    {extrasByType.map((extra) => {
+                    {compatibleExtras.map((extra) => {
                       const selected = selectedExtraIds.includes(extra.id);
                       return (
                         <button
@@ -873,7 +862,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, onClose
                     <span className="text-[#B7AE8A]">{t('preview_extras')}</span>
                     <div className="mt-1 text-[11px] font-semibold">
                       {selectedExtraIds.length > 0
-                        ? extrasByType
+                        ? compatibleExtras
                             .filter((e) => selectedExtraIds.includes(e.id))
                             .map((e) => e.label)
                             .join('; ')

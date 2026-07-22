@@ -1,4 +1,5 @@
 import { getFromApi } from './axios-service';
+import { stationDateKey, utcToStationMinutes } from '@/helpers/station-time';
 import type { Station, StationDetailData, ServiceCategory, TimeSlot, Review, StationServicePublic, StationServiceEntry, StationServiceExtra, StationHourRow, StationStatus } from '@/types/station';
 
 /* ------------------------------------------------------------------ */
@@ -285,14 +286,12 @@ function mapApiDetailToStationDetail(
         })
         .map((slot) => {
             const startTime = new Date(slot.start_time);
-            const year = startTime.getFullYear();
-            const month = String(startTime.getMonth() + 1).padStart(2, '0');
-            const day = String(startTime.getDate()).padStart(2, '0');
-            const hours = String(startTime.getHours()).padStart(2, '0');
-            const minutes = String(startTime.getMinutes()).padStart(2, '0');
+            const stationMinutes = utcToStationMinutes(startTime);
+            const hours = String(Math.floor(stationMinutes / 60) % 24).padStart(2, '0');
+            const minutes = String(stationMinutes % 60).padStart(2, '0');
             return {
                 id: slot.id,
-                date: `${year}-${month}-${day}`,
+                date: stationDateKey(startTime),
                 time: `${hours}:${minutes}`,
                 available: true,
             };

@@ -20,6 +20,7 @@ import { MonthCalendar } from '@/components/station/availability/MonthCalendar';
 import { CreateBlockModal } from '@/components/station/availability/CreateBlockModal';
 import { DayDetailsModal } from '@/components/station/availability/DayDetailsModal';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { stationDateKey, stationWallTimeToUtc, utcToStationMinutes } from '@/helpers/station-time';
 import type { AvailabilityBlock } from '@/components/station/availability/types';
 
 interface RawSlot {
@@ -48,18 +49,20 @@ function extractHHMM(time: string | null | undefined, fallback: string): string 
 }
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return stationDateKey(new Date());
 }
 
+/* Station-local wall time (not the viewer's browser timezone) — see
+ * src/helpers/station-time.ts. */
 function extractTime(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const minutes = utcToStationMinutes(new Date(iso));
+  return `${String(Math.floor(minutes / 60) % 24).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 }
 
 function localTimeToIsoUtc(date: string, time: string): string {
-  const local = new Date(`${date}T${time}:00`);
-  if (Number.isNaN(local.getTime())) throw new Error(`Invalid date/time combination: ${date} ${time}`);
-  return local.toISOString();
+  const [h, m] = time.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) throw new Error(`Invalid date/time combination: ${date} ${time}`);
+  return stationWallTimeToUtc(date, h * 60 + m).toISOString();
 }
 
 function enumerateMonth(month: Date): string[] {
@@ -79,7 +82,9 @@ function slotToBlock(slot: RawSlot, dateISO: string): AvailabilityBlock {
     dates: [dateISO],
     startTime: extractTime(slot.start_time),
     endTime: extractTime(slot.end_time),
-    bayIds: ['all'],
+    // Real post id when the slot is bound to one bay, so the edit modal can
+    // pre-select the right post; ['all'] for legacy post-less slots.
+    bayIds: slot.post_id ? [slot.post_id] : ['all'],
     postId: slot.post_id,
   };
 }
@@ -384,9 +389,9 @@ export default function StationAvailabilityPage() {
             onCreateClick={openCreateModal}
           />
         ) : (
-          <BlocksPanel blocks={allBlocks} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
+          <BlocksPanel blocks={allBlocks} posts={posts} onDelete={handleDeleteGroup} onEdit={openEditModal} onCreateClick={openCreateModal} />
         )}
-        <MonthCalendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} getBlocksForDate={getBlocksForDate} onDayClick={handleDayClick} selectedDateISO={selectedDay} />
+        <MonthCalendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} getBlocksForDate={getBlocksForDate} onDayClick={handleDayClick} selectedDateISO={selectedDay} posts={posts} />
       </div>
 
       <CreateBlockModal
@@ -409,6 +414,7 @@ export default function StationAvailabilityPage() {
         onClose={() => setIsDayModalOpen(false)}
         date={selectedDay}
         blocks={selectedDay ? getBlocksForDate(selectedDay) : []}
+        posts={posts}
         onDeleteBlock={handleDelete}
         onEditBlock={openEditModal}
         onCreateForDay={openCreateForDay}
