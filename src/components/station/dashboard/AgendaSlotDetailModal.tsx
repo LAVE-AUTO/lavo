@@ -84,7 +84,7 @@ export function AgendaSlotDetailModal({
         >
           {t('btn_close')}
         </button>
-        {isStartable && (
+        {!isRunning && entry.status !== 'completed' && entry.status !== 'cancelled' && (
           <>
             <button
               type="button"
