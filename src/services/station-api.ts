@@ -445,7 +445,7 @@ export async function fetchStationById(id: string): Promise<StationDetailData | 
         ? ((queueData as { data: { items: ApiQueueEntry[]; meta?: { total?: number } } }).data)
         : null;
     const queueEntries: ApiQueueEntry[] = queuePayload?.items ?? [];
-    const activeStatuses = new Set(['waiting', 'in_progress', 'pending']);
+    const activeStatuses = new Set(['pending', 'confirmed', 'late']);
     const queueCount = queuePayload?.meta?.total ?? queueEntries.filter((e) => activeStatuses.has(e.status)).length;
     const washDuration = station.stationConfig?.wash_duration_minutes ?? 30;
     const washPostCount = station.wash_post_count ?? 1;
