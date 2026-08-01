@@ -212,7 +212,7 @@ export function AdminCommissionView() {
                 ) : (
                   <>
                     <div className="flex overflow-hidden rounded-xl border-2 border-[#D8D4C8] bg-white transition-all focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221,175,59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:focus-within:border-[#DDAF3B]">
-                      <input type="number" min={0} step={0.5} value={fee}
+                      <input type="number" min={0} step="any" value={fee}
                         onChange={(e) => { const v = parseFloat(e.target.value); setFee(isNaN(v) ? 0 : Math.max(0, v)); }}
                         className="flex-1 bg-transparent px-5 py-3 text-[24px] font-black text-[#001201] outline-none [appearance:textfield] dark:text-[#FFF9EC]" />
                       <span className="flex items-center border-l border-[#FFF9EC] bg-[#F5F2EC] px-5 text-[16px] font-black text-[#AAAAAA] dark:border-[#001A05] dark:bg-[#0E1A0C]">CAD</span>

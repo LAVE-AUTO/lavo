@@ -13,7 +13,7 @@ interface PlatformSettingRow {
 // ─── Field components ──────────────────────────────────────────────────────────
 
 function NumericField({
-  label, hint, value, unit, min, max, step = 1, onChange, readOnly,
+  label, hint, value, unit, min, max, step, onChange, readOnly,
 }: {
   label: string; hint?: string; value: number; unit: string;
   min?: number; max?: number; step?: number;
@@ -29,7 +29,7 @@ function NumericField({
           : 'border-[#D8D4C8] bg-white hover:border-[#C4A830]/60 focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_4px_rgba(221, 175, 59,0.12)] dark:border-[#001A05] dark:bg-dark-bg dark:hover:border-[#3A5030] dark:focus-within:border-[#DDAF3B]',
       ].join(' ')}>
         <input
-          type="number" min={min} max={max} step={step} readOnly={readOnly} value={value}
+          type="number" min={min} max={max} step={step ?? 'any'} readOnly={readOnly} value={value}
           onChange={onChange
             ? (e) => onChange(Math.min(max ?? 99999, Math.max(min ?? 0, parseFloat(e.target.value) || (min ?? 0))))
             : undefined}
