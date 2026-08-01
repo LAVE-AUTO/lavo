@@ -1011,7 +1011,7 @@
         "error_stripe_unavailable": "The payment service is temporarily unavailable.",
         "error_queue_join_failed": "Unable to join the queue. Please try again.",
         "error_active_queue_entry": "You already have an active entry at this station.",
-        "error_station_closed": "This station is currently closed.",
+        "error_station_closed": "This station is currently unavailable.",
         "receipt_title": "Receipt",
         "receipt_issued_at": "Issued",
         "receipt_station": "Station",
