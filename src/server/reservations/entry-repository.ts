@@ -569,6 +569,33 @@ export async function findPendingPaymentQueueEntryAtStation(
 }
 
 /**
+ * Atomically cancels a pending_payment queue entry (status guard prevents double-cancel).
+ * Must run inside a transaction so the caller can shift surrounding positions atomically.
+ *
+ * Returns the cancelled entry's stripe_payment_id, or undefined if the entry was
+ * already handled by a concurrent caller. The caller is responsible for shifting
+ * queue positions using the old position it already knows.
+ */
+export async function cancelActivePendingPaymentQueueEntry(
+  entryId: string,
+  tx: DbTransaction
+): Promise<{ stripe_payment_id: string | null } | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.id, entryId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .returning({ stripe_payment_id: reservations.stripe_payment_id });
+  if (!row) return undefined;
+  return { stripe_payment_id: row.stripe_payment_id };
+}
+
+/**
  * Finds an entry by its Stripe payment ID. Used by webhook handler.
  */
 export async function findEntryByStripePaymentId(

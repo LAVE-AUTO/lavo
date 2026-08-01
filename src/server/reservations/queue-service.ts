@@ -5,8 +5,6 @@
  */
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { db } from '@/lib/db';
-import { and, eq } from 'drizzle-orm';
-import { reservations as reservationsTable } from '@/lib/db/schema';
 import { findServiceVehicleEntryForBooking, findServiceByIdAndStation } from '@/server/station/service-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
@@ -23,6 +21,7 @@ import {
   countQueueByStation,
   getNextQueuePosition,
   findActiveQueueEntryByUser,
+  cancelActivePendingPaymentQueueEntry,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -87,16 +86,7 @@ export async function joinQueue(
     const existing = await findActiveQueueEntryByUser(userId, stationId, tx);
     if (existing) {
       if (existing.status === 'pending_payment') {
-        const [cancelled] = await tx
-          .update(reservationsTable)
-          .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
-          .where(
-            and(
-              eq(reservationsTable.id, existing.id),
-              eq(reservationsTable.status, 'pending_payment')
-            )
-          )
-          .returning({ stripe_payment_id: reservationsTable.stripe_payment_id });
+        const cancelled = await cancelActivePendingPaymentQueueEntry(existing.id, tx);
         if (cancelled && existing.queue_position != null) {
           await shiftQueuePositions(stationId, existing.queue_position + 1, -1, tx);
         }
