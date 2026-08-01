@@ -512,6 +512,33 @@ export async function findPendingPaymentReservationForSlot(
   return row[0];
 }
 
+/**
+ * Atomically cancels a pending_payment reservation entry (status guard prevents
+ * double-cancel). Does NOT decrement booked_count — that is handled separately
+ * by cancelExpiredPendingPaymentsForSlot inside the main reservation transaction.
+ *
+ * Returns the cancelled entry's stripe_payment_id so the caller can cancel the
+ * Stripe PI outside the DB transaction.
+ */
+export async function cancelPendingPaymentReservationEntry(
+  entryId: string,
+  tx: DbTransaction
+): Promise<{ stripe_payment_id: string | null } | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({ status: 'payment_failed', updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.id, entryId),
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .returning({ stripe_payment_id: reservations.stripe_payment_id });
+  if (!row) return undefined;
+  return { stripe_payment_id: row.stripe_payment_id };
+}
+
 /** TTL for unconfirmed pending_payment reservations — slots are freed after this window. */
 export const PENDING_PAYMENT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 

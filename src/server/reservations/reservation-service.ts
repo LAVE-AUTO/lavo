@@ -39,8 +39,8 @@ import { sendWalkInReceiptEmail } from '@/lib/email';
 import { findStationById } from '@/server/station/station-repository';
 import { findMatchingAvailabilitySlot } from '@/server/station/post-availability-service';
 import { generateTicketCode } from './ticket-code';
-import { and, eq as eqInline, sql as sqlInline } from 'drizzle-orm';
-import { reservations as reservationsTableModule, timeSlots as timeSlotsTable } from '@/lib/db/schema';
+import { sql as sqlInline } from 'drizzle-orm';
+import { timeSlots as timeSlotsTable } from '@/lib/db/schema';
 import {
   createReservationEntry,
   createQueueEntry,
@@ -49,6 +49,7 @@ import {
   findEntryByIdAndStation,
   hasActiveReservationForSlot,
   findPendingPaymentReservationForSlot,
+  cancelPendingPaymentReservationEntry,
   clearStripePaymentSucceededNotifiedAt,
   markPiCancelFailed,
   setStripePaymentSucceededNotifiedAtIfMissing,
@@ -227,20 +228,8 @@ export async function createReservation(
   if (stalePending) {
     let stripePaymentIdToCancel: string | null = null;
     await db.transaction(async (tx) => {
-      const [row] = await tx
-        .update(reservationsTableModule)
-        .set({ status: 'payment_failed', updated_at: new Date() })
-        .where(
-          and(
-            eqInline(reservationsTableModule.id, stalePending.id),
-            eqInline(reservationsTableModule.status, 'pending_payment')
-          )
-        )
-        .returning({
-          id: reservationsTableModule.id,
-          stripe_payment_id: reservationsTableModule.stripe_payment_id,
-        });
-      if (row) stripePaymentIdToCancel = row.stripe_payment_id;
+      const cancelled = await cancelPendingPaymentReservationEntry(stalePending.id, tx);
+      if (cancelled) stripePaymentIdToCancel = cancelled.stripe_payment_id;
     });
     if (stripePaymentIdToCancel) {
       try {
