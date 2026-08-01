@@ -80,7 +80,7 @@ jest.mock('@/lib/require-auth', () => ({
 }));
 
 // --- next/headers ---
-let mockCookieGet = jest.fn();
+const mockCookieGet = jest.fn();
 
 jest.mock('next/headers', () => ({
   headers: () => Promise.resolve(new Map([['host', 'localhost:3000']])),
