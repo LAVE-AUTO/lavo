@@ -434,6 +434,37 @@ export async function hasActiveQueueEntryAtStation(
 }
 
 /**
+ * Returns the first active queue entry for a user at a station, or undefined.
+ * Includes `pending_payment` so callers can differentiate between abandoned payments
+ * and genuinely active entries.
+ */
+export async function findActiveQueueEntryByUser(
+  userId: string,
+  stationId: string,
+  tx?: DbTransaction
+): Promise<{ id: string; status: string; queue_position: number | null; stripe_payment_id: string | null } | undefined> {
+  const client = tx ?? db;
+  return client
+    .select({
+      id: reservations.id,
+      status: reservations.status,
+      queue_position: reservations.queue_position,
+      stripe_payment_id: reservations.stripe_payment_id,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, ACTIVE_STATUSES)
+      )
+    )
+    .limit(1)
+    .then((rows) => rows[0]);
+}
+
+/**
  * Returns true if the user already has a confirmed/in-progress/pending reservation for this slot.
  * Excludes `pending_payment` — those are handled by the upsert logic in createReservation.
  */
@@ -896,6 +927,38 @@ export async function shiftQueuePositions(
 ): Promise<void> {
   if (delta === 0) return;
   const client = tx ?? db;
+
+  // Step 1 — remove ghost entries from the affected position range.
+  // pending_payment entries are abandoned payments that block users but are invisible
+  // in the UI. payment_failed entries may still hold a queue_position from before
+  // the stripe-failure handler ran. Both must be excluded from position shifts so
+  // live queue ordering stays predictable.
+  await client
+    .update(reservations)
+    .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment'),
+        gte(reservations.queue_position, fromPosition)
+      )
+    );
+
+  await client
+    .update(reservations)
+    .set({ queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'payment_failed'),
+        isNotNull(reservations.queue_position),
+        gte(reservations.queue_position, fromPosition)
+      )
+    );
+
+  // Step 2 — shift the live entries that remain.
   await client
     .update(reservations)
     .set({
@@ -1341,7 +1404,11 @@ export async function listRichStationEntriesPaginated(
   const offset = (Math.max(1, page) - 1) * limit;
 
   const conditions = [eq(reservations.station_id, stationId)];
-  if (status) conditions.push(eq(reservations.status, status));
+  if (status) {
+    conditions.push(eq(reservations.status, status));
+  } else {
+    conditions.push(notInArray(reservations.status, ['pending_payment', 'payment_failed']));
+  }
   if (entry_type) conditions.push(eq(reservations.entry_type, entry_type));
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));

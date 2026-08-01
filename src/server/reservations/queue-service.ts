@@ -22,8 +22,7 @@ import {
   listQueueByStation,
   countQueueByStation,
   getNextQueuePosition,
-  hasActiveQueueEntryAtStation,
-  findPendingPaymentQueueEntryAtStation,
+  findActiveQueueEntryByUser,
   updateEntry,
   shiftQueuePositions,
   findFirstActiveQueueEntry,
@@ -65,48 +64,6 @@ export async function joinQueue(
   const amountCents = Math.round(split.client_total * 100);
   const applicationFeeAmountCents = Math.round(split.platform_total_retained * 100);
 
-  // Cancel any stale pending_payment queue entry before creating a new PI.
-  // Allows users to retry after abandoning the Stripe form.
-  //
-  // The cancel + shift must run atomically (bug #8): two concurrent join attempts from the
-  // same user could otherwise both observe the same stalePending and each apply the shift,
-  // double-decrementing queue positions and corrupting the queue for the whole station.
-  // We use a conditional UPDATE so only the first transaction wins; subsequent ones see no
-  // matching row and skip the shift.
-  const stalePending = await findPendingPaymentQueueEntryAtStation(userId, stationId);
-  if (stalePending) {
-    let wonRace = false;
-    let stripePaymentIdToCancel: string | null = null;
-    await db.transaction(async (tx) => {
-      const [updated] = await tx
-        .update(reservationsTable)
-        .set({ status: 'cancelled', queue_position: null, updated_at: new Date() })
-        .where(
-          and(
-            eq(reservationsTable.id, stalePending.id),
-            eq(reservationsTable.status, 'pending_payment')
-          )
-        )
-        .returning({
-          id: reservationsTable.id,
-          stripe_payment_id: reservationsTable.stripe_payment_id,
-        });
-      if (!updated) return; // another concurrent call already handled this stale entry.
-      wonRace = true;
-      stripePaymentIdToCancel = updated.stripe_payment_id;
-      if (stalePending.queue_position != null) {
-        await shiftQueuePositions(stationId, stalePending.queue_position + 1, -1, tx);
-      }
-    });
-    if (wonRace && stripePaymentIdToCancel) {
-      try {
-        await cancelPaymentIntent(stripePaymentIdToCancel);
-      } catch {
-        // Non-fatal: PI may already be expired
-      }
-    }
-  }
-
   // Idempotency key: scoped to (user, station, service, vehicle, minute). A network-retry from
   // the client within the same minute returns the same PI rather than producing a second
   // authorization hold on the card.
@@ -125,9 +82,29 @@ export async function joinQueue(
     },
   });
 
+  let stalePiId: string | null = null;
   const entry = await db.transaction(async (tx) => {
-    const hasActive = await hasActiveQueueEntryAtStation(userId, stationId, tx);
-    if (hasActive) throw new ConflictError('You already have an active queue entry at this station');
+    const existing = await findActiveQueueEntryByUser(userId, stationId, tx);
+    if (existing) {
+      if (existing.status === 'pending_payment') {
+        const [cancelled] = await tx
+          .update(reservationsTable)
+          .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
+          .where(
+            and(
+              eq(reservationsTable.id, existing.id),
+              eq(reservationsTable.status, 'pending_payment')
+            )
+          )
+          .returning({ stripe_payment_id: reservationsTable.stripe_payment_id });
+        if (cancelled && existing.queue_position != null) {
+          await shiftQueuePositions(stationId, existing.queue_position + 1, -1, tx);
+        }
+        stalePiId = cancelled?.stripe_payment_id ?? null;
+      } else {
+        throw new ConflictError('You already have an active queue entry at this station');
+      }
+    }
 
     const nextPos = await getNextQueuePosition(stationId, tx);
 
@@ -143,6 +120,14 @@ export async function joinQueue(
       ticket_code: generateTicketCode(),
     }, tx);
   });
+
+  if (stalePiId) {
+    try {
+      await cancelPaymentIntent(stalePiId);
+    } catch {
+      // Non-fatal: PI may already be expired
+    }
+  }
 
   // Update PI metadata with reservation_id now that the entry ID is known.
   // Non-fatal: metadata is informational only; webhook resolution uses stripe_payment_id on the entry.
