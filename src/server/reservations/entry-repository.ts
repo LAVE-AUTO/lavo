@@ -896,7 +896,7 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', queue_position: null, cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_FAILURE_STATUSES])))
     .returning();
   return row;
@@ -913,7 +913,7 @@ export async function cancelEntryForStripeIntentCancelIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', queue_position: null, cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_INTENT_CANCEL_STATUSES])))
     .returning();
   return row;

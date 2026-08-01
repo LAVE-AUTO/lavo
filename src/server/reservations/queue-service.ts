@@ -91,6 +91,15 @@ export async function joinQueue(
           await shiftQueuePositions(stationId, existing.queue_position + 1, -1, tx);
         }
         stalePiId = cancelled?.stripe_payment_id ?? null;
+        // A concurrent joinQueue call may have cancelled the same stale entry AND
+        // created a new one before we acquired the row lock. Re-read to catch it
+        // and avoid creating a duplicate entry (double-PI race, bug #38).
+        if (!cancelled) {
+          const replanted = await findActiveQueueEntryByUser(userId, stationId, tx);
+          if (replanted) {
+            throw new ConflictError('You already have an active queue entry at this station');
+          }
+        }
       } else {
         throw new ConflictError('You already have an active queue entry at this station');
       }
