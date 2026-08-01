@@ -13,6 +13,15 @@ function money(value: string): string {
   return `${(parseFloat(value) || 0).toFixed(2)}$`;
 }
 
+function displayAmount(entry: StationHistoryEntry): string {
+  if (entry.status === 'completed') {
+    const total = parseFloat(entry.client_total || '0');
+    const fee = parseFloat(entry.platform_service_fee || '0');
+    return money(String(Math.max(0, total - fee)));
+  }
+  return money(entry.station_service_total || entry.amount_paid || '0');
+}
+
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
   confirmed:   { bg: '#057960ff', text: '#FFFFFF' },
   completed:   { bg: '#00C851', text: '#FFFFFF' },
@@ -118,7 +127,7 @@ export function HistoryCard({ entry }: Props) {
 
         {/* Amount */}
         <span className="shrink-0 font-mono text-[15px] font-bold text-[#C09A18]">
-          {parseFloat(entry.amount_paid).toFixed(2)}$
+          {displayAmount(entry)}
         </span>
 
         {/* Status */}
@@ -164,7 +173,7 @@ export function HistoryCard({ entry }: Props) {
                 {t('col_amount')}
               </p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] sm:grid-cols-3">
-                <DetailRow label={t('col_amount')} value={money(entry.client_total ?? entry.amount_paid)} gold />
+                <DetailRow label={t('col_amount')} value={displayAmount(entry)} gold />
                 {entry.station_service_total && (
                   <DetailRow label={t('col_service_total')} value={money(entry.station_service_total)} />
                 )}
