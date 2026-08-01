@@ -176,16 +176,15 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
               )}
             </div>
 
-            {/* Financial breakdown on completed entries: real final amounts from
-             * the backend snapshot — merchant price, taxes and commission. The
-             * platform service fee is intentionally not shown on merchant cards. */}
-            {entry.status === 'completed' && (entry.client_total || entry.station_service_total) && (
+            {/* Financial breakdown on completed entries: station-centric view.
+             * Shows what the station earned — base price + taxes, minus platform
+             * commission, then net transferred. No client_total or platform fee shown. */}
+            {entry.status === 'completed' && (entry.station_service_total || entry.client_total) && (
               <div className="mb-3 rounded-xl bg-white/40 p-3 dark:bg-[#001A05]/60">
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
                   {t('amount_section_title')}
                 </p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
-                  <DetailRow label={t('amount_client_total')} value={money(entry.client_total ?? entry.amount_paid ?? '0')} gold />
                   {entry.station_service_total && (
                     <DetailRow label={t('amount_service')} value={money(entry.station_service_total)} />
                   )}
@@ -195,16 +194,9 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                   {entry.tvq_amount && parseFloat(entry.tvq_amount) > 0 && (
                     <DetailRow label={t('amount_tvq')} value={money(entry.tvq_amount)} />
                   )}
-                  {entry.commission_rate && (
-                    <DetailRow label={t('amount_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
+                  {entry.commission_amount && parseFloat(entry.commission_amount) > 0 && (
+                    <DetailRow label={t('amount_commission')} value={`−${money(entry.commission_amount)}`} />
                   )}
-                  {entry.commission_amount && (
-                    <DetailRow label={t('amount_commission')} value={money(entry.commission_amount)} />
-                  )}
-                  {entry.station_tax_amount && parseFloat(entry.station_tax_amount) > 0 && (
-                    <DetailRow label={t('amount_station_tax')} value={money(entry.station_tax_amount)} />
-                  )}
-                  {/* Reference net figure: the true amount that will be transferred to the station. */}
                   <DetailRow
                     label={t('amount_net_transferred')}
                     value={money(entry.station_total_transferred ?? entry.station_payout ?? '0')}
