@@ -8,6 +8,7 @@ import { StationReviews } from './StationReviews';
 import { StationOpeningHours } from './StationOpeningHours';
 import { BookingFlow } from './booking/BookingFlow';
 import { StationServicesSection } from './StationServicesSection';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { fetchStationById } from '@/services/station-api';
 import { useFavorites } from './useFavorites';
 import { useUserLocation, haversineKm } from './useUserLocation';
@@ -233,12 +234,7 @@ export function StationDetail({ id }: StationDetailProps) {
         <div>
           <p className="text-[11px] text-foreground/55 uppercase tracking-wider font-bold">{t('detail_price_from')}</p>
           <p className="text-[32px] font-black text-foreground leading-none mt-1">
-            {currentPrice != null ? (
-              <>
-                <span className="text-[16px] font-bold mr-1 text-foreground/70">{t('price_unit')}</span>
-                {currentPrice.toLocaleString()}
-              </>
-            ) : '--'}
+            {currentPrice != null ? formatMoneyPrefix(currentPrice) : '--'}
           </p>
         </div>
         <Badge variant={isOpen ? 'status-open' : 'status-closed'} className="px-3 py-1 text-[12px]">
@@ -521,9 +517,7 @@ export function StationDetail({ id }: StationDetailProps) {
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center gap-3">
             <div className="min-w-0">
               <p className="text-[20px] font-black text-foreground leading-none">
-                {currentPrice != null ? (
-                  <><span className="text-[14px] font-semibold text-foreground/70 mr-1">{t('price_unit')}</span>{currentPrice.toLocaleString()}</>
-                ) : '--'}
+                {currentPrice != null ? formatMoneyPrefix(currentPrice) : '--'}
               </p>
               <p className="text-[11px] text-foreground/70 mt-1 truncate">
                 {selectedService ? selectedService.name : t('detail_price_from')}

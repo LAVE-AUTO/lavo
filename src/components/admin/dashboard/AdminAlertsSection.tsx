@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface Station {
   id: string;
@@ -144,7 +145,7 @@ export function AdminAlertsSection() {
             .map((d): DisputeAlert => ({
               id: d.id,
               label: d.station?.name ?? t('alert_disputes_unknown_station'),
-              amount: d.requested_amount ? `${parseFloat(d.requested_amount).toFixed(0)} $` : '-',
+              amount: d.requested_amount ? formatMoneyPrefix(d.requested_amount) : '-',
               date: d.created_at,
               urgent: Date.now() - new Date(d.created_at).getTime() > 3 * 24 * 60 * 60 * 1000,
             }));

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { deleteWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { StationExtra } from '@/components/station/config/station-extras-types';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface Props {
   extra: StationExtra;
@@ -148,7 +149,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[17px] font-black tabular-nums leading-none text-[#DDAF3B] sm:text-[20px]">
-                  {parseFloat(entry.price || '0').toFixed(0)} $
+                  {formatMoneyPrefix(entry.price)}
                 </p>
                 <p className="mt-1 text-[10px] text-foreground/55 dark:text-[#B0BFB1] sm:text-[11px]">{entry.duration_min} min</p>
               </div>
@@ -160,7 +161,7 @@ export function ExtraCard({ extra, onEdit, onDeleted, onToggled }: Props) {
               {t('extras_all_formats')}
             </p>
             <p className="mt-1 font-mono text-[22px] font-black tabular-nums leading-none text-[#DDAF3B]">
-              +{parseFloat(extra.price || '0').toFixed(0)} $
+              +{formatMoneyPrefix(extra.price)}
             </p>
           </div>
         )}

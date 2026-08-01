@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useToast } from '@/context/toast-context';
 import { getFromApi, postWithApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { DisputeDetail, DisputeStatus } from './dispute-types';
 import { clientDisplayName, parseAmount } from './dispute-types';
 import { AdminDisputeActionModal, type ModalMode } from './AdminDisputeActionModal';
@@ -41,7 +42,7 @@ function formatDate(d: string, short = false) {
 }
 
 function formatAmount(n: number) {
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  return formatMoneyPrefix(n);
 }
 
 function initials(name: string) {

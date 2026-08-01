@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context';
 import { useFavorites } from './useFavorites';
 import { useUserLocation, haversineKm } from './useUserLocation';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationDetailData } from '@/types/station';
 
 interface StationCardProps {
@@ -146,7 +147,7 @@ export function StationCard({ station, unavailable = false }: StationCardProps) 
             </h3>
             {station.priceFrom != null && (
               <span className="text-[18px] font-bold text-gold shrink-0">
-                <span className="text-[13px] font-semibold">{t('price_unit')}</span>{station.priceFrom.toLocaleString()}
+                {formatMoneyPrefix(station.priceFrom)}
               </span>
             )}
           </div>

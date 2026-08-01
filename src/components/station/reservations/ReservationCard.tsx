@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { STATION_TIMEZONE, formatStationTime } from '@/helpers/station-time';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { ReservationEntry, EntryStatus } from './types';
 
 interface Props {
@@ -34,10 +35,9 @@ const ACCENT_MAP: Record<string, string> = {
   in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
 };
 
-/** Decimal string from the backend snapshot → "12.34$". Falls back to 0.00$. */
+/** Decimal string from the backend snapshot → "12.34 $". Falls back to 0.00 $. */
 function money(v: string | null | undefined): string {
-  const n = parseFloat(v ?? '0');
-  return `${(isNaN(n) ? 0 : n).toFixed(2)}$`;
+  return formatMoneyPrefix(v);
 }
 
 function canDoStart(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'pending_payment'; }

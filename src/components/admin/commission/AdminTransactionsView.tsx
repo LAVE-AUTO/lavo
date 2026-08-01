@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { AdminTransactionDrawer, type TxRow, type TxStatus, type TxType } from './AdminTransactionDrawer';
 import { AdminPagination } from '../ui/AdminPagination';
 
@@ -54,7 +55,7 @@ const STATUS_META: Record<TxStatus, { dot: string; text: string; bar: string; la
   failed:    { dot: 'bg-[#F43F5E]', text: 'text-[#9F1239] dark:text-[#FDA4AF]', bar: 'bg-[#F43F5E]', label: 'status_failed' },
 };
 
-function fmt(n: number) { return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }); }
+function fmt(n: number) { return formatMoneyPrefix(n); }
 function formatDate(d: string, locale: string) {
   try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'short' }); }
   catch { return d; }

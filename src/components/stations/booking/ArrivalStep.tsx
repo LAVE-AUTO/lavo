@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { formatStationTime, stationNowMinutes } from '@/helpers/station-time';
 import type { StationDetailData, StationConfigPublic, TimeSlot } from '@/types/station';
 
@@ -363,7 +364,7 @@ export function ArrivalStep({
                 </span>
                 {serviceBasePrice > 0 && (
                   <span className="ml-2 text-[13px] font-black text-gold">
-                    ${serviceBasePrice.toLocaleString()}
+                    {formatMoneyPrefix(serviceBasePrice)}
                   </span>
                 )}
               </div>
@@ -538,12 +539,12 @@ export function ArrivalStep({
                 </span>
                 {serviceBasePrice > 0 && (
                   <span className="text-[13px] font-black text-gold">
-                    ${(serviceBasePrice + (reservationSurcharge ?? 0)).toLocaleString()}
+                    {formatMoneyPrefix(serviceBasePrice + (reservationSurcharge ?? 0))}
                   </span>
                 )}
                 {reservationSurcharge != null && reservationSurcharge > 0 && (
                   <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
-                    +${reservationSurcharge.toLocaleString()} {t('arrival_surcharge_label')}
+                    +{formatMoneyPrefix(reservationSurcharge)} {t('arrival_surcharge_label')}
                   </span>
                 )}
               </div>

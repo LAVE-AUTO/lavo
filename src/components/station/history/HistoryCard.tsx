@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationHistoryEntry } from './types';
 
 interface Props {
   entry: StationHistoryEntry;
 }
 
-/** Formats a decimal string amount as "12.34$" for the detail rows. */
+/** Formats a decimal string amount as "12.34 $" for the detail rows. */
 function money(value: string): string {
-  return `${(parseFloat(value) || 0).toFixed(2)}$`;
+  return formatMoneyPrefix(value);
 }
 
 function displayAmount(entry: StationHistoryEntry): string {

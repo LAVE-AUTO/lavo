@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface KpiCardProps {
   icon: React.ReactNode;
@@ -138,8 +139,8 @@ interface DashboardResponse {
 
 function fmtCurrency(v: string | number) {
   const n = typeof v === 'string' ? parseFloat(v) : v;
-  if (isNaN(n)) return '0 $';
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (isNaN(n)) return formatMoneyPrefix(0);
+  return formatMoneyPrefix(n);
 }
 
 export function AdminKpiRow({ masked = false }: { masked?: boolean }) {

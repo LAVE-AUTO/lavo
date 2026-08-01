@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { ReservationItem } from './types';
 
 interface Props {
@@ -100,7 +101,7 @@ function ReservationRow({
           {t(s.key)}
         </span>
         {item.amountPaid !== null && (
-          <span className="w-14 text-right text-[12px] font-black text-[#DDAF3B]">{item.amountPaid.toFixed(2)} $</span>
+          <span className="w-14 text-right text-[12px] font-black text-[#DDAF3B]">{formatMoneyPrefix(item.amountPaid)}</span>
         )}
       </div>
     </div>
@@ -172,7 +173,7 @@ function GroupSection({
             {items.length}
           </span>
           {revenue > 0 && (
-            <span className="text-[11px] font-black text-[#0E8C45] dark:text-[#65E69A]">{revenue.toFixed(0)} $</span>
+            <span className="text-[11px] font-black text-[#0E8C45] dark:text-[#65E69A]">{formatMoneyPrefix(revenue)}</span>
           )}
         </div>
       </div>
@@ -281,7 +282,7 @@ export function DashboardGroupedPanel({ items, view, selectedDate }: Props) {
         </div>
         <span className="h-6 w-px bg-[#E0DDCC] dark:bg-[#1A2A14]" aria-hidden="true" />
         <div className="flex items-center gap-2">
-          <span className="text-[20px] font-black leading-none text-[#0E8C45] dark:text-[#65E69A]">{totalRevenue.toFixed(0)} $</span>
+          <span className="text-[20px] font-black leading-none text-[#0E8C45] dark:text-[#65E69A]">{formatMoneyPrefix(totalRevenue)}</span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/55 dark:text-[#B0BFB1]">{t('grouped_period_revenue')}</span>
         </div>
       </div>
