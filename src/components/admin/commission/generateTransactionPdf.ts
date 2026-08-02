@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { TxRow, TxStatus } from './AdminTransactionDrawer';
 
 export interface PdfLabels {
@@ -32,7 +33,7 @@ const STATUS_RGB: Record<TxStatus, [number, number, number]> = {
 };
 
 function fmt(n: number) {
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  return formatMoneyPrefix(n);
 }
 function formatDT(d: string) {
   try {

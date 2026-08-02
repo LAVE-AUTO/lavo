@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { KpiData } from './types';
 
 const STORAGE_KEY = 'lavo_dashboard_kpi_collapsed';
@@ -22,7 +23,7 @@ function pct(value: number | null, basis: number): number {
 }
 
 function formatMoney(n: number | null): string {
-  return n === null ? '—' : `${n}$`;
+  return n === null ? '—' : formatMoneyPrefix(n);
 }
 
 function formatCount(n: number | null): string {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 export type ModalMode = 'refund_full' | 'refund_partial' | 'close_dispute';
 
@@ -83,7 +84,7 @@ export function AdminDisputeActionModal({ mode, maxAmount, busy, onConfirm, onCl
                 <span className="shrink-0 border-l border-[#FFF9EC] bg-[#F9F8F5] px-3 py-2 text-[12px] font-bold text-foreground/55 dark:border-[#1E2E18] dark:bg-[#131E10]">CAD</span>
               </div>
               {maxAmount !== undefined && (
-                <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">Max : {maxAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                <p className="text-[12px] text-[#BBBBAA] dark:text-[#B0BFB1]">Max : {formatMoneyPrefix(maxAmount)}</p>
               )}
             </div>
           )}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { postWithApi, updateWithApi } from '@/services';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { TextField } from '@/components/station/config/TextField';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
 import type { StationExtra } from '@/components/station/config/station-extras-types';
@@ -192,7 +193,7 @@ export function ExtraModal({ extra, categories, onClose, onSaved }: Props) {
                 <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-[#DDAF3B]">{t('extra_preview')}</div>
                 <div className="text-[13px] text-[#5A5A4A] dark:text-[#B0BFB1]">
                   <span className="font-bold text-[#001201] dark:text-[#FFF9EC]">{previewName}</span>
-                  {' : '}+{previewPrice} $ · +{previewDuration} min
+                  {' : '}+{formatMoneyPrefix(previewPrice)} · +{previewDuration} min
                 </div>
               </div>
 

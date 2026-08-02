@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { patchWithApi, deleteWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { VehicleFormat } from './types';
 import { VehicleFormatModal } from './VehicleFormatModal';
 
@@ -135,7 +136,7 @@ export function VehicleFormatsTab({ formats, onAdd, onUpdate, onDelete, apiBaseP
 
                 {showPrice && (
                   <span className="shrink-0 font-mono text-[14px] font-bold text-[#DDAF3B]">
-                    {(isNaN(parseFloat(format.price)) ? 0 : parseFloat(format.price)).toFixed(2)} $
+                    {formatMoneyPrefix(format.price)}
                   </span>
                 )}
 

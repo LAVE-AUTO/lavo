@@ -215,6 +215,7 @@ export function BookingFlow({ station, qrToken, qrVersion, initialServiceId, ini
       if (!ok) {
         const errData = data as { code?: string } | null;
         setSummaryError(
+          errData?.code === 'STATION_CLOSED' ? t('error_station_closed') :
           errData?.code === 'CONFLICT' ? t('error_active_queue_entry') : t('error_queue_join_failed'),
         );
         return;

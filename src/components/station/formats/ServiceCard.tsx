@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CompatibleExtrasModal } from './CompatibleExtrasModal';
 import type { StationExtra } from '@/components/station/config/station-extras-types';
 import type { Service } from './types';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface Props {
   service: Service;
@@ -176,7 +177,7 @@ export function ServiceCard({ service, onEdit, onDeleted, onToggled, allExtras, 
                   {entry.vehicle_label}
                 </p>
                 <p className="mt-1 font-mono text-[17px] font-black tabular-nums leading-none text-[#DDAF3B] sm:text-[22px]">
-                  {parseFloat(entry.price || '0').toFixed(0)} $
+                  {formatMoneyPrefix(entry.price)}
                 </p>
                 <p className="mt-1 text-[10px] text-foreground/55 dark:text-[#B0BFB1] sm:text-[11px]">
                   {entry.duration_min} min

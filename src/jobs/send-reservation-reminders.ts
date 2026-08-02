@@ -5,8 +5,8 @@
  *   - 24 hours before: early heads-up
  *   - 2 hours before: preparation reminder
  *   - 1 hour before: imminent reminder
- *   - First configurable window (default 5 hours): legacy configurable window
- *   - Second configurable window (default 30 minutes): final confirmation window
+ *   - First configurable window (admin setting, default 5 hours): heads-up
+ *   - Second configurable window (admin setting, default 30 minutes): final confirmation
  *
  * Tolerance: ±7 minutes on each window to accommodate cron drift and provider delays.
  * Each reminder attempt is independent; failure in one window doesn't block the others.
@@ -16,29 +16,23 @@
  */
 
 import { listReservationsForReminder } from '@/server/reservations/entry-repository';
-import { notifyEntry, type NotifyEntryParams } from '@/server/notifications/notification-service';
+import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyClientFeed } from '@/server/notifications/client-feed-notifications';
 import { getPlatformSettingWithFallback } from '@/server/admin/platform-settings-service';
 import { runWithConcurrencyLimit } from '@/helpers/concurrency';
 
 const TOLERANCE_MINUTES = 7;
 
-type ReminderType = Extract<
-  NotifyEntryParams['type'],
+type FixedReminderKind =
   | 'reservation_reminder_24h'
   | 'reservation_reminder_2h'
-  | 'reservation_reminder_1h'
-  | 'reservation_reminder_5h'
-  | 'reservation_reminder_30min'
->;
+  | 'reservation_reminder_1h';
 
-const REMINDER_FEED_BODY: Record<ReminderType, string> = {
-  reservation_reminder_24h:  'Vous avez une réservation prévue demain.',
-  reservation_reminder_2h:   'Votre réservation est dans 2 heures.',
-  reservation_reminder_1h:   'Votre réservation est dans 1 heure.',
-  reservation_reminder_5h:   'Votre réservation est dans 5 heures.',
-  reservation_reminder_30min:'Votre réservation est dans 30 minutes.',
-};
+type ConfigurableReminderKind =
+  | 'reservation_reminder_5h'
+  | 'reservation_reminder_30min';
+
+type ReminderType = FixedReminderKind | ConfigurableReminderKind;
 
 export type SendRemindersResult = {
   reminders_24h: { processed: number; succeeded: number; failed: number };
@@ -46,6 +40,25 @@ export type SendRemindersResult = {
   reminders_1h: { processed: number; succeeded: number; failed: number };
   reminders_5h: { processed: number; succeeded: number; failed: number };
   reminders_30min: { processed: number; succeeded: number; failed: number };
+};
+
+function minutesToHumanFrench(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} heure${h > 1 ? 's' : ''}`);
+  if (m > 0) parts.push(`${m} minute${m > 1 ? 's' : ''}`);
+  return parts.join(' ');
+}
+
+function buildReminderFeedBody(windowMinutes: number): string {
+  return `Votre réservation est dans ${minutesToHumanFrench(windowMinutes)}.`;
+}
+
+const FIXED_FEED_BODIES: Record<FixedReminderKind, string> = {
+  reservation_reminder_24h: 'Vous avez une réservation prévue demain.',
+  reservation_reminder_2h:  'Votre réservation est dans 2 heures.',
+  reservation_reminder_1h:  'Votre réservation est dans 1 heure.',
 };
 
 
@@ -61,19 +74,28 @@ async function sendRemindersForWindow(
   let succeeded = 0;
   let failed = 0;
 
+  const feedBody =
+    type in FIXED_FEED_BODIES
+      ? FIXED_FEED_BODIES[type as FixedReminderKind]
+      : buildReminderFeedBody(windowMinutes);
+
+  const isConfigurable = type === 'reservation_reminder_5h' || type === 'reservation_reminder_30min';
+
   const results = await runWithConcurrencyLimit(entries, 8, async (entry) => {
     await notifyEntry({
       entryId: entry.id,
       userId: entry.user_id,
       stationId: entry.station_id,
       type,
+      ...(isConfigurable && { reminderMinutes: windowMinutes }),
     });
     await notifyClientFeed({
       userId: entry.user_id,
       entryId: entry.id,
       stationId: entry.station_id,
       kind: type,
-      body: REMINDER_FEED_BODY[type],
+      body: feedBody,
+      ...(isConfigurable && { reminderMinutes: windowMinutes }),
     });
   });
 
@@ -91,7 +113,7 @@ async function sendRemindersForWindow(
 
 /**
  * Main job entry point: send reminders for all configured windows in parallel.
- * Fixed windows (24h, 2h, 1h) run alongside the two legacy configurable windows.
+ * Fixed windows (24h, 2h, 1h) run alongside the two admin-configurable windows.
  */
 export async function runSendReservationReminders(): Promise<SendRemindersResult> {
   const [firstHoursRaw, secondMinutesRaw] = await Promise.all([

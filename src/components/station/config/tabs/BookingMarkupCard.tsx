@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { NumberStepper } from '../NumberStepper';
 
 interface Props {
@@ -161,7 +162,7 @@ export function BookingMarkupCard({
                   <path d="M0 5h16M12 1l4 4-4 4" stroke="#DDAF3B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span className="rounded-full bg-[#DDAF3B] px-2.5 py-0.5 font-mono text-[10px] font-black tabular-nums text-[#001201]">
-                  +{safeMarkup.toFixed(2)} $
+                  +{formatMoneyPrefix(safeMarkup)}
                 </span>
               </div>
 

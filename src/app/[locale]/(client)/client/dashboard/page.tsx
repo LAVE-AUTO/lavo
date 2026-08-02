@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { useAuth } from '@/context/auth-context';
 import { useFavorites } from '@/components/stations/useFavorites';
 import { mapApiStatus } from '@/components/support/support-types';
@@ -95,10 +96,7 @@ export default function ClientDashboardPage() {
       })
     : t('empty_value');
 
-  const totalSpentLabel = `${stats.totalSpent.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} $`;
+  const totalSpentLabel = formatMoneyPrefix(stats.totalSpent);
 
   return (
     <main className="min-h-screen bg-background pb-24 sm:pb-8">

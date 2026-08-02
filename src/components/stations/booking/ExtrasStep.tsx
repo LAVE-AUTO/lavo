@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationServiceExtra } from '@/types/station';
 
 interface ExtrasStepProps {
@@ -80,7 +81,7 @@ export function ExtrasStep({
                         </div>
                       </div>
                     </div>
-                    <span className="text-[16px] font-black text-gold shrink-0">+${extra.price.toLocaleString()}</span>
+                    <span className="text-[16px] font-black text-gold shrink-0">+{formatMoneyPrefix(extra.price)}</span>
                   </div>
                 </button>
               );
@@ -96,20 +97,20 @@ export function ExtrasStep({
 
           <div className="flex justify-between text-[14px]">
             <span className="text-foreground font-semibold">{serviceName}</span>
-            <span className="text-foreground font-bold">${servicePrice.toLocaleString()}</span>
+            <span className="text-foreground font-bold">{formatMoneyPrefix(servicePrice)}</span>
           </div>
 
           {selectedItems.map((item) => (
             <div key={item.id} className="flex justify-between text-[13px]">
               <span className="text-foreground/70">+ {item.name}</span>
-              <span className="text-foreground/70">${item.price.toLocaleString()}</span>
+              <span className="text-foreground/70">{formatMoneyPrefix(item.price)}</span>
             </div>
           ))}
 
           {extrasTotal > 0 && (
             <div className="flex justify-between text-[13px] border-t border-border pt-2 mt-2">
               <span className="text-foreground/70">{t('ticket_extras_total')}</span>
-              <span className="text-gold font-bold">${extrasTotal.toLocaleString()}</span>
+              <span className="text-gold font-bold">{formatMoneyPrefix(extrasTotal)}</span>
             </div>
           )}
 
@@ -120,7 +121,7 @@ export function ExtrasStep({
 
           <div className="flex justify-between text-[16px] border-t border-border pt-2 mt-2">
             <span className="font-black text-foreground">{t('ticket_total')}</span>
-            <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
+            <span className="font-black text-gold">{formatMoneyPrefix(grandTotal)}</span>
           </div>
         </div>
 

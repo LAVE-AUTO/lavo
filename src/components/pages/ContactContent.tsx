@@ -66,7 +66,7 @@ export function ContactContent({ html, eyebrow, title }: Props) {
               '[&_a]:text-[#DDAF3B] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2',
             ].join(' ')}
             // Sanitized server-side via DOMPurify before persistence.
-            // eslint-disable-next-line react/no-danger
+             
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </div>

@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import type { QueueEntry } from './QueueCard';
 import { ACTIVE_QUEUE_STATUSES } from './StationDashboard';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface Props {
   entries: QueueEntry[];
@@ -184,7 +185,7 @@ function QueueBandCard({ entry, position, isNext, onPrimary, primaryLabel, prima
 
       <div className="mt-1.5 text-[11px] font-semibold text-foreground/65 dark:text-[#B0BFB1]">
         {entry.serviceLabel ?? '—'}
-        {entry.price !== undefined ? ` · ${entry.price}$` : ''}
+        {entry.price !== undefined ? ` · ${formatMoneyPrefix(entry.price)}` : ''}
       </div>
       <div className="mt-0.5 truncate text-[13px] font-black text-[#001201] dark:text-[#FFF9EC]">
         {entry.clientName}

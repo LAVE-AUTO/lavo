@@ -22,7 +22,7 @@ async function getStationIds(): Promise<string[]> {
     const ids: string[] = [];
     let page = 1;
 
-    // eslint-disable-next-line no-constant-condition
+     
     while (true) {
       const { rows } = await listActiveStations({ page, per_page: PAGE_SIZE });
       if (rows.length === 0) break;

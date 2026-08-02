@@ -321,8 +321,20 @@ export async function listActiveQueueEntries(
   });
 }
 
-/** Active statuses for a live queue entry (excludes cancelled, completed, in_progress). */
-const QUEUE_LIVE_STATUSES = ['pending_payment', 'pending', 'confirmed', 'late'] as const;
+/**
+ * Publicly-visible active queue statuses. pending_payment is excluded because it is a
+ * transient payment-in-flight state: the entry should not appear as a live client until
+ * the webhook confirms the payment and moves it to pending/confirmed.
+ */
+const QUEUE_PUBLIC_STATUSES = ['pending', 'confirmed', 'late'] as const;
+
+/**
+ * Internal statuses used when calculating the next queue position.
+ * pending_payment must be included so that an incomplete payment attempt cannot be assigned
+ * the same position as another live entry. The displayed queue count, however, uses the
+ * public statuses above.
+ */
+const QUEUE_POSITION_STATUSES = ['pending_payment', 'pending', 'confirmed', 'late'] as const;
 
 /**
  * Stable primary ordering for entry lists: reservations first, queue second, then any future
@@ -336,24 +348,25 @@ function entryTypePrimaryOrder() {
 
 /**
  * Lists live queue entries for a station, ordered by queue_position.
- * Only returns entries in an active state (pending_payment, pending, confirmed, late).
- * Cancelled and completed entries are excluded so the queue view is not polluted.
+ * Only returns publicly-visible active states (pending, confirmed, late).
+ * Cancelled, completed, payment-in-flight and in-progress entries are excluded so the queue view
+ * is not polluted by ghosts or clients who are already being served.
  */
 export async function listQueueByStation(stationId: string): Promise<Entry[]> {
   return db.query.reservations.findMany({
     where: and(
       eq(reservations.station_id, stationId),
       eq(reservations.entry_type, 'queue'),
-      inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
+      inArray(reservations.status, [...QUEUE_PUBLIC_STATUSES])
     ),
     orderBy: asc(reservations.queue_position),
   });
 }
 
 /**
- * Returns the count of live queue entries for the station (for queue-position helper context).
- * Only counts active entries (pending_payment, pending, confirmed, late) so cancelled entries
- * do not inflate the count used for position calculation.
+ * Returns the count of position-bearing queue entries for the station (for queue-position helper context).
+ * Counts pending_payment as well as public active statuses so that an incomplete payment attempt
+ * still occupies a position and cannot collide with a new entry.
  */
 export async function countQueueByStation(stationId: string, tx?: DbTransaction): Promise<number> {
   const client = tx ?? db;
@@ -364,7 +377,7 @@ export async function countQueueByStation(stationId: string, tx?: DbTransaction)
       and(
         eq(reservations.station_id, stationId),
         eq(reservations.entry_type, 'queue'),
-        inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
+        inArray(reservations.status, [...QUEUE_POSITION_STATUSES])
       )
     );
   return result[0]?.count ?? 0;
@@ -372,8 +385,8 @@ export async function countQueueByStation(stationId: string, tx?: DbTransaction)
 
 /**
  * Returns the next available queue_position for the station (max + 1, or 1 if empty).
- * Only considers live entries (pending_payment, pending, confirmed, late) so that cancelled
- * entries with a stale non-null queue_position do not inflate the next position number.
+ * Considers position-bearing statuses (pending_payment, pending, confirmed, late) so that
+ * cancelled entries with a stale non-null queue_position do not inflate the next position number.
  * Accepts an optional transaction so the read is consistent with surrounding writes.
  */
 export async function getNextQueuePosition(stationId: string, tx?: DbTransaction): Promise<number> {
@@ -387,7 +400,7 @@ export async function getNextQueuePosition(stationId: string, tx?: DbTransaction
       and(
         eq(reservations.station_id, stationId),
         eq(reservations.entry_type, 'queue'),
-        inArray(reservations.status, [...QUEUE_LIVE_STATUSES])
+        inArray(reservations.status, [...QUEUE_POSITION_STATUSES])
       )
     );
   const max = result[0]?.max ?? 0;
@@ -431,6 +444,37 @@ export async function hasActiveQueueEntryAtStation(
     )
     .limit(1);
   return row.length > 0;
+}
+
+/**
+ * Returns the first active queue entry for a user at a station, or undefined.
+ * Includes `pending_payment` so callers can differentiate between abandoned payments
+ * and genuinely active entries.
+ */
+export async function findActiveQueueEntryByUser(
+  userId: string,
+  stationId: string,
+  tx?: DbTransaction
+): Promise<{ id: string; status: string; queue_position: number | null; stripe_payment_id: string | null } | undefined> {
+  const client = tx ?? db;
+  return client
+    .select({
+      id: reservations.id,
+      status: reservations.status,
+      queue_position: reservations.queue_position,
+      stripe_payment_id: reservations.stripe_payment_id,
+    })
+    .from(reservations)
+    .where(
+      and(
+        eq(reservations.user_id, userId),
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        inArray(reservations.status, ACTIVE_STATUSES)
+      )
+    )
+    .limit(1)
+    .then((rows) => rows[0]);
 }
 
 /**
@@ -479,6 +523,33 @@ export async function findPendingPaymentReservationForSlot(
     )
     .limit(1);
   return row[0];
+}
+
+/**
+ * Atomically cancels a pending_payment reservation entry (status guard prevents
+ * double-cancel). Does NOT decrement booked_count — that is handled separately
+ * by cancelExpiredPendingPaymentsForSlot inside the main reservation transaction.
+ *
+ * Returns the cancelled entry's stripe_payment_id so the caller can cancel the
+ * Stripe PI outside the DB transaction.
+ */
+export async function cancelPendingPaymentReservationEntry(
+  entryId: string,
+  tx: DbTransaction
+): Promise<{ stripe_payment_id: string | null } | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({ status: 'payment_failed', updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.id, entryId),
+        eq(reservations.entry_type, 'reservation'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .returning({ stripe_payment_id: reservations.stripe_payment_id });
+  if (!row) return undefined;
+  return { stripe_payment_id: row.stripe_payment_id };
 }
 
 /** TTL for unconfirmed pending_payment reservations — slots are freed after this window. */
@@ -535,6 +606,33 @@ export async function findPendingPaymentQueueEntryAtStation(
     )
     .limit(1);
   return row[0];
+}
+
+/**
+ * Atomically cancels a pending_payment queue entry (status guard prevents double-cancel).
+ * Must run inside a transaction so the caller can shift surrounding positions atomically.
+ *
+ * Returns the cancelled entry's stripe_payment_id, or undefined if the entry was
+ * already handled by a concurrent caller. The caller is responsible for shifting
+ * queue positions using the old position it already knows.
+ */
+export async function cancelActivePendingPaymentQueueEntry(
+  entryId: string,
+  tx: DbTransaction
+): Promise<{ stripe_payment_id: string | null } | undefined> {
+  const [row] = await tx
+    .update(reservations)
+    .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.id, entryId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment')
+      )
+    )
+    .returning({ stripe_payment_id: reservations.stripe_payment_id });
+  if (!row) return undefined;
+  return { stripe_payment_id: row.stripe_payment_id };
 }
 
 /**
@@ -811,7 +909,7 @@ export async function cancelEntryForStripePaymentFailureIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', queue_position: null, cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_PAYMENT_FAILURE_STATUSES])))
     .returning();
   return row;
@@ -828,7 +926,7 @@ export async function cancelEntryForStripeIntentCancelIfEligible(
 ): Promise<Entry | undefined> {
   const [row] = await tx
     .update(reservations)
-    .set({ status: 'payment_failed', cancellation_reason: reason, updated_at: new Date() })
+    .set({ status: 'payment_failed', queue_position: null, cancellation_reason: reason, updated_at: new Date() })
     .where(and(eq(reservations.id, id), inArray(reservations.status, [...STRIPE_INTENT_CANCEL_STATUSES])))
     .returning();
   return row;
@@ -896,6 +994,38 @@ export async function shiftQueuePositions(
 ): Promise<void> {
   if (delta === 0) return;
   const client = tx ?? db;
+
+  // Step 1 — remove ghost entries from the affected position range.
+  // pending_payment entries are abandoned payments that block users but are invisible
+  // in the UI. payment_failed entries may still hold a queue_position from before
+  // the stripe-failure handler ran. Both must be excluded from position shifts so
+  // live queue ordering stays predictable.
+  await client
+    .update(reservations)
+    .set({ status: 'payment_failed', queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'pending_payment'),
+        gte(reservations.queue_position, fromPosition)
+      )
+    );
+
+  await client
+    .update(reservations)
+    .set({ queue_position: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(reservations.station_id, stationId),
+        eq(reservations.entry_type, 'queue'),
+        eq(reservations.status, 'payment_failed'),
+        isNotNull(reservations.queue_position),
+        gte(reservations.queue_position, fromPosition)
+      )
+    );
+
+  // Step 2 — shift the live entries that remain.
   await client
     .update(reservations)
     .set({
@@ -1341,7 +1471,11 @@ export async function listRichStationEntriesPaginated(
   const offset = (Math.max(1, page) - 1) * limit;
 
   const conditions = [eq(reservations.station_id, stationId)];
-  if (status) conditions.push(eq(reservations.status, status));
+  if (status) {
+    conditions.push(eq(reservations.status, status));
+  } else {
+    conditions.push(notInArray(reservations.status, ['pending_payment', 'payment_failed']));
+  }
   if (entry_type) conditions.push(eq(reservations.entry_type, entry_type));
   if (from) conditions.push(gte(reservations.created_at, from));
   if (to) conditions.push(lte(reservations.created_at, to));

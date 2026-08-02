@@ -48,6 +48,7 @@ export interface NotifyClientParams {
   stationId?: string;
   kind: ClientFeedKind;
   body: string;
+  reminderMinutes?: number;
 }
 
 /* Map each kind to the client preference key that gates delivery. */
@@ -120,6 +121,22 @@ function resolveActionUrl(kind: ClientFeedKind, entryId: string): string {
   return `/client/reservations/${entryId}`;
 }
 
+function minutesToHumanFrench(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} heure${h > 1 ? 's' : ''}`);
+  if (m > 0) parts.push(`${m} minute${m > 1 ? 's' : ''}`);
+  return parts.join(' ');
+}
+
+function resolveTitle(kind: ClientFeedKind, reminderMinutes?: number): string {
+  if (reminderMinutes != null) {
+    return `Rappel : réservation dans ${minutesToHumanFrench(reminderMinutes)}`;
+  }
+  return TITLES[kind];
+}
+
 /**
  * Inserts a `user_notifications` row addressed to the client. Always
  * resolves: failures are logged but never thrown so the calling transaction
@@ -137,7 +154,7 @@ export async function notifyClientFeed(params: NotifyClientParams): Promise<void
     await insertUserNotification({
       user_id: params.userId,
       kind: params.kind,
-      title: TITLES[params.kind],
+      title: resolveTitle(params.kind, params.reminderMinutes),
       body: enrichedBody,
       action_url: resolveActionUrl(params.kind, params.entryId),
       payload: {

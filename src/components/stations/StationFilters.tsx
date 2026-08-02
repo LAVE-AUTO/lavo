@@ -361,7 +361,8 @@ function PriceInput({ value, onChange, placeholder, unit }: {
       <input
         type="number"
         min={0}
-        inputMode="numeric"
+        step="any"
+        inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

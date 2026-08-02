@@ -26,10 +26,9 @@ export function TextField({
 }: Props) {
   // For type="number", drop `step` from the HTML attribute: with `min` set, the
   // browser enforces a step grid anchored on `min` (e.g. min=1, step=5 → only
-  // 1, 6, 11… are valid → "60" is rejected). Free typing + visible bounds is the
-  // expected merchant UX. The same prop is still useful for stepper components
-  // that read it for their +/- buttons (NumberStepper).
-  const inputProps = type === 'number' ? { ...rest, step: undefined } : rest;
+  // 1, 6, 11… are valid → "60" is rejected). `step="any"` disables the grid fully
+  // so merchants can type free-form decimal values (e.g. "10.50").
+  const inputProps = type === 'number' ? { ...rest, step: 'any' } : rest;
   const borderColor = invalid
     ? 'border-[#EF4444]/60 focus-within:border-[#EF4444] focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
     : 'border-separator hover:border-separator-hover focus-within:border-[#DDAF3B] focus-within:shadow-[0_0_0_3px_rgba(221,175,59,0.12)] dark:border-[#001A05] dark:hover:border-[#2E3C2A]';

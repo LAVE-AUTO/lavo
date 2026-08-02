@@ -43,6 +43,7 @@ export type NotifyEntryParams = {
     | 'queue_cancelled_by_client'
     | 'queue_no_show';
   payload?: Record<string, unknown>;
+  reminderMinutes?: number;
 };
 
 const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: string }> = {
@@ -54,8 +55,8 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
   entry_cancelled: { title: 'Booking cancelled', body: 'Your booking has been cancelled.' },
   reservation_cancelled: { title: 'Reservation cancelled', body: 'Your reservation has been cancelled and a refund has been initiated.' },
   invitation_to_rate: { title: 'How was your experience?', body: 'Rate your last visit to help us improve.' },
-  reservation_reminder_5h: { title: 'Reminder: reservation in 5 hours', body: 'Do not forget to confirm your presence 30 minutes before your appointment.' },
-  reservation_reminder_30min: { title: 'Your appointment is in 30 minutes', body: 'Please confirm your presence now so your slot is kept.' },
+  reservation_reminder_5h: { title: 'Reminder: upcoming reservation', body: 'Do not forget to confirm your presence 30 minutes before your appointment.' },
+  reservation_reminder_30min: { title: 'Reminder: upcoming reservation', body: 'Please confirm your presence now so your slot is kept.' },
   reservation_reminder_24h: { title: 'Reminder: reservation tomorrow', body: 'You have a reservation scheduled for tomorrow. Get ready!' },
   reservation_reminder_2h: { title: 'Reminder: reservation in 2 hours', body: 'Your appointment is coming up in 2 hours. Do not forget!' },
   reservation_reminder_1h: { title: 'Reminder: reservation in 1 hour', body: 'Your appointment is in 1 hour. Please head over soon.' },
@@ -80,15 +81,45 @@ const PUSH_MESSAGES: Record<NotifyEntryParams['type'], { title: string; body: st
 };
 
 
+function buildReminderTitle(kind: 'reservation_reminder_5h' | 'reservation_reminder_30min', minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} ${h > 1 ? 'hours' : 'hour'}`);
+  if (m > 0) parts.push(`${m} ${m > 1 ? 'minutes' : 'minute'}`);
+  const human = parts.join(' ');
+  if (kind === 'reservation_reminder_30min') {
+    return `Your appointment is in ${human}`;
+  }
+  return `Reminder: reservation in ${human}`;
+}
+
+
 /**
  * Sends a push notification for an entry event via FCM and logs the intent.
  */
 export async function notifyEntry(params: NotifyEntryParams): Promise<void> {
-  const message = PUSH_MESSAGES[params.type];
-  if (message) {
+  let title: string | undefined;
+  let body: string | undefined;
+
+  if (
+    params.reminderMinutes != null &&
+    (params.type === 'reservation_reminder_5h' || params.type === 'reservation_reminder_30min')
+  ) {
+    title = buildReminderTitle(params.type, params.reminderMinutes);
+    body = PUSH_MESSAGES[params.type].body;
+  } else {
+    const message = PUSH_MESSAGES[params.type];
+    if (message) {
+      title = message.title;
+      body = message.body;
+    }
+  }
+
+  if (title && body) {
     await sendPushNotification(params.userId, {
-      title: message.title,
-      body: message.body,
+      title,
+      body,
       data: {
         entry_id: params.entryId,
         ...(params.stationId && { station_id: params.stationId }),

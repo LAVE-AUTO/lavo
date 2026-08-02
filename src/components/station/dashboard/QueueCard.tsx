@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 export interface QueueEntry {
   id: string;
@@ -78,7 +79,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
               )}
               {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
               {entry.price !== undefined && (
-                <span className="font-mono font-bold text-[#DDAF3B]">{entry.price}$</span>
+                <span className="font-mono font-bold text-[#DDAF3B]">{formatMoneyPrefix(entry.price)}</span>
               )}
             </div>
           )}
@@ -140,7 +141,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             {entry.time && <span className="font-mono font-semibold text-foreground">{entry.time}</span>}
             {entry.serviceLabel && <span>{entry.serviceLabel}</span>}
             {entry.price !== undefined && (
-              <span className="font-mono font-semibold text-[#DDAF3B]">{entry.price}$</span>
+              <span className="font-mono font-semibold text-[#DDAF3B]">{formatMoneyPrefix(entry.price)}</span>
             )}
           </div>
         </div>
@@ -157,7 +158,7 @@ export function QueueCard({ entry, onCall, onPick, onMoveUp, onMoveDown, callLab
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
               {entry.time && <DetailRow label={t('queue_detail_time')} value={entry.time} />}
               {entry.serviceLabel && <DetailRow label={t('queue_detail_service')} value={entry.serviceLabel} />}
-              {entry.price !== undefined && <DetailRow label={t('queue_detail_price')} value={`${entry.price}$`} gold />}
+              {entry.price !== undefined && <DetailRow label={t('queue_detail_price')} value={formatMoneyPrefix(entry.price)} gold />}
               {entry.postLabel && <DetailRow label={t('queue_detail_post')} value={entry.postLabel} />}
             </div>
 

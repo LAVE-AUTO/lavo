@@ -1,6 +1,7 @@
  'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 interface KpiData {
   totalRevenue: number;
@@ -91,11 +92,7 @@ export function AnalyticsKpiCards({ kpi }: AnalyticsKpiCardsProps) {
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('fr-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    minimumFractionDigits: 0,
-  }).format(value);
+  return formatMoneyPrefix(value);
 }
 
 function formatPercent(value: number): string {

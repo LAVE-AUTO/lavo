@@ -110,7 +110,7 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 
   const station = await findStationById(paramParsed.data.id);
   if (!station || station.status !== 'active') return error404('Station not found or not active');
-  if (!station.is_open) return error409('Station is currently closed for walk-ins', ApiCode.CONFLICT);
+  if (!station.is_open) return error409('Station is currently closed for walk-ins', ApiCode.STATION_CLOSED);
   if (!station.stripe_account_id) return error409('Station payment not configured', ApiCode.CONFLICT);
 
   try {

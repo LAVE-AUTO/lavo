@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationServicePublic, StationServiceEntry } from '@/types/station';
 
 interface FormatSelectionStepProps {
@@ -59,7 +60,7 @@ export function FormatSelectionStep({
                     }`}>
                       {selected && <span className="w-2.5 h-2.5 rounded-full bg-dark-bg" />}
                     </span>
-                    <span className="text-[18px] font-black text-gold">${entry.price.toLocaleString()}</span>
+                    <span className="text-[18px] font-black text-gold">{formatMoneyPrefix(entry.price)}</span>
                   </div>
 
                   {/* Format name */}
