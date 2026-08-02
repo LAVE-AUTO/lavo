@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { AdminPagination } from './ui/AdminPagination';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -198,7 +199,7 @@ function DetailsContent({ action, details, t }: { action: string; details: Recor
       <>
         {details.amount != null && (
           <Row label={t('detail_amount_refunded')}>
-            {parseFloat(String(details.amount)).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+            {formatMoneyPrefix(details.amount as string | number)}
           </Row>
         )}
         {typeof details.stripe_refund_id === 'string' && details.stripe_refund_id && (

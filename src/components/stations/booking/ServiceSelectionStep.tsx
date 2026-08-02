@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationDetailData, StationServicePublic } from '@/types/station';
 
 interface ServiceSelectionStepProps {
@@ -127,7 +128,7 @@ export function ServiceSelectionStep({
                     {price != null && (
                       <div className="text-right shrink-0">
                         <span className="text-[11px] text-foreground/55">{t('service_from')}</span>
-                        <div className="text-[18px] font-black text-gold">${price.toLocaleString()}</div>
+                        <div className="text-[18px] font-black text-gold">{formatMoneyPrefix(price)}</div>
                       </div>
                     )}
                   </div>

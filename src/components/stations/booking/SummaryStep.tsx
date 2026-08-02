@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type {
   StationDetailData,
   StationServicePublic,
@@ -113,7 +114,7 @@ export function SummaryStep({
           {selectedEntry?.vehicleFormatId && (
             <div className="flex justify-between text-[14px]">
               <span className="text-foreground/70">{entryLabel}</span>
-              <span className="text-foreground font-bold">${entryPrice.toLocaleString()}</span>
+              <span className="text-foreground font-bold">{formatMoneyPrefix(entryPrice)}</span>
             </div>
           )}
 
@@ -121,14 +122,14 @@ export function SummaryStep({
           {!selectedEntry?.vehicleFormatId && entryPrice > 0 && (
             <div className="flex justify-between text-[14px]">
               <span className="text-foreground/70">{t('summary_base_price')}</span>
-              <span className="text-foreground font-bold">${entryPrice.toLocaleString()}</span>
+              <span className="text-foreground font-bold">{formatMoneyPrefix(entryPrice)}</span>
             </div>
           )}
 
           {selectedExtras.map((extra) => (
             <div key={extra.id} className="flex justify-between text-[13px]">
               <span className="text-foreground/70">+ {extra.name}</span>
-              <span className="text-foreground/70">${extra.price.toLocaleString()}</span>
+              <span className="text-foreground/70">{formatMoneyPrefix(extra.price)}</span>
             </div>
           ))}
 
@@ -136,7 +137,7 @@ export function SummaryStep({
           {arrivalMode === 'book_slot' && reservationSurcharge != null && reservationSurcharge > 0 && (
             <div className="flex justify-between text-[13px] border-t border-border pt-2 mt-1">
               <span className="text-foreground/70">{t('summary_reservation_surcharge')}</span>
-              <span className="text-gold font-bold">+${reservationSurcharge.toLocaleString()}</span>
+              <span className="text-gold font-bold">+{formatMoneyPrefix(reservationSurcharge)}</span>
             </div>
           )}
         </div>
@@ -157,7 +158,7 @@ export function SummaryStep({
           </div>
           <div className="flex justify-between text-[18px]">
             <span className="font-black text-foreground">{t('summary_subtotal')}</span>
-            <span className="font-black text-gold">${grandTotal.toLocaleString()}</span>
+            <span className="font-black text-gold">{formatMoneyPrefix(grandTotal)}</span>
           </div>
           {/* No backend quote endpoint exists before entry creation, so taxes and
            * the platform service fee are only known at payment. Be explicit rather

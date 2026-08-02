@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { patchWithApi, postWithApi } from '@/services';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { TextField } from '@/components/station/config/TextField';
 import { Textarea } from '@/components/station/config/Textarea';
 import { NumberStepper } from '@/components/station/config/NumberStepper';
@@ -786,7 +787,7 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, categor
                               <span className="text-[10px] text-foreground/55 dark:text-[#B0BFB1]">{extra.duration_min} min</span>
                             )}
                           </div>
-                          <span className="font-mono text-[11px] font-bold text-[#DDAF3B] shrink-0 ml-2">+{extra.price}$</span>
+                          <span className="font-mono text-[11px] font-bold text-[#DDAF3B] shrink-0 ml-2">+{formatMoneyPrefix(extra.price)}</span>
                         </button>
                       );
                     })}
@@ -838,7 +839,13 @@ export function ServiceModal({ service, vehicleFormats, availableExtras, categor
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">
                     <span className="text-[#B7AE8A]">{t('preview_price')}</span>
                     <span className="font-bold text-[#DDAF3B]">
-                      {!isEdit ? `${basePrice || '--'}$` : (minPrice !== null ? (minPrice === maxPrice ? `${minPrice}$` : `${minPrice}$ - ${maxPrice}$`) : '--')}
+                      {!isEdit
+                        ? formatMoneyPrefix(basePrice)
+                        : minPrice !== null
+                          ? minPrice === maxPrice
+                            ? formatMoneyPrefix(minPrice)
+                            : `${formatMoneyPrefix(minPrice)} - ${formatMoneyPrefix(maxPrice)}`
+                          : '--'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b border-[#5A4630] pb-1">

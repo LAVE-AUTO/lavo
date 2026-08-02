@@ -4,6 +4,7 @@ import { useState, forwardRef, useImperativeHandle } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { generateReceiptPdf } from '@/components/receipts/generate-receipt-pdf';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { type FinancialSnapshot } from '@/types/financial';
 import type {
   StationDetailData,
@@ -313,20 +314,20 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
                 <div className="text-[14px] font-bold truncate text-[#FFEECA]">{serviceName}</div>
                 {formatLabel && <div className="text-[12px] text-[#B0BFB1]">{formatLabel}</div>}
               </div>
-              <div className="text-[14px] font-mono shrink-0 text-[#FFEECA]">${servicePrice.toLocaleString()}</div>
+              <div className="text-[14px] font-mono shrink-0 text-[#FFEECA]">{formatMoneyPrefix(servicePrice)}</div>
             </div>
 
             {extras.map((ex) => (
               <div key={ex.id} className="flex items-baseline justify-between gap-3 text-[13px] text-[#FFEECA]">
                 <span className="truncate">+ {ex.name}</span>
-                <span className="font-mono shrink-0">${ex.price.toLocaleString()}</span>
+                <span className="font-mono shrink-0">{formatMoneyPrefix(ex.price)}</span>
               </div>
             ))}
 
             {surchargeAmount > 0 && (
               <div className="flex items-baseline justify-between gap-3 text-[13px] text-[#FFEECA]">
                 <span>{t('receipt_reservation_surcharge')}</span>
-                <span className="font-mono shrink-0">${surchargeAmount.toLocaleString()}</span>
+                <span className="font-mono shrink-0">{formatMoneyPrefix(surchargeAmount)}</span>
               </div>
             )}
 
@@ -341,7 +342,7 @@ export const BookingReceipt = forwardRef<BookingReceiptHandle, BookingReceiptPro
             {extrasTotal > 0 || surchargeAmount > 0 ? (
               <div className="flex items-baseline justify-between gap-3 text-[12px] text-[#B0BFB1] pt-1">
                 <span>{t('receipt_subtotal')}</span>
-                <span className="font-mono">${(servicePrice + extrasTotal + surchargeAmount).toLocaleString()}</span>
+                <span className="font-mono">{formatMoneyPrefix(servicePrice + extrasTotal + surchargeAmount)}</span>
               </div>
             ) : null}
           </div>

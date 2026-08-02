@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { PeriodType } from './AnalyticsPeriodToggle';
 
@@ -53,7 +54,7 @@ export function AnalyticsChartsSection({ data, period }: AnalyticsChartsSectionP
                   borderRadius: '8px',
                   color: '#fff',
                 }}
-                formatter={(value) => `$${(+(value ?? 0)).toFixed(0)}`}
+                formatter={(value) => formatMoneyPrefix(value as string | number)}
               />
               <Legend />
               <Line

@@ -5,6 +5,7 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
 import { parseFinancialSnapshot, type RawFinancialSnapshot } from '@/types/financial';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { ReceiptModal } from './ReceiptModal';
 import { HistoryCard, type HistoryReservation } from './HistoryCard';
 import { PageSpinner } from '@/components/ui/PageSpinner';
@@ -37,8 +38,8 @@ function getPeriodStart(period: PeriodKey): Date | null {
   return d;
 }
 
-function formatAmount(amount: number, locale: string): string {
-  return `${amount.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$`;
+function formatAmount(amount: number): string {
+  return formatMoneyPrefix(amount);
 }
 
 export function ClientHistoryView() {
@@ -161,7 +162,7 @@ export function ClientHistoryView() {
           />
           <KpiCard
             label={t('total_spent')}
-            value={formatAmount(totalSpent, locale)}
+            value={formatAmount(totalSpent)}
             sub={completedCount > 0 ? t('kpi_completed_x', { count: completedCount }) : undefined}
             highlight
             icon={
@@ -204,7 +205,7 @@ export function ClientHistoryView() {
             <HistoryCard
               key={entry.id}
               entry={entry}
-              locale={locale}
+
               onSelect={() => setSelected(entry)}
             />
           ))}

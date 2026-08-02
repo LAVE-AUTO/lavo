@@ -239,9 +239,9 @@ export const updatePlatformSettingsSchema = z
     // --- Group C: Tips ---
 
     if ('max_tip_amount_xaf' in obj) {
-      const val = parseNonNegativeInteger(obj.max_tip_amount_xaf!);
-      if (isNaN(val)) {
-        addIssue(ctx, 'max_tip_amount_xaf', 'max_tip_amount_xaf must be a non-negative integer');
+      const val = parseDecimalString(obj.max_tip_amount_xaf!, 2);
+      if (isNaN(val) || val < 0) {
+        addIssue(ctx, 'max_tip_amount_xaf', 'max_tip_amount_xaf must be a non-negative decimal with at most 2 decimal places');
       }
     }
 

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { START_WINDOW_MINUTES, isWithinStartWindow } from '@/helpers/start-window';
 import { STATION_TIMEZONE, formatStationTime } from '@/helpers/station-time';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { ReservationEntry, EntryStatus } from './types';
 
 interface Props {
@@ -35,28 +35,28 @@ const ACCENT_MAP: Record<string, string> = {
   in_progress: '#00C851', completed: '#0044FF', cancelled: '#FF2525', late: '#FF8800',
 };
 
-/** Decimal string from the backend snapshot → "12.34$". Falls back to 0.00$. */
+/** Decimal string from the backend snapshot → "12.34 $". Falls back to 0.00 $. */
 function money(v: string | null | undefined): string {
-  const n = parseFloat(v ?? '0');
-  return `${(isNaN(n) ? 0 : n).toFixed(2)}$`;
+  return formatMoneyPrefix(v);
 }
 
 function canDoStart(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'pending_payment'; }
 function canDoValidate(s: EntryStatus) { return s === 'in_progress'; }
 function canDoCancel(s: EntryStatus) { return s === 'confirmed' || s === 'pending' || s === 'late'; }
 
+function stationDisplayAmount(entry: ReservationEntry): string {
+  if (entry.status === 'completed') {
+    const total = parseFloat(entry.client_total || '0');
+    const fee = parseFloat(entry.platform_service_fee || '0');
+    return money(String(Math.max(0, total - fee)));
+  }
+  return money(entry.station_service_total || entry.amount_paid);
+}
+
 export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraTime }: Props) {
   const t = useTranslations('station_reservations');
   const [expanded, setExpanded] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
-
-  // Re-evaluate the start window periodically so the buttons appear on time
-  // without the merchant needing to refresh.
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(id);
-  }, []);
 
   /* `pending_payment` is a transient internal lifecycle (Stripe card auth in
    * flight). The merchant doesn't need to see it - the booking exists and
@@ -82,20 +82,10 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
   const time = formatHourMinute(entry.slot_start_time ?? entry.created_at);
   const isReservation = entry.entry_type === 'reservation';
 
-  // "Démarrer" / "Annuler" only appear within START_WINDOW_MINUTES before the
-  // scheduled slot start. Entries without a scheduled slot (queue / walk-in) are
-  // not time-gated and behave as before.
-  const withinStartWindow = isWithinStartWindow(entry.slot_start_time, now);
-
   const showValidate = canDoValidate(entry.status);
   const showStart = canDoStart(entry.status);
   const showCancel = canDoCancel(entry.status);
   const hasActions = showStart || showValidate || showCancel;
-  const slotStartLabel = entry.slot_start_time ? formatHourMinute(entry.slot_start_time) : '';
-  // Minutes remaining until the start window opens (0 when already open or no slot)
-  const minutesLeft = entry.slot_start_time && !withinStartWindow
-    ? Math.ceil((new Date(entry.slot_start_time).getTime() - START_WINDOW_MINUTES * 60_000 - now) / 60_000)
-    : 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-[#C8C8B4] transition-shadow hover:shadow-md dark:bg-surface">
@@ -129,9 +119,9 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
             <span className="truncate text-[12px] font-semibold text-foreground/70 dark:text-foreground/70">
               {entry.service?.name ?? entry.vehicle_format?.label ?? t('label_no_service')}
             </span>
-            {(entry.client_total || entry.amount_paid) && (
+            {(entry.client_total || entry.amount_paid || entry.station_service_total) && (
               <span className="font-mono text-[13px] font-bold text-[#C09A18]">
-                {money(entry.client_total ?? entry.amount_paid)}
+                {stationDisplayAmount(entry)}
               </span>
             )}
           </div>
@@ -181,21 +171,20 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
               {entry.completed_at && (
                 <DetailRow label={t('detail_completed_at')} value={formatTime(entry.completed_at)} />
               )}
-              {entry.amount_paid && (
-                <DetailRow label={t('amount_label')} value={`${money(entry.client_total ?? entry.amount_paid)}`} gold />
+              {(entry.client_total || entry.amount_paid || entry.station_service_total) && (
+                <DetailRow label={t('amount_label')} value={stationDisplayAmount(entry)} gold />
               )}
             </div>
 
-            {/* Financial breakdown on completed entries: real final amounts from
-             * the backend snapshot — merchant price, taxes and commission. The
-             * platform service fee is intentionally not shown on merchant cards. */}
-            {entry.status === 'completed' && (entry.client_total || entry.station_service_total) && (
+            {/* Financial breakdown on completed entries: station-centric view.
+             * Shows what the station earned — base price + taxes, minus platform
+             * commission, then net transferred. No client_total or platform fee shown. */}
+            {entry.status === 'completed' && (entry.station_service_total || entry.client_total) && (
               <div className="mb-3 rounded-xl bg-white/40 p-3 dark:bg-[#001A05]/60">
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#000717]/35 dark:text-[#FFFFF0]/30">
                   {t('amount_section_title')}
                 </p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
-                  <DetailRow label={t('amount_client_total')} value={money(entry.client_total ?? entry.amount_paid ?? '0')} gold />
                   {entry.station_service_total && (
                     <DetailRow label={t('amount_service')} value={money(entry.station_service_total)} />
                   )}
@@ -205,16 +194,9 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                   {entry.tvq_amount && parseFloat(entry.tvq_amount) > 0 && (
                     <DetailRow label={t('amount_tvq')} value={money(entry.tvq_amount)} />
                   )}
-                  {entry.commission_rate && (
-                    <DetailRow label={t('amount_commission_rate')} value={`${(parseFloat(entry.commission_rate) * 100).toFixed(0)}%`} />
+                  {entry.commission_amount && parseFloat(entry.commission_amount) > 0 && (
+                    <DetailRow label={t('amount_commission')} value={`−${money(entry.commission_amount)}`} />
                   )}
-                  {entry.commission_amount && (
-                    <DetailRow label={t('amount_commission')} value={money(entry.commission_amount)} />
-                  )}
-                  {entry.station_tax_amount && parseFloat(entry.station_tax_amount) > 0 && (
-                    <DetailRow label={t('amount_station_tax')} value={money(entry.station_tax_amount)} />
-                  )}
-                  {/* Reference net figure: the true amount that will be transferred to the station. */}
                   <DetailRow
                     label={t('amount_net_transferred')}
                     value={money(entry.station_total_transferred ?? entry.station_payout ?? '0')}
@@ -281,15 +263,6 @@ export function ReservationCard({ entry, onValidate, onStart, onCancel, onExtraT
                     </button>
                   )}
                 </div>
-                {/* Informational countdown to the scheduled slot. The buttons stay
-                 * active at all times — confirmation flows guard accidental taps. */}
-                {!withinStartWindow && (showStart || showCancel) && minutesLeft > 0 && (
-                  <p className="flex items-center gap-1.5 text-[11px] text-[#000717]/45 dark:text-[#FFFFF0]/35">
-                    <ClockIcon />
-                    {t('actions_available_in', { min: minutesLeft })}
-                    {slotStartLabel ? ` · ${slotStartLabel}` : ''}
-                  </p>
-                )}
               </div>
             )}
           </div>

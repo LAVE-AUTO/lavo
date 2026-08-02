@@ -182,7 +182,7 @@ export async function completeStationOnboarding(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const { password_hash: _, ...safeUser } = newUser;
     return { user: safeUser as SafeUser, station: newStation };
   });
@@ -328,6 +328,7 @@ export async function approveStation(
       .update(stations)
       .set({
         status: 'active',
+        is_open: true,
         approved_by: adminId,
         approved_at: new Date(),
         stripe_account_id: accountId,

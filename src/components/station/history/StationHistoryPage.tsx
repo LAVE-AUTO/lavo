@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { HistoryCard } from './HistoryCard';
 import { DateRangePicker } from './DateRangePicker';
 import type { StationHistoryEntry, StationHistoryMeta, StatusFilter } from './types';
@@ -171,17 +172,17 @@ export function StationHistoryPage() {
           {/* KPI chips - desktop */}
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <KpiChip value={String(stats.count)} color="#1E40AF" label={t('stat_total_entries')} />
-            <KpiChip value={`${stats.revenue.toFixed(0)}$`} color="#DDAF3B" label={t('stat_total_revenue')} />
-            <KpiChip value={`${stats.payouts.toFixed(0)}$`} color="#00C851" label={t('stat_total_payout')} />
+            <KpiChip value={formatMoneyPrefix(stats.revenue)} color="#DDAF3B" label={t('stat_total_revenue')} />
+            <KpiChip value={formatMoneyPrefix(stats.payouts)} color="#00C851" label={t('stat_total_payout')} />
           </div>
         </div>
 
         {/* KPI cards - mobile only */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
           <StatCard label={t('stat_total_entries')} value={String(stats.count)} />
-          <StatCard label={t('stat_total_revenue')} value={`${stats.revenue.toFixed(2)}$`} gold />
-          <StatCard label={t('stat_total_payout')} value={`${stats.payouts.toFixed(2)}$`} gold />
-          <StatCard label={t('stat_total_commission')} value={`${stats.commission.toFixed(2)}$`} />
+          <StatCard label={t('stat_total_revenue')} value={formatMoneyPrefix(stats.revenue)} gold />
+          <StatCard label={t('stat_total_payout')} value={formatMoneyPrefix(stats.payouts)} gold />
+          <StatCard label={t('stat_total_commission')} value={formatMoneyPrefix(stats.commission)} />
         </div>
 
         {/* Filters */}

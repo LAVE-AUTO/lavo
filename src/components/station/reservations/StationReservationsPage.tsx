@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { stationDateKey, stationWallTimeToUtc } from '@/helpers/station-time';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { getFromApi, patchWithApi, postWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StartServiceModal } from '@/components/station/dashboard/StartServiceModal';
@@ -252,7 +253,7 @@ export function StationReservationsPage() {
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <KpiChip value={kpis.active} color="#DDAF3B" label={t('tab_in_progress')} />
             <KpiChip value={kpis.done} color="#00C851" label={t('tab_completed')} />
-            <KpiChip value={`${kpis.revenue.toFixed(0)}$`} color="#1E40AF" label={t('amount_label')} />
+            <KpiChip value={formatMoneyPrefix(kpis.revenue)} color="#1E40AF" label={t('amount_label')} />
           </div>
         </div>
 

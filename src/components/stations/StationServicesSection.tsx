@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { StationServicePublic } from '@/types/station';
 
 
@@ -284,8 +285,7 @@ function FeaturedServiceCard({
         </div>
         {price != null && (
           <div className="text-right shrink-0">
-            <span className="text-[12px] font-bold text-gold align-top mr-0.5">$</span>
-            <span className="text-[28px] font-black text-foreground leading-none">{price.toLocaleString()}</span>
+            <span className="text-[28px] font-black text-foreground leading-none">{formatMoneyPrefix(price)}</span>
             <p className="text-[10px] text-foreground/55 mt-1 uppercase tracking-wider">{t('detail_price_from')}</p>
           </div>
         )}
@@ -333,7 +333,7 @@ function FeaturedServiceCard({
                   </div>
                   <div className="mt-1.5 flex items-baseline gap-1.5">
                     <span className="text-[14px] font-black text-gold leading-none">
-                      ${entry.price.toLocaleString()}
+                      {formatMoneyPrefix(entry.price)}
                     </span>
                     <span className="text-[10.5px] font-bold text-foreground/55">
                       · {entry.duration} min
@@ -406,7 +406,7 @@ function OtherServiceCard({ service, locale, onSelect }: OtherServiceCardProps) 
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         {price != null && (
           <span className="text-[20px] font-black text-gold leading-none">
-            ${price.toLocaleString()}
+            {formatMoneyPrefix(price)}
           </span>
         )}
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { FinancialSnapshot } from '@/types/financial';
 
 export interface HistoryReservation {
@@ -23,7 +24,6 @@ export interface HistoryReservation {
 
 interface HistoryCardProps {
   entry: HistoryReservation;
-  locale: string;
   onSelect: () => void;
 }
 
@@ -41,8 +41,8 @@ function stationGradient(name: string): string {
   return palette[h % palette.length];
 }
 
-function formatAmount(amount: number, locale: string): string {
-  return `$${amount.toLocaleString(locale === 'en' ? 'en-CA' : 'fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatAmount(amount: number): string {
+  return formatMoneyPrefix(amount);
 }
 
 /**
@@ -50,8 +50,9 @@ function formatAmount(amount: number, locale: string): string {
  * Tapping it opens the receipt modal. Completed entries show a chevron;
  * cancelled entries are visually subdued but still openable.
  */
-export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
+export function HistoryCard({ entry: e, onSelect }: HistoryCardProps) {
   const t = useTranslations('history');
+  const locale = useLocale();
 
   const initials = e.stationName
     .split(/\s+/)
@@ -147,11 +148,11 @@ export function HistoryCard({ entry: e, locale, onSelect }: HistoryCardProps) {
             </p>
             <div className="text-right">
               <p className={`text-[18px] font-black leading-none ${isCompleted ? 'text-gold' : 'text-foreground/55'}`}>
-                {formatAmount(e.amountPaid, locale)}
+                {formatAmount(e.amountPaid)}
               </p>
               {e.tipAmount != null && e.tipAmount > 0 && (
                 <p className="text-[10.5px] font-semibold text-foreground/55 dark:text-[#B0BFB1] mt-0.5">
-                  {t('plus_tip', { amount: formatAmount(e.tipAmount, locale) })}
+                  {t('plus_tip', { amount: formatAmount(e.tipAmount) })}
                 </p>
               )}
             </div>

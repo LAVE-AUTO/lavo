@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { useToast } from '@/context/toast-context';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { generateTransactionPdf, type PdfLabels } from './generateTransactionPdf';
 
 export type TxStatus = 'succeeded' | 'refunded' | 'failed';
@@ -33,7 +34,7 @@ const STATUS_STYLE: Record<TxStatus, { badge: string; dot: string; bar: string }
 };
 
 function fmt(n: number) {
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  return formatMoneyPrefix(n);
 }
 function formatDateTime(d: string, locale: string) {
   try { return new Date(d).toLocaleDateString(intlDateLocale(locale), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }

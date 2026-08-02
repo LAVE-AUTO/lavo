@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { intlDateLocale } from '@/helpers/date-helper';
 import { Link } from '@/i18n/navigation';
+import { formatMoneyPrefix } from '@/helpers/money';
 import type { DisputeListItem, DisputeStatus } from './dispute-types';
 import { parseAmount } from './dispute-types';
 
@@ -19,7 +20,7 @@ function formatDate(d: string, locale: string) {
 }
 
 function formatAmount(n: number) {
-  return n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  return formatMoneyPrefix(n);
 }
 
 function initials(name: string) {

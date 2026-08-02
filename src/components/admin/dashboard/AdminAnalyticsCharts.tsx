@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getFromApi } from '@/services/axios-service';
+import { formatMoneyPrefix } from '@/helpers/money';
 
 type GroupBy = 'day' | 'week' | 'month';
 
@@ -51,7 +52,7 @@ function formatLabel(date: string, groupBy: GroupBy, locale: string): string {
 }
 
 function formatValue(v: number, isCurrency?: boolean): string {
-  if (isCurrency) return v.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (isCurrency) return formatMoneyPrefix(v);
   return String(v);
 }
 

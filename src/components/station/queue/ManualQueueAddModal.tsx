@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { getFromApi, postWithApi } from '@/services';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { Modal } from '@/components/ui/Modal';
 
 interface ServiceVehicleEntry {
@@ -625,7 +626,7 @@ function FormatPickerBlock({
               </div>
               <div className="mt-1 flex items-baseline gap-2">
                 <span className="text-[14px] font-black text-gold leading-none">
-                  ${parseFloat(entry.price).toLocaleString()}
+                  {formatMoneyPrefix(entry.price)}
                 </span>
                 <span className="text-[10.5px] font-bold text-foreground/55">
                   · {entry.duration_min} min

@@ -64,7 +64,7 @@ export async function LegalContentRenderer({
           ].join(' ')}
           // The HTML is sanitized server-side before storage via DOMPurify.
           // See src/server/admin/legal-content-service.ts#updateLegalContent.
-          // eslint-disable-next-line react/no-danger
+           
           dangerouslySetInnerHTML={{ __html: html }}
         />
 

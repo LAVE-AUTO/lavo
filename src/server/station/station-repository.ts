@@ -24,8 +24,9 @@ const priceFromExpr = sql<string | null>`(SELECT MIN(sve.price)::text FROM servi
 /** URL of the first station photo ordered by position (nullable when no photos). */
 const imageUrlExpr = sql<string | null>`(SELECT station_photos.url FROM station_photos WHERE station_photos.station_id = ${stations.id} ORDER BY station_photos.position ASC LIMIT 1)`;
 
-/** Count of live queue entries (pending_payment, pending, confirmed, late) for the station. */
-const liveQueueCountExpr = sql<number>`(SELECT COUNT(*)::int FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.entry_type = 'queue' AND reservations.status IN ('pending_payment', 'pending', 'confirmed', 'late'))`;
+/** Count of live queue entries (pending, confirmed, late) for the station.
+ *  pending_payment is excluded — those are payment-in-flight, not yet live. */
+const liveQueueCountExpr = sql<number>`(SELECT COUNT(*)::int FROM reservations WHERE reservations.station_id = ${stations.id} AND reservations.entry_type = 'queue' AND reservations.status IN ('pending', 'confirmed', 'late'))`;
 
 /** Station opening time from station_configs (nullable when config absent). */
 const openingTimeExpr = sql<string | null>`(SELECT station_configs.opening_time::text FROM station_configs WHERE station_configs.id = ${stations.id})`;

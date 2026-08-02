@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { postWithApi, updateWithApi, patchWithApi } from '@/services';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { formatMoneyPrefix } from '@/helpers/money';
 import { FormatCombobox } from './FormatCombobox';
 import type { VehicleFormat } from './types';
 
@@ -265,7 +266,7 @@ export function VehicleFormatModal({ format, existingFormats, onClose, onSaved, 
       <ConfirmDialog
         open={confirmOpen}
         title={t('confirm_save_title')}
-        message={t('confirm_save_message', { name: label.trim(), price: parseFloat(price || '0').toFixed(2) })}
+        message={t('confirm_save_message', { name: label.trim(), price: formatMoneyPrefix(price) })}
         confirmLabel={t('btn_save')}
         cancelLabel={t('btn_cancel')}
         variant="default"
