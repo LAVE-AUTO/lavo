@@ -1,7 +1,7 @@
 # Hurryline
 
 
-Car-wash booking, queue, and payment platform for clients, stations, and admins.
+Car-wash booking, queue, and payment platform for clients, stations, and admins .
 
 [![Build](https://img.shields.io/badge/build-jest%20%2B%20playwright-blue)](#) [![Version](https://img.shields.io/badge/version-0.1.0-blue)](#) [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
