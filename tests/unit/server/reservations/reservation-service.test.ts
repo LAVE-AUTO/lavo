@@ -16,6 +16,7 @@ const mockUpdatePaymentIntentMetadata = jest.fn();
 const mockNotifyEntry = jest.fn();
 const mockFindEntryByIdAndStation = jest.fn();
 const mockFindEntryById = jest.fn();
+const mockFindEntryByStripePaymentId = jest.fn();
 const mockSetStripePaymentSucceededNotifiedAtIfMissing = jest.fn();
 const mockClearStripePaymentSucceededNotifiedAt = jest.fn();
 const mockSendEscrowReleasedNotificationsForEntry = jest.fn();
@@ -81,6 +82,7 @@ jest.mock('@/server/reservations/entry-repository', () => ({
   findEntryById: (...args: unknown[]) => mockFindEntryById(...args),
   findEntryByIdAndUser: (...args: unknown[]) => mockFindEntryByIdAndUser(...args),
   findEntryByIdAndStation: (...args: unknown[]) => mockFindEntryByIdAndStation(...args),
+  findEntryByStripePaymentId: (...args: unknown[]) => mockFindEntryByStripePaymentId(...args),
   hasActiveEntryAtStation: (...args: unknown[]) => mockHasActiveEntryAtStation(...args),
   hasActiveReservationForSlot: (...args: unknown[]) => mockHasActiveReservationForSlot(...args),
   findPendingPaymentReservationForSlot: (...args: unknown[]) => mockFindPendingPaymentReservationForSlot(...args),
@@ -140,6 +142,7 @@ describe('reservation-service', () => {
     mockUpdatePaymentIntentMetadata.mockResolvedValue(undefined);
     mockNotifyEntry.mockResolvedValue(undefined);
     mockFindEntryById.mockResolvedValue(null);
+    mockFindEntryByStripePaymentId.mockResolvedValue(null);
     process.env.QR_TOKEN_SECRET = 'unit-test-qr-secret-0123456789abcdef';
   });
 
@@ -470,6 +473,56 @@ describe('reservation-service', () => {
 
       expect(mockSetStripePaymentSucceededNotifiedAtIfMissing).not.toHaveBeenCalled();
       expect(mockSendEscrowReleasedNotificationsForEntry).not.toHaveBeenCalled();
+    });
+
+    it('allows late queue entries to be started or cancelled by the station', async () => {
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'queue',
+        status: 'late',
+        stripe_payment_id: 'pi_123',
+      });
+      mockUpdateEntry.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'queue' as const,
+        status: 'in_progress' as const,
+        stripe_payment_id: 'pi_123',
+      });
+
+      await setEntryStatusByStation(entryId, stationId, 'in_progress');
+      expect(mockUpdateEntry).toHaveBeenCalledWith(
+        entryId,
+        expect.objectContaining({ status: 'in_progress' }),
+        expect.anything()
+      );
+
+      mockFindEntryByIdAndStation.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'queue',
+        status: 'late',
+        stripe_payment_id: 'pi_123',
+      });
+      mockUpdateEntry.mockResolvedValue({
+        id: entryId,
+        user_id: userId,
+        station_id: stationId,
+        entry_type: 'queue' as const,
+        status: 'cancelled' as const,
+        stripe_payment_id: 'pi_123',
+      });
+
+      await setEntryStatusByStation(entryId, stationId, 'cancelled');
+      expect(mockUpdateEntry).toHaveBeenCalledWith(
+        entryId,
+        expect.objectContaining({ status: 'cancelled' }),
+        expect.anything()
+      );
     });
   });
 });

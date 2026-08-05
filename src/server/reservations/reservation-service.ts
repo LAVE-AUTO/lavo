@@ -1110,14 +1110,18 @@ const VALID_STATION_TRANSITIONS: Record<string, readonly string[]> = {
   pending_payment: ['in_progress', 'cancelled'],
   pending:         ['in_progress', 'cancelled'],
   confirmed:       ['in_progress', 'cancelled'],
+  late:            ['in_progress', 'cancelled'],
   in_progress:     ['completed', 'cancelled'],
 };
 
 /**
  * Updates an entry's status (station only). Used by PATCH /station/entries/:entryId.
  * Enforces valid status transitions:
- *   confirmed   → in_progress | cancelled
- *   in_progress → completed   | cancelled
+ *   pending_payment → in_progress | cancelled
+ *   pending         → in_progress | cancelled
+ *   confirmed       → in_progress | cancelled
+ *   late            → in_progress | cancelled
+ *   in_progress     → completed   | cancelled
  * Any other transition is rejected with a ConflictError.
  *
  * On status completed:
