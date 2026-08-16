@@ -31,6 +31,16 @@ jest.mock('@/server/payments/payment-service', () => ({
   capturePaymentIntent: (...args: unknown[]) => mockCapturePaymentIntent(...args),
   refundPaymentIntent: (...args: unknown[]) => mockRefundPaymentIntent(...args),
   distributePenalty: (...args: unknown[]) => mockDistributePenalty(...args),
+  // Real implementation just classifies a Stripe error's class/code for logging; the code
+  // under test only reads .class/.code/.message off the result, so a passthrough stub with
+  // the shape it expects is enough. Missing this mock left classifyStripeError undefined,
+  // throwing inside the capture-failure catch block and silently flipping the entry to
+  // "failed" instead of exercising the intended graceful-degradation path.
+  classifyStripeError: (e: unknown) => ({
+    class: 'unknown',
+    code: undefined,
+    message: e instanceof Error ? e.message : String(e),
+  }),
 }));
 
 jest.mock('@/server/notifications/notification-service', () => ({
@@ -54,6 +64,7 @@ const DEFAULT_POLICY = {
 };
 
 function makeEntry(overrides: Record<string, unknown> = {}) {
+  const created_at = (overrides.created_at as Date | undefined) ?? new Date(Date.now() - 25 * 60 * 60 * 1000);
   return {
     id: 'entry-1',
     station_id: 'station-1',
@@ -80,7 +91,11 @@ function makeEntry(overrides: Record<string, unknown> = {}) {
     penalty_amount: null,
     confirmed_at: null,
     completed_at: null,
-    created_at: new Date(Date.now() - 25 * 60 * 60 * 1000),
+    created_at,
+    // Mirrors the field the entry actually became a queue entry at (see queued_at on the
+    // reservations schema) — defaults alongside created_at like a genuine walk-in queue entry,
+    // so a test overriding only created_at still gets a consistent effective date.
+    queued_at: created_at,
     updated_at: new Date(),
     ...overrides,
   };
@@ -141,7 +156,7 @@ describe('markQueueNoShows', () => {
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
     mockUpdateEntry.mockResolvedValue(entry);
-    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
+    mockCapturePaymentIntent.mockResolvedValue({ charged: true, chargeId: 'ch_test', transferId: null });
     mockRefundPaymentIntent.mockResolvedValue('re_test');
     mockDistributePenalty.mockResolvedValue(undefined);
     mockNotifyEntry.mockResolvedValue(undefined);
@@ -220,7 +235,7 @@ describe('markQueueNoShows', () => {
     const entry = makeEntry({ amount_paid: '-10.00', station_service_total: '-10.00' });
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
-    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
+    mockCapturePaymentIntent.mockResolvedValue({ charged: true, chargeId: 'ch_test', transferId: null });
     mockNotifyEntry.mockResolvedValue(undefined);
 
     const result = await markQueueNoShows();
@@ -235,7 +250,7 @@ describe('markQueueNoShows', () => {
     const entry = makeEntry();
     mockListActiveQueueEntries.mockResolvedValue([entry]);
     mockGetConfigByStationId.mockResolvedValue({ closing_time: '00:01' });
-    mockCapturePaymentIntent.mockResolvedValue({ chargeId: null, transferId: null });
+    mockCapturePaymentIntent.mockResolvedValue({ charged: true, chargeId: 'ch_test', transferId: null });
     mockRefundPaymentIntent.mockResolvedValue('re_test');
     mockDistributePenalty.mockResolvedValue(undefined);
     mockNotifyEntry.mockRejectedValue(new Error('FCM down'));

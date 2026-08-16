@@ -56,6 +56,7 @@ const RESERVATION_COLUMNS = {
   refund_persist_failed_at: reservations.refund_persist_failed_at,
   confirmed_at: reservations.confirmed_at,
   completed_at: reservations.completed_at,
+  queued_at: reservations.queued_at,
   walk_in_client_email: reservations.walk_in_client_email,
   walk_in_client_name: reservations.walk_in_client_name,
   walk_in_receipt_sent_at: reservations.walk_in_receipt_sent_at,
@@ -189,6 +190,7 @@ export async function createQueueEntry(data: CreateQueueEntryData, tx?: DbTransa
       time_slot_id: null,
       queue_position: data.queue_position,
       status: data.status,
+      queued_at: new Date(),
       amount_paid: data.amount_paid,
       commission_rate: data.commission_rate,
       commission_amount: data.commission_amount ?? '0.00',
@@ -263,11 +265,31 @@ export async function findReservationWithSlot(
  */
 export async function findEntryByIdAndStation(
   id: string,
-  stationId: string
+  stationId: string,
+  tx?: DbTransaction
 ): Promise<Entry | undefined> {
-  return db.query.reservations.findFirst({
+  const client = tx ?? db;
+  return client.query.reservations.findFirst({
     where: and(eq(reservations.id, id), eq(reservations.station_id, stationId)),
   });
+}
+
+/**
+ * Returns a reservation entry with its time_slot start_time, scoped to the owning station.
+ * Station-side counterpart to `findReservationWithSlot` — used for cancellation policy checks
+ * when the station (not the client) initiates the cancellation.
+ */
+export async function findReservationWithSlotByStation(
+  id: string,
+  stationId: string
+): Promise<EntryWithSlot | undefined> {
+  const rows = await db
+    .select({ ...RESERVATION_COLUMNS, slotStartTime: timeSlots.start_time })
+    .from(reservations)
+    .leftJoin(timeSlots, eq(reservations.time_slot_id, timeSlots.id))
+    .where(and(eq(reservations.id, id), eq(reservations.station_id, stationId)))
+    .limit(1);
+  return rows[0];
 }
 
 /**
@@ -296,9 +318,17 @@ export async function listEntriesByStation(
 }
 
 /**
- * Returns active queue entries across all stations (pending, confirmed, late) created within
- * the last 2 days. The 2-day window safely covers stations with very late closing times while
- * excluding genuinely stale entries from previous days.
+ * Returns active queue entries across all stations (pending, confirmed, late) that became
+ * queue entries within the last 2 days. The 2-day window safely covers stations with very
+ * late closing times while excluding genuinely stale entries from previous days.
+ *
+ * Filters on `queued_at` (when the row actually became a queue entry — set at insert for
+ * walk-ins, at downgrade time for late reservations moved to the queue), NOT `created_at`
+ * (the original booking time, which for a downgraded reservation can be days before the
+ * service date). Filtering on created_at previously made this scan silently skip any
+ * reservation booked more than 2 days ahead once it was downgraded to a late queue entry —
+ * those entries were never captured or penalized; the Stripe pre-authorization just expired
+ * on its own. `coalesce` covers rows written before queued_at existed.
  *
  * Bounded by `limit` (default 500) so a cron pass over a growing platform cannot exhaust
  * memory or Stripe API quotas in a single iteration (bug #16). Callers that need to drain
@@ -309,13 +339,14 @@ export async function listActiveQueueEntries(
   offset = 0
 ): Promise<Entry[]> {
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+  const effectiveQueuedAt = sql`coalesce(${reservations.queued_at}, ${reservations.created_at})`;
   return db.query.reservations.findMany({
     where: and(
       eq(reservations.entry_type, 'queue'),
       inArray(reservations.status, ['pending', 'confirmed', 'late']),
-      gte(reservations.created_at, twoDaysAgo)
+      gte(effectiveQueuedAt, twoDaysAgo)
     ),
-    orderBy: (r, { asc }) => [asc(r.created_at)],
+    orderBy: (r, { asc }) => [asc(sql`coalesce(${r.queued_at}, ${r.created_at})`)],
     limit,
     offset,
   });
@@ -765,6 +796,7 @@ export async function updateEntry(
     post_id: string | null;
     time_slot_id: string | null;
     queue_position: number | null;
+    queued_at: Date | null;
     amount_paid: string;
     commission_rate: string;
     commission_amount: string;
@@ -1042,8 +1074,15 @@ export async function shiftQueuePositions(
 }
 
 /**
- * Lists confirmed reservations whose slot start_time + late_tolerance is in the past
- * and client has not confirmed presence. Used by cron to downgrade them to queue.
+ * Lists confirmed reservations whose slot start_time + late_tolerance (extended by any
+ * station-accepted delay request's max_delay_minutes) is in the past and the client has
+ * not confirmed presence. Used by cron to downgrade them to queue.
+ *
+ * A delay request accepted by the station pushes the deadline out by its max_delay_minutes —
+ * previously the cron ignored delay_requests entirely (they were a display-only communication
+ * layer, see delay-service.ts), so a client the station had explicitly told "come whenever,
+ * up to 30 extra minutes" could still be downgraded to the queue (and later penalized as a
+ * no-show) at the original late_tolerance deadline despite the station's own approval.
  */
 export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
   const now = new Date();
@@ -1058,7 +1097,16 @@ export async function listLateUnconfirmedReservations(): Promise<Entry[]> {
         eq(reservations.entry_type, 'reservation'),
         eq(reservations.status, 'confirmed'),
         eq(reservations.client_confirmed, false),
-        sql`(${timeSlots.start_time} + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')) < ${now}`
+        sql`(
+          ${timeSlots.start_time}
+          + (${stationConfigs.late_tolerance_minutes} * interval '1 minute')
+          + (COALESCE(
+              (SELECT dr.max_delay_minutes FROM delay_requests dr
+               WHERE dr.reservation_id = ${reservations.id} AND dr.status = 'accepted'
+               ORDER BY dr.created_at DESC LIMIT 1),
+              0
+            ) * interval '1 minute')
+        ) < ${now}`
       )
     );
 }
@@ -1205,6 +1253,9 @@ export type RichEntry = {
     longitude: string | null;
     image_url: string | null;
     free_cancellation_minutes: number | null;
+    /** Grace period (minutes) after slot start during which the late-detection
+     * cron still tolerates a client arriving; drives the confirm-presence window. */
+    late_tolerance_minutes: number | null;
   };
   vehicle_format: { id: string; label: string; price: string } | null;
   service: { id: string; name: string; category: string } | null;
@@ -1238,6 +1289,7 @@ function richEntrySelect() {
     // evaluated for every returned row (bug #19). Image URLs are now fetched in a single
     // separate query keyed by distinct station_id and merged in `mapToRichEntry`.
     station_free_cancellation_minutes: stationConfigs.cancellation_delay_minutes,
+    station_late_tolerance_minutes: stationConfigs.late_tolerance_minutes,
     station_wash_duration_minutes: stationConfigs.wash_duration_minutes,
     station_wash_post_count: stationConfigs.wash_post_count,
     slot_start_time: timeSlots.start_time,
@@ -1328,6 +1380,7 @@ function mapToRichEntry(
       longitude: r.station_longitude as string | null,
       image_url: imageByStation?.get(stationId) ?? null,
       free_cancellation_minutes: r.station_free_cancellation_minutes as number | null,
+      late_tolerance_minutes: r.station_late_tolerance_minutes as number | null,
     },
     vehicle_format: r.vf_label
       ? {

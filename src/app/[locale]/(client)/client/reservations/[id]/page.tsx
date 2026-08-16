@@ -24,6 +24,7 @@ interface ApiRichStation {
   longitude: string | null;
   image_url: string | null;
   free_cancellation_minutes: number | null;
+  late_tolerance_minutes: number | null;
 }
 
 interface ApiRichEntry extends Partial<Omit<RawFinancialSnapshot, 'amount_paid'>> {
@@ -64,6 +65,8 @@ interface EnrichedReservation {
   timeSlot: string;
   /** ISO start_time used for past/upcoming + cancel-window detection. */
   slotStart: string | null;
+  /** Grace period (minutes) after slotStart during which presence can still be confirmed. */
+  lateToleranceMinutes: number;
   duration: number;
   totalPrice: number;
   status: string;
@@ -74,8 +77,13 @@ interface EnrichedReservation {
   receipt: HistoryReservation;
 }
 
-/** Free cancellation rule: more than 1h before service start. */
-const FREE_CANCEL_THRESHOLD_MS = 60 * 60 * 1000;
+/** Fallback used only until /cancellation-policy answers (or if it fails) —
+ * matches the server's own default in platform-settings-service.ts. */
+const FALLBACK_FREE_WINDOW_MINUTES = 60;
+
+/** Fallback matching the server's own default in config-repository.ts
+ * (DEFAULT_LATE_TOLERANCE_MINUTES), used only if the station has no config row. */
+const FALLBACK_LATE_TOLERANCE_MINUTES = 5;
 
 /* Station-local wall time (not the visitor's browser timezone) — see
  * src/helpers/station-time.ts. */
@@ -116,15 +124,25 @@ export default function ReservationDetailPage() {
   const [confirmPresenceLoading, setConfirmPresenceLoading] = useState(false);
   const [presenceConfirmed, setPresenceConfirmed] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [freeWindowMinutes, setFreeWindowMinutes] = useState(FALLBACK_FREE_WINDOW_MINUTES);
   const { success: showSuccess, error: showError } = useToast();
 
   const loadReservation = useCallback(async () => {
     setLoading(true);
 
     /* Fetch the single entry directly — avoids the pagination pitfall where
-     * a client with 100+ entries would never find an older reservation. */
-    const [ok, data] = await getFromApi(`/me/entries/${id}`);
+     * a client with 100+ entries would never find an older reservation.
+     * Also fetch the real admin-configured cancellation policy so the fee
+     * warning below reflects the actual window, not a hardcoded guess. */
+    const [[ok, data], [policyOk, policyData]] = await Promise.all([
+      getFromApi(`/me/entries/${id}`),
+      getFromApi('/cancellation-policy'),
+    ]);
     if (!mountedRef.current) return;
+    if (policyOk) {
+      const minutes = (policyData as { data: { free_window_minutes: number } }).data.free_window_minutes;
+      setFreeWindowMinutes(minutes);
+    }
 
     if (!ok) {
       setNotFound(true);
@@ -162,6 +180,7 @@ export default function ReservationDetailPage() {
       date,
       timeSlot,
       slotStart: entry.slot_start_time,
+      lateToleranceMinutes: entry.station?.late_tolerance_minutes ?? FALLBACK_LATE_TOLERANCE_MINUTES,
       duration,
       totalPrice: parseFloat(entry.amount_paid ?? '0'),
       status: entry.status,
@@ -276,13 +295,27 @@ export default function ReservationDetailPage() {
 
   /* Start button: active 30-45 min before slot time. */
   const canStart = minutesUntilSlot >= 0 && minutesUntilSlot <= 45;
-  /* Cancel warning: applies fees within the last hour before service start. */
-  const cancelHasFees = msUntilSlot > 0 && msUntilSlot <= FREE_CANCEL_THRESHOLD_MS;
-  /* Past = cancelled / completed OR slot already started. */
+
+  /* Confirm-presence window: opens the same 45 min before the slot, but stays open
+   * past slot start through the station's late-tolerance grace period — matching the
+   * backend, which still accepts confirm-presence until the late-detection cron runs
+   * at slot_start + late_tolerance_minutes (see confirm-presence/route.ts). Previously
+   * this reused `canStart`, which closed the button exactly at slot start, before the
+   * grace period the backend actually honors. */
+  const canConfirmPresence =
+    minutesUntilSlot >= -reservation.lateToleranceMinutes && minutesUntilSlot <= 45;
+  /* Cancel warning: applies fees within the free-cancellation window before service start. */
+  const cancelHasFees = msUntilSlot > 0 && msUntilSlot <= freeWindowMinutes * 60_000;
+  /* Past = cancelled / completed OR the late-tolerance grace period has fully elapsed.
+   * Using slot start alone (msUntilSlot <= 0) would flip this to "past" — showing the
+   * past_cancelled/past_completed summary and hiding the confirm-presence action — the
+   * moment the clock hits the slot time, even though the reservation is still 'confirmed'
+   * and the backend (and canConfirmPresence above) still accept a presence confirmation
+   * for lateToleranceMinutes afterwards. */
   const isPast =
     reservation.status === 'completed' ||
     reservation.status === 'cancelled' ||
-    msUntilSlot <= 0;
+    minutesUntilSlot <= -reservation.lateToleranceMinutes;
   const isUpcoming = !isPast && (reservation.status === 'confirmed' || reservation.status === 'pending');
 
   const dateLabel = slotDateTime.toLocaleDateString(locale === 'en' ? 'en-CA' : 'fr-CA', {
@@ -435,7 +468,7 @@ export default function ReservationDetailPage() {
         {/* Action buttons (only for upcoming reservations) */}
         {isUpcoming && (
           <div className="space-y-3">
-            {canStart && !presenceConfirmed && (
+            {canConfirmPresence && !presenceConfirmed && (
               <button
                 type="button"
                 onClick={handleConfirmPresence}
@@ -454,7 +487,7 @@ export default function ReservationDetailPage() {
                 {confirmPresenceLoading ? t('confirm_presence_loading') : t('confirm_presence_btn')}
               </button>
             )}
-            {canStart && presenceConfirmed && (
+            {canConfirmPresence && presenceConfirmed && (
               <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-Hurryline-success/10 border border-Hurryline-success/30">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C851" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />

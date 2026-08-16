@@ -202,6 +202,7 @@ export async function moveReservationToQueue(entryId: string): Promise<Entry> {
       time_slot_id: null,
       queue_position: newPosition,
       status: STATUS_LATE,
+      queued_at: new Date(),
       updated_at: new Date(),
     }, tx);
     await decrementSlotBookedCount(entry.time_slot_id!, tx);

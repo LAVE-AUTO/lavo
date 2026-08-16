@@ -29,7 +29,7 @@ import {
 } from '@/server/station/slot-repository';
 import { createPaymentIntent, cancelPaymentIntent, capturePaymentIntent, classifyStripeError, refundPaymentIntent, distributePenalty, updatePaymentIntentMetadata } from '@/server/payments/payment-service';
 import { logFinancialEvent } from '@/server/payments/financial-event-logger';
-import { cancelReservation } from '@/server/reservations/cancellation-service';
+import { cancelReservation, cancelReservationByStation } from '@/server/reservations/cancellation-service';
 import { findById, findByEmail } from '@/server/auth/user-repository';
 import { notifyEntry } from '@/server/notifications/notification-service';
 import { notifyStationFeed } from '@/server/notifications/station-feed-notifications';
@@ -546,13 +546,19 @@ export async function cancelEntry(
       if (!current) throw new NotFoundError('Entry not found');
       if (current.status === STATUS_CANCELLED) throw new ConflictError('Entry already cancelled');
 
-      // Defensive: amount_paid comes from the DB as a string. Clamp to a non-negative
-      // finite number so a corrupt / migrated row cannot produce negative Stripe cents.
+      // Defensive: amount_paid / station_service_total come from the DB as strings. Clamp to
+      // non-negative finite numbers so a corrupt / migrated row cannot produce negative Stripe
+      // cents. Penalty base is the pre-tax, pre-platform-fee service price (station_service_total),
+      // matching cancellation-service.ts and no-show-service.ts — the client isn't penalized on
+      // tax or the platform fee. Previously this used amount_paid (the tax-inclusive total),
+      // which structurally over-penalized queue cancellations relative to every other cancel path.
       const rawAmount = parseFloat(String(current.amount_paid));
       const amountPaid = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
+      const rawServiceAmount = parseFloat(String(current.station_service_total));
+      const penaltyBaseAmount = Number.isFinite(rawServiceAmount) && rawServiceAmount > 0 ? rawServiceAmount : 0;
       const computedPenalty = Math.max(
         0,
-        Math.round(amountPaid * policy.penaltyRate * 100) / 100
+        Math.round(penaltyBaseAmount * policy.penaltyRate * 100) / 100
       );
       const computedRefund = Math.max(
         0,
@@ -1147,10 +1153,21 @@ export async function setEntryStatusByStation(
     );
   }
 
-  // Station-side cancellation: atomically free the slot in the same transaction as the
-  // status update so the slot booked_count never lingers above reality (bug #7).
-  // The PI release (cancel for pending_payment, refund for confirmed) happens after the
-  // commit so we never hold DB locks during Stripe network I/O.
+  // Cancelling a confirmed reservation goes through the same cancellation-policy path used for
+  // client self-cancellation, so a late cancellation is penalized identically regardless of who
+  // clicks cancel — a station cannot bypass the penalty by cancelling on the client's behalf
+  // instead of leaving it to the client or the no-show cron (see cancellation-service.ts header
+  // comment). This also covers the Stripe capture/refund/penalty-distribution and the client
+  // notification, which the generic path below does not (it only ever releases the hold).
+  if (status === 'cancelled' && entry.entry_type === 'reservation' && entry.status === 'confirmed') {
+    const result = await cancelReservationByStation(entryId, stationId);
+    return result.entry;
+  }
+
+  // Station-side cancellation (pending_payment reservations, queue entries): no penalty applies —
+  // atomically free the slot in the same transaction as the status update so the slot
+  // booked_count never lingers above reality (bug #7). The PI release happens after the commit
+  // so we never hold DB locks during Stripe network I/O.
   const updated = await db.transaction(async (tx) => {
     const row = await updateEntry(
       entryId,
@@ -1167,10 +1184,9 @@ export async function setEntryStatusByStation(
   });
 
   if (status === 'cancelled' && entry.stripe_payment_id) {
-    // pending_payment → cancel the authorization (no charge ever happened).
-    // confirmed → also cancel: funds were authorized but never captured, releasing the hold
-    //             is the correct behaviour for a station-initiated cancellation. Compensation
-    //             policy (refund vs penalty) lives in the client-driven cancellation path.
+    // pending_payment → cancel the authorization (no charge ever happened, no penalty possible).
+    // confirmed (queue entries only — confirmed reservations are handled above, with penalty
+    // logic) → funds were authorized but never captured, releasing the hold is correct here too.
     if (entry.status === 'pending_payment' || entry.status === 'confirmed') {
       try {
         await cancelPaymentIntent(entry.stripe_payment_id);
@@ -1297,6 +1313,16 @@ export async function setEntryStatusByStation(
   if (status === 'in_progress' && hasRealClient) {
     notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_started' }).catch(() => {});
     notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'service_started', body: 'Votre lavage a commencé. Vous serez notifié quand il sera terminé.' }).catch(() => {});
+  } else if (status === 'cancelled' && hasRealClient) {
+    // Reservations in 'confirmed' status are handled by the early return above (with penalty
+    // logic and its own notification). This covers the remaining cancellable states — a
+    // pending_payment reservation, or any queue entry — which previously fired no notification
+    // at all, leaving the client to discover the cancellation by reopening the app.
+    const body = entry.entry_type === 'queue'
+      ? "Votre place dans la file d'attente a été annulée par la station."
+      : 'Votre réservation a été annulée par la station.';
+    notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'entry_cancelled' }).catch(() => {});
+    notifyClientFeed({ userId: entry.user_id, entryId, stationId, kind: 'entry_cancelled', body }).catch(() => {});
   } else if (status === 'completed') {
     if (hasRealClient) {
       notifyEntry({ entryId, userId: entry.user_id, stationId, type: 'service_completed' }).catch(() => {});

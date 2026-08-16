@@ -9,11 +9,13 @@
  *   4. Distributes the penalty share between the platform and the station.
  *   5. Notifies the client.
  *
- * The "effective date" of a queue entry is determined by created_at:
- *   - For walk-in entries: created_at is the day the client joined the queue.
- *   - For late reservations moved to queue: created_at reflects the original booking date.
- * Using created_at avoids false date shifts caused by position updates or refund ID writes,
- * which modify updated_at without changing the service date.
+ * The "effective date" of a queue entry is determined by queued_at — when the row actually
+ * became a queue entry (set at insert for walk-ins, at downgrade time for late reservations
+ * moved to the queue by the downgrade cron). NOT created_at, which for a downgraded
+ * reservation reflects the original booking date and can be days before the service date —
+ * and NOT updated_at, which position updates and refund/charge ID writes bump without the
+ * service date having changed. `queued_at` is the only timestamp that tracks the actual
+ * service day for both entry origins.
  */
 import { parseTimeForDate } from '@/helpers/date-helper';
 import { runWithConcurrencyLimit } from '@/helpers/concurrency';
@@ -76,7 +78,7 @@ export async function markQueueNoShows(): Promise<MarkNoShowsResult> {
   const toProcess: Entry[] = entries.filter((entry) => {
     const config = configMap.get(entry.station_id);
     if (!config?.closing_time) return false;
-    const effectiveDateStr = entry.created_at.toISOString().slice(0, 10);
+    const effectiveDateStr = (entry.queued_at ?? entry.created_at).toISOString().slice(0, 10);
     const closingTime = parseTimeForDate(effectiveDateStr, config.closing_time as string);
     return now > closingTime;
   });

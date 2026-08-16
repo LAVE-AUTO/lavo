@@ -146,6 +146,19 @@ export const reservations = pgTable(
       mode: "date",
       withTimezone: true,
     }),
+    /**
+     * When this row became a queue entry — set at insert for walk-ins and at
+     * downgrade time for late reservations moved to the queue. NULL for
+     * entry_type='reservation' rows that have never been queued. Distinct from
+     * created_at (original booking time, which can be days before the service
+     * date for a downgraded reservation) and from updated_at (bumped by
+     * unrelated queue-position churn from other entries). Drives the no-show
+     * cron's scan window and effective-date resolution.
+     */
+    queued_at: timestamp("queued_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
     created_at: timestamp("created_at", {
       mode: "date",
       withTimezone: true,
@@ -165,6 +178,7 @@ export const reservations = pgTable(
     index("reservations_time_slot_id_idx").on(table.time_slot_id),
     index("reservations_status_idx").on(table.status),
     index("reservations_created_at_idx").on(table.created_at),
+    index("reservations_queued_at_idx").on(table.queued_at),
     index("reservations_stripe_payment_succeeded_at_idx").on(table.stripe_payment_succeeded_at),
     index("reservations_entry_type_station_idx").on(table.entry_type, table.station_id),
     index("reservations_booking_source_idx").on(table.booking_source),

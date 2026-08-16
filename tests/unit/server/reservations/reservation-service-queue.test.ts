@@ -110,6 +110,10 @@ function makeQueueEntry(overrides: Record<string, unknown> = {}) {
     status: 'confirmed',
     stripe_payment_id: 'pi_test',
     amount_paid: '100.00',
+    // Pre-tax/pre-platform-fee service price — deliberately distinct from amount_paid so the
+    // penalty-base assertions below fail loudly if the code regresses to penalizing on the
+    // tax-inclusive total instead.
+    station_service_total: '80.00',
     queue_position: 1,
     time_slot_id: null,
     commission_rate: '0.10',
@@ -171,8 +175,9 @@ describe('cancelEntry - queue cancellation path', () => {
         undefined
       );
       expect(result.isLateCancellation).toBe(true);
-      expect(result.penaltyAmount).toBeCloseTo(20, 5);
-      expect(result.refundedAmount).toBeCloseTo(80, 5);
+      // 20% of station_service_total (80.00), not amount_paid (100.00).
+      expect(result.penaltyAmount).toBeCloseTo(16, 5);
+      expect(result.refundedAmount).toBeCloseTo(84, 5);
     });
   });
 
