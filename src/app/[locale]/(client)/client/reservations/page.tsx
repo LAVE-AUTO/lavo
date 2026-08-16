@@ -148,8 +148,9 @@ interface ClientQueueEntry {
 /* Helpers                                                              */
 /* ------------------------------------------------------------------ */
 
-/** Free cancellation rule: more than 1h before service start (3 600 000 ms). */
-const FREE_CANCEL_THRESHOLD_MS = 60 * 60 * 1000;
+/** Fallback used only until /cancellation-policy answers (or if it fails) —
+ * matches the server's own default in platform-settings-service.ts. */
+const FALLBACK_FREE_WINDOW_MINUTES = 60;
 
 /** Signal-delay window: button surfaces only within the last 2h before start. */
 const SIGNAL_DELAY_WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -161,11 +162,12 @@ function msUntilStart(slotStart: string | null): number {
 
 /**
  * `isWithinFeeWindow` is true when cancelling now would trigger the fee.
- * UX rule: free cancellation if more than 1h before start, fee otherwise.
+ * `freeWindowMinutes` is the real admin-configured cancellation policy window
+ * (fetched from /cancellation-policy), not a hardcoded guess.
  */
-function isWithinFeeWindow(slotStart: string | null): boolean {
+function isWithinFeeWindow(slotStart: string | null, freeWindowMinutes: number): boolean {
   const ms = msUntilStart(slotStart);
-  return ms > 0 && ms <= FREE_CANCEL_THRESHOLD_MS;
+  return ms > 0 && ms <= freeWindowMinutes * 60_000;
 }
 
 /** Surface the "I'm running late" button only within the last 2 hours. */
@@ -316,15 +318,24 @@ export default function ClientReservationsPage() {
   const [queueAction, setQueueAction] = useState<{ entry: ClientQueueEntry } | null>(null);
   const [queueActionLoading, setQueueActionLoading] = useState(false);
   const [upgradeTarget, setUpgradeTarget] = useState<ClientQueueEntry | null>(null);
+  const [freeWindowMinutes, setFreeWindowMinutes] = useState(FALLBACK_FREE_WINDOW_MINUTES);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
 
     /* /me/entries returns rich entries with denormalised station, vehicle format
-     * and slot times - no N+1 fetch needed. */
-    const [ok, data] = await getFromApi('/me/entries?per_page=100');
+     * and slot times - no N+1 fetch needed. Also fetch the real admin-configured
+     * cancellation policy so the fee warning reflects the actual window. */
+    const [[ok, data], [policyOk, policyData]] = await Promise.all([
+      getFromApi('/me/entries?per_page=100'),
+      getFromApi('/cancellation-policy'),
+    ]);
     if (!mountedRef.current) return;
+    if (policyOk) {
+      const minutes = (policyData as { data: { free_window_minutes: number } }).data.free_window_minutes;
+      setFreeWindowMinutes(minutes);
+    }
 
     if (!ok) {
       setLoadError(true);
@@ -670,6 +681,7 @@ export default function ClientReservationsPage() {
           loading={cancelLoading}
           t={t}
           locale={locale}
+          freeWindowMinutes={freeWindowMinutes}
           onConfirm={handleCancelConfirm}
           onClose={() => { if (!cancelLoading) setCancelTarget(null); }}
         />
@@ -962,6 +974,7 @@ function CancelModal({
   loading,
   t,
   locale,
+  freeWindowMinutes,
   onConfirm,
   onClose,
 }: {
@@ -969,6 +982,7 @@ function CancelModal({
   loading: boolean;
   t: ReturnType<typeof useTranslations>;
   locale: string;
+  freeWindowMinutes: number;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -1003,9 +1017,9 @@ function CancelModal({
     };
   }, []);
 
-  /* UX rule: free cancellation if more than 1h before service start. Within
-   * the last hour, the station applies a fee. */
-  const showFeesWarning = isWithinFeeWindow(r.slotStart);
+  /* UX rule: free cancellation before the admin-configured window; a fee
+   * applies within it (see /cancellation-policy). */
+  const showFeesWarning = isWithinFeeWindow(r.slotStart, freeWindowMinutes);
   const dateLabel = new Date(`${r.date}T${r.timeSlot}`).toLocaleDateString(
     locale === 'en' ? 'en-CA' : 'fr-CA',
     { weekday: 'short', day: 'numeric', month: 'short' },

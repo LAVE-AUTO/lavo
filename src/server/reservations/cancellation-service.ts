@@ -1,16 +1,26 @@
 /**
  * Reservation cancellation with penalty calculation and Stripe refund.
- * Handles POST /reservations/:id/cancel for confirmed/pending reservations.
+ * Handles POST /reservations/:id/cancel for confirmed/pending reservations (client-initiated),
+ * and the 'confirmed' branch of PATCH /station/entries/:id (station-initiated).
  *
- * Policy:
+ * Policy — identical regardless of who cancels (client or station):
  *   - Free cancellation if cancelled >= freeWindowMinutes before service start.
  *   - Late cancellation: penalty = station_service_total * penaltyRate (pre-tax, pre-platform-fee
  *     price only — the client isn't penalized on tax or the platform fee); refund = amount_paid - penalty
  *     (amount_paid is the full tax-inclusive total actually captured by Stripe).
+ *   - Station-fault override (slot pushed past closing time) still waives the penalty either way —
+ *     a station cannot be penalized for its own overrun, and a client shouldn't pay for it either.
+ *
+ * A late cancellation is a late cancellation regardless of who clicks the button: if the station
+ * cancels on the client's behalf (e.g. the client called in, or didn't show and the station closed
+ * it out manually instead of waiting for the no-show cron), the same fee applies as if the client
+ * had cancelled themselves at that moment. This keeps the policy from being bypassable simply by
+ * routing the cancellation through the station dashboard instead of the client app.
  *
  * Flow:
- *   1. Load reservation + time_slot start_time.
- *   2. Check ownership and cancellable status (confirmed only).
+ *   1. Load reservation + time_slot start_time, scoped to the caller (client owns it, or station
+ *      owns the station it belongs to).
+ *   2. Check cancellable status (confirmed only).
  *   3. Read platform cancellation policy.
  *   4. Calculate penalty and refund amount.
  *   5. Atomic transaction: update status + penalty_amount + cancellation_reason + decrement slot.
@@ -18,7 +28,8 @@
  *      - Free cancellation: cancelPaymentIntent - releases the authorization, no charge.
  *      - Late cancellation: capturePaymentIntent (materialise charge), then partial refund,
  *        then distributePenalty to claw back platform's share from the station's transfer.
- *   7. Send notifications to client and station.
+ *   7. Notify the client either way — they need to know their reservation was cancelled and
+ *      what happened financially, whether they cancelled it themselves or the station did.
  */
 import { db } from '@/lib/db';
 import { ConflictError, NotFoundError } from '@/lib/errors';
@@ -37,16 +48,24 @@ import {
 import { logFinancialEvent } from '@/server/payments/financial-event-logger';
 import {
   findReservationWithSlot,
+  findReservationWithSlotByStation,
   findEntryByIdAndUser,
+  findEntryByIdAndStation,
   markPiCancelFailed,
   markRefundPersistFailed,
   setStripeTransferIdIfMissing,
   updateEntry,
   type Entry,
+  type EntryWithSlot,
 } from '@/server/reservations/entry-repository';
 import { decrementSlotBookedCount } from '@/server/station/slot-repository';
 
 const CANCELLABLE_STATUSES = ['confirmed'] as const;
+
+/** Who initiated the cancellation — affects only the re-read ownership check and notification wording. */
+type CancelActor =
+  | { type: 'client'; userId: string }
+  | { type: 'station'; stationId: string };
 
 /**
  * Returns true if the reservation's current slot starts at or after the station's closing time.
@@ -75,7 +94,7 @@ export type CancelReservationResult = {
 };
 
 /**
- * Cancels a confirmed or pending reservation with Stripe refund.
+ * Cancels a confirmed reservation on behalf of the client who owns it.
  * Applies a penalty if cancelled within the free cancellation window.
  */
 export async function cancelReservation(
@@ -85,16 +104,44 @@ export async function cancelReservation(
 ): Promise<CancelReservationResult> {
   const reservation = await findReservationWithSlot(reservationId, userId);
   if (!reservation) throw new NotFoundError('Reservation not found');
+  assertCancellable(reservation);
+  return performCancellation(reservation, reason, { type: 'client', userId });
+}
 
+/**
+ * Cancels a confirmed reservation on behalf of the station that owns it.
+ * Applies the exact same penalty policy as `cancelReservation` — a late cancellation
+ * is a late cancellation regardless of who performed it (see file header comment).
+ */
+export async function cancelReservationByStation(
+  reservationId: string,
+  stationId: string,
+  reason?: string
+): Promise<CancelReservationResult> {
+  const reservation = await findReservationWithSlotByStation(reservationId, stationId);
+  if (!reservation) throw new NotFoundError('Reservation not found');
+  assertCancellable(reservation);
+  return performCancellation(reservation, reason, { type: 'station', stationId });
+}
+
+function assertCancellable(reservation: EntryWithSlot): void {
   if (reservation.entry_type !== 'reservation') {
     throw new ConflictError('Only reservations can be cancelled via this endpoint');
   }
-
   if (!(CANCELLABLE_STATUSES as readonly string[]).includes(reservation.status)) {
     throw new ConflictError(
       `Reservation cannot be cancelled from status '${reservation.status}'`
     );
   }
+}
+
+/** Shared core: penalty computation, DB update, Stripe settlement, client notification. */
+async function performCancellation(
+  reservation: EntryWithSlot,
+  reason: string | undefined,
+  actor: CancelActor,
+): Promise<CancelReservationResult> {
+  const reservationId = reservation.id;
 
   const [policy, stationFault] = await Promise.all([
     getCancellationPolicy(),
@@ -126,17 +173,24 @@ export async function cancelReservation(
 
   const updated = await db.transaction(async (tx) => {
     // Re-read inside the transaction to prevent double-cancel race condition.
-    const current = await findEntryByIdAndUser(reservationId, userId, tx);
+    // Scoped to the same owner (client or station) as the initial lookup.
+    const current = actor.type === 'client'
+      ? await findEntryByIdAndUser(reservationId, actor.userId, tx)
+      : await findEntryByIdAndStation(reservationId, actor.stationId, tx);
     if (!current) throw new NotFoundError('Reservation not found');
     if (!(CANCELLABLE_STATUSES as readonly string[]).includes(current.status)) {
       throw new ConflictError(`Reservation cannot be cancelled from status '${current.status}'`);
     }
 
+    // Default reason when the station cancels without an explicit one, so audit/support
+    // records can tell this apart from a client-supplied reason, a no-show, or a reschedule.
+    const cancellationReason = reason ?? (actor.type === 'station' ? 'cancelled_by_station' : null);
+
     const entry = await updateEntry(
       reservationId,
       {
         status: 'cancelled',
-        cancellation_reason: reason ?? null,
+        cancellation_reason: cancellationReason,
         penalty_amount: penaltyAmount > 0 ? penaltyAmount.toFixed(2) : null,
       },
       tx
@@ -172,12 +226,12 @@ export async function cancelReservation(
           stripePaymentIntentId: reservation.stripe_payment_id,
           reservationId,
           entryId: reservationId,
-          userId,
+          userId: reservation.user_id,
           stationId: reservation.station_id,
           meta: {
             error_class: err.class,
             error_code: err.code ?? null,
-            context: 'free_cancellation',
+            context: actor.type === 'station' ? 'free_cancellation_by_station' : 'free_cancellation',
           },
         });
         // Mark for reconciliation cron retry. Best-effort: a DB failure here only loses the
@@ -266,7 +320,7 @@ export async function cancelReservation(
               stripeRefundId: refundId,
               reservationId,
               entryId: reservationId,
-              userId,
+              userId: reservation.user_id,
               stationId: reservation.station_id,
               amountCents: Math.round(refundedAmount * 100),
             });
@@ -299,23 +353,28 @@ export async function cancelReservation(
     }
   }
 
-  // Single notification to the client. A previous iteration duplicated the push with a
+  // Single notification to the client — always, regardless of who cancelled: a station-
+  // initiated cancellation previously fired no notification at all, leaving the client to
+  // discover it by reopening the app. A previous iteration duplicated the push with a
   // `notifyStation: true` payload flag, but `notifyEntry` always targets `userId` (the client)
   // and the flag was never consumed downstream - it only caused a duplicate push to the client
   // and leaked the internal flag to the device `data` bag.
+  const cancelledByStation = actor.type === 'station';
   await notifyEntry({
     entryId: reservationId,
-    userId,
+    userId: reservation.user_id,
     stationId: reservation.station_id,
     type: 'reservation_cancelled',
-    payload: { penaltyAmount, refundedAmount, isLateCancellation },
+    payload: { penaltyAmount, refundedAmount, isLateCancellation, cancelledByStation },
   });
   await notifyClientFeed({
-    userId,
+    userId: reservation.user_id,
     entryId: reservationId,
     stationId: reservation.station_id,
     kind: 'reservation_cancelled',
-    body: 'Votre réservation a été annulée et un remboursement a été initié.',
+    body: cancelledByStation
+      ? 'La station a annulé votre réservation. Un remboursement a été initié.'
+      : 'Votre réservation a été annulée et un remboursement a été initié.',
   });
 
   return { entry: updated, refundedAmount, penaltyAmount, isLateCancellation };

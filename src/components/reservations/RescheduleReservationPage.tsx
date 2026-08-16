@@ -21,11 +21,18 @@ interface ApiRichEntry {
   vehicle_format_id: string | null;
   status: string;
   amount_paid: string | null;
+  /** Pre-tax, pre-platform-fee service price — the real penalty base (see cancellation-service.ts). */
+  station_service_total: string | null;
   created_at: string;
   slot_start_time: string | null;
   slot_end_time: string | null;
   station: { id: string; name: string } | null;
   vehicle_format: { id: string; label: string; price: string } | null;
+}
+
+interface ApiCancellationPolicy {
+  free_window_minutes: number;
+  penalty_rate: number;
 }
 
 interface ApiAvailabilitySlot {
@@ -61,9 +68,10 @@ function addDaysToDateKey(dateKey: string, days: number): string {
 /* Constantes                                                           */
 /* ------------------------------------------------------------------ */
 
-/* Frais de report appliqués si le créneau actuel est dans moins de 2h */
-const RESCHEDULE_FEE = 5;
-const LATE_RESCHEDULE_THRESHOLD_MINUTES = 120;
+/* Fallback policy used only until /cancellation-policy answers (or if it fails) —
+ * matches the server's own DEFAULTS in platform-settings-service.ts so the
+ * pre-fetch estimate is never worse than the real default policy. */
+const FALLBACK_POLICY: ApiCancellationPolicy = { free_window_minutes: 60, penalty_rate: 0.2 };
 
 function safeFloat(v: string | null | undefined): number {
   const n = parseFloat(v ?? '');
@@ -98,6 +106,7 @@ export default function RescheduleReservationPage() {
   const [stationName, setStationName]         = useState('');
   const [amount, setAmount]                   = useState(0);
   const [hasFee, setHasFee]                   = useState(false);
+  const [feeAmount, setFeeAmount]             = useState(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const confirmDialogRef = useRef<HTMLDivElement | null>(null);
 
@@ -106,8 +115,13 @@ export default function RescheduleReservationPage() {
     setLoadError(false);
 
     /* Fetch the rich entry directly (denormalised station + vehicle format +
-     * slot times) to avoid an N+1 list scan. */
-    const [entryOk, entryData] = await getFromApi(`/me/entries/${id}`);
+     * slot times) to avoid an N+1 list scan, plus the real admin-configured
+     * cancellation policy so the fee preview below matches what the server
+     * will actually charge (reschedule-service.ts uses the same policy). */
+    const [[entryOk, entryData], [policyOk, policyData]] = await Promise.all([
+      getFromApi(`/me/entries/${id}`),
+      getFromApi('/cancellation-policy'),
+    ]);
     if (!mountedRef.current) return;
 
     if (!entryOk) { setLoadError(true); setLoading(false); return; }
@@ -116,6 +130,10 @@ export default function RescheduleReservationPage() {
     if (!entry || entry.entry_type !== 'reservation') {
       setLoadError(true); setLoading(false); return;
     }
+
+    const policy = policyOk
+      ? (policyData as { data: ApiCancellationPolicy }).data
+      : FALLBACK_POLICY;
 
     const now = Date.now();
 
@@ -131,7 +149,12 @@ export default function RescheduleReservationPage() {
       setCurrentLabel(label);
 
       const minutesUntil = (currentSlotMs - now) / 60000;
-      setHasFee(minutesUntil > 0 && minutesUntil < LATE_RESCHEDULE_THRESHOLD_MINUTES);
+      const late = minutesUntil > 0 && minutesUntil < policy.free_window_minutes;
+      setHasFee(late);
+      // Same base as the server: station_service_total (pre-tax, pre-platform-fee),
+      // falling back to amount_paid if missing — matches reschedule-service.ts.
+      const penaltyBase = safeFloat(entry.station_service_total) || safeFloat(entry.amount_paid);
+      setFeeAmount(late ? Math.round(penaltyBase * policy.penalty_rate * 100) / 100 : 0);
     }
 
     setForfaitLabel(entry.vehicle_format?.label ?? '-');
@@ -305,7 +328,6 @@ export default function RescheduleReservationPage() {
     );
   }
 
-  const feeTotal = hasFee ? RESCHEDULE_FEE : 0;
   const canConfirm = selectedSlotId !== null && !submitting;
 
   return (
@@ -337,7 +359,7 @@ export default function RescheduleReservationPage() {
         />
 
         {/* Avertissement frais de report */}
-        {hasFee && <FeeWarningBanner fee={RESCHEDULE_FEE} t={t} />}
+        {hasFee && <FeeWarningBanner fee={feeAmount} t={t} />}
 
         {/* Sélecteur de créneau */}
         <section className="bg-surface rounded-xl border border-border p-5 space-y-4">
@@ -405,7 +427,7 @@ export default function RescheduleReservationPage() {
         {selectedSlotId && (
           <ConfirmSection
             amount={amount}
-            fee={feeTotal}
+            fee={feeAmount}
             hasFee={hasFee}
             submitting={submitting}
             canConfirm={canConfirm}
@@ -452,7 +474,7 @@ export default function RescheduleReservationPage() {
               {hasFee && (
                 <div className="flex justify-between text-[14px] px-1">
                   <span className="text-[#999] dark:text-foreground/55">{t('fee_label')}</span>
-                  <span className="font-bold text-[#FF8800]">+{RESCHEDULE_FEE.toFixed(2)}$</span>
+                  <span className="font-bold text-[#FF8800]">+{feeAmount.toFixed(2)}$</span>
                 </div>
               )}
 
