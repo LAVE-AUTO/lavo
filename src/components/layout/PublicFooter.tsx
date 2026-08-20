@@ -13,7 +13,7 @@ export async function PublicFooter() {
 
   const appLinks = [
     { href: `/${locale}/#how-it-works`, label: t('app_how'), external: true },
-    { href: '/stations',                label: t('app_stations'), external: false },
+    // { href: '/stations',                label: t('app_stations'), external: false },
     { href: '/station/apply',           label: t('app_merchant'), external: false },
   ];
 
