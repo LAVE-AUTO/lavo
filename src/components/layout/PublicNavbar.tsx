@@ -260,12 +260,12 @@ export function PublicNavbar({
               : (
                 <>
                   <a href={`/${locale}/#how-it-works`} className={linkClass}>{t('how_it_works')}</a>
-                  <Link
+                  {/* <Link
                     href="/stations"
                     className={`${linkClass}${pathname.startsWith('/stations') ? ' !text-[#DDAF3B]' : ''}`}
                   >
                     {t('stations')}
-                  </Link>
+                  </Link> */}
                   <a href={`/${locale}/#notifications`} className={linkClass}>{t('reminders')}</a>
                   <a href={`/${locale}/#faq`} className={linkClass}>{t('faq')}</a>
                 </>
@@ -476,7 +476,7 @@ export function PublicNavbar({
         {menuOpen && (
           <div className="lg:hidden bg-[rgba(247,243,236,0.98)] dark:bg-[rgba(13,31,15,0.98)] border-t border-[rgba(221,175,59,0.18)] px-6 py-5 space-y-1 animate-fade-in">
             <a href={`/${locale}/#how-it-works`} className={drawerLinkClass}>{t('how_it_works')}</a>
-            <Link href="/stations" className={drawerLinkClass}>{t('stations')}</Link>
+            {/* <Link href="/stations" className={drawerLinkClass}>{t('stations')}</Link> */}
             <a href={`/${locale}/#notifications`} className={drawerLinkClass}>{t('reminders')}</a>
             <a href={`/${locale}/#faq`} className={drawerLinkClass}>{t('faq')}</a>
             <div className="pt-4 border-t border-[rgba(221,175,59,0.18)] flex flex-col gap-2.5">

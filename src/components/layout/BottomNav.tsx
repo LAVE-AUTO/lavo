@@ -149,7 +149,7 @@ export function BottomNav() {
   /* Guest items - labels kept short so they stay on a single line in the bottom bar */
   const guestItems = [
     { href: homeHref, label: t('home'), icon: (a: boolean) => <HomeIcon active={a} /> },
-    { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
+    // { href: '/stations', label: t('stations'), icon: (a: boolean) => <SearchIcon active={a} /> },
     { href: '/login', label: t('login'), icon: () => <UserIcon /> },
     { href: '/#how-it-works', label: t('bottom_how_it_works'), icon: (a: boolean) => <HowItWorksIcon active={a} /> },
   ];
