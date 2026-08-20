@@ -43,12 +43,25 @@ export function errorResponse(
       status,
       code: options.code,
       message,
-      error: devError instanceof Error
-        ? { name: devError.name, message: devError.message, stack: devError.stack }
-        : devError,
+      error: serializeErrorForLog(devError),
     });
   }
   return NextResponse.json(body, { status });
+}
+
+/**
+ * Serializes an error for server-side logs, walking `.cause` (drizzle/postgres wrap the real
+ * DB/network reason there, e.g. connection reset or statement timeout — the top-level message
+ * is often just "Failed query: <sql>", which is useless without the cause).
+ */
+export function serializeErrorForLog(error: unknown): unknown {
+  if (!(error instanceof Error)) return error;
+  return {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+    ...(error.cause !== undefined && { cause: serializeErrorForLog(error.cause) }),
+  };
 }
 
 function defaultCodeForStatus(status: number): ApiCode | undefined {

@@ -82,6 +82,22 @@ const STATUS_CANCELLED = 'cancelled';
 const STATUS_CONFIRMED = 'confirmed';
 
 
+/**
+ * Wraps findEntryByStripePaymentId with a single retry. Called right after the Stripe
+ * PaymentIntent is created and before the booking transaction starts — a transient DB/connection
+ * blip here must not be treated as "no existing entry", since that would let the caller fall
+ * through to create a second entry (or, on repeated failure, leave the already-authorized PI
+ * with no reservation row anywhere to track it for cleanup).
+ */
+async function findEntryByStripePaymentIdWithRetry(paymentIntentId: string): Promise<Entry | undefined> {
+  try {
+    return await findEntryByStripePaymentId(paymentIntentId);
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    return findEntryByStripePaymentId(paymentIntentId);
+  }
+}
+
 function toDecimal(v: string | number): string {
   return typeof v === 'number' ? v.toFixed(2) : String(v);
 }
@@ -264,7 +280,7 @@ export async function createReservation(
   // retries (double-click, network retry). Without this check the retry would
   // hit the ActiveReservationExistsError inside the transaction and show a 409
   // instead of returning the already-confirmed entry.
-  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  const existingForPaymentIntent = await findEntryByStripePaymentIdWithRetry(paymentIntentId);
   if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
     return { entry: existingForPaymentIntent, clientSecret };
   }
@@ -425,7 +441,7 @@ export async function createReservationByStartTime(
    * on rapid retries (double-click, client network retry). Without this check
    * each retry inserted a fresh entry on another free post, producing several
    * bookings tied to one payment — all later confirmed by the webhook/cron. */
-  const existingForPaymentIntent = await findEntryByStripePaymentId(paymentIntentId);
+  const existingForPaymentIntent = await findEntryByStripePaymentIdWithRetry(paymentIntentId);
   if (existingForPaymentIntent && existingForPaymentIntent.status !== STATUS_CANCELLED) {
     return { entry: existingForPaymentIntent, clientSecret };
   }

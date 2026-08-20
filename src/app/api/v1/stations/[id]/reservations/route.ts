@@ -93,7 +93,7 @@
  *               $ref: '#/components/schemas/ErrorEnvelope'
  */
 import { requireRole } from '@/lib/require-role';
-import { successResponse, error400, error404, error409, error429, error500, fromAppError } from '@/lib/responses';
+import { successResponse, error400, error404, error409, error429, error500, fromAppError, serializeErrorForLog } from '@/lib/responses';
 import { ApiCode } from '@/types/api-codes';
 import { createEndpointRateLimiter } from '@/lib/endpoint-rate-limiter';
 import { stationIdParamSchema, mapZodErrors } from '@/validators/station';
@@ -192,7 +192,7 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     console.error('[CREATE_RESERVATION] Unexpected error', {
       stationId: paramParsed.data.id,
       userId: auth.sub,
-      error: e instanceof Error ? { message: e.message, stack: e.stack } : String(e),
+      error: serializeErrorForLog(e),
     });
     return error500(e);
   }
